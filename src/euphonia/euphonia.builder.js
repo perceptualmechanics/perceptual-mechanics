@@ -4,6 +4,7 @@
 // so a link is the character, and this browser remembers the last one.
 import srdUrl from './euphonia.srd.json?url';
 import classesUrl from './euphonia.classes.json?url';
+import subclassesUrl from './euphonia.subclasses.json?url';
 import charactersUrl from './euphonia.characters.json?url';
 import languagesUrl from './euphonia.languages.json?url';
 import tonguesUrl from './euphonia.tongues.json?url';
@@ -65,8 +66,8 @@ export async function initBuilder(panel) {
   const status = form.querySelector('.builder-status');
   let book, srd, languages, tongueNames;
   try {
-    const [s, e, c, l, t] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
-    srd = s; book = rulebook(s, e, c); languages = l.data;
+    const [s, e, c, l, t, a] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl, subclassesUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
+    srd = s; book = rulebook(s, e, c, a); languages = l.data;
     // What a language field suggests: the real tongues of the cultures the
     // book names (the ribbons' list), then the rules' own languages.
     tongueNames = [...new Set([...t.tongues.map(x => x.language), ...book.languages.standard, ...book.languages.rare])];
@@ -167,6 +168,10 @@ export async function initBuilder(panel) {
     classList.lastElementChild?.querySelector('select')?.focus();
   });
 
+  // A class's subclasses, the setting's first and each named with its book
+  // where a book adds it to an SRD class; a source with none isn't shown.
+  const subclassGroups = (list, chosen) => ['Euphonia', 'SRD 5.2.1'].filter(src => list.some(x => x.source === src)).map(src => h('optgroup', { label: src === 'Euphonia' ? 'Euphonia’s subclasses' : 'The SRD’s subclasses' },
+    list.filter(x => x.source === src).map(x => h('option', { value: x.name, selected: x.name === chosen || null }, x.book ? `${x.name} (${x.book.replace(/^Euphonia: /, '')})` : x.name))));
   // The class rows: a class, its level, its subclass once it has one.
   let classShape = null;
   function renderClasses(result) {
@@ -184,7 +189,7 @@ export async function initBuilder(panel) {
             h('input', { 'data-key': `level-${i}`, type: 'number', min: 1, max: MAX_LEVEL, inputmode: 'numeric', value: c.level, oninput: e => set(s => { s.classes[i].level = Number(e.target.value); }) })),
           rules ? h('label', { class: 'b-field b-subclass' }, h('span', {}, `Subclass (from level ${rules.subclassLevel})`),
             h('select', { 'data-key': `subclass-${i}`, 'data-sub': c.class, 'aria-describedby': idFor(`subclass:${c.class}`), onchange: e => set(s => { s.classes[i].subclass = e.target.value; }) },
-              options(rules.subclasses.map(x => x.name), c.subclass, 'Choose a subclass'))) : null,
+              h('option', { value: '' }, 'Choose a subclass'), subclassGroups(rules.subclasses, c.subclass))) : null,
           rules ? problemSlot(`subclass:${c.class}`) : null,
           state.classes.length > 1 ? h('button', { type: 'button', class: 'b-button b-remove', 'data-key': `remove-${i}`, onclick: () => { set(s => { s.classes.splice(i, 1); }); classList.querySelector('select')?.focus(); } }, `Remove ${c.class || 'this class'}`) : null);
       }));
@@ -674,7 +679,7 @@ export async function initBuilder(panel) {
       result.classes.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-features' },
         h('h3', { id: 'sheet-features' }, 'Class features'),
         result.classes.map(c => h('div', { class: 'sheet-class' },
-          h('h4', {}, `${c.class} ${c.level}${c.subclass ? `, ${c.subclass}` : ''}`, h('span', { class: 'sheet-source' }, ` · ${c.source}`)),
+          h('h4', {}, `${c.class} ${c.level}${c.subclass ? `, ${c.subclass}` : ''}`, h('span', { class: 'sheet-source' }, ` · ${c.source}${c.subclassBook ? `; ${c.subclass} from ${c.subclassBook}` : ''}`)),
           result.features.filter(f => f.class === c.class && !f.option && !(f.name === 'Ability Score Improvement' || f.name === 'Epic Boon'))
             .map(f => det(`feature-${c.class}-${f.level}-${f.name}`, `Level ${f.level}: ${f.name}${f.subclass ? ` (${f.subclass})` : ''}`, h('div', { html: blocks(f.text) })))))) : null,
       h('footer', { class: 'sheet-credit' },

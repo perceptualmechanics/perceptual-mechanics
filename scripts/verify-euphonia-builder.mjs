@@ -17,11 +17,11 @@ const someone = (classes, extra = {}) => ({
   method: 'rolled', base: ABLE, classes, originFeats: { 'Human Versatile': 'Alert' }, styles: { 'Fighter 1 Fighting Style': 'Archery' }, ...extra,
 });
 
-export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes'), setting = read('characters') } = {}) {
+export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes'), setting = read('characters'), subclasses = read('subclasses') } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
   let book;
-  try { book = engine.rulebook(srd, euphonia, setting); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
+  try { book = engine.rulebook(srd, euphonia, setting, subclasses); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
   // Weapon Mastery and languages have checks of their own (below); a build
   // that doesn't name its weapons takes the first kinds the engine offers,
   // and one that doesn't name its languages takes as many distinct ones as
@@ -101,6 +101,32 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   ];
   for (const [quote, holds] of examples) if (!holds()) fail(`the SRD's example doesn't hold: ${quote}`);
 
+  // The subclasses the books add to the SRD's classes: every one offered,
+  // ahead of the SRD's own (Scott: emphasize them), and each built to level
+  // 20 with nothing it can't read, only the problems its choices left open,
+  // and every feature it has.
+  const offered = book.classes.flatMap(c => c.subclasses.filter(s => s.class_name).map(s => `${c.name}: ${s.name}`));
+  for (const s of subclasses.data) if (!offered.includes(`${s.class_name}: ${s.name}`)) fail(`${s.class_name}'s ${s.name} isn't offered`);
+  for (const c of book.classes) {
+    const order = c.subclasses.map(s => s.source);
+    if (order.lastIndexOf('Euphonia') > order.indexOf('SRD 5.2.1') && order.includes('SRD 5.2.1')) fail(`${c.name}: an SRD subclass is offered before one of Euphonia's`);
+  }
+  let booked = 0;
+  for (const s of subclasses.data) {
+    const c = book.classNamed(s.class_name);
+    if (!c?.subclasses.some(x => x.name === s.name)) continue;
+    const state = someone([{ class: c.name, level: 20, subclass: s.name }], {
+      method: 'point', base: POINT_BUY,
+      improvements: Object.fromEntries(c.improvements.map(i => [`${c.name} ${i.level}`, { feat: 'Ability Score Improvement', increases: { Dexterity: 1, Wisdom: 1 } }])),
+      skills: { [c.name]: c.skills.from.slice(0, c.skills.count), 'Human Skillful': ['Arcana'] },
+    });
+    const got = run(complete(state, `${c.name} ${s.name}`), `${c.name} ${s.name}`);
+    if (!got) continue;
+    if (got.problems.length) fail(`${c.name} (${s.name}) at level 20: ${got.problems.map(p => p.message).join(' ')}`);
+    else if (got.features.filter(f => f.subclass === s.name).length !== s.features.length) fail(`${c.name} (${s.name}): its features don't all come through at level 20`);
+    else booked++;
+  }
+
   // Every class, to level 20 alone, with its first subclass, its feats and
   // its skills: nothing it can't read, and only the problems the choices
   // left open.
@@ -177,7 +203,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   // multiclass rules to build with.
   for (const where of ['level 2 feature', 'Level 2: A Planted Feature', 'As a Multiclass Character']) {
     try {
-      const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · ${where}`, reasons: ['bracket'] }] }, setting);
+      const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · ${where}`, reasons: ['bracket'] }] }, setting, subclasses);
       if (planted.classNamed(whole.name) || !planted.unfinished.includes(whole.name)) fail(`a withheld ${where} planted in ${whole.name} doesn't set it aside`);
     } catch (e) { fail(`a withheld ${where} planted in ${whole.name}: ${e.message}`); }
   }
@@ -365,7 +391,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
 
   const log = problems.length
     ? [`\neuphonia builder: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; the setting's ${backgrounds} backgrounds built${book.unfinished.length ? `, and ${book.unfinished.join(', ')} set aside as still being written` : ''}; ${book.species.length} species placed and ${book.feats.length} feats read`];
+    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes and the books’ ${booked} subclasses for the SRD’s, offered first, built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; the setting's ${backgrounds} backgrounds built${book.unfinished.length ? `, and ${book.unfinished.join(', ')} set aside as still being written` : ''}; ${book.species.length} species placed and ${book.feats.length} feats read`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

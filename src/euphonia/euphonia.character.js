@@ -113,8 +113,9 @@ function sectionOptions(c) {
 
 // The rules as the builder uses them: the SRD's tables and options, every
 // class and background, the SRD's and the setting's own, in one shape, and
-// where the setting places each species.
-export function rulebook(srd, euphonia, setting) {
+// where the setting places each species. `added` holds the subclasses the
+// books add to the SRD's classes.
+export function rulebook(srd, euphonia, setting, added) {
   const skills = srd.tables.skills.map(r => r.Skill);
   const modifiers = srd.tables.ability_modifiers.map(r => {
     const [lo, hi = lo] = r.Score.split('–').map(Number);
@@ -160,6 +161,11 @@ export function rulebook(srd, euphonia, setting) {
     const features = c.features.map(f => (f.name === choices?.feature && inline(f) >= 0 ? { ...f, text: f.text.slice(0, inline(f)).trim() } : f));
     return {
       ...c, features, die, saves, skills: choice, subclassLevel: grants[0].level, spellList: spells,
+      // Its subclasses, the setting's first: an SRD class takes the books'
+      // beside its own, found after the feature that grants them, whose text
+      // names only the SRD's. Each says where it's from.
+      subclasses: [...(c.source === 'SRD 5.2.1' ? added.data.filter(s => s.class_name === c.name).map(s => ({ ...s, source: 'Euphonia' })) : []),
+        ...c.subclasses.map(s => ({ ...s, source: c.source }))],
       // The levels that bring a feat: an Ability Score Improvement, or the
       // Epic Boon at 19.
       improvements: c.table.rows.flatMap(r => (r['Class Features'] ?? '').split(/,\s*/).filter(n => n === 'Ability Score Improvement' || n === 'Epic Boon').map(kind => ({ level: number(r.Level), kind }))),
@@ -380,11 +386,14 @@ export function character(book, state) {
   // the player's, and the one chosen a feature from then on. One whose
   // choices are a list ("you learn one of the following facts about it of
   // your choice", then items) is chosen in play, each time, not here; one of
-  // "the following skills" is a skill choice, read with the skills.
+  // "the following skills" is a skill choice, read with the skills; one named
+  // in its own sentence ("one of the following tools of your choice:
+  // Cartographer's Tools, Mason's Tools, or Navigator's Tools") is a tool,
+  // which the sheet shows as text, as it shows a background's.
   const pickChoices = [];
   for (const f of [...features]) {
     const offers = f.text.match(/\bone of the following (?:[\w ]+ )?of your choice(?:[^.\n]*)[.:]\s*(\S)?/);
-    if (!offers || /one of the following skills/.test(f.text) || offers[1] === '-') continue;
+    if (!offers || /one of the following skills/.test(f.text) || offers[1] !== '*') continue;
     const offered = [...f.text.matchAll(/^\*\*([^*]+?)\.\*\* (.+)$/gm)].map(m => ({ name: m[1], text: m[2] }));
     if (offered.length < 2) throw new Error(`${f.name}: "one of the following" names ${offered.length} option(s)`);
     const key = `${f.class} ${f.level} ${f.name}`, chosen = offered.find(x => x.name === state.picks?.[key]);
@@ -812,7 +821,7 @@ export function character(book, state) {
   return {
     problems, warnings, notes, species, option: options?.names.includes(state.option) ? state.option : null, size, background, scores, base, mod, level: total, bonus,
     xp: advancement.xp, nextXp: book.advancement[total]?.xp ?? null,
-    classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source })),
+    classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
     skills, choices, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, masteryChoices, proficientWeapons, languageChoices, stealthDisadvantage: Boolean(stealthy), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),

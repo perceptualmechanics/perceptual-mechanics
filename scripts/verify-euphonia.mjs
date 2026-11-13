@@ -9,7 +9,7 @@ import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
+const FILES = ['classes', 'subclasses', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -128,6 +128,23 @@ export function verifyEuphonia(d = euphoniaData()) {
     }
   }
 
+  // The subclasses the books add to the core classes: each to an SRD class,
+  // named as none of its own is, beginning at the level the class takes its
+  // subclass (the builder offers it beside the SRD's there), from a book the
+  // page can cite, with features to show.
+  const srdClasses = JSON.parse(read('src/euphonia/euphonia.srd.json')).classes;
+  const BOOKS = ['Euphonia: The Classes', 'Euphonia: Life on the Border'];
+  for (const sub of d.subclasses.data) {
+    const core = srdClasses.find(c => c.name === sub.class_name);
+    const at = `${sub.class_name} subclass ${sub.name}`;
+    if (!core) { fail(`${at}: ${sub.class_name} isn't one of the SRD's classes`); continue; }
+    const first = Math.min(...core.subclasses.flatMap(s => s.features.map(f => f.level)));
+    if (core.subclasses.some(s => s.name === sub.name) || d.subclasses.data.filter(s => s.class_name === sub.class_name && s.name === sub.name).length > 1) fail(`${at}: its name is taken`);
+    if (!sub.features.length) fail(`${at}: shown with no features`);
+    else if (Math.min(...sub.features.map(f => f.level)) !== first) fail(`${at}: begins at level ${Math.min(...sub.features.map(f => f.level))}, but ${sub.class_name} takes its subclass at ${first}`);
+    if (!BOOKS.includes(sub.book)) fail(`${at}: from "${sub.book}", which isn't one of the books`);
+  }
+
   // The Wheel behind the globe: every plane the table files by height and
   // bearing reads as a place on it, no two share a place, and each of the
   // Revelator's five roads runs through two or more of them.
@@ -156,7 +173,7 @@ export function verifyEuphonia(d = euphoniaData()) {
     for (const p of problemsFound) log.push(`  ${p}`);
   } else {
     const n = k => d[k].data.length;
-    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
+    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
 }

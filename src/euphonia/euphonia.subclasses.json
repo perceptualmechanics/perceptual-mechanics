@@ -1,0 +1,1086 @@
+{
+ "provenance": {
+  "source": "Euphonia.md",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "58a72ab92134f59b4c021117edc94e2d80fabaffb0e80a45526ffbd0e2e46191",
+  "modified": "2026-11-13T05:10:48-05:00",
+  "exporter": "class-kit/site_export.py",
+  "exporter_version": 15,
+  "rules": {
+   "banned": [
+    "eladrin",
+    "Feywild",
+    "Shadowfell",
+    "changeling",
+    "genasi",
+    "Seelie",
+    "Unseelie",
+    "Imbas",
+    "Dungeons & Dragons",
+    "D&D"
+   ],
+   "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
+  }
+ },
+ "withheld": [
+  {
+   "where": "Warlock · Envoy Patron · introduction",
+   "reasons": [
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Warlock · Dreamlord Patron · introduction",
+   "reasons": [
+    "names a placeholder"
+   ]
+  }
+ ],
+ "data": [
+  {
+   "class_name": "Druid",
+   "name": "Circle of Shapers",
+   "book": "Euphonia: The Classes",
+   "lead": "> **The Circle of Shapers at a Glance**\n>\n> **Shape the Land** is your button. As a Bonus Action, spend a use of Wild Shape to raise a rampart for cover, lift a pillar under a friend or a foe, or turn the ground into grasping roots and stone. It lasts an hour, and from 6th level your Bonus Action can rework it for free every turn after: walk the wall forward, move the grasp, raise the pillar higher. Out of a fight the same power builds.\n>\n> | Feature | What it does | From |\n> |---|---|---|\n> | The Mason's Hand | shape stone, earth, and wood with your hands like clay | Level 3 |\n> | Shape the Land | Wild Shape turned outward: rampart, pillar, or grasp | Level 3 |\n> | Raise the Works | build walls, bridges, and rooms with your party; a rampart when an ally is hit; rework your shapings as a Bonus Action | Level 6 |\n> | Living Stone | your works keep growing; two shapings at once | Level 10 |\n> | What Stands | the stone answers faster; what you build stays | Level 14 |\n>\n> **A good turn:** cast your spell, then shape the field with your Bonus Action: a rampart between the archers and your wizard, a pillar that lifts your rogue onto the high ground, or a grasp that holds the brute where your fighter wants it. From 6th level, on the turns after, cast, then rework.\n\n**Wild Shape is still yours.** You can take a beast's shape as any druid can; the uses are one pool.",
+   "features": [
+    {
+     "level": 3,
+     "name": "Circle of Shapers Spells",
+     "text": "When you reach a Druid level specified in the Circle of Shapers Spells table, you thereafter always have the listed spells prepared.\n\n| Druid Level | Spells |\n|---|---|\n| 3 | *Floating Disk*, *Spike Growth* |\n| 5 | *Meld into Stone*, *Plant Growth* |\n| 7 | *Stone Shape*, *Stoneskin* |\n| 9 | *Tree Stride*, *Wall of Stone* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Floating Disk",
+        "Spike Growth"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Meld into Stone",
+        "Plant Growth"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Stone Shape",
+        "Stoneskin"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Tree Stride",
+        "Wall of Stone"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Mason's Hand",
+     "text": "You can shape unworked stone, earth, or wood with your bare hands as if it were wet clay: up to a 1-foot cube a minute, and it holds its new shape when you let go. Stones you join this way fit with no mortar and no gap. You also know at a touch whether a wall, a bridge, or a mine's ceiling is sound, and where it will fail first."
+    },
+    {
+     "level": 3,
+     "name": "Shape the Land",
+     "text": "As a Bonus Action, you can expend a use of your Wild Shape feature to shape the ground at a point you can see within 60 feet of yourself. Choose one shaping. It lasts for 1 hour or until you dismiss it (no action required). If you make a shaping while you already have as many as you can maintain (one, or two from Living Stone), your oldest shaping ends. Earth, stone, and roots answer you; worked stone floors and wooden decks answer too, slowly, and rejoin when the shaping ends.\n\n- *Rampart.* Up to three 5-foot sections of earth or stone wall rise in unoccupied spaces, each 5 feet wide and 5 feet high; each must touch another section or the point you chose. A section is a solid block: nothing moves through it, it can be climbed, and it can stand on top of another section. A section gives Half Cover to a creature behind it, or Three-Quarters Cover to a creature behind it that has the Prone condition. Each section has AC 15 and Hit Points equal to twice your Druid level. The sections can instead lie flat, end to end, as a span or a stair up to 15 feet long, which bears any weight a stone bridge would.\n- *Pillar.* A 5-foot column rises up to 15 feet under a Medium or smaller creature or an empty space, stopping at a ceiling. A willing creature rides it up safely. An unwilling creature makes a Dexterity saving throw against your spell save DC; on a failed save it's lifted, and on a success it steps off into an adjacent space of its choice. A creature on top can climb down the sides, or step off and fall.\n- *Grasp.* The ground in a 15-foot-radius circle turns to roots and grinding stone. It's Difficult Terrain for creatures you don't choose. For the first minute, the roots also grasp: when such a creature enters the area for the first time on a turn or starts its turn there, it makes a Strength saving throw against your spell save DC or has the Restrained condition until the start of its next turn. (If you have levels in another class, figure this DC with the Proficiency Bonus for your Druid level alone.) A Huge or larger creature is too big to hold, and so is a Large one until you reach Druid level 6; for such a creature, the Grasp is only Difficult Terrain.\n\nOnce, you can use this feature without expending a use of Wild Shape. You regain this free use when you finish a Short or Long Rest. From Druid level 6, you can spend it on The Wall Comes Up instead.\n\n**Out of a fight**, the same shapings build: a rampart is a wall for a camp, a pillar is a lookout or a stair, a grasp holds a riverbank from flooding. Shapings you make outside combat can be any shape that fits their size."
+    },
+    {
+     "level": 6,
+     "name": "Raise the Works",
+     "text": "You can build. With 10 minutes of work, you can expend a use of your Wild Shape feature to raise a structure of earth, stone, or wood: a wall up to 30 feet long and 10 feet high, a bridge spanning up to 5 feet per Druid level, a stair, or a room with walls and a roof that fits in a 20-foot cube. Each 5-foot section has the AC and Hit Points of a Rampart section. It lasts until you finish your next Long Rest, then settles back into the ground.\n\nBuilding is loud and plain to see: the ground groans, and anyone within a mile who is looking knows where you are. It needn't be lonely work. Each creature that helps you for the full 10 minutes (hauling, bracing, singing the stone along) adds 10 feet to the length of a wall or the span of a bridge.\n\n**The Wall Comes Up.** When a creature you can see within 60 feet of you is hit by an attack roll, you can take a Reaction to expend a use of your Wild Shape feature (or your free use from Shape the Land) and raise a single Rampart section between it and the attacker, as long as there is space. The creature has Half Cover against that attack, which can turn the hit into a miss. The section lasts for 1 minute and doesn't count against the shapings you can maintain.\n\n**Rework.** The land keeps answering once it has moved. As a Bonus Action, you can rework one of your shapings from Shape the Land within 60 feet of yourself without expending a use: sink your Rampart's sections and raise them in new spaces (or lay them flat farther along), raise or lower your Pillar by up to 15 feet, or move your Grasp up to 15 feet. A creature that a moved Grasp reaches isn't held until it starts its turn there. Reworking a shaping doesn't lengthen it, or the Grasp's first minute."
+    },
+    {
+     "level": 10,
+     "name": "Living Stone",
+     "text": "You can maintain two shapings from Shape the Land at once. In addition, Rampart sections you raise regain 5 Hit Points at the start of each of your turns.\n\n**Works That Grow.** A structure you raise with Raise the Works mends itself: it regains all its Hit Points at dawn, and damage to it closes like a wound."
+    },
+    {
+     "level": 14,
+     "name": "What Stands",
+     "text": "When you roll Initiative and have fewer than two uses of Wild Shape left, you regain one. In addition, your Rampart sections have AC 17 and Resistance to Bludgeoning, Piercing, and Slashing damage.\n\n**Permanence.** A structure you raise with Raise the Works, and keep raising for seven days in a row, stays when its time is up. It's as permanent as stone. It's yours, and the land remembers who asked for it.\n\n> **Playing a Shaper**\n>\n> Your Wild Shape uses are your power budget, and the field is your canvas. Raise cover before the archers fire, lift your rogue onto the high ground, hold the brute where your fighter wants it. From 6th level, keep the canvas moving: every turn after, your Bonus Action reworks a shaping for free. Walk the rampart forward with your fighter, slide the grasp onto the ones who stepped out of it, take your rogue up another 15 feet. In a chase, lay the rampart flat as a span over the gap, and rework it ahead of your runner each turn. Out of a fight, you're the party's engineer: the bridge, the wall, the safe room in the cliff, and everyone who helps makes it bigger."
+    }
+   ]
+  },
+  {
+   "class_name": "Sorcerer",
+   "name": "Earth Origin",
+   "book": "Euphonia: The Classes",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Earth Spells",
+     "text": "When you reach a Sorcerer level specified in the Earth Spells table, you thereafter always have the listed spells prepared.\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | *Shield*, *Spike Growth* |\n| 5 | *Fireball*, *Meld into Stone* |\n| 7 | *Stone Shape*, *Stoneskin* |\n| 9 | *Conjure Elemental*, *Wall of Stone* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Shield",
+        "Spike Growth"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Fireball",
+        "Meld into Stone"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Stone Shape",
+        "Stoneskin"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Conjure Elemental",
+        "Wall of Stone"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Mark",
+     "text": "You always know which way is down and how deep you are underground. While your Pressure is 3, the ground within 5 feet of you trembles and loose stones rattle. As a Bonus Action, you can crack or seal a seam in unworked stone or earth you touch, up to a 1-foot cube."
+    },
+    {
+     "level": 3,
+     "name": "Bury",
+     "text": "Your Release is heavy. The creature's Speed is reduced by 10 feet for each Pressure you spent, until the start of your next turn. If you spent 3 Pressure, it also has the Prone condition unless it is Huge or larger."
+    },
+    {
+     "level": 3,
+     "name": "Bedrock",
+     "text": "As a Bonus Action, you harden into the mountain for 1 minute. While hardened, you can't be moved against your will or knocked Prone, you have a +1 bonus to AC, and your Overflow affects only creatures hostile to you, since the stone rises around your friends and falls on everyone else. The hardening ends early if you have the Incapacitated condition or you end it (no action required). You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+    },
+    {
+     "level": 6,
+     "name": "Deep Ground",
+     "text": "You also gain Discipline (The Plane Coming Through), and your Release die becomes a d6 (2d6 from Sorcerer level 8). In addition, you have Tremorsense out to 30 feet, and Resistance to Fire damage. While you are hardened, you have a Burrow Speed equal to half your Speed through sand, earth, and loose stone, leaving no tunnel.\n\n**Ore-Sense.** By touching the ground for 1 minute, you know whether any metal ore lies within 500 feet of you, which metals, and roughly where."
+    },
+    {
+     "level": 14,
+     "name": "Upheaval",
+     "text": "You also gain On Purpose (The Plane Coming Through). In addition, when you Release with 3 Pressure, the ground in a 10-foot radius around the creature heaves: it becomes Difficult Terrain until the start of your next turn, and each other creature of your choice in that area makes a Strength saving throw against your Sorcerer spell save DC or has the Prone condition. If you chose molten, the area burns instead of heaving: a creature that enters it or starts its turn there takes Fire damage equal to one roll of your Release die.\n\n**Stone-Reader.** By touching worked stone, you know when it was cut and laid, and whether anything is hidden in it or behind it."
+    },
+    {
+     "level": 18,
+     "name": "Cataclysm",
+     "text": "This is your Detonation (The Plane Coming Through). Once per Long Rest, when you Overflow on purpose, you can make it a 30-foot Emanation, and each creature that fails its saving throw is also Buried as if you had Released 3 Pressure on it."
+    }
+   ]
+  },
+  {
+   "class_name": "Sorcerer",
+   "name": "Fire Origin",
+   "book": "Euphonia: The Classes",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Fire Spells",
+     "text": "When you reach a Sorcerer level specified in the Fire Spells table, you thereafter always have the listed spells prepared.\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | *Burning Hands*, *Scorching Ray* |\n| 5 | *Fireball*, *Fly* |\n| 7 | *Fire Shield*, *Wall of Fire* |\n| 9 | *Conjure Elemental*, *Flame Strike* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Burning Hands",
+        "Scorching Ray"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Fireball",
+        "Fly"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Fire Shield",
+        "Wall of Fire"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Conjure Elemental",
+        "Flame Strike"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Mark",
+     "text": "Mundane heat doesn't trouble you: hot weather, a hot coal in your hand, the air above a forge. While your Pressure is 3, your mark glows through clothing and smoke curls off your skin. As a Bonus Action, you can light a flammable object you touch that isn't being worn or carried, or snuff out a nonmagical flame no larger than a campfire within 30 feet of yourself."
+    },
+    {
+     "level": 3,
+     "name": "Kindle",
+     "text": "Your Release doesn't hit all at once; it catches. Instead of taking the Release damage, the creature is Kindled: it burns with a number of Release dice (its burn dice) equal to the Pressure you spent. A creature burns with only one Kindle at a time. If it is Kindled again with more burn dice, the new Kindle replaces the old one; with the same number or fewer, the creature takes the Release damage normally instead. At the start of each of its turns, a Kindled creature takes Fire damage equal to a roll of its burn dice, and then the fire burns down: it loses one burn die. You roll the dice, and it's easiest to keep them beside the creature on the table and take one away after each roll. While it burns, it sheds Bright Light in a 5-foot radius and can't hide. The fire goes out when its last die is gone, when the creature (or another creature within 5 feet of it) takes an action to put it out, or when the creature is submerged in water."
+    },
+    {
+     "level": 3,
+     "name": "Wreathed",
+     "text": "As a Bonus Action, you wreathe yourself in fire for 1 minute. While wreathed, you shed Bright Light in a 20-foot radius and Dim Light for an additional 20 feet; a creature that touches you or hits you with a melee attack roll takes Fire damage equal to your Charisma modifier; and your Overflow affects only creatures hostile to you, since the flames carry whatever is past 3 outward. The fire ends early if you have the Incapacitated condition or you end it (no action required). You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+    },
+    {
+     "level": 6,
+     "name": "Burning Bright",
+     "text": "You also gain Discipline (The Plane Coming Through), and your Release die becomes a d6 (2d6 from Sorcerer level 8). In addition, you have Resistance to Fire damage, and Fire damage from your Sorcerer spells and your Kindle ignores Resistance. While you are wreathed, you have a Fly Speed equal to your Speed.\n\n**Forge-Hand.** You can heat metal or glass you hold to working temperature over 10 minutes, and keep it there as long as you hold it. For work with Smith's Tools, Glassblower's Tools, Jeweler's Tools, or Cook's Utensils, you count as a forge, a furnace, or an oven."
+    },
+    {
+     "level": 14,
+     "name": "Wildfire",
+     "text": "You also gain On Purpose (The Plane Coming Through). In addition, when a Kindled creature drops to 0 Hit Points, its fire leaps: one creature of your choice within 15 feet of it becomes Kindled with the burn dice it had left.\n\n**Ash-Reader.** By touching the remains of a fire, you know how long ago it burned (to the hour, if within the last week), what fed it, and whether it was set or caught, and by a sorcerer or not."
+    },
+    {
+     "level": 18,
+     "name": "Inferno",
+     "text": "This is your Detonation (The Plane Coming Through). Once per Long Rest, when you Overflow on purpose, you can make it a 30-foot Emanation, and each creature that fails its saving throw is also Kindled with three burn dice."
+    }
+   ]
+  },
+  {
+   "class_name": "Sorcerer",
+   "name": "Frost Origin",
+   "book": "Euphonia: The Classes",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Frost Spells",
+     "text": "When you reach a Sorcerer level specified in the Frost Spells table, you thereafter always have the listed spells prepared.\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | *Hold Person*, *Ice Knife* |\n| 5 | *Sleet Storm*, *Slow* |\n| 7 | *Fire Shield*, *Ice Storm* |\n| 9 | *Cone of Cold*, *Conjure Elemental* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Hold Person",
+        "Ice Knife"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Sleet Storm",
+        "Slow"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Fire Shield",
+        "Ice Storm"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Cone of Cold",
+        "Conjure Elemental"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Mark",
+     "text": "Mundane cold doesn't trouble you. While your Pressure is 3, frost forms on whatever you touch and your breath shows. As a Bonus Action, you can freeze nonmagical water you can see within 30 feet of yourself, up to a 10-foot Cube, solid enough to walk on; it thaws normally."
+    },
+    {
+     "level": 3,
+     "name": "Freeze",
+     "text": "When you Release, the creature's Speed decreases by 10 feet for each Pressure you spent, and it can't take Reactions, until the start of your next turn. If you spent 3 Pressure, it also makes a Constitution saving throw against your Sorcerer spell save DC. On a failed save, it has the Restrained condition until the start of your next turn."
+    },
+    {
+     "level": 6,
+     "name": "Hoarfrost",
+     "text": "You also gain Discipline (The Plane Coming Through), and your Release die becomes a d6 (2d6 from Sorcerer level 8). In addition, you have Resistance to Cold damage, and Cold damage from your Sorcerer spells ignores Resistance. When you Release, the ground in a 10-foot radius around the creature also becomes Difficult Terrain until the start of your next turn.\n\n**Icehouse.** Once per Long Rest, you can spend 10 minutes chilling a closed space no larger than a 10-foot Cube: a cellar, a cask, a ship's hold, a sickroom. For 24 hours it stays as cold as a winter cellar, whatever the weather outside. Food kept there doesn't spoil, and anyone resting there is comfortable in any heat."
+    },
+    {
+     "level": 14,
+     "name": "Frozen Solid",
+     "text": "You also gain On Purpose (The Plane Coming Through). In addition, when you Release with 3 Pressure, the creature doesn't make the saving throw against Freeze; it has the Restrained condition until the start of your next turn.\n\n**Ice-Reader.** You know at a glance how thick any ice you can see is, and whether it will bear a given weight: a person, a cart, a cannon, an army."
+    },
+    {
+     "level": 18,
+     "name": "Absolute Zero",
+     "text": "This is your Detonation (The Plane Coming Through). Once per Long Rest, when you Overflow on purpose, you can make it a 30-foot Emanation, and each creature that fails its saving throw also has the Restrained condition until the start of your next turn."
+    }
+   ]
+  },
+  {
+   "class_name": "Sorcerer",
+   "name": "Kinetic Origin",
+   "book": "Euphonia: The Classes",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Kinetic Spells",
+     "text": "When you reach a Sorcerer level specified in the Kinetic Spells table, you thereafter always have the listed spells prepared.\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | *Levitate*, *Magic Missile* |\n| 5 | *Haste*, *Tiny Hut* |\n| 7 | *Dimension Door*, *Resilient Sphere* |\n| 9 | *Arcane Hand*, *Telekinesis* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Levitate",
+        "Magic Missile"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Haste",
+        "Tiny Hut"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Dimension Door",
+        "Resilient Sphere"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Arcane Hand",
+        "Telekinesis"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Mark",
+     "text": "While your Pressure is 3, loose objects within 5 feet of you rattle and drift. As a Magic action, you can push or pull an unattended object weighing up to 10 pounds that you can see within 30 feet of yourself, up to 10 feet."
+    },
+    {
+     "level": 3,
+     "name": "Shove",
+     "text": "This isn't the Shove of an Unarmed Strike, and features that key on Shoving a creature don't apply to it. When you Release, you can push the creature up to 10 feet straight away from you for each Pressure you spent. If you spent 3 Pressure, it also has the Prone condition.\n\nOr you can take the push yourself: instead of moving the creature, you fly up to 10 feet for each Pressure you spent, in a straight line, without provoking Opportunity Attacks. If you end in the air, you fall. The Release dice still land, but the creature isn't pushed or knocked Prone."
+    },
+    {
+     "level": 6,
+     "name": "Deflection",
+     "text": "You also gain Discipline (The Plane Coming Through), and your Release die becomes a d6 (2d6 from Sorcerer level 8). In addition, you have Resistance to Force damage, and when you or a creature you can see within 30 feet of yourself is hit by an attack roll, you can take a Reaction and spend all your Pressure (at least 1) to reduce the damage by a roll of that many Release dice. You can use this Reaction a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest.\n\n**Porter.** Your carrying capacity is doubled, and you can steady anything you carry or hold: it doesn't spill, slosh, or swing, however you move."
+    },
+    {
+     "level": 14,
+     "name": "Pin",
+     "text": "You also gain On Purpose (The Plane Coming Through). In addition, when you Release with 3 Pressure, the creature also makes a Strength saving throw against your Sorcerer spell save DC. On a failed save, it has the Restrained condition until the start of your next turn, pinned where it lies.\n\n**Feel the Load.** By touching a floor, beam, bridge, wall, or vault, you know whether it will bear a given weight, and where it's weakest."
+    },
+    {
+     "level": 18,
+     "name": "Shockwave",
+     "text": "This is your Detonation (The Plane Coming Through). Once per Long Rest, when you Overflow on purpose, you can make it a 30-foot Emanation, and each creature that fails its saving throw is also pushed up to 10 feet straight away from you and has the Prone condition. You can instead give any of those creatures the Restrained condition until the start of your next turn, as with Pin."
+    }
+   ]
+  },
+  {
+   "class_name": "Sorcerer",
+   "name": "Light Origin",
+   "book": "Euphonia: The Classes",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Light Spells",
+     "text": "When you reach a Sorcerer level specified in the Light Spells table, you thereafter always have the listed spells prepared.\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | *Faerie Fire*, *Guiding Bolt* |\n| 5 | *Daylight*, *Hypnotic Pattern* |\n| 7 | *Greater Invisibility*, *Guardian of Faith* |\n| 9 | *Dispel Evil and Good*, *Hallow* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Faerie Fire",
+        "Guiding Bolt"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Daylight",
+        "Hypnotic Pattern"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Greater Invisibility",
+        "Guardian of Faith"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Dispel Evil and Good",
+        "Hallow"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Mark",
+     "text": "As a Bonus Action, you can make your mark shed Bright Light in a 20-foot radius and Dim Light for an additional 20 feet, or stop it. While your Pressure is 3, it sheds Dim Light in a 5-foot radius whether you want it to or not."
+    },
+    {
+     "level": 3,
+     "name": "Illuminate",
+     "text": "When you Release, until the start of your next turn the creature sheds Dim Light in a 5-foot radius and can't benefit from the Invisible condition, and the next attack roll against it has Advantage. If you spent 2 or more Pressure, every attack roll against it has Advantage instead. If you spent 3 Pressure, it also makes a Constitution saving throw against your Sorcerer spell save DC. On a failed save, it has the Blinded condition until the start of your next turn."
+    },
+    {
+     "level": 6,
+     "name": "Nothing Hidden",
+     "text": "You also gain Discipline (The Plane Coming Through), and your Release die becomes a d6 (2d6 from Sorcerer level 8). In addition, you have Resistance to Radiant damage. While your Pressure is 1 or more, you can see creatures and objects that have the Invisible condition within 10 feet of yourself. Undead and Fiends have Disadvantage on the saving throw against Illuminate.\n\n**Palimpsest.** By the light of your mark, you can read writing that has been scraped, washed, or faded from a page, see a document's watermark and every correction under its ink, and tell a new forgery from an old letter."
+    },
+    {
+     "level": 14,
+     "name": "Searing",
+     "text": "You also gain On Purpose (The Plane Coming Through). In addition, Illuminate's Blinded condition needs only 2 Pressure, not 3, and Radiant damage from your Sorcerer spells ignores Resistance.\n\n**The Halo.** When you let your mark shed Bright Light, the devout of any faith who see it take you for something holy until you give them reason not to. While the light lasts, you have Advantage on Charisma (Persuasion) checks to calm, sway, or be believed by a crowd."
+    },
+    {
+     "level": 18,
+     "name": "Dawn",
+     "text": "This is your Detonation (The Plane Coming Through). Once per Long Rest, when you Overflow on purpose, you can make it a 30-foot Emanation, and each creature that fails its saving throw is also lit as by an Illuminate of 3 Pressure (until the start of your next turn it sheds Dim Light in a 5-foot radius, can't benefit from the Invisible condition, and every attack roll against it has Advantage) and has the Blinded condition until the start of your next turn."
+    }
+   ]
+  },
+  {
+   "class_name": "Sorcerer",
+   "name": "Storm Origin",
+   "book": "Euphonia: The Classes",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Storm Spells",
+     "text": "When you reach a Sorcerer level specified in the Storm Spells table, you thereafter always have the listed spells prepared.\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | *Shatter*, *Thunderwave* |\n| 5 | *Call Lightning*, *Lightning Bolt* |\n| 7 | *Conjure Minor Elementals*, *Ice Storm* |\n| 9 | *Conjure Elemental*, *Hold Monster* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Shatter",
+        "Thunderwave"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Call Lightning",
+        "Lightning Bolt"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Conjure Minor Elementals",
+        "Ice Storm"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Conjure Elemental",
+        "Hold Monster"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Mark",
+     "text": "You can always tell what the weather will do in the next 24 hours where you are. While your Pressure is 3, your hair lifts, sparks snap from your fingers to metal, and the air smells of a struck bell. When you speak, you can make your voice carry up to 300 feet."
+    },
+    {
+     "level": 3,
+     "name": "Forked Strike",
+     "text": "When you Release, the strike jumps. For each Pressure you spent beyond the first, one other creature of your choice within 30 feet of the target (a different creature each time) takes half the Release damage. Roll the Release dice once for all of them."
+    },
+    {
+     "level": 6,
+     "name": "Thunderclap",
+     "text": "You also gain Discipline (The Plane Coming Through), and your Release die becomes a d6 (2d6 from Sorcerer level 8). In addition, you have Resistance to Lightning and Thunder damage, and when a creature within 10 feet of you hits you with an attack roll, you can take a Reaction to Release on it: spend all your Pressure (at least 1), and it takes a number of Release dice of Thunder damage equal to the Pressure you spent, and you can push it up to 10 feet straight away from you. This counts as your one Release for the turn. It doesn't need a spell, and it doesn't set off Forked Strike.\n\n**Wind-Knots.** During a Long Rest, you can tie up to three knots in a cord, and give it to someone else. Whoever unties a knot before your next Long Rest gets a fair wind: for 1 hour, a sailing ship or boat they're aboard moves as though the wind were behind it, whatever the weather. Untied after your next Long Rest, a knot does nothing."
+    },
+    {
+     "level": 14,
+     "name": "Eye of the Storm",
+     "text": "You also gain On Purpose (The Plane Coming Through). In addition, you have a Fly Speed of 60 feet and can hover, and your Forked Strike jumps once for every Pressure you spend, not only those beyond the first.\n\n**Spark-Sense.** You can feel current. By touching an object, you know whether it holds a charge of lightning or carries current, and whether a Mutapan device is running, failing, or about to fail."
+    },
+    {
+     "level": 18,
+     "name": "Superstorm",
+     "text": "This is your Detonation (The Plane Coming Through). Once per Long Rest, when you Overflow on purpose, you can make it a 30-foot Emanation, and each creature that fails its saving throw also has the Deafened condition until the start of your next turn and is pushed up to 10 feet straight away from you."
+    }
+   ]
+  },
+  {
+   "class_name": "Warlock",
+   "name": "Envoy Patron",
+   "book": "Euphonia: The Classes",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Envoy Spells",
+     "text": "When you reach a Warlock level specified in the Envoy Spells table, you thereafter always have the listed spells prepared.\n\n| Warlock Level | Spells |\n|---|---|\n| 3 | *Aid*, *Bless*, *Command*, *Zone of Truth* |\n| 5 | *Beacon of Hope*, *Revivify* |\n| 7 | *Death Ward*, *Guardian of Faith* |\n| 9 | *Commune*, *Flame Strike* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Aid",
+        "Bless",
+        "Command",
+        "Zone of Truth"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Beacon of Hope",
+        "Revivify"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Death Ward",
+        "Guardian of Faith"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Commune",
+        "Flame Strike"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "Call an Angel",
+     "text": "As a Bonus Action, you can expend a Pact Magic spell slot to call an angel to an unoccupied space you can see within 30 feet of yourself. It uses the Angel stat block below, at the row of the Angel table for your Warlock level.\n\nWhen you call it, give the angel one **errand**:\n\n- **Strike.** Name a creature you can see. The angel attacks it, and departs at the end of its second turn or when the creature drops to 0 Hit Points, whichever comes first: either way, its errand is done. If the creature drops before the angel's first turn, you can name another (no action required), so the angel never leaves without striking.\n- **Guard.** Name a creature you can see; you can name yourself. The angel stays close to it and takes the hits meant for it (its Intercede Reaction). When that creature moves, the angel moves with it (no action required), staying within 5 feet of it. If the creature falls, the angel bears it down: it takes no damage from the fall.\n- **Mend.** The angel carries a store of healing (its Mend action), and it departs when that store is spent.\n- **Bear.** Name a creature you know or a place you have seen within 1 mile of you. The angel takes a spoken message, or an object weighing up to 10 pounds, and goes by the ladder: it vanishes, arrives there within the minute, delivers it, and departs.\n\nThe angel shares your Initiative count and takes its turn immediately after yours. It obeys your commands (no action required) about where it moves and whom its errand serves; with no command, it pursues its errand on its own. It departs when its errand ends, when it drops to 0 Hit Points, when you dismiss it (no action required), or after 1 minute.\n\nYou run the angel in a fight. Out of one, the DM speaks for it, and it remembers you.\n\nCalling an angel counts as expending a spell slot to cast a spell for the rule that you can expend only one spell slot on a turn: you can't call an angel and cast a spell with a spell slot on the same turn. You can have only one angel at a time, and one in each fight: once you've called an angel, you can't call another until you next roll Initiative or finish a Short or Long Rest."
+    },
+    {
+     "level": 3,
+     "name": "Tongue of Fire",
+     "text": "You can speak, read, and write Celestial. In addition, you know the names, seals, and ranks of the messengers as your tradition records them, and you have Advantage on Intelligence (Religion) checks about angels, Celestials, and the Overworld."
+    },
+    {
+     "level": 3,
+     "name": "Pact Boons",
+     "text": "If you have the Pact of the Chain invocation, your familiar can't take a Fiend or Undead form, and it can take the form of a (stat block below)."
+    },
+    {
+     "level": 6,
+     "name": "Messenger",
+     "text": "You always have *Sending* prepared. Once per Long Rest, you can cast it without a spell slot, and an angel bears the message.\n\n**Heaven's Crown.** You were made to carry messages, and courts can tell. You know the protocol of any court or household you enter: precedence, titles, forms of address, which door to use and when to kneel. In addition, anyone who reads a letter you wrote and signed knows whether you believed it when you wrote it."
+    },
+    {
+     "level": 10,
+     "name": "Greater Angels",
+     "text": "Your angels' Rank increases by 1 (the Angel table's level 10 row). In addition, when the creature a Strike angel is attacking drops to 0 Hit Points, you can name another (no action required); the angel still departs at the end of its second turn.\n\n**Stranger at the Door.** The oldest hospitality stories are about angels at the door. Households that keep the old laws of hospitality (most of them, across the Abrahamic world and well beyond) give you food and a bed for a night without asking payment. When you accept a host's food or bed, you can ask the DM whether your host means you harm under their roof, and the DM answers truly."
+    },
+    {
+     "level": 14,
+     "name": "Archangel",
+     "text": "When you call an angel, you can call an archangel instead (the Angel table's archangel row). It takes both the Strike and Guard errands at once (name a creature for each when you call it), departing only when it drops to 0 Hit Points or after 1 minute. It uses Multiattack as a Strike angel and Intercede as a Guard angel. When its Strike target drops, you name a new one (no action required).\n\nWhen it arrives, each creature of your choice within 30 feet of it must succeed on a Wisdom saving throw against your spell save DC or have the Prone condition and be Frightened of the archangel until the end of that creature's next turn.\n\nOnce you use this feature, you can't use it again until you finish a Long Rest.\n\n**Visitation.** Once every 7 days, you can call your archangel for a visitation, not a fight: it appears for 1 minute, takes no errand, and harms no one, and every creature within 1 mile that can see it knows a messenger of the highest rank has come. Crowds kneel, riots stop, and a wedding or a funeral is remembered for a hundred years. A visitation costs no spell slot and doesn't use your Archangel.\n\n**Call on the Ladder.** You can call on the ladder the angels climb between the heavens and the world. Once per Long Rest, you can cast *Plane Shift* without a spell slot or Material components, with these changes: it affects only you and willing creatures, and you arrive where you choose within 1 mile of a place you have seen on that plane.\n\n> **Playing an Envoy**\n>\n> Every fight asks one question: which errand? Strike when there's a creature that has to fall, Guard when someone is about to be the target (the daring one, the one about to jump), Mend when the fight has gone long. The angel's turn is scripted by its errand, so your turn stays quick: call, blast, and let it work. Between fights, the angel is a courier with opinions, and the DM will voice them."
+    }
+   ]
+  },
+  {
+   "class_name": "Wizard",
+   "name": "Geomancer",
+   "book": "Euphonia: The Classes",
+   "lead": "*The Geometry Underneath Everything Is Yours*\n\n> **The Geomancer at a Glance**\n>\n> **Figures** are your one button. As a Bonus Action, you draw a Figure on a surface within 60 feet: Intelligence modifier uses, back on a Short or Long Rest. Each Figure is a fixed shape with fixed numbers, and it affects only the creatures you choose.\n>\n> | Figure | What it does | From |\n> |---|---|---|\n> | Square | one creature falls 10 feet sideways and has the Prone condition; or a friend walks on walls for a minute | Level 3 |\n> | Circle | one creature can't leave; a Square inside it holds it down (and from 10th, for two more uses, it loses its next turn) | Level 6 |\n> | Vesica Piscis | a slow hour, and a quick one (two uses) | Level 10 |\n> | Nested Spheres | a second turn, once per Long Rest | Level 14 |\n>\n> **A good turn:** cast a spell with your action, and draw the Figure that sets up your allies. The Square is a Strength save and the Circle a Wisdom save, so Square the archer, the caster, or the skirmisher before the Fighter swings, and Circle the brute that wants to reach you.",
+   "features": [
+    {
+     "level": 3,
+     "name": "Geomancer Spells",
+     "text": "When you reach a Wizard level specified in the Geomancer Spells table, you thereafter always have the listed spells prepared, and they are in your spellbook. They don't count against the number of spells you can prepare.\n\n| Wizard Level | Spells |\n|---|---|\n| 3 | *Feather Fall*, *Levitate* |\n| 5 | *Haste*, *Slow* |\n| 7 | *Dimension Door*, *Resilient Sphere* |\n| 9 | *Hold Monster*, *Telekinesis* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Feather Fall",
+        "Levitate"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Haste",
+        "Slow"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Dimension Door",
+        "Resilient Sphere"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Hold Monster",
+        "Telekinesis"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Plumb Line",
+     "text": "You always know which way is down, how high you are above or below the ground or the sea, and the hour to the minute. By holding an object for a moment, you know its weight to the ounce."
+    },
+    {
+     "level": 3,
+     "name": "Shop Talk",
+     "text": "You gain proficiency with one of the following tools of your choice: Cartographer's Tools, Mason's Tools, or Navigator's Tools. In addition, masons, surveyors, instrument-makers, tilers, and astronomers anywhere in the world recognize you as one of theirs: given an hour among them, you can find a bed, a meal, a bench to borrow, and the local gossip about whatever's being built. You also know the sixteen figures of sand divination well enough to cast a chart for a paying client. It has no magical effect."
+    },
+    {
+     "level": 3,
+     "name": "Figures",
+     "text": "As a Bonus Action, you inscribe a Figure you know on a surface you can see within 60 feet of yourself: a floor, a wall, a ceiling, or the ground. You can inscribe Figures a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a Short or Long Rest.\n\nA Figure is a ruled line of light, visible to anyone who can see its surface, and it is magical. It affects only the creatures you choose when you inscribe it, and it does exactly what its rule says: its distances are fixed and its damage isn't rolled. Most Figures act once and fade; a Circle stays, and you can have only one Circle at a time. When a Figure calls for a saving throw, the DC equals your spell save DC.\n\nYou know the Square. You learn the Circle at Wizard level 6 and the Vesica Piscis at Wizard level 10.\n\n**Square**\n-\n- You inscribe the Square on the surface under one creature you can see that is on that surface, filling its space. When you inscribe it, name one of the Square's edges as down.\n- An unwilling creature makes a Strength saving throw. On a failed save, it falls up to 10 feet toward that edge. This is forced movement, and it stops early if the creature meets another creature or a solid surface. The creature then has the Prone condition and takes Bludgeoning damage equal to your Intelligence modifier. If it ends this movement with nothing to support it, it then falls normally.\n- A willing creature doesn't fall. Instead, for 1 minute, it can walk on walls and ceilings as if they were floors. If the minute ends while it's on a wall or a ceiling, it falls."
+    },
+    {
+     "level": 6,
+     "name": "The Circle",
+     "text": "You learn another Figure:\n\n**Circle**\n-\n- You inscribe the Circle around the space of one creature you can see within 60 feet of yourself. The Circle's space extends 10 feet up from the surface. It lasts for 1 minute, until the creature leaves it, or until you inscribe another Circle.\n- When the creature tries to leave the Circle's space by its own movement, it makes a Wisdom saving throw. On a failed save, it is back in the space it left, the movement it spent is lost, and it can't try to leave again until its next turn. On a successful save, it leaves, and the Circle fades.\n- If the creature teleports or another effect moves it out of the Circle, the Circle fades.\n- A creature inside your Circle that fails its saving throw against your Square doesn't fall: it has the Prone condition and takes the damage where it stands, and the Circle doesn't fade.\n\n**Squaring the Map.** Given an hour at a vantage point, you can draw an accurate map of everything you can see, its distances true to within a yard in a hundred. By the sun or the stars you can find your latitude, and with a clock you trust, your longitude, which the navies of Europe still can't do. In addition, after 10 minutes of pacing a building, you know whether its inside and outside measurements disagree, and roughly where: a hollow wall, a sealed room, a stair that isn't on the plan."
+    },
+    {
+     "level": 10,
+     "name": "The Vesica Piscis",
+     "text": "You learn another Figure:\n\n**Vesica Piscis**\n-\n- Inscribing the Vesica Piscis expends two uses of your Figures.\n- The Figure fills a 15-foot Cube that rests on the inscribed surface. Each creature you choose in it is caught in one of its two hours, your choice for each:\n    - *The slow hour.* The creature makes a Wisdom saving throw. On a failed save, until the start of your next turn, its Speed is halved, it can't take Reactions, and on its turn it can take either an action or a Bonus Action, not both.\n    - *The quick hour.* A willing creature can immediately move up to half its Speed without provoking Opportunity Attacks.\n\n**Figure Within Figure.** When you inscribe your Square on a creature inside your Circle, you can expend two more uses of your Figures to draw the one figure inside the other. If you do and the creature fails its saving throw, the Circle holds it harder: as well as the Prone condition and the damage, it has the Incapacitated condition and its Speed is 0 until the start of your next turn.\n\n**Ephemeris.** With a day's work and paper, you can compute the sky for any date and place: eclipses, the moon's phase, sunrise and sunset, the tides at a known port, the auspicious and inauspicious hours by any court's reckoning, and the length of a shadow at noon. In a contest of calendars, you're right to the minute."
+    },
+    {
+     "level": 14,
+     "name": "The Nested Spheres",
+     "text": "At the start of your turn (no action required), you can stand inside the Nested Spheres. When this turn ends, you take another turn immediately. During the second turn, you can't expend a spell slot. Other creatures can take Reactions normally during both turns. An effect that lasts until the start or the end of your turn counts each of the two turns. The Figure fades when the second turn ends.\n\nUsing this feature doesn't expend a use of your Figures. Once you use it, you can't use it again until you finish a Long Rest.\n\n**Wrong Angles.** You can see where the world's geometry has been bent. When you enter a place, or as a Bonus Action, you can ask the DM whether any place within 60 feet of you is thin ground (*Life on the Border*, Introduction, The Hidden, in the rules), and whether magic has altered the shape of a place you can see within the last day: a Figure, a Danae's warp (the Danae, in *Life on the Border*), a teleportation circle, a passage opened through a wall. The DM answers truly.\n\n> **Playing a Geomancer**\n>\n> Put your Figures on the map: a square of string or a card for the Square, a ring for the Circle. A Figure is precise where a Danae's warp is wild: even the Circle, which also lasts a minute, holds only the one creature it was drawn around, where a warp catches anyone who walks in.\n>\n> - **Turn order matters.** A creature you Square stands up on its own turn, so drop it just before your friends act, and remember that Prone gives Disadvantage to ranged attacks against it, yours included.\n> - **Circle, then Square.** From 6th level, a Square inside your Circle pins the creature where it stands; from 10th, spend two more uses and it loses its next turn too. Your uses are the budget: one lockdown, or two more Squares.\n> - **The willing Square is a gift.** One Bonus Action sends your rogue up the palazzo wall and across the roofs for a minute.\n> - **The Nested Spheres.** Draw the Circle on your first turn and the Square on your second, before the creature can walk out. Or run a spell that needs your action each turn (*Telekinesis*) twice. Or just move twice, while the world waits."
+    }
+   ]
+  },
+  {
+   "class_name": "Barbarian",
+   "name": "Path of the Bordermarch",
+   "book": "Euphonia: Life on the Border",
+   "lead": "*Ride Out with the Hunt*\n\n> **The Bordermarch at a Glance**\n>\n> **Your Rage is the ríastrad.** When you Rage, your body turns in its skin: your reach grows, light rises from your brow, you gain Temporary Hit Points, and you can push through the ranks of anyone you've hit.\n>\n> **Going deeper is a choice.** Once per Short or Long Rest, you can let the ríastrad take you deeper. Your hits deal more damage, but you can't tell friend from foe. You can't end it yourself: it ends when your Rage does, a turn after the last enemy near you falls, or when you're cooled (a bucket of water thrown over you, *Create or Destroy Water*, a plunge into cold water, or Cold damage from anyone, foes included). If it ends any way but cooling, it costs you a level of Exhaustion until you rest.\n>\n> | Feature | What it does | From |\n> |---|---|---|\n> | The Ríastrad | Rage: +5 feet of reach, light, Temporary Hit Points; move through creatures you've hit | Level 3 |\n> | The Deep Ríastrad | +1d6 Force on each hit; Friend or Foe; ends with your Rage, the fight's end, or cooling; 1 Exhaustion until you rest unless you were cooled | Level 6 |\n> | Strike and Vanish | after a hit, teleport 10 feet | Level 10 |\n> | The Hunt Rides | going deep frightens your enemies; while deep, you're Large and make one more attack | Level 14 |\n>\n> **A good turn:** Rage, swing with Reckless Attack, and push through the one you hit to reach the one behind. Go deep in the fight that matters, after the party has stepped back out of your reach, so the nearest creature is always an enemy. When it's over, the water bearer walks in with the bucket, and you pay nothing.\n\n**Hidden Creatures.** *Hidden creature* means what \"The Hidden, in the rules\" in this book's introduction says. A Bordermarch Barbarian is one: it carries a piece of the Hidden in its soul.",
+   "features": [
+    {
+     "level": 3,
+     "name": "The Ríastrad",
+     "text": "While your Rage is active, you gain the following benefits:\n\n- **Twisted.** Your reach increases by 5 feet.\n- **The Hero's Light.** Light rises from your brow, shedding Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. You can't take the Hide action.\n- **Through the Ranks.** You can move through the space of any creature you've hit with a melee attack this turn. You can't end your move in its space.\n\nWhen you enter your Rage, you also gain Temporary Hit Points equal to your Constitution modifier plus half your Barbarian level (round down)."
+    },
+    {
+     "level": 3,
+     "name": "Of the Border",
+     "text": "You always know the tide of the Hidden where you are (see \"The Hidden, in the rules\" in this book's introduction): whether it is at the flood or at the ebb, and how many days remain until the next open night. You also know the direction of the nearest thin ground (defined in the same section) within 1 mile, and you can't become lost by nonmagical means."
+    },
+    {
+     "level": 6,
+     "name": "The Deep Ríastrad",
+     "text": "When you enter your Rage, or as a Bonus Action while your Rage is active, you can let the ríastrad take you deeper. The Deep Ríastrad lasts until your Rage ends, you're cooled (see below), or The Fight's End ends it, and you can't end either one yourself. While it lasts, your Rage stays active without your extending it, and it doesn't end early unless you have the Incapacitated condition. The following also apply:\n\n- **Warp Strikes.** Each time you hit a creature with an attack using a melee weapon, it takes an extra 1d6 Force damage.\n- **Friend or Foe.** You can't tell them apart. At the start of each of your turns, note the creature nearest to you that you can see (if several are equally near, you choose one). If that creature is within your reach, your first attack roll this turn must target it, whoever it is.\n- **Engaging Distraction.** When you make an attack roll against an ally, any ally within 30 feet of you that you can see can take a Reaction to catch your eye. The attack roll has Disadvantage.\n- **The Fight's End.** If no enemy remains within 60 feet of you that you can see, the Deep Ríastrad ends at the end of your next turn.\n\n**Cooling the Hero.** Cold water in sizable amounts, or cold itself, cools you. When you're cooled, the Deep Ríastrad ends; your Rage doesn't. You're cooled when any of the following happens:\n\n- **Water.** Cold water drenches you: another creature within 5 feet of you takes the Utilize action to throw at least a full bucket of water over you on purpose; *Create or Destroy Water* is cast so that the water falls on you; or you're plunged into, or fall into, cold water deep enough to go under. A splash, a waterskin, or rain doesn't cool you.\n- **Cold.** You take Cold damage from any creature or effect, an enemy's included. You can choose to fail a saving throw against an effect that would deal you Cold damage, but the effect must deal you at least 1 Cold damage to cool you.\n\nYou can't cool yourself: water you enter on purpose doesn't count.\n\nWhen the Deep Ríastrad ends, you gain 1 Exhaustion level, unless it ended because you were cooled. Track this Exhaustion apart from Exhaustion from other sources; you lose it when you finish a Short or Long Rest.\n\nOnce you use this feature, you can't use it again until you finish a Short or Long Rest.\n\n**The Flood.** While the Hidden are at the flood, the first time the Deep Ríastrad ends uncooled after each Long Rest, you don't gain the Exhaustion level."
+    },
+    {
+     "level": 10,
+     "name": "Strike and Vanish",
+     "text": "Once on each of your turns, immediately after you hit a creature with a melee attack while your Rage is active, you can step through the Hidden: you teleport up to 10 feet to an unoccupied space you can see."
+    },
+    {
+     "level": 14,
+     "name": "The Hunt Rides",
+     "text": "While your Deep Ríastrad lasts, you gain the following benefits:\n\n- **The Full Ríastrad.** You can make one extra attack when you take the Attack action. Your size also becomes Large, if you're smaller and there is room; if there isn't room, you become as large as the space allows. Your reach doesn't change from this. If an effect such as *Enlarge/Reduce* increases your size while you're Large, it makes you Huge.\n- **The Hunt.** When you enter the Deep Ríastrad, each creature of your choice within 30 feet of you that can see you makes a Wisdom saving throw (DC 8 plus your Strength modifier and Proficiency Bonus). On a failed save, it has the Frightened condition for 1 minute. A Frightened creature repeats the save at the end of each of its turns, ending the effect on itself on a success.\n\n> **Playing a Bordermarch Barbarian**\n>\n> The ríastrad is safe; the Deep Ríastrad is the danger. Tell the table before the fight that you'll go deep: once a rest, the Rogue has to fight from outside your 10-foot reach, and it's better heard now than mid-swing.\n>\n> Friend or Foe is about positions. If an enemy is as near to you as any ally, you choose the enemy. Your reach grows when you Rage, so your allies should stand off a step. Through the Ranks lets you push past the one you hit to the one behind, and at 10th level Strike and Vanish lets you put yourself among enemies after each hit.\n>\n> Someone has to be the water bearer. When the last enemy falls, the Deep Ríastrad runs one more turn: if anyone is within your reach then, your first swing goes to them. The party can wait it out at a distance, but then you pay the Exhaustion. Cool you instead (a full bucket from someone within 5 feet, *Create or Destroy Water*, or a *Ray of Frost* from across the field) and you pay nothing. A party with no caster can manage with a bucket, but someone has to carry it and keep it full (*Euphonia: The Setting* has the Water-Bearer's Bucket, in Characters, Wonders and Curiosities). Cooling you in the middle of a fight works too: it ends the Deep Ríastrad early and spares you the Exhaustion. So does an enemy that deals Cold damage: against a white dragon or a winter wolf, the Deep Ríastrad won't last, but it won't cost you either.\n>\n> When you do swing at an ally, the ally who catches your eye (Engaging Distraction) doesn't have to be the one you're swinging at.\n>\n> At 14th level the Full Ríastrad makes you Large: you take up a 10-foot square, you can grapple Huge creatures, and you have to squeeze down a corridor a Medium hero walks."
+    }
+   ]
+  },
+  {
+   "class_name": "Barbarian",
+   "name": "Path of the Faebreaker",
+   "book": "Euphonia: Life on the Border",
+   "lead": "*Hold On and Don't Let Go*\n\n> **The Faebreaker at a Glance**\n>\n> **Your Rage is a grip.** While you Rage, you can grab whatever you hit without letting go of your weapon. Whatever you hold can't get free easily, can't fight well, can't teleport or change its shape to get away, and it hurts.\n>\n> **Friend or foe: you hold one.** Your grip is on an enemy or on a friend, never both. Take hold of a friend when something comes to carry them off, or when they need you to shield them: a friend you hold has Half Cover, and from 6th level you can bear what's hitting them.\n>\n> | Feature | What it does | From |\n> |---|---|---|\n> | Hold Fast | while raging: grab on a hit, no free hand needed; what you hold has Disadvantage on attacks and escape, can't teleport or change shape to get free, and takes damage at the start of each of your turns | Level 3 |\n> | Hold a Friend | take hold of an ally instead: it has Half Cover, and nothing moves, teleports, or carries it off without you | Level 3 |\n> | By Touch | what you hold, you know: whether it's Hidden, whether its shape is its own | Level 3 |\n> | Bear the Burning | take the hits meant for the friend you hold | Level 6 |\n> | The Night Turns | hold one of the taken from dusk to dawn and win them back | Level 6 |\n> | Pull Them Back | a Reaction to rush to an ally who falls, is taken, or is grabbed, and take hold of them | Level 10 |\n> | Through Every Shape | what you hold is Restrained; a friend you hold shakes off charms and changes; Temporary Hit Points when you Rage | Level 14 |\n>\n> **A good turn:** Rage, swing at the enemy you mean to hold (not the one you're about to kill), and grab it on the hit. Keep it held while the party kills the others. If a friend is about to be carried off, or is going down, let go and take hold of them.\n\n**Hidden Creatures.** *Hidden creature* means what \"The Hidden, in the rules\" in this book's introduction says. A Faebreaker isn't one: it carries no piece of the Hidden.",
+   "features": [
+    {
+     "level": 3,
+     "name": "Hold Fast",
+     "text": "While your Rage is active, you gain the following benefits:\n\n- **Reality's Grip.** You can Grapple a creature without a free hand: you hold it with your arm, your knees, and your weight, and your hands stay on your weapon. You can hold only one creature at a time this way (see Hold a Friend). When your Rage ends, a creature you hold this way is released unless you have a hand free to keep the grapple.\n- **Take Hold.** Once on each of your turns, immediately after you hit a creature with a melee attack, you can try to Grapple it (as the Grapple option of your Unarmed Strike) without using an attack.\n- **It Can't Get Away.** The creature you have Grappled has Disadvantage on attack rolls, including against you, and on ability checks to escape your grapple. It can't teleport, and changing its shape or size doesn't free it, whatever size it becomes. If it has the Invisible condition, it gains no benefit from it against you, and you always know where it is.\n- **The Grip Bites.** At the start of each of your turns, the creature you have Grappled takes Force damage equal to a roll of d6s, one for each point of your Rage Damage bonus.\n\n**Nothing Takes What You Hold.** A creature you hold, by Hold Fast or Hold a Friend, can't be Taken (see \"The Hidden, in the rules\" in this book's introduction) unless the taker beats you in the contest there."
+    },
+    {
+     "level": 3,
+     "name": "Hold a Friend",
+     "text": "As a Bonus Action, you can take hold of a willing creature within 5 feet of yourself; this counts as your one hold under Hold Fast, so you let go of anything else you hold (outside your Rage, it takes a free hand). The creature doesn't have the Grappled condition: it moves with you when you move (at half your Speed unless it is Tiny or two sizes smaller than you), and the hold ends if it moves away from you, you let go (no action required), or you have the Incapacitated condition.\n\nWhile you hold it, the creature has Half Cover, and it can't be moved, teleported, or carried away against its will unless you go with it. It has Advantage on saving throws against effects that would move it, teleport it, or change its shape against its will."
+    },
+    {
+     "level": 3,
+     "name": "By Touch",
+     "text": "While you hold a creature, by Hold Fast or Hold a Friend, you know whether it is a Hidden creature, and whether an illusion or a shape-changing effect is disguising it (though not what its true form is). You also recognize any creature you know well while you touch it, whatever shape or glamour it wears."
+    },
+    {
+     "level": 6,
+     "name": "Bear the Burning",
+     "text": "When a creature you hold by Hold a Friend takes damage from an attack or an effect, you can take a Reaction to take that damage instead of it. Your own Resistances and Immunities apply to the damage you take; any other effect of the attack or effect (a condition, a push) still falls on the creature you hold."
+    },
+    {
+     "level": 6,
+     "name": "The Night Turns",
+     "text": "You can win back a creature the Hidden have taken or swapped: a stolen child, a bride carried off, a rider of the Hunt who was once a villager, a creature left in someone's place. You must hold it from dusk to dawn, without letting go, through every shape it is forced into: by Hold Fast, by Hold a Friend, or by an ordinary Grapple. For The Night Turns, a grip begun by Hold Fast doesn't end when your Rage does and still needs no free hand. You don't need to be raging, and it needn't be willing: through The Night Turns, the creature can't escape your grip by any means. If you let go, or have the Incapacitated condition, the night is lost and you must begin again on another night.\n\nAt dawn, the creature is won back: the taking or the swap is broken; any charm, curse, or shape-change the Hidden laid on it ends; and a creature left in its place goes back to the Hidden. The DM says what a creature has been taken by, and what it is like when it comes back.\n\n> **Running The Night Turns**\n>\n> The night is a scene, not a single roll. Pick three or more shapes for the Hidden to force on the creature, one an hour or at the moments the story wants, and let each one test the holder once. The DC is 13, or higher for a great power of the Hidden. Allies can't take the burden, but they can heal the holder, keep the fire lit, and keep whatever comes to interrupt away.\n>\n> | Shape | What it does to the one holding it |\n> |---|---|\n> | An adder, or a snake | It bites: Constitution saving throw, or the Poisoned condition until dawn. |\n> | A bear, a lion, or a wolf | It mauls: 2d8 Slashing damage, or half as much on a successful Strength saving throw. |\n> | A bar of red-hot iron, or a burning coal | It burns: 3d6 Fire damage, or half as much on a successful Constitution saving throw. |\n> | An eel, or a rope of running water | It slips: Strength (Athletics) check, or Disadvantage on your next saving throw this night. |\n> | Something pitiable: a weeping child, your own mother dying | It begs: Wisdom saving throw, or the Frightened condition until the next shape. You can hold on while Frightened. |\n>\n> The last shape is always its own: the night is done, and it's only a person again."
+    },
+    {
+     "level": 10,
+     "name": "Pull Them Back",
+     "text": "When a creature you can see within 30 feet of yourself drops to 0 Hit Points, is about to be moved, teleported, carried away, or Taken against its will, or is Grappled or Restrained by another creature, you can take a Reaction to go to it. You move up to your Speed toward it without provoking Opportunity Attacks; if you end within 5 feet of it, you take hold of it as if by Hold a Friend (it must be willing, or have the Unconscious condition). If you take hold of it, it isn't moved, teleported, or carried away by that effect, and the other creature's grapple or restraint on it ends; if it was about to be Taken, you hold on instead, with the contest in Taken. If you reach it but can't take hold, none of this happens."
+    },
+    {
+     "level": 14,
+     "name": "Through Every Shape",
+     "text": "While your Rage is active, you gain the following benefits:\n\n- **Held Fast.** The creature you have Grappled by Hold Fast also has the Restrained condition.\n- **Won Back.** At the end of each of your turns, a creature you hold by Hold a Friend can end one of the following effects on itself: the Charmed condition, the Frightened condition, or an effect that changed its shape against its will.\n- **Steeled.** When you enter your Rage, you gain Temporary Hit Points equal to your Constitution modifier plus half your Barbarian level (round down).\n\n> **Playing a Faebreaker Barbarian**\n>\n> The grip is a choice of who. Grab the healthiest enemy and hold it while the party kills the rest; a grip on something about to die is wasted. The grip works on anything, Hidden or not.\n>\n> Let go when a friend needs you: a friend you hold has Half Cover, nothing takes them while you hold on, and from 6th level you can take the blows meant for them. Bear the Burning only when you have the Hit Points to bear it; your friend is safer behind you than your body is in front of them if you go down.\n>\n> Holding is your motion. What you hold moves when you do (at half your Speed): drag a rider off its horse, haul the Bard out of its own song, carry the thing across the ford, or into the Killer's ward where it can't vanish."
+    }
+   ]
+  },
+  {
+   "class_name": "Bard",
+   "name": "Hidden Bard",
+   "book": "Euphonia: Life on the Border",
+   "lead": "*Remember What You Never Learned*\n\n> **The Hidden Bard at a Glance**\n>\n> **Remembering** is what you carry. You remember a skill, a tongue, a piece of lore, a song, or (from level 6) a spell you never learned. Each one goes on your **tally**, and the Hidden is owed: you **sing your case**, a Charisma (Performance) check against DC 6 plus your Proficiency Bonus plus twice your tally. Succeed, and you owe nothing. Fail, and the Hidden takes its due: your voice for a turn, a level of Exhaustion, or (once per Long Rest) a tongue that can't lie.\n>\n> **Sing the Season** is your Bonus Action. Spend Bardic Inspiration (or remember the song, and owe for it) to sing spring, summer, autumn, or winter into a person. From level 6 you can sing it into a place, and the music carries where it carries: a place takes everyone in it, friend or foe.\n>\n> **Read the Room** tells you the tempers in a fight, one for each group of like creatures. A season that **matches** a creature's temper lands hard (Disadvantage on the save, and a stronger effect); the **opposite** season slides off (Advantage on the save).\n>\n> | Season | Save | Fails | Matched |\n> |---|---|---|---|\n> | Spring | Strength | pushed 15 feet | and Prone |\n> | Summer | Dexterity | 2 Bardic Inspiration dice of Fire (half on a success) | 4 dice |\n> | Autumn | Wisdom | Charmed, or Disadvantage on its next save | both |\n> | Winter | Constitution | Speed 0 | and no Reactions, and an action or a Bonus Action, not both |\n>\n> **A good turn:** read the room as the fight starts. Then match the season to the creature that matters, not the one in front of you: autumn on the wistful one you're about to hold with *Hypnotic Pattern*, winter on the frightened one, summer on the furious. Remember a song only after you've cast your spell: a failed Due takes your voice until the end of your next turn.\n\n**Hidden Creatures.** *Hidden creature* means what \"The Hidden, in the rules\" in this book's introduction says. A Hidden Bard is one: it carries a piece of the Hidden in its soul, and that piece is what remembers for it. The Hunt's fiddlers and remembrancers are Hidden Bards.",
+   "features": [
+    {
+     "level": 3,
+     "name": "A Piece of the Hidden",
+     "text": "You gain the following benefits.\n\n**Tongue.** You know Sylvan.\n\n**Read the Room.** As a Bonus Action, or as part of rolling Initiative, you read the room: the DM tells you the **temper** of the creatures you can see within 60 feet of yourself, one for each group of like creatures and one for any creature that stands apart. You can also read the room without an action by watching for 1 minute. A temper is always one of the four seasons:\n\n| Temper | What lies under it |\n|---|---|\n| Spring | hope, curiosity, a beginning |\n| Summer | passion, anger, confidence |\n| Autumn | longing, regret, decline |\n| Winter | fear, grief, resolve |\n\nSpring and autumn are **opposites**, and so are summer and winter. The DM assigns tempers, and says how long one holds, by the Tempers rule in \"The Hidden, in the rules\" in this book's introduction. Once you've read the room, you keep the list: note each temper the DM tells you, and each one you turn. While you know a creature's temper, you have Advantage on Charisma (Deception, Intimidation, or Persuasion) checks against it that play to that temper."
+    },
+    {
+     "level": 3,
+     "name": "Remembering",
+     "text": "You can **remember** any of the following. Each time you do, it goes on your **tally**, and you owe the Hidden a **Due**, which you settle at once (see \"The Hidden's Due,\" below). You can't remember while the Hidden has your voice.\n\n- **A Skill.** When you make an ability check with a skill or tool, before you roll, you remember it: you have proficiency and Expertise in it for that check. You can't remember Performance.\n- **A Tongue.** As a Bonus Action, you remember a language you have heard spoken or seen written. For 1 hour, you can speak, read, and write it.\n- **A Lore.** As a Magic action, you name a creature, place, or object you can see or are holding, and ask one question about it. The DM answers truthfully, in a sentence, with what the Hidden remembers of it: old things, the dead, the fae, oaths, curses, and the ways in and out of places, not the plans of the living.\n- **A Song.** When you Sing the Season, you can remember the song instead of expending Bardic Inspiration.\n\n> **The Hidden's Due**\n>\n> When you remember, first add it to your **tally**: a skill, a tongue, a lore, or a song into a person counts as one; a song into a place counts as two; a spell counts as one plus its level. Your tally goes back to 0 when you finish a Long Rest.\n>\n> What you remember happens first (the skill applies to that check, the song or spell takes effect). Then you settle: sing your case to the Hidden by making a Charisma (Performance) check. The DC is 6 plus your Proficiency Bonus plus twice your tally, whether you paid for the earlier ones or not. On a success, the Hidden is satisfied, and you owe nothing.\n>\n> On a failure, the Hidden takes its due. Choose one:\n>\n> - **The Hidden Keeps Your Voice.** You can't speak or sing: you can't cast spells that have a Verbal component, sing a season, or remember. In combat, this lasts until the end of your next turn. Out of combat, the Hidden keeps your voice until you finish a Short or Long Rest. A spell you're already concentrating on continues.\n> - **Seven Years in a Night.** You gain one level of Exhaustion.\n> - **A Tongue That Cannot Lie.** Until you finish a Long Rest, you can't knowingly speak a falsehood. Once you choose this price, you can't choose it again until you finish a Long Rest.\n>\n> The DM can let the Hidden name a different price of the same weight, one that fits the story: a promise, a gift left at a hawthorn, a dance at the next full moon."
+    },
+    {
+     "level": 3,
+     "name": "Sing the Season",
+     "text": "As a Bonus Action, you can expend one use of Bardic Inspiration to sing a season (spring, summer, autumn, or winter) into a person: one creature you can see within 60 feet of yourself that can hear you is subject to the season. Instead of expending Bardic Inspiration, you can remember the song (see Remembering).\n\nA creature subject to a season makes the saving throw the season calls for against your spell save DC. A creature whose temper **matches** the season has Disadvantage on the save, and if it fails, it also suffers the season's matched effect. A creature whose temper is the season's **opposite** has Advantage on the save. A creature's temper counts whether or not you've read it. These are your seasons, not a Danae's: where the two differ, each follows its own feature.\n\n| Season | Effect | Matched |\n|---|---|---|\n| **Spring** | *Strength saving throw.* On a failed save, you push the creature up to 15 feet horizontally in a direction of your choice. A willing creature can instead teleport up to 15 feet to an unoccupied space it can see. | It also has the Prone condition. |\n| **Summer** | *Dexterity saving throw.* Roll two of your Bardic Inspiration dice. The creature takes that much Fire damage on a failed save, or half as much on a successful one. | Roll four dice instead of two. |\n| **Autumn** | *Wisdom saving throw.* On a failed save, choose one: the creature has the Charmed condition, with you as the charmer, until the end of its next turn, or it has Disadvantage on the next saving throw it makes before the end of your next turn. | Both. |\n| **Winter** | *Constitution saving throw.* On a failed save, the creature's Speed is 0 until the end of its next turn. | Until the end of its next turn, it also can't take Reactions, and on its turn it can take either an action or a Bonus Action, not both. |"
+    },
+    {
+     "level": 6,
+     "name": "Remember a Spell",
+     "text": "When you would cast a spell, you can instead cast one you don't have prepared, as long as it's on the Bard, Cleric, Druid, or Wizard spell list and is a cantrip or of a level for which you have spell slots. You cast it normally, expending a spell slot if it needs one, and you remember it: it counts as one plus its level in your tally (the slot's level, if you expend a higher one; a cantrip counts as one). The spell counts as a Bard spell for you."
+    },
+    {
+     "level": 6,
+     "name": "Into a Place",
+     "text": "When you Sing the Season, you can sing it into a place instead of a person. Expend two uses of Bardic Inspiration, or remember the song (it counts as two in your tally). Choose a point you can see within 60 feet of yourself. Every creature in a 10-foot-radius Sphere centered there that can hear you is subject to the season, whether you want it to be or not."
+    },
+    {
+     "level": 6,
+     "name": "Turn the Season",
+     "text": "When a creature fails its saving throw against a season you sing, its temper turns to that season for 1 hour, and its mood follows: hope, anger, longing, or fear. It doesn't know you did it unless it sees you sing and understands what you are."
+    },
+    {
+     "level": 14,
+     "name": "The Teind",
+     "text": "When you owe the Hidden a Due, you can choose not to sing your case, and sing the teind onto another instead; you can also do so when the Hidden would take its due from you after a failed check. Choose a creature you can see within 60 feet of yourself that can hear you. It makes a Charisma saving throw against your spell save DC. On a failed save, it pays instead of you: it has the Incapacitated condition until the end of its next turn, and you pay nothing. On a successful save, you pay as usual. You can sing the teind onto another twice, and you regain both uses when you finish a Long Rest.\n\n> **Playing a Hidden Bard**\n>\n> Keep your tally where you can see it: the Due's DC is 6 plus your Proficiency Bonus plus twice the tally. Put your Expertise in Performance, because the check is the subclass. Remember freely; in a fight the Hidden takes your voice for a turn, not the fight, so remember a song after you've cast your spell, never before. A remembered spell weighs one plus its level, so a remembered *Fireball* late in the day is a real bet. From 14th, twice a day, the Teind lets you skip the check and send the bill to the enemy you most want out of the next round.\n>\n> Remember what nobody at the table can do: the tongue nobody speaks, the lock nobody can pick, the old story nobody knows. A skill your friend already has is their moment, not yours.\n>\n> A Danae's warp is precise and stays; your song lands once, and from 6th it can take everyone in the room."
+    }
+   ]
+  },
+  {
+   "class_name": "Cleric",
+   "name": "Hidden Domain",
+   "book": "Euphonia: Life on the Border",
+   "lead": "> **The Hidden Domain at a Glance**\n>\n> **Strike a Bargain** is your Channel Divinity. As a Magic action, you ask the Hidden for one of two things. The **tide** decides which goes better, and you always know it.\n>\n> | Ask | What it does | At its tide |\n> |---|---|---|\n> | Turn Aside | creatures you choose within 30 feet make a Wisdom save or are Incapacitated until your next turn | at the flood, they have Disadvantage on the save |\n> | Bring Back | creatures you choose within 30 feet at 0 Hit Points, Charmed, Frightened, or Taken (unless Taken on thin ground) get back up | at the ebb, double the Hit Points, and it reaches the Bloodied too |\n>\n> **Rowan and Red Thread** (level 6): one ward at a time, tied on a rest. It turns one drop to 0 Hit Points into 1.\n>\n> **Not Dead, Only Away** (level 17): Bring Back reaches a creature that died in the last minute, and you can ward a village's heart against the Hidden for a night.\n>\n> **A good turn:** at the flood, when the Hunt rides, open with *Spirit Guardians*, then Turn Aside the ones that hit hardest. At the ebb, hold your Channel Divinity until two of you are in trouble, then Bring Back both.\n\n**Hidden Creatures.** *Hidden creature* means what \"The Hidden, in the rules\" in this book's introduction says. A Cleric of the Hidden Domain isn't one: it speaks for its people to the Hidden and carries no piece of it.",
+   "features": [
+    {
+     "level": 3,
+     "name": "Hidden Domain Spells",
+     "text": "Your connection to the hill ensures you always have certain spells ready. When you reach a Cleric level specified in the Hidden Domain Spells table, you thereafter always have the listed spells prepared.\n\n| Cleric Level | Prepared Spells |\n|---|---|\n| 3 | *Calm Emotions*, *Charm Person*, *Lesser Restoration*, *Protection from Evil and Good* |\n| 5 | *Magic Circle*, *Remove Curse* |\n| 7 | *Banishment*, *Locate Creature* |\n| 9 | *Dispel Evil and Good*, *Geas* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Calm Emotions",
+        "Charm Person",
+        "Lesser Restoration",
+        "Protection from Evil and Good"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Magic Circle",
+        "Remove Curse"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Banishment",
+        "Locate Creature"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Dispel Evil and Good",
+        "Geas"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "The Go-Between",
+     "text": "You gain the following benefits.\n\n**The Tide.** You always know the tide where you are (see \"The Tide,\" below), and you know whether a creature you can see within 30 feet of yourself is a Hidden creature (see \"The Hidden, in the rules\" in this book's introduction).\n\n**Tongue.** You know Sylvan.\n\n**Parley.** Before Initiative is rolled, you can call out to Hidden creatures that can hear you and offer parley under the old courtesies: iron put away, a gift held out, no names given. They hear you out, in Sylvan or any language you share, unless they have a reason not to (the DM decides; the old courtesies are strong). For up to 1 minute, while you talk, they don't attack you or anyone you speak for. The parley ends if you or anyone you speak for attacks, casts a spell, or draws iron. Once a parley ends in a fight, you can't offer parley to those creatures again until you finish a Long Rest.\n\n**Bargains.** You have Advantage on Wisdom (Insight) checks to read a Hidden creature, and on Charisma (Persuasion) checks to strike a bargain with one, and you can use your Wisdom modifier for those Persuasion checks. A bargain you strike with the Hidden binds both sides (see \"Bargains with the Hidden,\" below).\n\n> **The Tide**\n>\n> The tide, the raiding season, and the open nights are in \"The Hidden, in the rules\" in this book's introduction. On the open nights, Samhain and Beltane, the tide is whichever you need for each use of Strike a Bargain and each bargain you make under Bargains with the Hidden. A place of power can keep its own tide: under the fairy hill itself, it might always be at the flood."
+    },
+    {
+     "level": 3,
+     "name": "Strike a Bargain",
+     "text": "As a Magic action, you can expend one use of your Channel Divinity to strike a bargain with the Hidden, choosing one of the following asks.\n\n**Turn Aside.** Each creature of your choice that you can see within 30 feet of yourself makes a Wisdom saving throw against your spell save DC. At the flood, it has Disadvantage on the save. On a failed save, the good people lead it astray: it has the Incapacitated condition until the start of your next turn. A Hidden creature that has broken a bargain struck through you fails this save automatically.\n\n**Bring Back.** Choose any number of creatures you can see within 30 feet of yourself that have 0 Hit Points and aren't dead, or that have the Charmed or Frightened condition. Each of them regains Hit Points equal to your Cleric level plus your Wisdom modifier, and its Charmed and Frightened conditions end. At the ebb, the Hit Points are doubled, and you can also choose creatures that are Bloodied.\n\nYou can also call back any creature that was Taken (see \"The Hidden, in the rules\" in this book's introduction) from a place within 30 feet of you, whatever took it, unless it was Taken on thin ground: it is no longer Taken, reappears in the space it left or the nearest unoccupied space, and regains Hit Points as above.\n\n> **Bargains with the Hidden**\n>\n> Out of a fight, the go-between's work is talk. To ask the Hidden for something on someone's behalf, find them (at a hill, a ring, a hawthorn, a crossroads at the right hour, or your people's equivalent), offer parley, and ask for one thing: give back someone who is away, lift what afflicts the fairy-struck (a person, a cow, the butter that won't come), turn a raid aside, or settle what's owed.\n>\n> **The price.** The DM names a price: a gift, a service, a promise, or something dear. The tide sets how steep it is. At the flood, asking them to go is fair, and asking for something back is dear; at the ebb, the reverse. Pay it, and it's done, to the letter.\n>\n> **What's owed.** If either side breaks a bargain, the other is owed. When the Hidden owe you or the people you speak for, you can call the debt in once: the creature that owes must do one thing you ask of it that the DM agrees is in its power and doesn't cost its life. Until it pays, it fails its saves against your Turn Aside."
+    },
+    {
+     "level": 6,
+     "name": "Rowan and Red Thread",
+     "text": "When you finish a Short or Long Rest, you can tie a ward on one creature you touch. You can have only one ward tied at a time; tying another unties the first. While a creature wears your ward, it has Advantage on saving throws to avoid or end the Charmed and Frightened conditions.\n\nWhen the warded creature is reduced to 0 Hit Points and isn't killed outright, the ward breaks, and the creature drops to 1 Hit Point instead."
+    },
+    {
+     "level": 17,
+     "name": "Not Dead, Only Away",
+     "text": "**The Newly Dead.** When you use Bring Back, you can also choose a creature that died within the last minute and whose body is within 30 feet of yourself. It returns to life with 0 Hit Points and then regains Hit Points as Bring Back says. This can't return a creature that died of old age, and it doesn't restore missing body parts.\n\n**Ward the Village.** You can cast *Hallow* without expending a spell slot or material components, and the casting takes you 1 hour. Cast this way, the spell keeps out Hidden creatures other than those you choose when you cast it, whatever their creature type, along with any types you choose for it; its area can be any part of a settlement up to 300 feet on a side; and it lasts until the next dawn. Once you cast it this way, you can't cast it this way again until you finish a Long Rest.\n\n> **Playing a Hidden Domain Cleric**\n>\n> You always know the tide, so let it pick your ask. At the flood, when the Hunt rides hardest, Turn Aside is your opener: the riders save at Disadvantage, and every one it catches loses its turn. At the ebb, hold your Channel Divinity until two or more of you are down, Charmed, Frightened, or Taken, then Bring Back all of them at once, at double the Hit Points.\n>\n> Talk first. Parley comes before Initiative, so offer it before anyone draws iron: a minute of talk is a minute nobody is hitting you, and a bargain struck there binds both sides. A Hidden creature that breaks one fails its saves against your Turn Aside until it pays.\n>\n> Tie Rowan and Red Thread on whoever the Hunt will go for first, and keep the fight off thin ground if you can: Bring Back can't reach a friend Taken there."
+    }
+   ]
+  },
+  {
+   "class_name": "Ranger",
+   "name": "Hidden Killer",
+   "book": "Euphonia: Life on the Border",
+   "lead": "> **The Hidden Killer at a Glance**\n>\n> **Before the fight:** Read the Tide to learn whether the Hidden are abroad, and which way. Then Prepare the Ground: ward the place they'll come to. A fight on your ground starts on your terms. Caught off it, throw the ward down where you stand.\n>\n> **In the fight:** Cold Iron is extra damage once a turn against anything, and more against the Hidden. Your *Hunter's Mark* sees through what the Hidden hide behind.\n>\n> | Feature | What it does | From |\n> |---|---|---|\n> | Read the Tide | know whether the Hidden are abroad, and where | Level 3 |\n> | Prepare the Ground | a warded place: no surprise, no glamour; once a rest, a ward thrown down around you in a fight | Level 3 |\n> | Cold Iron | 1d6 extra once a turn; 2d6 against the Hidden, who can't teleport away | Level 3 |\n> | Inside Out | shrug off charm; give an ally a second try (Wisdom modifier plus Proficiency Bonus uses) | Level 7 |\n> | Name It | pin a creature to the real for a round (spends a use of Inside Out) | Level 11 |\n> | Iron Answer | shoot back when one of you is hit (spends a use of Inside Out) | Level 15 |\n>\n> **A good turn:** *Hunter's Mark* on the one wearing a glamour, one shot (two from 5th), Cold Iron on the first that lands; from 11th, name the one that matters so the whole party can hit it.\n\n**Hidden Creatures.** *Hidden creature* means what \"The Hidden, in the rules\" in this book's introduction says. A Hidden Killer isn't one: it carries no piece of the Hidden.",
+   "features": [
+    {
+     "level": 3,
+     "name": "Hidden Killer Spells",
+     "text": "When you reach a Ranger level specified in the Hidden Killer Spells table, you thereafter always have the listed spell prepared.\n\n| Ranger Level | Spells |\n|---|---|\n| 3 | *Protection from Evil and Good* |\n| 5 | *See Invisibility* |\n| 9 | *Magic Circle* |\n| 13 | *Banishment* |\n| 17 | *Dispel Evil and Good* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Protection from Evil and Good"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "See Invisibility"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Magic Circle"
+       ]
+      },
+      {
+       "level": 13,
+       "spells": [
+        "Banishment"
+       ]
+      },
+      {
+       "level": 17,
+       "spells": [
+        "Dispel Evil and Good"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "Read the Tide",
+     "text": "When you finish a Long Rest, or after you spend 10 minutes watching the land around you, you learn the following about the area within 1 mile of yourself:\n\n- Whether the Hidden there are at the flood or at the ebb.\n- Whether Hidden creatures are abroad in the area or gathering at its edge, roughly how many (a few, a band, or a Hunt), and the direction of the nearest of them.\n\nYou don't learn what they are. In addition, you don't have Disadvantage on Initiative rolls for being surprised by Hidden creatures, and you have Advantage on Wisdom (Survival) checks to track them."
+    },
+    {
+     "level": 3,
+     "name": "Prepare the Ground",
+     "text": "Anyone can iron and salt a room or a small building (see \"Iron and salt\" in \"The Hidden, in the rules\" in this book's introduction); a Killer's ward goes further.\n\nYou can spend 10 minutes warding a place against the Hidden: a building, or an area of open ground up to 60 feet on a side. You can do this during a Short or Long Rest. When you ward a place, choose any number of creatures the ward ignores (your allies, usually); the ward treats them as neither Hidden nor intruders. The ward lasts until you finish a Long Rest (a ward made during a Long Rest lasts until you finish the next one) or ward another place. It doesn't bar a Hidden creature from entering; iron and salt a door for that. While the ward lasts:\n\n- **Forewarned.** You know when a creature the ward doesn't ignore enters it, and the knowledge wakes you if you're asleep. When combat starts and you or any of your enemies are in the ward, you and your allies have Advantage on Initiative rolls, and Hidden creatures in the ward that it doesn't ignore have Disadvantage on theirs.\n- **No Glamour.** A Hidden creature in the ward that it doesn't ignore can't have the Invisible condition, and you and your allies see through any illusion or shape-changing effect that disguises such a creature there, seeing its true form alongside the false one. Such a creature can't teleport into or out of the ward.\n- **Bread and Salt.** You and your allies have Advantage on saving throws against the Charmed condition while in the ward.\n\nFrom Ranger level 11, the ward can cover an area up to 300 feet on a side: a village, or the camp and the road through it.\n\n**Nightmare Ward.** As a Magic action, you can throw down a ward where you stand: for 1 minute, a 10-foot Emanation from you is warded as above, though Forewarned has no effect, and it ignores you and your allies. It doesn't end a ward you've already made. Once you throw down a ward, you can't do so again until you finish a Short or Long Rest."
+    },
+    {
+     "level": 3,
+     "name": "Cold Iron",
+     "text": "Once on each of your turns, when you hit a creature with an attack roll using a weapon, you can deal an extra 1d6 damage of the weapon's type to it. If the target is a Hidden creature, the extra damage is 2d6 instead, and it can't teleport until the start of your next turn.\n\nIn addition, while a creature is marked by your *Hunter's Mark*, you know whether it is a Hidden creature, it gains no benefit from the Invisible condition against you, and you see through any illusion or shape-changing effect that disguises it, seeing its true form alongside the false one."
+    },
+    {
+     "level": 7,
+     "name": "Inside Out",
+     "text": "You have Advantage on saving throws against the Charmed condition and on Intelligence (Investigation) checks to see through illusions, and magic can't make you lose your way.\n\nWhen you or a creature you can see within 30 feet of yourself fails a saving throw against the Charmed or Frightened condition, you can take a Reaction to let it reroll the save; it must use the new roll.\n\nYou have a number of uses of Inside Out equal to your Wisdom modifier (minimum of 1) plus your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. Each reroll expends one. From 11th level, Name It spends the same uses, and from 15th, so does Iron Answer."
+    },
+    {
+     "level": 11,
+     "name": "Name It",
+     "text": "When you hit a creature with a weapon and deal Cold Iron damage to it, you can name it. It makes a Charisma saving throw against your spell save DC; a Hidden creature has Disadvantage on the save. On a failed save, it is pinned to the real until the end of your next turn: its Speed is 0, it can't teleport, become Invisible, or change its shape, and attack rolls against it have Advantage.\n\nEach time you name a creature, expend one use of Inside Out."
+    },
+    {
+     "level": 15,
+     "name": "Iron Answer",
+     "text": "When a creature you can see hits you or an ally with an attack roll, you can take a Reaction to make one attack against it with a weapon you're holding, if it's within that weapon's range. You can deal Cold Iron damage with this attack, even though it isn't your turn and even if you've already dealt it this turn. Each Iron Answer expends one use of Inside Out.\n\n> **Playing a Hidden Killer**\n>\n> The fight you win is the one you saw coming. Read the tide every morning, and when it tells you something is abroad, spend the ten minutes: ward the place it will come to, not the place you happen to be. On your own ground you go first, nothing hides, and the charm doesn't take. Caught off it, run for the gate, the bridge, or the friend the glamour is working on, and throw the ward down there. Off your ground you're still a Ranger with iron in every shot, and Cold Iron works on bandits and wolves as well as on the Hunt.\n>\n> Inside Out, Name It, and Iron Answer draw on one set of uses. Spend them on your friends' failed saves early in the day; from 11th, keep a few back for Name It on the creature the party needs to kill, not the first one you hit."
+    }
+   ]
+  },
+  {
+   "class_name": "Ranger",
+   "name": "Mortal Hunter",
+   "book": "Euphonia: Life on the Border",
+   "lead": "> **The Mortal Hunter at a Glance**\n>\n> **Your one button is Take.** When a creature is Bloodied, or held by a condition, take it as a Bonus Action. If it fails a Wisdom save, it vanishes from the fight; afterward it turns up asleep at your feet. Three uses a Long Rest, and you get one back on each Short Rest while the Hidden are at the flood.\n>\n> **Where you strike matters.** On thin ground, your prey saves at Disadvantage and can't find its way back unless a friend calls its name. If there's no thin ground, make some: spend a use of Take to call the mist.\n>\n> | Feature | What it does | From |\n> |---|---|---|\n> | Of the Hunt | you know the tide and the open nights; you know thin ground | Level 3 |\n> | Elf-Shot | 1d6 Psychic extra once a turn; your arrows can knock out | Level 3 |\n> | Take | a Bloodied or held creature is taken out of the fight; spend a use to call the mist and make thin ground | Level 3 |\n> | Pixie-Led | a hit on you misses on a failed save; you can't be lost or easily followed | Level 7 |\n> | The Fairy Ride | the taken struggle to find their way back; the Hunt's road | Level 11 |\n> | Will-o'-the-Wisp | Pixie-Led for your allies too | Level 15 |\n>\n> **A good turn:** *Hunter's Mark* on the one you mean to take, one shot (two from 5th), Elf-Shot on the first that lands; once it's Bloodied, Take it with your Bonus Action. Better still, draw the fight onto thin ground first, or call the mist as Initiative is rolled.\n\n**Hidden Creatures.** *Hidden creature* means what \"The Hidden, in the rules\" in this book's introduction says. A Mortal Hunter is one: it carries a piece of the Hidden in its soul, and so it remembers what it is while it walks in the real world.",
+   "features": [
+    {
+     "level": 3,
+     "name": "Mortal Hunter Spells",
+     "text": "When you reach a Ranger level specified in the Mortal Hunter Spells table, you thereafter always have the listed spell prepared.\n\n| Ranger Level | Spells |\n|---|---|\n| 3 | *Sleep* |\n| 5 | *Hold Person* |\n| 9 | *Hypnotic Pattern* |\n| 13 | *Confusion* |\n| 17 | *Hold Monster* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Sleep"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Hold Person"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Hypnotic Pattern"
+       ]
+      },
+      {
+       "level": 13,
+       "spells": [
+        "Confusion"
+       ]
+      },
+      {
+       "level": 17,
+       "spells": [
+        "Hold Monster"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "Of the Hunt",
+     "text": "You always know the tide of the Hidden where you are (see \"The Hidden, in the rules\" in this book's introduction): at the flood or at the ebb. You also know when the night ahead is an open night (Samhain and Beltane, and any other night the DM says).\n\n**Thin Ground.** You know thin ground (defined in the same section) when you're on it or can see it."
+    },
+    {
+     "level": 3,
+     "name": "Elf-Shot",
+     "text": "Once on each of your turns, when you hit a creature with an attack roll using a weapon, you can deal an extra 1d6 Psychic damage to it.\n\nWhen you reduce a creature to 0 Hit Points with an attack using a weapon, you can knock it out instead of killing it, even with a Ranged attack."
+    },
+    {
+     "level": 3,
+     "name": "Take",
+     "text": "As a Bonus Action, you can try to take a creature you can see within 60 feet of yourself that is Bloodied or has the Charmed, Frightened, Grappled, Incapacitated, Restrained, or Unconscious condition. It makes a Wisdom saving throw against your spell save DC, with Disadvantage if it is on thin ground. On a failed save, it is **Taken** (see \"The Hidden, in the rules\" in this book's introduction, which also covers a creature someone is holding on to).\n\nYou can use this feature three times, whether or not the creature fails its save, and you regain all expended uses when you finish a Long Rest. While the Hidden are at the flood, you also regain one expended use when you finish a Short Rest.\n\n**The Way Back.** At the end of each of its turns, a creature you Took repeats the save, and comes back on a success. On thin ground it can't find the way alone: it repeats the save only when a creature within 30 feet of the place it vanished from takes an action to call its name. If it is still Taken when combat ends or 1 minute has passed, it reappears asleep: it has the Unconscious condition in an unoccupied space of your choice within 30 feet of you. It wakes after 1 hour, when it takes any damage (so the first hit wakes it), or when another creature takes an action to shake it awake. A sleeper can be bound, carried off or bargained with; it can't simply be finished.\n\n**An Open Night.** When a creature you Took on an open night would reappear asleep, you can carry it into the Hidden instead. It returns when and where you choose, up to a year and a day later. For the taken, only a night has passed. The DM can rule that a creature of great power, or one the Hidden have reason to refuse, finds its own way back sooner.\n\n**Call the Mist.** When you roll Initiative, or as a Magic action, you can expend one use of Take to call the mist: a 20-foot-radius Sphere centered on a point you can see within 60 feet of yourself is thin ground for 1 minute. The mist can't be called into a warded place."
+    },
+    {
+     "level": 7,
+     "name": "Pixie-Led",
+     "text": "When a creature you can see hits you with an attack roll that isn't a Critical Hit, you can take a Reaction to lead it astray. It makes a Wisdom saving throw against your spell save DC. On a failed save, the attack misses instead: it struck a wisp where you seemed to stand.\n\nYou can use this Reaction a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest.\n\nIn addition, you can't become lost except by magical means, and creatures have Disadvantage on Wisdom (Survival) checks to track you or the creatures traveling with you."
+    },
+    {
+     "level": 11,
+     "name": "The Fairy Ride",
+     "text": "A creature you Take off thin ground has Disadvantage on the saves it repeats to find its way back.\n\nWhen a Taken creature reappears asleep, you can have it reappear in an unoccupied space you have seen within 1 mile of where you took it, instead of near you.\n\nIn addition, you can lead up to six willing creatures onto the Hunt's road. For the next 8 hours, you and they travel at twice your normal travel pace and can't be tracked by nonmagical means. Any of you can leave the road at any time. Once you lead creatures onto the road, you can't do so again until you finish a Long Rest."
+    },
+    {
+     "level": 15,
+     "name": "Will-o'-the-Wisp",
+     "text": "You can use your Pixie-Led Reaction when a creature you can see hits a creature within 30 feet of you, as well as when it hits you.\n\n> **Playing a Mortal Hunter**\n>\n> Shoot first, take second. Elf-Shot is your damage, and it softens your prey for Take. Take the one that would hurt the party most, not the one about to fall anyway: a creature at its last few Hit Points dies to the next arrow, and a Take spent on it is wasted. Your spells (*Sleep*, *Hold Person*, *Hypnotic Pattern*) put a condition on a creature still at full strength, and a held creature can be taken.\n>\n> The ground is the other half. Lead the prey onto thin ground before the fight, or call the mist as Initiative is rolled when you have uses to spare: there it saves at Disadvantage, and doesn't come back unless someone within 30 feet of where it vanished calls its name. A Hidden Killer's ward is never thin ground, and the mist can't be called into one.\n>\n> Watch the tide. At the flood you get a Take back every Short Rest. On an open night, what you take stays taken as long as you like, up to a year and a day; tell your DM before you try it on someone the story needs, because the DM can send a great power, or one the Hidden won't keep, home sooner."
+    }
+   ]
+  },
+  {
+   "class_name": "Warlock",
+   "name": "Dreamlord Patron",
+   "book": "Euphonia: Life on the Border",
+   "lead": "",
+   "features": [
+    {
+     "level": 3,
+     "name": "Dreamlord Spells",
+     "text": "When you reach a Warlock level specified in the Dreamlord Spells table, you thereafter always have the listed spells prepared.\n\n| Warlock Level | Spells |\n|---|---|\n| 3 | *Faerie Fire*, *Invisibility*, *Phantasmal Force*, *Sleep* |\n| 5 | *Blink*, *Hypnotic Pattern* |\n| 7 | *Dimension Door*, *Greater Invisibility* |\n| 9 | *Dream*, *Seeming* |",
+     "spells": [
+      {
+       "level": 3,
+       "spells": [
+        "Faerie Fire",
+        "Invisibility",
+        "Phantasmal Force",
+        "Sleep"
+       ]
+      },
+      {
+       "level": 5,
+       "spells": [
+        "Blink",
+        "Hypnotic Pattern"
+       ]
+      },
+      {
+       "level": 7,
+       "spells": [
+        "Dimension Door",
+        "Greater Invisibility"
+       ]
+      },
+      {
+       "level": 9,
+       "spells": [
+        "Dream",
+        "Seeming"
+       ]
+      }
+     ]
+    },
+    {
+     "level": 3,
+     "name": "Step into the Hidden",
+     "text": "As a Bonus Action, you step out of the world and back in. You teleport up to 30 feet to an unoccupied space you can see, and you have the Invisible condition until the start of your next turn. It ends early when you make an attack roll, deal damage, or cast a spell, and it doesn't give that attack roll Advantage.\n\n**Come With Me.** When you Step into the Hidden, you can take one willing creature within 5 feet of yourself with you. It teleports to an unoccupied space within 5 feet of where you arrive. It doesn't have the Invisible condition.\n\nYou can use this feature a number of times equal to your Charisma modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+    },
+    {
+     "level": 3,
+     "name": "Manners",
+     "text": "You know the Hidden's manners, and the near Realm's upside-down courtesies: which food a mortal can safely eat there and which binds them, which gifts are insults, how to accept hospitality and still leave. You always know whether a bargain a Hidden creature offers you is binding, and you have Advantage on Charisma checks to bargain with Hidden creatures."
+    },
+    {
+     "level": 6,
+     "name": "Spirited Away",
+     "text": "As a Bonus Action, choose a creature you can see within 60 feet of yourself. It makes a Charisma saving throw against your spell save DC; a willing creature can choose to fail it. On a failed save, the Hidden take it: it is Taken (see \"The Hidden, in the rules\" in this book's introduction) until the start of your next turn, and it comes back early if you die or have the Incapacitated condition.\n\nYou can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+    },
+    {
+     "level": 6,
+     "name": "Hidden Tracks",
+     "text": "You can tell by looking at someone whether they've been to the Hidden Realm and come back, and whether they carry a piece of it in their soul (and so remember). By touching a door, a hill, a ring of mushrooms, or a standing stone, you know whether it's thin ground."
+    },
+    {
+     "level": 10,
+     "name": "Iron and Oaths",
+     "text": "You have Immunity to the Charmed condition. In addition, when a creature breaks a promise it made to you (one it stated to you aloud, in a language you share), you know it at once, wherever it is.\n\n**Fairy Gold.** By touching an object, you know whether it's mortal-made or fae (a Danae's fairy gold among them): gold that will be leaves by morning, a feast that's a table of bark and beetles, a letter that will be blank once it's read."
+    },
+    {
+     "level": 14,
+     "name": "The Long Taking",
+     "text": "When a creature fails its saving throw against your Spirited Away, you can keep it Taken for up to 1 minute instead. At the start of each of your turns, it repeats the saving throw, coming back on a success. Once you use this feature, you can't use it again until you finish a Long Rest.\n\n**The Road Under the Hill.** You can take people into the Hidden. Standing on thin ground, you can spend 10 minutes opening the way, and you and up to eight willing creatures holding hands with you or with each other cross into the near reaches of the Hidden Realm. You return together to the place you left, when you choose or after 24 hours there; how much time has passed in the world is the DM's to decide. Those who travel with you remember the journey, as though each carried a piece of the Realm back in their soul, though none of them becomes a Hidden creature. Once you open the way, you can't do so again until you finish a Long Rest.\n\n> **Playing a Dreamlord Warlock**\n>\n> Order matters. Cast first, then Step into the Hidden: the Invisible condition lasts through the enemies' turns, and casting after you step would end it. When a friend is about to be cut down, take them with you; they arrive beside you, visible but out of reach.\n>\n> Spirited Away buys a round. Spend it on the enemy whose turn would hurt the party most, or on an ally about to take a blow they can't survive (an ally can choose to fail the save). Taking a caster ends its Concentration. A creature someone is holding can still be taken, but the holder can hold on (see Taken). You carry no piece of the Hidden: Cold Iron's extra bite against the Hidden, the Iron Bell, and the wards that stop the Hunt don't touch you, and you deal with the Hidden as a guest, not as one of them."
+    }
+   ]
+  }
+ ]
+}
