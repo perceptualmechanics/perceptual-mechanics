@@ -172,6 +172,14 @@ export async function initBuilder(panel) {
   // where a book adds it to an SRD class; a source with none isn't shown.
   const subclassGroups = (list, chosen) => ['Euphonia', 'SRD 5.2.1'].filter(src => list.some(x => x.source === src)).map(src => h('optgroup', { label: src === 'Euphonia' ? 'Euphonia’s subclasses' : 'The SRD’s subclasses' },
     list.filter(x => x.source === src).map(x => h('option', { value: x.name, selected: x.name === chosen || null }, x.book ? `${x.name} (${x.book.replace(/^Euphonia: /, '')})` : x.name))));
+  // The classes, the setting's own first; then the SRD's it adds subclasses
+  // to, apart from those it leaves as they are.
+  const withOurs = c => c.subclasses.some(x => x.source === 'Euphonia');
+  const classGroups = [
+    ['Euphonia’s classes', book.classes.filter(c => c.source === 'Euphonia')],
+    ['The SRD’s classes, with Euphonia’s subclasses', book.classes.filter(c => c.source === 'SRD 5.2.1' && withOurs(c))],
+    ['The SRD’s classes', book.classes.filter(c => c.source === 'SRD 5.2.1' && !withOurs(c))],
+  ].filter(([, list]) => list.length);
   // The class rows: a class, its level, its subclass once it has one.
   let classShape = null;
   function renderClasses(result) {
@@ -180,8 +188,7 @@ export async function initBuilder(panel) {
       classShape = shape;
       rebuild(classList, ...state.classes.map((c, i) => {
         const rules = book.classNamed(c.class);
-        const groups = ['Euphonia', 'SRD 5.2.1'].map(src => h('optgroup', { label: src === 'Euphonia' ? 'Euphonia’s classes' : 'The SRD’s classes' },
-          options(book.classes.filter(x => x.source === src).map(x => x.name), c.class)));
+        const groups = classGroups.map(([label, list]) => h('optgroup', { label }, options(list.map(x => x.name), c.class)));
         return h('li', { class: 'b-class' },
           h('label', { class: 'b-field' }, h('span', {}, i ? 'Then' : 'Class'),
             h('select', { 'data-key': `class-${i}`, 'aria-describedby': idFor('classes'), onchange: e => set(s => { s.classes[i] = { ...s.classes[i], class: e.target.value, subclass: '' }; }) }, h('option', { value: '' }, 'Choose a class'), groups)),
