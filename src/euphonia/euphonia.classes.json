@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/mnt/euphonia/Euphonia.md",
-  "sha256": "02f4a8ffbe083fcda949744dd2b94ba1bf71c37023dcb5e88c9e637675e7e6a3",
-  "modified": "2026-11-12T23:52:47+00:00",
+  "sha256": "58a72ab92134f59b4c021117edc94e2d80fabaffb0e80a45526ffbd0e2e46191",
+  "modified": "2026-11-13T10:10:48+00:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 14,
   "rules": {
@@ -51,6 +51,19 @@
   },
   {
    "where": "Courtier · Grace · Level 3: A Maxim a Day",
+   "reasons": [
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Danae · level 9 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Danae · Level 17: The Door Opens",
    "reasons": [
     "names a placeholder"
    ]
@@ -623,7 +636,7 @@
       {
        "level": 3,
        "name": "Battle Picture",
-       "text": "When you roll Initiative, you and each ally within 30 feet of you who can see or hear you can roll your computation die and add the number rolled to the Initiative roll. In addition, you know the location of each Observed creature within 60 feet of you, even if it is Invisible or behind Total Cover, and an Observed creature can't hide from you."
+       "text": "When you roll Initiative, you and each ally within 30 feet of you who can see or hear you can't have Disadvantage on the roll. In addition, you know the location of each Observed creature within 60 feet of you, even if it is Invisible or behind Total Cover, and an Observed creature can't hide from you."
       },
       {
        "level": 6,
@@ -3998,7 +4011,7 @@
       {
        "level": 3,
        "name": "Reading the Nerves",
-       "text": "You learn to read the body's wiring. When you use Diagnosis on a creature, automatically or with a successful check, you also learn whether any effect on its mind, such as a charm, a fear, a compulsion, or a voice, is the creature's own, the work of a spell or similar magical effect, or the influence of another creature; if the source is a creature you can see, you learn which one.\n\nAdd the following to your Treatment table:\n\n| Treatment | DC |\n|---|---|\n| End the Charmed or Frightened condition | 12 |\n| End the Stunned condition | 15 |\n\nYou also gain proficiency in the Insight skill if you don't already have it, and you learn the *Mind Sliver* cantrip, which counts as a Physician cantrip for you and doesn't count against the number of cantrips you know.\n\n**Nerve Spells.** A **nerve spell** is a Physician spell that deals Psychic damage or can give a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition. Several Neurologist features work on them.\n\n**Neurologist Spells.** When you reach a Physician level specified in the Neurologist Spells table, you thereafter always have the listed spells prepared. Each counts as a Physician spell for you and is added to your spellbook.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Dissonant Whispers*, *Mind Spike* |\n| 5 | *Hypnotic Pattern*, *Tiny Hut* |\n| 7 | *Compulsion*, *Phantasmal Killer* |\n| 9 | *Dominate Person*, *Modify Memory* |"
+       "text": "You learn to read the body's wiring. When you use Diagnosis on a creature, automatically or with a successful check, you also learn whether any effect on its mind, such as a charm, a fear, a compulsion, or a voice, is the creature's own, the work of a spell or similar magical effect, or the influence of another creature; if the source is a creature you can see, you learn which one.\n\nAdd the following to your Treatment table:\n\n| Treatment | DC |\n|---|---|\n| End the Charmed or Frightened condition | 12 |\n| End the Stunned condition | 15 |\n\nYou also gain proficiency in the Insight skill if you don't already have it, and you learn the *Mind Sliver* cantrip, which counts as a Physician cantrip for you and doesn't count against the number of cantrips you know.\n\n**Nerve Spells.** A **nerve spell** is a Physician spell that deals Psychic damage or can give a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition. Several Neurologist features work on them.\n\n**Neurologist Spells.** When you reach a Physician level specified in the Neurologist Spells table, you thereafter always have the listed spells prepared. Each counts as a Physician spell for you and is added to your spellbook.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Dissonant Whispers*, *Mind Spike* |\n| 5 | *Speak with Dead*, *Tiny Hut* |\n| 7 | *Compulsion*, *Phantasmal Killer* |\n| 9 | *Dominate Person*, *Modify Memory* |"
       },
       {
        "level": 3,
@@ -6068,7 +6081,7 @@
      {
       "Level": "9",
       "Proficiency Bonus": "+4",
-      "Class Features": "The Way Back, Thresholds, Loop",
+      "Class Features": "Thresholds, Loop",
       "Warps": "6",
       "Cantrips": "4",
       "Prepared Spells": "14",
@@ -6204,7 +6217,7 @@
      {
       "Level": "17",
       "Proficiency Bonus": "+6",
-      "Class Features": "The Elder Cycles, The Door Opens",
+      "Class Features": "The Elder Cycles",
       "Warps": "8",
       "Cantrips": "5",
       "Prepared Spells": "19",
@@ -6320,7 +6333,7 @@
     {
      "level": 5,
      "name": "The First Cycles",
-     "text": "Your warps can be 5-foot or 10-foot Cubes, and you learn two more shapes:\n\n- **Tilt.** You choose which way is down within the warp when you make it. A creature that enters the warp for the first time on a turn, or starts its turn there, makes a Strength saving throw. On a failed save, it is thrown 10 feet that way, stopping if it strikes something solid, and has the Prone condition; a creature thrown upward then falls. A willing creature can instead walk through the warp with down where you chose it: up a wall or across a ceiling, as if it were floor. When the warp ends, down is down again, and a creature left in the air falls.\n- **Pocket.** The warp is bigger inside than out. A creature enters it by moving into its space, and a creature inside can leave by spending 5 feet of movement to appear in an unoccupied space next to it. Up to eight Medium creatures fit inside it, whatever its size (a Small or Tiny creature counts as one, a Large creature as four, and a Huge or larger creature can't enter; nor can a creature that wouldn't fit beside those already inside), and anything inside has Total Cover against anything outside, and the reverse. When a Pocket ends, each creature inside it appears in the nearest unoccupied space."
+     "text": "Your warps can be 5-foot or 10-foot Cubes, and you learn two more shapes:\n\n- **Tilt.** You choose which way is down within the warp when you make it. A creature that enters the warp for the first time on a turn, or starts its turn there, makes a Strength saving throw. On a failed save, it is thrown 10 feet that way, stopping if it strikes something solid, and has the Prone condition; a creature thrown upward then falls. A willing creature can instead walk through the warp with down where you chose it: up a wall or across a ceiling, as if it were floor. When the warp ends, down is down again, and a creature left in the air falls.\n- **Pocket.** The warp is bigger inside than out. A creature enters it by moving into its space, and a creature inside can leave by spending 5 feet of movement to appear in an unoccupied space next to it. Up to eight Medium creatures fit inside it, whatever its size (a Small or Tiny creature counts as one, a Large creature as four, and a Huge or larger creature can't enter; nor can a creature that wouldn't fit beside those already inside), and anything inside has Total Cover against anything outside, and the reverse. When a Pocket ends, each creature inside it appears in the nearest unoccupied space.\n\n**The Way Back.** You learn the way home: you regain the use of Flee when you finish a Short or Long Rest."
     },
     {
      "level": 7,
@@ -6331,11 +6344,6 @@
      "level": 7,
      "name": "Open Book",
      "text": "You can cast *Detect Thoughts* without expending a spell slot a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. A creature you've read has Disadvantage on its saving throw against the spell."
-    },
-    {
-     "level": 9,
-     "name": "The Way Back",
-     "text": "You regain the use of Flee when you finish a Short or Long Rest.\n\nIn addition, while you're Away, when you teleport with Flicker, you can leave a warp of any shape you know in the space you left. It follows every rule for your warps (it can't overlap another, it lasts 1 minute, it can carry a season you know, and it counts as one of your warps in place), except that it costs no Bonus Action and no warp."
     },
     {
      "level": 9,
@@ -6371,11 +6379,6 @@
      "level": 17,
      "name": "The Elder Cycles",
      "text": "You can call the whole year at once. As a Bonus Action, choose a point within 60 feet of yourself. Every creature of your choice in a 30-foot-radius Sphere centered there is subject to all four seasons, making each saving throw separately. A season's effect that would last until the start of a creature's next turn lasts until the end of its next turn instead. To resolve it quickly, each creature rolls its Constitution and Wisdom saving throws together, then its Strength saving throw (summer's damage needs no saving throw). Move the creatures that failed against spring last. This isn't a warp's season: it doesn't count against the one-warp-a-turn limit, and a creature can still be subject to one of your warps' seasons on the same turn. Once you use this feature, you can't use it again until you finish a Long Rest."
-    },
-    {
-     "level": 17,
-     "name": "The Door Opens",
-     "text": "When you go Away, you can read up to a number of creatures you can see within 30 feet of yourself equal to your Charisma modifier (minimum of one), as part of the same Reaction, as if you had used Reading the Season; the DM can tell you their tempers when the fight allows. While you're Away, the door you carry stands open, and you gain these benefits:\n\n- **The Storm.** At the start of each of your turns, choose a season you know. Each creature of your choice in a 15-foot Emanation originating from you is subject to it, and a creature you've read has Disadvantage on any saving throw against it. This counts as one of your warps' seasons, so a creature it takes can't be taken by a warp's season on the same turn. A season's effect that would last until the start of a creature's next turn lasts until the end of its next turn instead.\n- **The Glamour Drops.** Each creature you've read that starts its turn within 30 feet of you and can see you makes a Wisdom saving throw against your spell save DC (you can spare any of them). On a failed save, it has the Charmed condition, with you as the charmer, until the start of its next turn: it can't bring itself to touch you, and must choose another target if it attacks.\n\nThe Storm takes the place of the warps Flicker leaves behind (The Way Back): while the door stands open, Flicker still moves you, but leaves no warp."
     },
     {
      "level": 18,
