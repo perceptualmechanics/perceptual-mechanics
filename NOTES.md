@@ -2806,3 +2806,35 @@ it can't take.
 levels 3 and 6 are flagged as placeholders. QA: the globe suite 53/53, layout
 53/53, the builder 22/22, the site 27/27, and all 19 classes at five levels
 walked through the UI.
+
+### 7.5.2 — the horizon comes off the globe
+
+**The horizon ring is gone.** It crossed the globe's middle and hid the region
+names behind it. 7.5.1 worked around it: names tried every place in their region
+and every side of each, held their spot while the globe turned, and glided when
+crowded out. Holding a spot left names off their regions once the globe came to
+rest (India over Tibet, the Steppe over the Caspian). The ring now goes, with its
+zodiac, its 1668 calendar, its grain and its lit walls, and the workaround goes
+with it. The brass meridian ring stays. About 400 lines are gone: 496 removed, 90
+added.
+
+**Names stand at their regions,** as they did before 7.5.1: at the mean of their
+places, nudged past another name or hidden, and free to cross the thin ring. Names
+hidden at the six homes now number 4, 5, 9, 3, 4 and 7, against 7.5.0's 6, 7, 9,
+5, 4 and 7. In the views checked, each sits near the limb or on the far side.
+
+**The eye reaches the poles.** The 48° limit was the horizon's, set so it filled
+one frame. The meridian ring alone fills the same frame from any eye, and from a
+pole it is edge-on and covers nothing. The frame is now the ring's.
+
+**Gates.** verify-euphonia-map casts the eye's line against the ring alone; with
+the ring's far half planted in its place, it reports 21,688 points wrong. It
+holds the frame's size from 10 eyes, level among them. Three checks went with
+what they checked: the horizon's narrowest width, its calendar, and every home
+within the eye's reach, which can no longer fail.
+
+**The export of 13 November.** Danae's level 9 and 17 features are now
+placeholders, so by the rule of 9 November the builder holds the class back until
+they're written. QA: the globe suite 53/53 in four themes, layout 53/53, the
+builder 22/22, the site 27/27, and the 18 offered classes at five levels walked
+through the UI.
