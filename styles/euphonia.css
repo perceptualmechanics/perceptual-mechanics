@@ -126,7 +126,7 @@ body { background: var(--ground); font-family: var(--type); }
 .theme-pick select:hover { border-color: var(--accent); }
 .theme-pick select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 /* The map's buttons have nothing to do over the builder. */
-.euphonia-top.is-builder :is(.map-reset, .map-contents-open) { display: none; }
+.euphonia-top.is-builder :is(.map-reset, .map-contents-open, .contact) { display: none; }
 
 /* The ribbons: capitals between two rules, in the theme's paper, across the
    window and fading at its edges, the words drifting left along the top and

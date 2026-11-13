@@ -513,7 +513,6 @@ export async function initMap(stage) {
     }
     placeLabels();
     reset.hidden = atHome();
-    contact.hidden = atHome();
     ambient.fade(shown);
     // Still means no turn for SETTLE_MS after the last frame's end, however
     // long that frame took.
