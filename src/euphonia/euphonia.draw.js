@@ -7,7 +7,7 @@
 import { geoPath } from 'd3-geo';
 import { projectionFor, faces, capOf, ellipseOf } from './euphonia.globe.js';
 import { MERIDIAN, lit } from './euphonia.mount.js';
-import { AXES, SPHERES } from './euphonia.wheel.js';
+import { AXES, SPHERES, SIXTEENTH } from './euphonia.wheel.js';
 
 const RAD = Math.PI / 180;
 // The golden angle: steps by it never line up, so what it spaces never
@@ -269,9 +269,16 @@ export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, 
     ctx.globalAlpha = WHEEL_TYPE_ALPHA;
     ctx.fillStyle = colors.paper;
     type(WHEEL_SMALL_REM, 'italic');
-    const mid = road.centre ? ring[0] : road.from + road.span / 2;
-    inward(mid);
-    ctx.fillText(road.name, ...point(t, mid));
+    // Its name at its source, where its pathway's opening says it rises
+    // ("The River of Life rises in Elysium", the Mountain "rising from
+    // Asphodel"), in the gap after that realm's name: half the Wheel's
+    // sixteenth on along its arc, or, for a road through the centre, back
+    // from the way it climbs, so two roads rising together part.
+    const source = place.get(road.rises), half = SIXTEENTH / 2;
+    const along = road.centre ? -Math.sign(((ring.find(at => at !== source) - source + 540) % 360) - 180) : source === road.from ? 1 : -1;
+    const at = (source + along * half + 360) % 360;
+    inward(at);
+    ctx.fillText(road.name, ...point(t, at));
   });
 
   // The realms where the Wheel files them, in small capitals where the

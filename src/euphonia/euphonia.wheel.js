@@ -13,6 +13,8 @@ export const AXES = { Chaos: 0, Good: 90, Law: 180, Evil: 270 };
 // "X and Y" lies halfway between two axes, and "X, toward Y" a quarter of the
 // way from X to Y: the ring in sixteenths, with the nine alignments on it.
 const TOWARD = 1 / 4;
+// The step between places on the ring, a quarter of the way between axes.
+export const SIXTEENTH = (AXES.Good - AXES.Chaos) * TOWARD;
 const RAD = Math.PI / 180;
 const CENTRE = 'Neutral, the center';
 
