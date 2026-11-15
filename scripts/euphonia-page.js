@@ -74,6 +74,7 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${LIVING_NOTE}</p>\n` 
 </div>
 </div>
 <p class="map-status" aria-live="polite"></p>
+<div class="map-peek" hidden><p class="map-peek-label"></p><button type="button" class="map-peek-back">Back to entry</button></div>
 <p class="map-help visually-hidden" id="map-help">Drag the globe across, or focus it and use the left and right arrows, to spin it on its axis; drag up or down, or use the up and down arrows, to slide its brass ring through the horizon and set it for a latitude, the pole raised that far. The wheel, a pinch, or + and − zoom; 0 sets it home again. The wooden horizon's calendar marks today beside the sun's place in the zodiac. A region's name opens its chapter beside the globe, and Contents lists every chapter and the rest of the book's pages. Click or tap a place, or press Enter on the globe for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
 <noscript><p class="map-help">The map and its pages are drawn in the page by script.</p></noscript>`;
 }
@@ -203,13 +204,15 @@ ${notable}
 // In each section of a chapter, the first mention of each place its @places
 // line names, and of each title, ruler or power its @names line places, is a
 // button that turns the globe there (euphonia.map.js). A place is matched as
-// the book writes it; a name, whatever its case ("The shah", "the shah").
-// Text already in a link or a button is left as it is.
+// the book writes it, a name whatever its case ("The shah", "the shah"), and
+// both accents aside, as the map finds a place in a chapter ("Nojpeten"
+// finds "Nojpetén"). Text already in a link or a button is left as it is.
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const fold = s => s.normalize('NFD').replace(/\p{M}/gu, '');
 function globeMarks(r) {
   const id = slug(r.name);
   const mark = (text, flags, attr) => ({
-    re: new RegExp(`(?<![\\p{L}])${escapeRe(esc(text))}(?![\\p{L}])`, flags),
+    re: new RegExp(`(?<![\\p{L}])${escapeRe(fold(esc(text)))}(?![\\p{L}])`, flags),
     button: shown => `<button type="button" class="map-mark" data-region="${id}" ${attr}>${shown}<span class="visually-hidden">, on the globe</span></button>`,
   });
   return [
@@ -228,14 +231,21 @@ function globeLinks(html, marks) {
     }
     let out = '', rest = part;
     while (!inside && left.length) {
+      // Matched in the text with its accents folded away, each folded
+      // character keeping the index of the one it came from, and cut from
+      // the text as written.
+      let folded = '';
+      const from = [];
+      [...rest].reduce((at, ch) => { for (const f of fold(ch)) { folded += f; from.push(at); } return at + ch.length; }, 0);
       let first = null;
       for (const m of left) {
-        const found = m.re.exec(rest);
+        const found = m.re.exec(folded);
         if (found && (!first || found.index < first.found.index)) first = { m, found };
       }
       if (!first) break;
-      out += rest.slice(0, first.found.index) + first.m.button(first.found[0]);
-      rest = rest.slice(first.found.index + first.found[0].length);
+      const start = from[first.found.index], end = from[first.found.index + first.found[0].length - 1] + 1;
+      out += rest.slice(0, start) + first.m.button(rest.slice(start, end));
+      rest = rest.slice(end);
       left.splice(left.indexOf(first.m), 1);
     }
     return out + rest;

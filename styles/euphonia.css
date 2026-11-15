@@ -313,7 +313,20 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
 .map-panel.from-left { left: 0; right: auto; border-left: 0; border-right: 1px solid var(--line); transform: translateX(-100%); }
 .map-panel.no-transition { transition: none !important; }
 .map-panel.open { transform: translateX(0); visibility: visible; transition: transform .5s cubic-bezier(.16, 1, .3, 1), visibility 0s; }
-@media (prefers-reduced-motion: reduce) { .map-panel, .map-panel.open { transition: visibility 0s; } }
+/* Stepped aside for a name the reader followed (euphonia.map.js, a phone):
+   out of view as when closed, its place kept, a strip along the globe's foot
+   to bring it back. */
+.map-panel.open.peeked { transform: translateX(100%); visibility: hidden; transition: transform .5s cubic-bezier(.16, 1, .3, 1), visibility 0s linear .5s; }
+.map-panel.open.peeked.from-left { transform: translateX(-100%); }
+@media (prefers-reduced-motion: reduce) { .map-panel, .map-panel.open, .map-panel.open.peeked { transition: visibility 0s; } }
+.map-peek {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 11; display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
+  padding: 0.7rem 1rem; background: var(--surface-deep); border-top: 1px solid var(--line); cursor: pointer;
+}
+.map-peek[hidden] { display: none; }
+.map-peek-label { margin: 0; color: var(--text); font-size: 0.95rem; }
+.map-peek-back { font: inherit; font-size: 0.9rem; color: var(--accent); background: var(--surface); border: 1px solid var(--line-accent); padding: 0.3rem 0.8rem; cursor: pointer; white-space: nowrap; }
+.map-peek-back:hover, .map-peek-back:focus-visible { border-color: var(--accent); }
 .map-panel-close {
   position: sticky; top: 0; z-index: 2; display: block; width: max-content; margin: -0.6rem -0.6rem 0 auto;
   background: none; border: 0; font: inherit; font-size: 1.2rem; line-height: 1; color: var(--text-quiet); cursor: pointer; padding: 0.5rem;

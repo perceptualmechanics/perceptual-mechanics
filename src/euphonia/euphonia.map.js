@@ -262,7 +262,7 @@ export async function initMap(stage) {
     closeBtn: panel.querySelector('.map-panel-close'),
     // Closed, the glass draws back to the whole mount as the panel slides
     // away, the globe still turned where the reader left it.
-    onClose: () => { chosen = null; pick = null; marked = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
+    onClose: () => { unpeek(); chosen = null; pick = null; marked = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
   });
   panel.querySelector('.map-panel-zoom').addEventListener('click', () => zoomToRegion(chosen));
   // A region whose power has a theme offers it; the page never changes on its
@@ -311,6 +311,7 @@ export async function initMap(stage) {
   // The panel comes in from the right, over the globe's eastern edge. Whether
   // it was closed, and so is sliding in now.
   function openPanel(button) {
+    unpeek();
     const arriving = !panel.classList.contains('open');
     opener = button;
     if (panel.classList.contains('from-left')) setPanelSide(panel, false);
@@ -796,8 +797,30 @@ export async function initMap(stage) {
   // (their entry's @at line), a place a chapter's @places line names, and a
   // title, ruler or power its @names line places.
   const people = new Map(places.people.map(p => [p.name, p]));
-  function showMark(at, label, r) {
+  // Where the panel covers most of the globe (a phone), it steps aside to a
+  // strip along the globe's foot, the label and a way back, so the turn and
+  // the ring show above it; back, the panel returns where the reader was.
+  const peek = stage.querySelector('.map-peek'), peekLabel = peek.querySelector('.map-peek-label');
+  let peekedFrom = null;
+  function unpeek() {
+    if (peek.hidden) return;
+    panel.classList.remove('peeked');
+    peek.hidden = true;
+  }
+  peek.addEventListener('click', () => {
+    unpeek();
+    peekedFrom?.focus({ preventScroll: true });
+    peekedFrom = null;
+  });
+  function showMark(at, label, r, from) {
     marked = { lat: at.lat, lon: at.lon, label };
+    if (panel.offsetWidth >= g.cssWidth / 2) {
+      peekedFrom = from;
+      panel.classList.add('peeked');
+      peekLabel.textContent = label;
+      peek.hidden = false;
+      peek.querySelector('button').focus({ preventScroll: true });
+    }
     zoomTo(at, Math.max(r ? regionZoom(r) : 1, g.zoom) * KEY_ZOOM);
     status.textContent = `${label}.`;
     redraw();
@@ -807,14 +830,14 @@ export async function initMap(stage) {
     if (!b) return;
     if (b.dataset.person) {
       const p = people.get(b.dataset.person);
-      if (p) showMark(p, `${p.name}, at ${p.place}`, regions.find(x => x.id === p.region));
+      if (p) showMark(p, `${p.name}, at ${p.place}`, regions.find(x => x.id === p.region), b);
       return;
     }
     const r = regions.find(x => x.id === b.dataset.region);
     const place = b.dataset.place && r?.glows.find(x => x.name === b.dataset.place);
     const named = b.dataset.name && r?.names.find(x => x.name === b.dataset.name);
-    if (place) showMark(place, placeName(place), r);
-    else if (named) showMark(named, `${named.name}, at ${named.modern}`, r);
+    if (place) showMark(place, placeName(place), r, b);
+    else if (named) showMark(named, `${named.name}, at ${named.modern}`, r, b);
   });
   // Where the point (lon, lat) is on the mount, in radii at zoom 1 from the
   // globe's centre, with the globe turned to lon0 and seen from `eye`.

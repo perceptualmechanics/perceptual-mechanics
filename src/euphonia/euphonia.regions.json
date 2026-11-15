@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "0bf0b108140eb08b3f213bfd26179265243832e29307e92482d2c89a2541ee50",
-  "modified": "2026-11-15T12:56:43-05:00",
+  "sha256": "911898ce1e3bec1b7e14f3bed6ee9ce957ad57fdf0f35463607b003f7d9567e7",
+  "modified": "2026-11-15T13:47:42-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 24,
   "rules": {
@@ -111,7 +111,83 @@
      "country": "Russia"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "Colbert",
+     "modern": "Paris",
+     "country": "France"
+    },
+    {
+     "name": "Charles II",
+     "modern": "London",
+     "country": "United Kingdom"
+    },
+    {
+     "name": "the Privy Council",
+     "modern": "London",
+     "country": "United Kingdom"
+    },
+    {
+     "name": "the Kirk",
+     "modern": "Edinburgh",
+     "country": "United Kingdom"
+    },
+    {
+     "name": "the Wisselbank",
+     "modern": "Amsterdam",
+     "country": "Netherlands"
+    },
+    {
+     "name": "the VOC",
+     "modern": "Amsterdam",
+     "country": "Netherlands"
+    },
+    {
+     "name": "Diet",
+     "modern": "Regensburg",
+     "country": "Germany"
+    },
+    {
+     "name": "the Council of Ten",
+     "modern": "Venice",
+     "country": "Italy"
+    },
+    {
+     "name": "the Ten",
+     "modern": "Venice",
+     "country": "Italy"
+    },
+    {
+     "name": "Rome",
+     "modern": "Rome",
+     "country": "Italy"
+    },
+    {
+     "name": "the Holy Office",
+     "modern": "Rome",
+     "country": "Italy"
+    },
+    {
+     "name": "the Sejm",
+     "modern": "Warsaw",
+     "country": "Poland"
+    },
+    {
+     "name": "Tsar Alexei",
+     "modern": "Moscow",
+     "country": "Russia"
+    },
+    {
+     "name": "Lanternhall",
+     "modern": "Basel",
+     "country": "Switzerland"
+    },
+    {
+     "name": "the Black Forest",
+     "modern": "Freiburg",
+     "country": "Germany"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -233,7 +309,83 @@
      "country": "Mauritius"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "Mukombwe",
+     "modern": "Mazowe",
+     "country": "Zimbabwe"
+    },
+    {
+     "name": "the king",
+     "modern": "Mazowe",
+     "country": "Zimbabwe"
+    },
+    {
+     "name": "the court",
+     "modern": "Mazowe",
+     "country": "Zimbabwe"
+    },
+    {
+     "name": "the House of the Bird",
+     "modern": "Beira",
+     "country": "Mozambique"
+    },
+    {
+     "name": "the Mhizha Guild",
+     "modern": "Beira",
+     "country": "Mozambique"
+    },
+    {
+     "name": "the Great Dyke",
+     "modern": "Kadoma",
+     "country": "Zimbabwe"
+    },
+    {
+     "name": "the Matobo Hills",
+     "modern": "Bulawayo",
+     "country": "Zimbabwe"
+    },
+    {
+     "name": "Mozambique Island",
+     "modern": "Mocambique",
+     "country": "Mozambique"
+    },
+    {
+     "name": "Fort Jesus",
+     "modern": "Mombasa",
+     "country": "Kenya"
+    },
+    {
+     "name": "Goa",
+     "modern": "Panaji",
+     "country": "India"
+    },
+    {
+     "name": "the Dutch East India Company",
+     "modern": "Jakarta",
+     "country": "Indonesia"
+    },
+    {
+     "name": "Kandy",
+     "modern": "Kandy",
+     "country": "Sri Lanka"
+    },
+    {
+     "name": "Ambon",
+     "modern": "Ambon",
+     "country": "Indonesia"
+    },
+    {
+     "name": "Table Mountain",
+     "modern": "Cape Town",
+     "country": "South Africa"
+    },
+    {
+     "name": "Mataram",
+     "modern": "Yogyakarta",
+     "country": "Indonesia"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -395,7 +547,83 @@
      "country": "Somalia"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "the Porte",
+     "modern": "Istanbul",
+     "country": "Turkey"
+    },
+    {
+     "name": "Mehmed IV",
+     "modern": "Istanbul",
+     "country": "Turkey"
+    },
+    {
+     "name": "Fazıl Ahmed",
+     "modern": "Iraklio",
+     "country": "Greece"
+    },
+    {
+     "name": "the shah",
+     "modern": "Isfahan",
+     "country": "Iran"
+    },
+    {
+     "name": "Solayman",
+     "modern": "Isfahan",
+     "country": "Iran"
+    },
+    {
+     "name": "New Julfa",
+     "modern": "Isfahan",
+     "country": "Iran"
+    },
+    {
+     "name": "the taifa",
+     "modern": "Algiers",
+     "country": "Algeria"
+    },
+    {
+     "name": "Yohannes I",
+     "modern": "Gondar",
+     "country": "Ethiopia"
+    },
+    {
+     "name": "Emir Hashim ibn Ali",
+     "modern": "Harar",
+     "country": "Ethiopia"
+    },
+    {
+     "name": "al-Mutawakkil Ismaʿil",
+     "modern": "Sanaa",
+     "country": "Yemen"
+    },
+    {
+     "name": "Badi II",
+     "modern": "Sennar",
+     "country": "Sudan"
+    },
+    {
+     "name": "Jidda",
+     "modern": "Jeddah",
+     "country": "Saudi Arabia"
+    },
+    {
+     "name": "al-Mansuri",
+     "modern": "Cairo",
+     "country": "Egypt"
+    },
+    {
+     "name": "Farahabad",
+     "modern": "Sari",
+     "country": "Iran"
+    },
+    {
+     "name": "Aksum",
+     "modern": "Aksum",
+     "country": "Ethiopia"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -522,7 +750,83 @@
      "country": "Congo (Kinshasa)"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "Ooni",
+     "modern": "Ife",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Alaafin",
+     "modern": "Ilorin",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Oyo Mesi",
+     "modern": "Ilorin",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Offra",
+     "modern": "Cotonou",
+     "country": "Benin"
+    },
+    {
+     "name": "Benin's oba",
+     "modern": "Benin City",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Akwamu",
+     "modern": "Accra",
+     "country": "Ghana"
+    },
+    {
+     "name": "the Arma",
+     "modern": "Timbuktu",
+     "country": "Mali"
+    },
+    {
+     "name": "the Kwararafa",
+     "modern": "Wukari",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Álvaro VIII",
+     "modern": "Mbanza-Congo",
+     "country": "Angola"
+    },
+    {
+     "name": "Paulo da Silva",
+     "modern": "Soyo",
+     "country": "Angola"
+    },
+    {
+     "name": "Nfinda Ngula",
+     "modern": "Soyo",
+     "country": "Angola"
+    },
+    {
+     "name": "Elmina",
+     "modern": "Cape Coast",
+     "country": "Ghana"
+    },
+    {
+     "name": "Cape Coast Castle",
+     "modern": "Cape Coast",
+     "country": "Ghana"
+    },
+    {
+     "name": "Christiansborg",
+     "modern": "Accra",
+     "country": "Ghana"
+    },
+    {
+     "name": "Ijebu",
+     "modern": "Ijebu Ode",
+     "country": "Nigeria"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -655,7 +959,79 @@
      "country": "India"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "Aurangzeb",
+     "modern": "Delhi",
+     "country": "India"
+    },
+    {
+     "name": "Shah Jahan",
+     "modern": "Agra",
+     "country": "India"
+    },
+    {
+     "name": "Shivaji",
+     "modern": "Pune",
+     "country": "India"
+    },
+    {
+     "name": "the Mughal viceroy",
+     "modern": "Aurangabad",
+     "province": "Maharashtra",
+     "country": "India"
+    },
+    {
+     "name": "Chokkanatha Nayak",
+     "modern": "Madurai",
+     "country": "India"
+    },
+    {
+     "name": "Vijayaraghava Nayak",
+     "modern": "Thanjavur",
+     "country": "India"
+    },
+    {
+     "name": "Sriranga III",
+     "modern": "Shivamogga",
+     "country": "India"
+    },
+    {
+     "name": "Vijayanagara",
+     "modern": "Hosapete",
+     "country": "India"
+    },
+    {
+     "name": "the Zamorin",
+     "modern": "Kozhikode",
+     "country": "India"
+    },
+    {
+     "name": "Madras",
+     "modern": "Chennai",
+     "country": "India"
+    },
+    {
+     "name": "Tranquebar",
+     "modern": "Kumbakonam",
+     "country": "India"
+    },
+    {
+     "name": "Bombay",
+     "modern": "Mumbai",
+     "country": "India"
+    },
+    {
+     "name": "Chittagong",
+     "modern": "Chattogram",
+     "country": "Bangladesh"
+    },
+    {
+     "name": "Shaista Khan",
+     "modern": "Dhaka",
+     "country": "Bangladesh"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -787,7 +1163,88 @@
      "country": "Philippines"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "the Kangxi Emperor",
+     "modern": "Beijing",
+     "country": "China"
+    },
+    {
+     "name": "the Astronomical Bureau",
+     "modern": "Beijing",
+     "country": "China"
+    },
+    {
+     "name": "Yang Guangxian",
+     "modern": "Beijing",
+     "country": "China"
+    },
+    {
+     "name": "Wu Sangui",
+     "modern": "Kunming",
+     "country": "China"
+    },
+    {
+     "name": "Shang Kexi",
+     "modern": "Guangzhou",
+     "country": "China"
+    },
+    {
+     "name": "Tungning",
+     "modern": "Tainan",
+     "country": "Taiwan"
+    },
+    {
+     "name": "the Tokugawa shoguns",
+     "modern": "Tokyo",
+     "country": "Japan"
+    },
+    {
+     "name": "Dejima",
+     "modern": "Nagasaki",
+     "country": "Japan"
+    },
+    {
+     "name": "Narai",
+     "modern": "Ayutthaya",
+     "country": "Thailand"
+    },
+    {
+     "name": "Pye Min",
+     "modern": "Mandalay",
+     "country": "Myanmar"
+    },
+    {
+     "name": "Trịnh",
+     "modern": "Hanoi",
+     "country": "Vietnam"
+    },
+    {
+     "name": "Nguyễn",
+     "modern": "Hue",
+     "country": "Vietnam"
+    },
+    {
+     "name": "Hasanuddin",
+     "modern": "Makassar",
+     "country": "Indonesia"
+    },
+    {
+     "name": "Somba Opu",
+     "modern": "Makassar",
+     "country": "Indonesia"
+    },
+    {
+     "name": "Macau",
+     "modern": "Macau",
+     "country": "Macau S.A.R"
+    },
+    {
+     "name": "Ainu Mosir",
+     "modern": "Sapporo",
+     "country": "Japan"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -923,7 +1380,83 @@
      "country": "Brazil"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "the Grand Council",
+     "modern": "Syracuse",
+     "country": "United States of America"
+    },
+    {
+     "name": "the Sapa Inca",
+     "modern": "Cusco",
+     "country": "Peru"
+    },
+    {
+     "name": "Cusi Túpac Yupanqui",
+     "modern": "Cusco",
+     "country": "Peru"
+    },
+    {
+     "name": "Cusco",
+     "modern": "Cusco",
+     "country": "Peru"
+    },
+    {
+     "name": "Aj Kan Ek'",
+     "modern": "Flores",
+     "country": "Guatemala"
+    },
+    {
+     "name": "Nojpetén",
+     "modern": "Flores",
+     "country": "Guatemala"
+    },
+    {
+     "name": "Potosí",
+     "modern": "Potosi",
+     "country": "Bolivia"
+    },
+    {
+     "name": "Huancavelica",
+     "modern": "Huancavelica",
+     "country": "Peru"
+    },
+    {
+     "name": "Laicacota",
+     "modern": "Ilave",
+     "country": "Peru"
+    },
+    {
+     "name": "the Archbishop",
+     "modern": "Lima",
+     "country": "Peru"
+    },
+    {
+     "name": "the Mapuche",
+     "modern": "Temuco",
+     "country": "Chile"
+    },
+    {
+     "name": "Palmares",
+     "modern": "Rio Largo",
+     "country": "Brazil"
+    },
+    {
+     "name": "Pernambuco",
+     "modern": "Recife",
+     "country": "Brazil"
+    },
+    {
+     "name": "Portobelo",
+     "modern": "Colón",
+     "country": "Panama"
+    },
+    {
+     "name": "Henry Morgan",
+     "modern": "Kingston",
+     "country": "Jamaica"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1015,7 +1548,58 @@
      "country": "Papua New Guinea"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "Pohnpei",
+     "modern": "Palikir",
+     "country": "Federated States of Micronesia"
+    },
+    {
+     "name": "Nahnmwarki",
+     "modern": "Palikir",
+     "country": "Federated States of Micronesia"
+    },
+    {
+     "name": "the samworo",
+     "modern": "Palikir",
+     "country": "Federated States of Micronesia"
+    },
+    {
+     "name": "the Tuʻi Tonga",
+     "modern": "Nukualofa",
+     "country": "Tonga"
+    },
+    {
+     "name": "Raʻiātea",
+     "modern": "Papeete",
+     "country": "French Polynesia"
+    },
+    {
+     "name": "the Waikato",
+     "modern": "Hamilton",
+     "country": "New Zealand"
+    },
+    {
+     "name": "San Vitores",
+     "modern": "Agana",
+     "country": "Guam"
+    },
+    {
+     "name": "Matapang",
+     "modern": "Agana",
+     "country": "Guam"
+    },
+    {
+     "name": "Kuk",
+     "modern": "Mount Hagen",
+     "country": "Papua New Guinea"
+    },
+    {
+     "name": "Samoa",
+     "modern": "Apia",
+     "country": "Samoa"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1107,7 +1691,68 @@
      "country": "Russia"
     }
    ],
-   "names": [],
+   "names": [
+    {
+     "name": "the Gobi",
+     "modern": "Dalandzadgad",
+     "country": "Mongolia"
+    },
+    {
+     "name": "Khiva",
+     "modern": "Khiwa",
+     "country": "Uzbekistan"
+    },
+    {
+     "name": "the Janid khan",
+     "modern": "Bukhara",
+     "country": "Uzbekistan"
+    },
+    {
+     "name": "Ahmed Yasawi",
+     "modern": "Turkistan",
+     "country": "Kazakhstan"
+    },
+    {
+     "name": "Sengge",
+     "modern": "Yining",
+     "country": "China"
+    },
+    {
+     "name": "the Ili valley",
+     "modern": "Yining",
+     "country": "China"
+    },
+    {
+     "name": "the Dzungars",
+     "modern": "Yining",
+     "country": "China"
+    },
+    {
+     "name": "Tibet",
+     "modern": "Lhasa",
+     "country": "China"
+    },
+    {
+     "name": "the Kalmyks",
+     "modern": "Astrakhan",
+     "country": "Russia"
+    },
+    {
+     "name": "the Qing",
+     "modern": "Beijing",
+     "country": "China"
+    },
+    {
+     "name": "Norilsk",
+     "modern": "Norilsk",
+     "country": "Russia"
+    },
+    {
+     "name": "the Chukchi",
+     "modern": "Anadyr",
+     "country": "Russia"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
