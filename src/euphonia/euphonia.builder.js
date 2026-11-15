@@ -19,7 +19,7 @@ const PARAM = 'c';
 // A number the sheet can't know yet (no scores chosen, say) shows as a dash.
 const known = n => (Number.isFinite(n) ? String(n) : '—');
 const signed = n => (!Number.isFinite(n) ? '—' : n >= 0 ? `+${n}` : `−${-n}`);
-const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, homeland: '', styles: {}, expertise: {}, options: {}, optionArts: {}, languages: {} });
+const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, homeland: '', market: '', styles: {}, expertise: {}, options: {}, optionArts: {}, languages: {} });
 
 // The character in the address: its choices as JSON, base64url.
 const encode = state => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(state)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -104,6 +104,9 @@ export async function initBuilder(panel) {
   // regions, whose chapter opens on the map.
   const homelandSelect = h('select', { name: 'homeland' }, options(places.regions.map(r => r.name), state.homeland, 'Choose a region'));
   const homelandLink = h('p', { class: 'b-note' });
+  // Where the character buys what the books price by distance (a Mutapan
+  // curiosity), among the places they name; by default, the homeland's.
+  const marketSelect = h('select', { name: 'market' }, h('option', { value: '' }), options([...new Set(book.items.flatMap(i => i.prices?.places.map(p => p.place) ?? []))], state.market));
   const styleBox = h('div', { class: 'b-styles' });
   const optionBox = h('div', { class: 'b-options' });
   const pickBox = h('div', { class: 'b-picks' });
@@ -149,7 +152,9 @@ export async function initBuilder(panel) {
     optionSection,
     section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, speciesTraits),
     section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
-      h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink),
+      h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink,
+      h('label', { class: 'b-field' }, h('span', {}, 'Buying in'), marketSelect),
+      h('p', { class: 'b-note' }, 'Mutapan curiosities cost more the farther they travel from Mutapa’s capital.')),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
     section('Languages', tongueList, languageBox, languageAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
@@ -166,7 +171,8 @@ export async function initBuilder(panel) {
   optionSelect.addEventListener('change', () => set(s => { s.option = optionSelect.value; }));
   sizeSelect.addEventListener('change', () => set(s => { s.size = sizeSelect.value; }));
   backgroundSelect.addEventListener('change', () => set(s => { s.background = backgroundSelect.value; s.increases = {}; }));
-  homelandSelect.addEventListener('change', () => set(s => { s.homeland = homelandSelect.value; }));
+  homelandSelect.addEventListener('change', () => set(s => { s.homeland = homelandSelect.value; s.market = ''; }));
+  marketSelect.addEventListener('change', () => set(s => { s.market = marketSelect.value; }));
   methodGroup.addEventListener('change', e => set(s => { s.method = e.target.value; s.base = {}; }));
   addClass.addEventListener('click', () => {
     set(s => { s.classes.push({ class: '', level: 1, subclass: '' }); });
@@ -662,11 +668,15 @@ export async function initBuilder(panel) {
     ]).flat());
   }
 
-  // The homeland, and a link to its chapter on the map.
-  function renderHomeland() {
+  // The homeland, a link to its chapter on the map, and where the character
+  // buys: the homeland's place unless another is chosen.
+  function renderHomeland(result) {
     const region = places.regions.find(r => r.name === state.homeland);
     homelandSelect.value = region ? region.name : '';
     homelandLink.replaceChildren(...(region ? [h('a', { href: `#${region.id}` }, `Read ${region.name}`), ' on the map.'] : []));
+    const { place, chosen } = result.equipment.buying;
+    marketSelect.value = chosen ? state.market : '';
+    marketSelect.options[0].textContent = !chosen && place ? `At home: ${place}` : 'Choose a place';
   }
 
   // The Fighting Style feats features grant, and the Expertise they ask.
@@ -775,9 +785,11 @@ export async function initBuilder(panel) {
 
   // ---------- the sheet
   // What the export changed from the SRD, as the licence asks it be said:
-  // the names it renamed, and how many passages besides.
-  const renamed = srd.adapted.changes.filter(c => c.path.endsWith('/name')).map(c => c.to);
-  const passages = srd.adapted.changes.length - renamed.length;
+  // the names it renamed, each once (Conjure Fae is renamed in the Druid's
+  // list and in the spells), and how many passages besides.
+  const renames = srd.adapted.changes.filter(c => c.path.endsWith('/name'));
+  const renamed = [...new Set(renames.map(c => c.to))];
+  const passages = srd.adapted.changes.length - renames.length;
   const adaptedNote = srd.adapted.changes.length ? `Adapted to the setting's names${renamed.length ? `: ${renamed.join(', ')}` : ''}${passages ? `, and ${passages} passage${passages === 1 ? '' : 's'}` : ''}.` : '';
   const open = new Set();
   function renderSheet(result) {
@@ -841,7 +853,7 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Money'), h('dd', {}, `${gear.gold.toLocaleString('en')} GP${gear.levelGold ? `, with the ${gear.levelGold.toLocaleString('en')} GP a character starting at level ${result.level} has; roll ${gear.roll} more` : ''}`)),
         gear.magicItems.length ? [h('h4', {}, 'Magic items'),
           h('ul', { class: 'sheet-items' }, gear.magicItems.map((m, i) => h('li', {}, m.item
-            ? det(`item-${i}`, `${m.rarity}: ${m.item.name}${m.item.member ? ` (${m.item.member})` : ''}${m.item.bonus ? `, ${m.item.bonus}` : ''}${m.item.attunement ? ', requires Attunement' : ''}`, h('div', { html: blocks(m.item.text) }))
+            ? det(`item-${i}`, `${m.rarity}: ${m.item.name}${m.item.member ? ` (${m.item.member})` : ''}${m.item.bonus ? `, ${m.item.bonus}` : ''}${m.item.attunement ? `, requires Attunement${m.item.attunement.by ? ` by ${m.item.attunement.by}` : ''}` : ''}${m.item.living ? ', a living tradition of your homeland' : ''}`, h('div', { html: blocks(m.item.text) }))
             : `${m.rarity}: none of the books’ items fits; the DM’s choice`)))] : null,
         gear.forSale.length ? [h('h4', {}, 'The books’ gear you could buy'),
           h('ul', { class: 'sheet-gear' }, gear.forSale.map(x => h('li', {}, `${x.name}${x.of ? ` (${x.of})` : ''}${x.countsAs ? `, counts as ${x.countsAs.join(' or ')}` : ''}, ${x.cost === null ? x.note : `${x.cost.toLocaleString('en')} GP${x.note ? ` (${x.note})` : ''}`}`)))] : null),
@@ -928,7 +940,7 @@ export async function initBuilder(panel) {
     renderBackground(result);
     renderScores();
     renderOrigin(result);
-    renderHomeland();
+    renderHomeland(result);
     renderStyles(result);
     renderExpertise(result);
     renderSkills(result);

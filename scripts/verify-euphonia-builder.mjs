@@ -5,6 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as defaultEngine from '../src/euphonia/euphonia.character.js';
+import { LIVING, FROM, PRICES } from '../src/euphonia/euphonia.provenance.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 
@@ -373,6 +374,63 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
       if (i.dm) fail(`${c.name} 17: ${i.name} is one the DM hands out`);
       if (i.who && !(i.who.class === c.name && (!i.who.subclasses || i.who.subclasses.includes(sub.name)))) fail(`${c.name} (${sub.name}) 17: given ${i.name}, which requires Attunement by ${i.attunement.by}`);
     }
+  }
+  // Where the items come from (euphonia.provenance.js, authored): each
+  // homeland a region of the State of the World, and each quote in the
+  // item's name or text or a homeland's chapter. A living tradition goes
+  // only to a character of its homeland; the homeland's items come first;
+  // a Mutapan curiosity is priced where it's bought, as the books price it:
+  // by default the one place they name in the homeland, none where they
+  // split the region or don't price it, and the buyer's price at a court or
+  // in Japan.
+  const regions = read('regions').data;
+  for (const x of [...LIVING, ...FROM, ...PRICES.flatMap(p => p.places.map(a => ({ ...a, item: p.item })))]) {
+    const it = items.items.find(i => i.name === x.item);
+    for (const h of x.homelands) if (!regions.some(r => r.name === h)) fail(`euphonia.provenance.js: ${x.item}'s homeland "${h}" isn't a region`);
+    const where = [it?.name, it?.text, ...x.homelands.map(h => JSON.stringify(regions.find(r => r.name === h) ?? ''))].join('\n');
+    for (const q of x.because) if (!where.includes(q)) fail(`euphonia.provenance.js: "${q}" isn't in ${x.item}'s text or its homelands' chapters`);
+  }
+  try {
+    const marked = { ...items, items: items.items.map(i => (i.name === 'Water-Bearer\'s Bucket' ? { ...i, text: `${i.text}\n\n*A living tradition.* Planted.` } : i)) };
+    engine.rulebook(srd, euphonia, setting, subclasses, marked);
+    fail('an item planted as a living tradition, with no homeland in euphonia.provenance.js, builds');
+  } catch { /* the rulebook refuses it, as it should */ }
+  const from = (homeland, cls = 'Fighter', subclass = 'Champion') => run({ ...someone([{ class: cls, level: 11, subclass }]), homeland }, `${cls} of ${homeland || 'nowhere'}`)?.equipment;
+  for (const r of ['', ...regions.map(x => x.name)]) {
+    const got = from(r);
+    for (const m of got?.magicItems ?? []) {
+      const living = LIVING.find(x => x.item === m.item?.name);
+      if (living && !living.homelands.includes(r)) fail(`${m.item.name}, a living tradition of ${living.homelands.join(' and ')}, given to a character of ${r || 'no homeland'}`);
+    }
+  }
+  const named11 = h => (from(h)?.magicItems ?? []).map(m => m.item?.name);
+  if (!named11('The Americas').includes('Khipu of Record') || !named11('East and Southeast Asia').includes('Talisman Papers (fu)') || !named11('India').includes('Lahore Astrolabe'))
+    fail(`a homeland's items first: the Americas' ${named11('The Americas').join(', ')}; East and Southeast Asia's ${named11('East and Southeast Asia').join(', ')}; India's ${named11('India').join(', ')}`);
+  const lamp = (homeland, market) => run({ ...someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), homeland, market }, `a lamp bought by ${homeland || 'no one'} in ${market || 'the homeland'}`)?.equipment.forSale.find(x => x.name === 'Self-Lighting Lamp');
+  const base = items.items.find(i => i.name === 'Mutapan Curiosities').pieces.find(p => p.name === 'Self-Lighting Lamp').cost;
+  const LAMPS = [['Mutapa and the Indian Ocean', '', base], ['India', '', 5 * base], ['Europe', '', 10 * base], ['The Americas', '', 10 * base], ['East and Southeast Asia', '', null], ['East and Southeast Asia', 'China', 10 * base],
+    ['East and Southeast Asia', 'a Monsoon Road port, such as Surat, Malacca or Aceh', 5 * base], ['East and Southeast Asia', 'Japan, at Nagasaki', null], ['Europe', 'a court', null], ['West and Central Africa', '', null], ['', '', null]];
+  const lamps = LAMPS.map(([h, m]) => lamp(h, m));
+  if (!LAMPS.every(([, , cost], i) => lamps[i] && lamps[i].cost === cost) || !/whatever the buyer will bear/.test(lamps[7]?.note) || !/the DM sets it/.test(lamps[9]?.note) || !/by place/.test(lamps[4]?.note))
+    fail(`Self-Lighting Lamps: ${LAMPS.map(([h, m], i) => `${h || 'no homeland'}${m ? ` in ${m}` : ''} ${lamps[i]?.cost ?? 'no price'} (${lamps[i]?.note})`).join('; ')}`);
+  // Every form "Requires Attunement by …" takes, each given to one who
+  // qualifies and never to one who doesn't: a class (a multiclass character
+  // with its levels qualifies), a subclass ("a Geomancer Wizard"), the
+  // family member for the character's subclass or pathway ("a Danae of the
+  // Token's Subclass"), and a chapter's subclasses ("a Sorcerer of an Origin
+  // in This Chapter").
+  const holds = (classes, item) => (geared(classes)?.equipment.magicItems ?? []).some(m => `${m.item?.name}${m.item?.member ? ` (${m.item.member})` : ''}` === item);
+  const ATTUNED = [
+    ['by a class', [{ class: 'Revelator', level: 17, subclass: 'The Bridge' }], "Wayfarer's Staff", [{ class: 'Fighter', level: 17, subclass: 'Champion' }]],
+    ['by a class, multiclassed', [{ class: 'Fighter', level: 9, subclass: 'Champion' }, { class: 'Revelator', level: 8, subclass: 'The Bridge' }], "Wayfarer's Staff", [{ class: 'Fighter', level: 17, subclass: 'Champion' }]],
+    ['by a subclass', [{ class: 'Wizard', level: 5, subclass: 'Geomancer' }], 'Mason\'s Square and Compasses', [{ class: 'Wizard', level: 5, subclass: 'Evoker' }]],
+    ["by the Token's subclass", [{ class: 'Danae', level: 5, subclass: 'Binding' }], 'Tokens of Method (Binding)', [{ class: 'Danae', level: 5, subclass: 'Crossing' }]],
+    ["by the Keepsake's pathway", [{ class: 'Revelator', level: 11, subclass: 'The Bridge' }], 'Pathway Keepsakes (The Bridge)', [{ class: 'Revelator', level: 11, subclass: 'The Tree' }]],
+    ['by an origin in the chapter', [{ class: 'Sorcerer', level: 5, subclass: 'Earth Origin' }], 'Pressure Gauge', [{ class: 'Sorcerer', level: 5, subclass: 'Draconic Sorcery' }]],
+  ];
+  for (const [form, yes, item, no] of ATTUNED) {
+    if (!holds(yes, item)) fail(`Attunement ${form}: ${yes.map(c => `${c.class} ${c.level} (${c.subclass})`).join(' / ')} isn't given ${item}`);
+    if (holds(no, item)) fail(`Attunement ${form}: ${no.map(c => `${c.class} ${c.level} (${c.subclass})`).join(' / ')} is given ${item}`);
   }
   // The books' gear to buy: the period weapons that count as one the
   // character is proficient with, and a class chapter's gear only for that

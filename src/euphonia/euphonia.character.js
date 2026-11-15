@@ -6,6 +6,8 @@
 // error, not a guess. Pure, so the gate (verify-euphonia-builder) runs it
 // against the SRD's own worked examples.
 
+import { LIVING, FROM, PRICES } from './euphonia.provenance.js';
+
 export const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 export const MAX_LEVEL = 20;
 
@@ -272,8 +274,11 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     });
     const bound = Boolean(who?.member) || new RegExp(`works only for an? ${item.place.class_name} of that subclass`).test(item.text);
     for (const r of item.rarities) if (r.member && !members.some(mb => mb.name === r.member)) throw new Error(`${item.name}: it's ${r.rarity} for the ${r.member}, which isn't one of its members`);
-    return { ...item, who, members, bound };
+    const living = LIVING.find(x => x.item === item.name)?.homelands ?? null;
+    if (!living && /\*A living tradition\.\*/.test(item.text)) throw new Error(`${item.name}: the books call it a living tradition, and euphonia.provenance.js doesn't say whose`);
+    return { ...item, who, members, bound, living, from: FROM.find(x => x.item === item.name)?.homelands ?? [], prices: PRICES.find(x => x.item === item.name) ?? null };
   });
+  for (const x of [...LIVING, ...FROM, ...PRICES]) if (!goods.items.some(i => i.name === x.item)) throw new Error(`euphonia.provenance.js: there's no item "${x.item}"`);
   return {
     items, periodWeapons: goods.weapons,
     skills: srd.tables.skills.map(r => ({ name: r.Skill, ability: r.Ability })),
@@ -1481,37 +1486,57 @@ export function character(book, state) {
   // subclass), never one the DM hands out. The builder chooses, as with
   // armour: first what's made for its subclass (its chapter's, or the
   // family member for it), then its classes', then the setting's own, then
-  // other classes' chapters, each in the books' order; the rarest slots
-  // first, so an item that comes in several rarities (+1, +2, +3) fills the
-  // rarest it can. A rarity no item fits is left for the DM to fill.
+  // other classes' chapters, each the homeland's first, then in the books'
+  // order; the rarest slots first, so an item that comes in several rarities
+  // (+1, +2, +3) fills the rarest it can. A living tradition goes only to a
+  // character of its homeland. A rarity no item fits is left for the DM to
+  // fill.
   const has = cls => known.some(k => k.class === cls);
   const subclassOf = cls => known.find(k => k.class === cls && k.level >= k.rules.subclassLevel)?.subclass || null;
   const memberFor = item => item.members.find(mb => mb.subclass === subclassOf(item.place.class_name)) ?? null;
-  const usable = item => (!item.who || (has(item.who.class) && (!item.who.subclasses || item.who.subclasses.includes(subclassOf(item.who.class))))) && (!item.bound || memberFor(item));
+  const homeland = state.homeland || null;
+  const usable = item => (!item.living || item.living.includes(homeland)) && (!item.who || (has(item.who.class) && (!item.who.subclasses || item.who.subclasses.includes(subclassOf(item.who.class))))) && (!item.bound || memberFor(item));
   // A rarity a family gives one member ("Uncommon, or Rare for the Spare
   // Barrel") is that member's, and the others take the rest.
   const ratedAt = (item, member) => (item.rarities.some(r => r.member && r.member === member?.name) ? item.rarities.filter(r => r.member === member.name) : item.rarities.filter(r => !r.member));
   const nearness = item => ((item.place.subclass && item.place.subclass === subclassOf(item.place.class_name)) || memberFor(item) ? 0 : has(item.place.class_name) || (item.who && has(item.who.class)) ? 1 : item.place.class_name ? 3 : 2);
+  const athome = item => Number(item.from.includes(homeland) || Boolean(item.living));
   const taken = new Set();
   const RARITIES = ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Legendary'];
   const magicItems = (higher?.magic ?? []).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).flatMap(({ count, rarity }) => Array.from({ length: count }, () => {
     const pick = book.items.filter(i => i.magical && !i.dm && !taken.has(i.name) && usable(i))
       .map(i => ({ item: i, member: memberFor(i), at: ratedAt(i, memberFor(i)).find(r => r.rarity === rarity) }))
-      .filter(x => x.at).sort((a, b) => nearness(a.item) - nearness(b.item))[0];
+      .filter(x => x.at).sort((a, b) => nearness(a.item) - nearness(b.item) || athome(b.item) - athome(a.item))[0];
     if (!pick) return { rarity, item: null };
     taken.add(pick.item.name);
-    return { rarity, item: { name: pick.item.name, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: Boolean(pick.item.attunement), text: pick.item.text } };
+    return { rarity, item: { name: pick.item.name, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: pick.item.attunement, living: Boolean(pick.item.living), text: pick.item.text } };
   })).toSorted((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
   // The books' gear, for the player to buy at the table with what's left:
   // the setting's own and its classes' chapters', each piece of a priced set
   // on its own, and the period's weapons that count as one the character is
-  // proficient with, whatever it can afford (or the books leave unpriced).
+  // proficient with, whatever it can afford (or the books leave unpriced),
+  // the homeland's first. Where the books price an item by distance (a
+  // Mutapan curiosity costs ten times as much in Europe), it's priced where
+  // the character buys: the place chosen, or by default the one place the
+  // books name in its homeland. Where the books give no number, the price at
+  // home stands with their words, for the DM to set.
   const left = money - gear.spent, affordable = x => x.cost === null || x.cost <= left;
+  const places = [...new Set(book.items.flatMap(i => i.prices?.places.map(p => p.place) ?? []))];
+  const homePlaces = item => item.prices.places.filter(p => p.homelands.includes(homeland));
+  const placeOf = item => item.prices.places.find(p => p.place === state.market) ?? (homePlaces(item).length === 1 ? homePlaces(item)[0] : null);
+  const priced = (item, cost) => {
+    if (!item.prices) return { cost, note: item.pieces.length ? null : item.note };
+    const at = placeOf(item), base = `${cost.toLocaleString('en')} GP in ${item.prices.home}`;
+    if (!at) return { cost: null, note: homePlaces(item).length ? `${base}; the books price ${homeland} by place, so choose where you’re buying` : `${base}; the books give no price here, so the DM sets it` };
+    if (at.times === null) return { cost: null, note: `${base}; in ${at.place}, ${at.words}` };
+    return { cost: cost * at.times, note: at.times === 1 ? `in ${item.prices.home}` : `in ${at.place}, ${at.times} times the price in ${item.prices.home}` };
+  };
+  const market = book.items.find(i => i.prices) ? placeOf(book.items.find(i => i.prices))?.place ?? null : null;
   const forSale = [
-    ...book.items.filter(i => !i.magical && (!i.place.class_name || has(i.place.class_name))).flatMap(i => (i.pieces.length ? i.pieces.map(p => ({ name: p.name, cost: p.cost, of: i.name, note: null })) : [{ name: i.name, cost: i.cost, of: null, note: i.note }])),
-    ...book.periodWeapons.filter(w => w.counts_as.some(n => proficientWeapons.some(p => p.name === n))).map(w => ({ name: w.name, cost: w.cost, of: null, note: null, countsAs: w.counts_as })),
-  ].filter(affordable);
-  const equipment = { kits: kits.map(k => ({ from: k.from, items: k.items })), bought: gear.spent ? { name: worn.name, cost: gear.spent } : null, gold: left, levelGold: higher?.gold ?? 0, roll: higher?.roll ?? null, magicItems, forSale };
+    ...book.items.filter(i => !i.magical && (!i.place.class_name || has(i.place.class_name))).flatMap(i => (i.pieces.length ? i.pieces.map(p => ({ name: p.name, of: i.name, home: i.from.includes(homeland), ...priced(i, p.cost) })) : [{ name: i.name, of: null, home: i.from.includes(homeland), ...priced(i, i.cost) }])),
+    ...book.periodWeapons.filter(w => w.counts_as.some(n => proficientWeapons.some(p => p.name === n))).map(w => ({ name: w.name, cost: w.cost, of: null, note: null, home: false, countsAs: w.counts_as })),
+  ].filter(affordable).toSorted((a, b) => b.home - a.home);
+  const equipment = { buying: { place: market, places, chosen: places.includes(state.market) }, kits: kits.map(k => ({ from: k.from, items: k.items })), bought: gear.spent ? { name: worn.name, cost: gear.spent } : null, gold: left, levelGold: higher?.gold ?? 0, roll: higher?.roll ?? null, magicItems, forSale };
   // The Monster's card, for one who carries it, as Monster Form writes it:
   // the scores it swaps ("Your Strength and Intelligence scores swap, and
   // your Dexterity and Wisdom scores swap"), and with them the Armor Class
