@@ -169,6 +169,12 @@ export function verifyEuphonia(d = euphoniaData()) {
   // spaces once left).
   for (const r of d.regions.data) for (const sec of r.sections) if (/<li>\s*<ul>/.test(blocks(sec.text))) fail(`${r.name}, ${sec.heading}: a list item with nothing in it but a sub-list`);
 
+  // Each title, ruler or power a chapter places (its @names line) stands in
+  // that chapter's text, so its link has somewhere to be.
+  for (const r of d.regions.data) for (const n of r.names ?? []) {
+    if (!new RegExp(`(?<![\\p{L}])${n.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'iu').test(r.sections.map(s => s.text).join('\n'))) fail(`${r.name}: its @names line places "${n.name}", which its chapter never names`);
+  }
+
   // The people a table meets: each region's, in the regions' order, each
   // named once and standing in its chapter's People section as the chapter
   // shows it; and Notable People, whole, its headings the book's.

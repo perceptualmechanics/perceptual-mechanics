@@ -200,6 +200,48 @@ ${notable}
 </section>`;
 }
 
+// In each section of a chapter, the first mention of each place its @places
+// line names, and of each title, ruler or power its @names line places, is a
+// button that turns the globe there (euphonia.map.js). A place is matched as
+// the book writes it; a name, whatever its case ("The shah", "the shah").
+// Text already in a link or a button is left as it is.
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function globeMarks(r) {
+  const id = slug(r.name);
+  const mark = (text, flags, attr) => ({
+    re: new RegExp(`(?<![\\p{L}])${escapeRe(esc(text))}(?![\\p{L}])`, flags),
+    button: shown => `<button type="button" class="map-mark" data-region="${id}" ${attr}>${shown}<span class="visually-hidden">, on the globe</span></button>`,
+  });
+  return [
+    ...r.places.map(p => mark(p.name, 'u', `data-place="${esc(p.name)}"`)),
+    ...(r.names ?? []).map(n => mark(n.name, 'iu', `data-name="${esc(n.name)}"`)),
+  ];
+}
+function globeLinks(html, marks) {
+  const left = [...marks];
+  let inside = 0;
+  return html.split(/(<[^>]+>)/).map(part => {
+    if (part.startsWith('<')) {
+      if (/^<(a|button)\b/i.test(part)) inside++;
+      else if (/^<\/(a|button)>/i.test(part)) inside--;
+      return part;
+    }
+    let out = '', rest = part;
+    while (!inside && left.length) {
+      let first = null;
+      for (const m of left) {
+        const found = m.re.exec(rest);
+        if (found && (!first || found.index < first.found.index)) first = { m, found };
+      }
+      if (!first) break;
+      out += rest.slice(0, first.found.index) + first.m.button(first.found[0]);
+      rest = rest.slice(first.found.index + first.found[0].length);
+      left.splice(left.indexOf(first.m), 1);
+    }
+    return out + rest;
+  }).join('');
+}
+
 // The character builder's panel: its choices beside the sheet they make. The
 // rules load when it first opens, and the script fills both sides. Its id
 // isn't the address's #builder, which names the tab, so opening that address
@@ -262,7 +304,7 @@ ${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><s
 ${peoplePage(people.data, regions.status, sheets.data)}
 ${ribbonsPage(tonguesData())}
 ${regions.data.map(r => `<template class="map-chapter" data-region="${slug(r.name)}">
-${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${sec.heading === 'People' ? chapterPeople(people.data.regions.find(x => x.region === r.name), sheets.data) : blocks(sec.text)}`).join('\n')}
+${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${globeLinks(sec.heading === 'People' ? chapterPeople(people.data.regions.find(x => x.region === r.name), sheets.data) : blocks(sec.text), globeMarks(r))}`).join('\n')}
 </template>`).join('\n')}`;
 }
 

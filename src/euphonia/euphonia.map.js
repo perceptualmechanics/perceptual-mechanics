@@ -255,13 +255,14 @@ export async function initMap(stage) {
   const pages = [...panel.querySelectorAll('.map-panel-page')], back = panel.querySelector('.map-panel-back');
   const contentsOpen = document.querySelector('.map-contents-open');
   let opener = null, pick = null, nearest = null;
-  // A person the book places, ringed where they are with their name.
-  let person = null;
+  // What a name in the panel turned the glass to (a person, a place, a
+  // ruler), ringed where it stands with its label.
+  let marked = null;
   createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
     // Closed, the glass draws back to the whole mount as the panel slides
     // away, the globe still turned where the reader left it.
-    onClose: () => { chosen = null; pick = null; person = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
+    onClose: () => { chosen = null; pick = null; marked = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
   });
   panel.querySelector('.map-panel-zoom').addEventListener('click', () => zoomToRegion(chosen));
   // A region whose power has a theme offers it; the page never changes on its
@@ -500,7 +501,7 @@ export async function initMap(stage) {
     if (globe) {
       // The mount recedes by its layers' opacity; the globe is drawn whole.
       backCanvas.style.opacity = canvas.style.opacity = String(shown);
-      globe(v, { regions, hoverPlace: hoverPlace ?? person, pick, scale });
+      globe(v, { regions, hoverPlace: hoverPlace ?? marked, pick, scale });
     } else {
       g.ctx.clearRect(0, 0, v.width, v.height);
       g.ctx.globalAlpha = shown;
@@ -508,7 +509,7 @@ export async function initMap(stage) {
       g.ctx.globalAlpha = 1;
       g.ctx.drawImage(g.fills, 0, 0);
       g.ctx.drawImage(g.lines, 0, 0);
-      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace: hoverPlace ?? person, pick }, colors, scale);
+      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace: hoverPlace ?? marked, pick }, colors, scale);
       g.ctx.globalAlpha = shown;
       if (shown) g.ctx.drawImage(g.mountFront, 0, 0);
       g.ctx.globalAlpha = 1;
@@ -539,11 +540,11 @@ export async function initMap(stage) {
     // A point of the canvas on the globe's face: inside its limb, and on
     // the canvas.
     const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height;
-    const ringed = hoverPlace ?? person;
+    const ringed = hoverPlace ?? marked;
     const tip = ringed && faces(v, ringed) && project([ringed.lon, ringed.lat]);
     g.tip.hidden = !tip;
     if (tip) {
-      g.tip.textContent = hoverPlace ? placeName(hoverPlace) : `${person.name}, at ${person.place}`;
+      g.tip.textContent = hoverPlace ? placeName(hoverPlace) : marked.label;
       g.tip.style.transform = `translate(${tip[0] + 10}px, ${tip[1]}px) translate(0, -50%)`;
     }
     const boxes = [];
@@ -575,7 +576,7 @@ export async function initMap(stage) {
   // place offered instead. A line for screen readers says what was picked.
   function pickPoint(at) {
     pick = at;
-    person = null;
+    marked = null;
     const hit = placeAt(at);
     pickSection.hidden = false;
     readouts();
@@ -789,21 +790,31 @@ export async function initMap(stage) {
   let zooming = 0;
   const regionZoom = r => REGION_FIT / Math.sin(Math.max(r.spread, 1) * RAD);
   const zoomToRegion = r => zoomTo(r.centre, regionZoom(r));
-  // A person's name, in a chapter's People or on the People page, turns the
-  // glass to where the book places them, a step closer than their region's
-  // scale, and rings the spot with their name; the page the reader came
-  // from stays open beside it.
+  // A name in the panel turns the glass to where the book places it, a step
+  // closer than its region's scale, and rings the spot with its label; the
+  // page the reader came from stays open beside it. The names are a person's
+  // (their entry's @at line), a place a chapter's @places line names, and a
+  // title, ruler or power its @names line places.
   const people = new Map(places.people.map(p => [p.name, p]));
-  function showPerson(p) {
-    person = p;
-    const r = regions.find(x => x.id === p.region);
-    zoomTo(p, Math.max(r ? regionZoom(r) : 1, g.zoom) * KEY_ZOOM);
-    status.textContent = `${p.name}, at ${p.place}.`;
+  function showMark(at, label, r) {
+    marked = { lat: at.lat, lon: at.lon, label };
+    zoomTo(at, Math.max(r ? regionZoom(r) : 1, g.zoom) * KEY_ZOOM);
+    status.textContent = `${label}.`;
     redraw();
   }
   panel.addEventListener('click', e => {
-    const b = e.target.closest('button.map-person');
-    if (b && people.has(b.dataset.person)) showPerson(people.get(b.dataset.person));
+    const b = e.target.closest('button.map-person, button.map-mark');
+    if (!b) return;
+    if (b.dataset.person) {
+      const p = people.get(b.dataset.person);
+      if (p) showMark(p, `${p.name}, at ${p.place}`, regions.find(x => x.id === p.region));
+      return;
+    }
+    const r = regions.find(x => x.id === b.dataset.region);
+    const place = b.dataset.place && r?.glows.find(x => x.name === b.dataset.place);
+    const named = b.dataset.name && r?.names.find(x => x.name === b.dataset.name);
+    if (place) showMark(place, placeName(place), r);
+    else if (named) showMark(named, `${named.name}, at ${named.modern}`, r);
   });
   // Where the point (lon, lat) is on the mount, in radii at zoom 1 from the
   // globe's centre, with the globe turned to lon0 and seen from `eye`.

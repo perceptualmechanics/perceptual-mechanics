@@ -72,10 +72,10 @@ ul.catalog .n { display: block; color: var(--text-muted); font-size: 0.88rem; fo
 .people-list p { margin: 0.4rem 0 0; font-size: 0.92rem; }
 .people-group h4 { margin: 1.4rem 0 0.4rem; }
 .people-group h5 { margin: 1rem 0 0.3rem; font-size: 0.9rem; }
-/* A person the book places: their name turns the globe to them. */
-button.map-person { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 0.18em; }
-button.map-person:hover { text-decoration-style: solid; }
-button.map-person:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* A name the book places (a person, a place, a ruler): it turns the globe there. */
+button:is(.map-person, .map-mark) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 0.18em; }
+button:is(.map-person, .map-mark):hover { text-decoration-style: solid; }
+button:is(.map-person, .map-mark):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1.4rem; color: var(--text-dim); font-size: 0.85rem; }
 footer a { text-decoration: none; }
 @media (max-width: 600px) { h1 { font-size: 1.6rem; } }
