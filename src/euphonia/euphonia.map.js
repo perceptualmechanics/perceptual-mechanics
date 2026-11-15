@@ -938,10 +938,17 @@ export async function initMap(stage) {
   tideLine.hidden = false;
   stage.classList.add('is-drawn');
 
-  // A link to a region (#europe) opens its chapter.
+  // A link to a region (#europe) opens its chapter; one to the People page
+  // (#people), or to its Notable People (#notable-people), opens that.
   function openFromAddress() {
-    const r = regions.find(x => x.id === location.hash.slice(1));
-    if (r) openChapter(r, g.cell);
+    const id = location.hash.slice(1);
+    const r = regions.find(x => x.id === id);
+    if (r) { openChapter(r, g.cell); return; }
+    const people = panel.querySelector('.map-panel-people');
+    if (id !== 'people' && !(id && people.querySelector(`#${CSS.escape(id)}`))) return;
+    showPage('people');
+    openPanel(contentsOpen);
+    requestAnimationFrame(() => (id === 'people' ? panelTitle.focus() : people.querySelector(`#${CSS.escape(id)} h3`).scrollIntoView()));
   }
   addEventListener('hashchange', openFromAddress);
   openFromAddress();

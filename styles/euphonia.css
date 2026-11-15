@@ -64,6 +64,14 @@ ul.catalog .t { font-weight: 600; font-style: normal; }
 ul.catalog .c { color: var(--text-cite); }
 ul.catalog .e { display: block; color: var(--text-dim); font-size: 0.8rem; margin-top: 0.15rem; }
 ul.catalog .n { display: block; color: var(--text-muted); font-size: 0.88rem; font-style: italic; margin-top: 0.4rem; }
+/* The People page: a region's people as a list, each entry as the book has it;
+   the finding sits above them, once the script is there to run it. */
+.people-find { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; margin: 0 0 1rem; }
+.people-find[hidden] { display: none; }
+.people-find label { display: grid; gap: 0.2rem; font-size: 0.88rem; color: var(--text-quiet); }
+.people-list p { margin: 0.4rem 0 0; font-size: 0.92rem; }
+.people-group h4 { margin: 1.4rem 0 0.4rem; }
+.people-group h5 { margin: 1rem 0 0.3rem; font-size: 0.9rem; }
 footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1.4rem; color: var(--text-dim); font-size: 0.85rem; }
 footer a { text-decoration: none; }
 @media (max-width: 600px) { h1 { font-size: 1.6rem; } }
@@ -381,7 +389,7 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-field > span { color: var(--text-quiet); font-size: 0.88rem; }
 .b-field[hidden], .b-problem[hidden] { display: none; }
 /* Every field and list one height, whatever the control. */
-.builder input[type=text], .builder input[type=number], .builder select {
+.builder input[type=text], .builder input[type=number], .builder select, .people-find :is(select, input) {
   --pad: 0.55rem;
   font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--frame); padding: 0 var(--pad); min-width: 0; max-width: 100%;
   block-size: 2.2rem; box-sizing: border-box;
@@ -391,7 +399,7 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
    is from the left, so it never meets the border. One gradient, so it has no
    seam: a 90° wedge opening up from the bottom's middle, which meets the top
    corners of a box twice as wide as it is tall. */
-:is(.builder, .theme-pick) select {
+:is(.builder, .theme-pick, .people-find) select {
   --caret: 0.32em;
   appearance: none;
   padding-inline-end: calc(2 * var(--pad) + 2 * var(--caret));
@@ -401,7 +409,7 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
   background-repeat: no-repeat;
 }
 .builder select:disabled { color: var(--text-dim); border-color: var(--rule); }
-.builder input:focus-visible, .builder select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+:is(.builder, .people-find) :is(input, select):focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .builder input[type=radio], .builder input[type=checkbox] { accent-color: var(--signal); width: 1rem; height: 1rem; vertical-align: -0.1em; }
 /* Buttons of the stand's wood, edged in its brass. */
 .b-button { font: inherit; font-size: 0.9rem; color: var(--paper); background: var(--case); border: 1px solid var(--frame); padding: 0.3rem 0.8rem; cursor: pointer; }

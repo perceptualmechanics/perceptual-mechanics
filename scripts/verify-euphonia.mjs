@@ -9,7 +9,7 @@ import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'subclasses', 'items', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
+const FILES = ['classes', 'subclasses', 'items', 'people', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -164,6 +164,19 @@ export function verifyEuphonia(d = euphoniaData()) {
   const srdWeapons = JSON.parse(read('src/euphonia/euphonia.srd.json')).weapons.map(w => w.name);
   for (const w of d.items.data.weapons) for (const n of w.counts_as) if (!srdWeapons.includes(n)) fail(`period weapon ${w.name}: counts as "${n}", which the SRD hasn't`);
 
+  // The people a table meets: each region's, in the regions' order, each
+  // named once and standing in its chapter's People section as the chapter
+  // shows it; and Notable People, whole, its headings the book's.
+  const people = d.people.data;
+  if (people.regions.map(r => r.region).join('|') !== d.regions.data.map(r => r.name).join('|')) fail(`euphonia.people.json: its regions (${people.regions.map(r => r.region).join(', ')}) aren't the chapters'`);
+  for (const r of people.regions) {
+    const shown = d.regions.data.find(x => x.name === r.region)?.sections.find(sec => sec.heading === 'People')?.text ?? '';
+    if (!r.people.length) fail(`euphonia.people.json: ${r.region} has no people`);
+    if (new Set(r.people.map(p => p.name)).size !== r.people.length) fail(`euphonia.people.json: ${r.region} names someone twice`);
+    for (const p of r.people) if (!shown.includes(`**${p.name}.** ${p.text}`)) fail(`euphonia.people.json: ${r.region}'s ${p.name} isn't as the chapter's People section shows them`);
+  }
+  if (people.notable.title !== 'Notable People' || !people.notable.blocks.length || people.notable.blocks.some(b => b.kind === 'heading' && ![3, 4].includes(b.level))) fail('euphonia.people.json: Notable People is missing or not the book\'s shape');
+
   // The Wheel behind the globe: every plane the table files by height and
   // bearing reads as a place on it, no two share a place, and each of the
   // Revelator's five roads runs through two or more of them.
@@ -192,7 +205,7 @@ export function verifyEuphonia(d = euphoniaData()) {
     for (const p of problemsFound) log.push(`  ${p}`);
   } else {
     const n = k => d[k].data.length;
-    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${d.items.data.items.length} items and ${d.items.data.weapons.length} period weapons, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
+    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${d.items.data.items.length} items and ${d.items.data.weapons.length} period weapons, ${people.regions.reduce((n, r) => n + r.people.length, 0)} people in the regions besides Notable People, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
 }

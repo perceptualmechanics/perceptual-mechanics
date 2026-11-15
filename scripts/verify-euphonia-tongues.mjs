@@ -143,7 +143,9 @@ export function verifyEuphoniaTongues({ data = tonguesData(), book = euphoniaDat
   // Scott's machine the master itself, which carries every one.
   const exported = ['classes', 'regions', 'adventures', 'hidden', 'characters'].map(f => flat(book[f])).join(' ');
   const master = book.master ? readFileSync(book.master.path, 'utf8') : null;
-  const named = (name, text) => new RegExp(`(?<![\\p{L}])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'u').test(text);
+  // A culture's name, or its people's in the plural ("The Armenians of New
+  // Julfa" names the Armenians).
+  const named = (name, text) => new RegExp(`(?<![\\p{L}])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?(?![\\p{L}])`, 'u').test(text);
   let unexported = 0;
   const culture = (who, name) => {
     if (named(name, exported)) return;
@@ -163,8 +165,13 @@ export function verifyEuphoniaTongues({ data = tonguesData(), book = euphoniaDat
     if ((t.script === 'Latin') === Boolean(t.roman)) errors.push(`${who}: ${t.script === 'Latin' ? 'a romanisation it doesn\'t need' : 'no romanisation'}`);
     if (!t.source?.title || !t.source?.by) errors.push(`${who}: its source isn't named`);
     try { if (!/^https?:$/.test(new URL(t.source?.url).protocol)) throw 0; } catch { errors.push(`${who}: its source has no address`); }
-    // Assigned to a region whose chapter names the culture, where any does.
-    const naming = regions.filter(r => named(t.culture, flat(r))).map(r => r.name);
+    // Assigned to a region the book ties the culture to, where it ties it to
+    // any: a chapter that names it, or a sentence of the book's languages
+    // that names it with the region ("The learned of Europe write to each
+    // other in Latin"). A chapter's passing word for it (a Latin name) is
+    // one such tie, so the languages' sentence counts beside it.
+    const said = flat(book.languages.data).split(/(?<=\.)\s+/);
+    const naming = regions.filter(r => named(t.culture, flat(r)) || said.some(x => named(t.culture, x) && named(r.name, x))).map(r => r.name);
     if (!regions.some(r => r.name === t.region)) errors.push(`${who}: no region ${t.region}`);
     else if (naming.length && !naming.includes(t.region)) errors.push(`${who}: ${t.region}'s chapter doesn't name ${t.culture} (${naming.join(', ')} do)`);
     culture(who, t.culture);
