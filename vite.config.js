@@ -261,7 +261,8 @@ function verifyEuphoniaTonguesPlugin() {
 }
 
 // The map's places, looked up in the vendored gazetteer at build time, so the
-// page carries coordinates for its seats and regions and never the gazetteer.
+// page carries coordinates for its seats, regions and people, and never the
+// gazetteer.
 const PLACES_ID = 'virtual:euphonia-places';
 function euphoniaPlacesPlugin() {
   return {
@@ -269,9 +270,9 @@ function euphoniaPlacesPlugin() {
     resolveId: id => (id === PLACES_ID ? `\0${PLACES_ID}` : null),
     load(id) {
       if (id !== `\0${PLACES_ID}`) return null;
-      const { seats, regions, errors } = placesData();
+      const { seats, regions, people, errors } = placesData();
       if (errors.length) this.error(`euphonia places: ${errors.join('; ')}`);
-      return `export default ${JSON.stringify({ seats, regions })};`;
+      return `export default ${JSON.stringify({ seats, regions, people })};`;
     },
   };
 }

@@ -255,11 +255,13 @@ export async function initMap(stage) {
   const pages = [...panel.querySelectorAll('.map-panel-page')], back = panel.querySelector('.map-panel-back');
   const contentsOpen = document.querySelector('.map-contents-open');
   let opener = null, pick = null, nearest = null;
+  // A person the book places, ringed where they are with their name.
+  let person = null;
   createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
     // Closed, the glass draws back to the whole mount as the panel slides
     // away, the globe still turned where the reader left it.
-    onClose: () => { chosen = null; pick = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
+    onClose: () => { chosen = null; pick = null; person = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
   });
   panel.querySelector('.map-panel-zoom').addEventListener('click', () => zoomToRegion(chosen));
   // A region whose power has a theme offers it; the page never changes on its
@@ -498,7 +500,7 @@ export async function initMap(stage) {
     if (globe) {
       // The mount recedes by its layers' opacity; the globe is drawn whole.
       backCanvas.style.opacity = canvas.style.opacity = String(shown);
-      globe(v, { regions, hoverPlace, pick, scale });
+      globe(v, { regions, hoverPlace: hoverPlace ?? person, pick, scale });
     } else {
       g.ctx.clearRect(0, 0, v.width, v.height);
       g.ctx.globalAlpha = shown;
@@ -506,7 +508,7 @@ export async function initMap(stage) {
       g.ctx.globalAlpha = 1;
       g.ctx.drawImage(g.fills, 0, 0);
       g.ctx.drawImage(g.lines, 0, 0);
-      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace, pick }, colors, scale);
+      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace: hoverPlace ?? person, pick }, colors, scale);
       g.ctx.globalAlpha = shown;
       if (shown) g.ctx.drawImage(g.mountFront, 0, 0);
       g.ctx.globalAlpha = 1;
@@ -537,10 +539,11 @@ export async function initMap(stage) {
     // A point of the canvas on the globe's face: inside its limb, and on
     // the canvas.
     const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height;
-    const tip = hoverPlace && faces(v, hoverPlace) && project([hoverPlace.lon, hoverPlace.lat]);
+    const ringed = hoverPlace ?? person;
+    const tip = ringed && faces(v, ringed) && project([ringed.lon, ringed.lat]);
     g.tip.hidden = !tip;
     if (tip) {
-      g.tip.textContent = placeName(hoverPlace);
+      g.tip.textContent = hoverPlace ? placeName(hoverPlace) : `${person.name}, at ${person.place}`;
       g.tip.style.transform = `translate(${tip[0] + 10}px, ${tip[1]}px) translate(0, -50%)`;
     }
     const boxes = [];
@@ -572,6 +575,7 @@ export async function initMap(stage) {
   // place offered instead. A line for screen readers says what was picked.
   function pickPoint(at) {
     pick = at;
+    person = null;
     const hit = placeAt(at);
     pickSection.hidden = false;
     readouts();
@@ -655,7 +659,10 @@ export async function initMap(stage) {
   function draw() { readouts(); redraw(); }
 
   // Sizes in device pixels, from the globe's drawn size; the names keep the
-  // page's small type size whatever the globe's.
+  // page's small type size whatever the globe's. The first measure settles
+  // `measured`.
+  let firstMeasure;
+  const measured = new Promise(resolve => { firstMeasure = resolve; });
   new ResizeObserver(() => {
     // A hidden stage measures nothing; the globe keeps its size until it
     // shows again.
@@ -681,6 +688,7 @@ export async function initMap(stage) {
     g.baseKey = '';
     clampZoom();
     redraw();
+    firstMeasure();
   }).observe(stage.querySelector('.map-globe'));
 
   // Zoom stays between the whole mount and the coasts' resolution. Along
@@ -781,6 +789,22 @@ export async function initMap(stage) {
   let zooming = 0;
   const regionZoom = r => REGION_FIT / Math.sin(Math.max(r.spread, 1) * RAD);
   const zoomToRegion = r => zoomTo(r.centre, regionZoom(r));
+  // A person's name, in a chapter's People or on the People page, turns the
+  // glass to where the book places them, a step closer than their region's
+  // scale, and rings the spot with their name; the page the reader came
+  // from stays open beside it.
+  const people = new Map(places.people.map(p => [p.name, p]));
+  function showPerson(p) {
+    person = p;
+    const r = regions.find(x => x.id === p.region);
+    zoomTo(p, Math.max(r ? regionZoom(r) : 1, g.zoom) * KEY_ZOOM);
+    status.textContent = `${p.name}, at ${p.place}.`;
+    redraw();
+  }
+  panel.addEventListener('click', e => {
+    const b = e.target.closest('button.map-person');
+    if (b && people.has(b.dataset.person)) showPerson(people.get(b.dataset.person));
+  });
   // Where the point (lon, lat) is on the mount, in radii at zoom 1 from the
   // globe's centre, with the globe turned to lon0 and seen from `eye`.
   const onMount = (at, lon0, eye = g.eye) => {
@@ -948,10 +972,19 @@ export async function initMap(stage) {
     if (id !== 'people' && !(id && people.querySelector(`#${CSS.escape(id)}`))) return;
     showPage('people');
     openPanel(contentsOpen);
-    requestAnimationFrame(() => (id === 'people' ? panelTitle.focus() : people.querySelector(`#${CSS.escape(id)} h3`).scrollIntoView()));
+    // The panel scrolls to the section itself; scrollIntoView would scroll
+    // the page under the globe as well.
+    requestAnimationFrame(() => {
+      if (id === 'people') { panelTitle.focus(); return; }
+      const head = people.querySelector(`#${CSS.escape(id)} h3`);
+      panel.scrollTo({ top: head.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop });
+    });
   }
   addEventListener('hashchange', openFromAddress);
-  openFromAddress();
+  // The address the page opens at waits for the globe's first measure:
+  // a chapter zooms to its region, and before the globe has a size the fit
+  // is no number (and the zoom with it, for good).
+  measured.then(openFromAddress);
 }
 
 const stage = document.getElementById('map-figure');

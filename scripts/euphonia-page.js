@@ -152,10 +152,16 @@ function sheetLink(sheets, name) {
   const sh = sheets.find(x => x.name === name);
   return sh ? `<a class="sheet-link" href="/euphonia/sheets/${esc(sh.file)}">Character sheet</a> (${esc(sh.line)})` : '';
 }
+// A person the book places (their entry's @at line) is named by a button
+// that turns the globe to them (euphonia.map.js); one it doesn't yet place,
+// by their name alone.
+function personName(name, at) {
+  return at ? `<button type="button" class="map-person" data-person="${esc(name)}">${esc(name)}<span class="visually-hidden">, on the globe</span></button>` : esc(name);
+}
 // A region chapter's People: its intro, and each person as the chapter has
 // them (verify-euphonia holds the two to one text), with their sheet.
 function chapterPeople(r, sheets) {
-  return `${r.intro ? `<p>${inline(r.intro)}</p>\n` : ''}${r.people.map(p => `<p><strong>${esc(p.name)}.</strong> ${inline(p.text)}${sheetLink(sheets, p.name) ? ` <span class="sheet-ref">${sheetLink(sheets, p.name)}</span>` : ''}</p>`).join('\n')}`;
+  return `${r.intro ? `<p>${inline(r.intro)}</p>\n` : ''}${r.people.map(p => `<p><strong>${personName(p.name, p.at)}.</strong> ${inline(p.text)}${sheetLink(sheets, p.name) ? ` <span class="sheet-ref">${sheetLink(sheets, p.name)}</span>` : ''}</p>`).join('\n')}`;
 }
 function peoplePage(people, status, sheets) {
   const sheet = name => sheetLink(sheets, name);
@@ -164,7 +170,7 @@ function peoplePage(people, status, sheets) {
 ${body}
 </section>`;
   const regional = people.regions.map(r => groupOf(slug(r.region), r.region, `${r.intro ? `<p class="note">${inline(r.intro)}</p>\n` : ''}<ul class="catalog people-list">
-${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="t">${esc(p.name)}</span><span class="e"><a href="#${slug(r.region)}">${esc(r.region)}</a>${sheet(p.name) ? ` · ${sheet(p.name)}` : ''}</span><p>${inline(p.text)}</p></li>`).join('\n')}
+${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="t">${personName(p.name, p.at)}</span><span class="e"><a href="#${slug(r.region)}">${esc(r.region)}</a>${sheet(p.name) ? ` · ${sheet(p.name)}` : ''}</span><p>${inline(p.text)}</p></li>`).join('\n')}
 </ul>`));
   // Notable People's blocks, as the book has them: its sections (###) are
   // each a person or a pair, found by name; the paragraphs before them say
@@ -172,7 +178,7 @@ ${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="
   let open = false;
   const notable = people.notable.blocks.map(b => {
     if (b.kind === 'heading' && b.level === 3) {
-      const html = `${open ? '</div>\n' : ''}<div class="person" data-name="${esc(b.text)}"><h4>${esc(b.text)}</h4>${sheet(b.text) ? `<p class="note">${sheet(b.text)}</p>` : ''}`;
+      const html = `${open ? '</div>\n' : ''}<div class="person" data-name="${esc(b.text)}"><h4>${personName(b.text, b.at)}</h4>${sheet(b.text) ? `<p class="note">${sheet(b.text)}</p>` : ''}`;
       open = true;
       return html;
     }

@@ -24,9 +24,9 @@ export const calendarsData = vendored('calendars');
 export const reliefData = () => ({ ...vendored('relief')(), bytes: new Int8Array(readFileSync(new URL('../src/euphonia/euphonia.relief.bin', import.meta.url)).buffer.slice(0)) });
 export const rosesData = vendored('roses');
 export const gazetteerData = vendored('gazetteer');
-// The seats and the regions' places, looked up in the gazetteer.
+// The seats, the regions' places and the people's, looked up in the gazetteer.
 export const placesData = () =>
-  resolvePlaces({ gazetteer: gazetteerData(), regions: vendored('regions')().data, calendars: calendarsData() });
+  resolvePlaces({ gazetteer: gazetteerData(), regions: vendored('regions')().data, calendars: calendarsData(), people: vendored('people')().data });
 
 // The sun's place against JPL Horizons. NOAA calls its approximations "very
 // good" only from 1800, so 1668 is held to an ephemeris instead. Measured
@@ -64,7 +64,7 @@ function ringArea(ring) {
 const VIEWS = [];
 for (let lat0 = -90; lat0 <= 90; lat0 += 15) for (let lon0 = -180; lon0 < 180; lon0 += 15) VIEWS.push({ lon0, lat0 });
 
-export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), gazetteer = gazetteerData(), regions = vendored('regions')().data, relief = reliefData(), roses = rosesData(), geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
+export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), gazetteer = gazetteerData(), regions = vendored('regions')().data, people = vendored('people')().data, relief = reliefData(), roses = rosesData(), geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -126,12 +126,14 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
     if (phase === 'full' && after.waxing) { fail(`a minute after the full moon of ${utc} the moon is still waxing`); break; }
   }
 
-  // The places: every calendar's seat and every region's place, found in the
-  // gazetteer exactly once; and each region naming enough places to show
-  // where it reaches.
+  // The places: every calendar's seat, every region's place and every
+  // person's the book places, found in the gazetteer exactly once; each
+  // region naming enough places to show where it reaches; and each placed
+  // person named once, since a name on the page finds its person by name.
   if (!/Natural Earth/.test(gazetteer.provenance?.source ?? '') || !/^[0-9a-f]{64}$/.test(gazetteer.provenance?.sha256 ?? '')) fail('euphonia.gazetteer.json: no Natural Earth provenance');
-  const resolved = resolvePlaces({ gazetteer, regions, calendars });
+  const resolved = resolvePlaces({ gazetteer, regions, calendars, people });
   for (const e of resolved.errors) fail(`a place the map can't find: ${e}`);
+  for (const p of resolved.people) if (resolved.people.filter(q => q.name === p.name).length > 1) { fail(`${p.name} is placed twice`); break; }
   for (const r of regions) if (!(r.places?.length >= MIN_PLACES)) fail(`${r.name} names ${r.places?.length ?? 0} places; the map needs ${MIN_PLACES} to show where a region reaches`);
   // Each place's glow reaches halfway to the region's nearest place
   // somewhere else (euphonia.map.js); a region with every place at one site,

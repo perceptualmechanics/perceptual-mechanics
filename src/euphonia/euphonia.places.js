@@ -44,9 +44,11 @@ export function regionShape(r) {
 export const slug = name => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // Every place the map needs, looked up once: the calendars' seats, by seat
-// name, and each region's places, with the name the book shows for each.
-// errors lists any the gazetteer can't place exactly once.
-export function resolvePlaces({ gazetteer, regions, calendars }) {
+// name; each region's places, with the name the book shows for each; and
+// each person the book places (euphonia.people.json: a region's people and
+// Notable People's sections), with where. errors lists any the gazetteer
+// can't place exactly once.
+export function resolvePlaces({ gazetteer, regions, calendars, people = { regions: [], notable: { blocks: [] } } }) {
   const errors = [];
   const at = (where, place, country, province) => {
     const found = lookup(gazetteer, place, country, province);
@@ -59,5 +61,9 @@ export function resolvePlaces({ gazetteer, regions, calendars }) {
     id: slug(r.name),
     places: r.places.map(p => ({ name: p.name, modern: p.modern, country: p.country, ...at(r.name, p.modern, p.country, p.province) })),
   }));
-  return { seats, regions: placed, errors };
+  const placedPeople = [
+    ...people.regions.flatMap(r => r.people.filter(p => p.at).map(p => ({ name: p.name, region: slug(r.region), at: p.at }))),
+    ...people.notable.blocks.filter(b => b.kind === 'heading' && b.at).map(b => ({ name: b.text, region: null, at: b.at })),
+  ].map(({ name, region, at: where }) => ({ name, region, place: where.name, ...at(`${name}'s place`, where.modern, where.country, where.province) }));
+  return { seats, regions: placed, people: placedPeople, errors };
 }
