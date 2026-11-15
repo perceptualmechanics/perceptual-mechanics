@@ -671,6 +671,12 @@ function backgroundIncreases() {
 // ---------- armour: the Armor table's rows under its category rows ("Light
 // Armor (1 Minute to Don or Doff)"), each AC as the table writes it ("11 +
 // Dex modifier", "14 + Dex modifier (max 2)", "16", "+2").
+// An amount in gold pieces as the SRD writes it ("1,500 GP", "10 GP").
+const gold = (text, where) => {
+  const m = text.match(/^([\d,]+) GP$/i);
+  if (!m) throw new Error(`${where}: a price the exporter doesn't read: "${text}"`);
+  return +m[1].replace(/,/g, '');
+};
 function armor() {
   const t = lines.findIndex((l, k) => l.kind === 'title' && l.text === 'Armor' && lines[k + 1]?.kind === 'table');
   if (t < 0) throw new Error('the SRD has no Armor table');
@@ -685,6 +691,8 @@ function armor() {
       ...(ac[1] ? { bonus: +ac[2] } : { base: +ac[2], dex: /Dex modifier/.test(r['Armor Class (AC)']), dex_max: ac[3] ? +ac[3] : null }),
       strength: +(r.Strength.match(/^Str (\d+)$/)?.[1] ?? 0) || null,
       stealth_disadvantage: r.Stealth === 'Disadvantage',
+      // Its price in gold ("1,500 GP"), what a character buys it with.
+      cost: gold(r.Cost, `armor "${r.Armor}"`),
     });
   }
   return out;
@@ -916,6 +924,7 @@ const data = {
     point_costs: titledTable('Ability Score Point Costs', ['Score', 'Cost', 'Score', 'Cost']),
     ability_modifiers: titledTable('Ability Scores and Modifiers', ['Score', 'Modifier', 'Score', 'Modifier']),
     multiclass_slots: titledTable('Multiclass Spellcaster:', ['Level', ...LEVELS]),
+    higher_level_equipment: titledTable('Starting Equipment at Higher Levels', ['Starting Level', 'Equipment and Money', 'Magic Items']),
   },
 };
 writeFileSync(OUT, `${JSON.stringify(data, null, 1)}\n`);

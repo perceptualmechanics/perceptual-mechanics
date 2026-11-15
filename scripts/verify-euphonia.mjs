@@ -9,7 +9,7 @@ import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'subclasses', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
+const FILES = ['classes', 'subclasses', 'items', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -153,6 +153,17 @@ export function verifyEuphonia(d = euphoniaData()) {
     if (!BOOKS.includes(sub.book)) fail(`${at}: from "${sub.book}", which isn't one of the books`);
   }
 
+  // The books' items, for the builder's gear: each from a book the page can
+  // cite, a magic item with a rarity and a piece of gear without one, and
+  // each period weapon counted as a weapon the SRD has.
+  const ITEM_BOOKS = ['Euphonia: The Setting', ...BOOKS];
+  for (const it of d.items.data.items) {
+    if (!ITEM_BOOKS.includes(it.place.book)) fail(`item ${it.name}: from "${it.place.book}", which isn't one of the books`);
+    if (it.magical !== Boolean(it.rarities.length)) fail(`item ${it.name}: ${it.magical ? 'a magic item with no rarity' : 'gear with a rarity'}`);
+  }
+  const srdWeapons = JSON.parse(read('src/euphonia/euphonia.srd.json')).weapons.map(w => w.name);
+  for (const w of d.items.data.weapons) for (const n of w.counts_as) if (!srdWeapons.includes(n)) fail(`period weapon ${w.name}: counts as "${n}", which the SRD hasn't`);
+
   // The Wheel behind the globe: every plane the table files by height and
   // bearing reads as a place on it, no two share a place, and each of the
   // Revelator's five roads runs through two or more of them.
@@ -181,7 +192,7 @@ export function verifyEuphonia(d = euphoniaData()) {
     for (const p of problemsFound) log.push(`  ${p}`);
   } else {
     const n = k => d[k].data.length;
-    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
+    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${d.items.data.items.length} items and ${d.items.data.weapons.length} period weapons, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
 }

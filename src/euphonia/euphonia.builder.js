@@ -5,6 +5,7 @@
 import srdUrl from './euphonia.srd.json?url';
 import classesUrl from './euphonia.classes.json?url';
 import subclassesUrl from './euphonia.subclasses.json?url';
+import itemsUrl from './euphonia.items.json?url';
 import charactersUrl from './euphonia.characters.json?url';
 import languagesUrl from './euphonia.languages.json?url';
 import tonguesUrl from './euphonia.tongues.json?url';
@@ -18,7 +19,7 @@ const PARAM = 'c';
 // A number the sheet can't know yet (no scores chosen, say) shows as a dash.
 const known = n => (Number.isFinite(n) ? String(n) : '—');
 const signed = n => (!Number.isFinite(n) ? '—' : n >= 0 ? `+${n}` : `−${-n}`);
-const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, armor: '', shield: false, homeland: '', styles: {}, expertise: {}, options: {}, optionArts: {}, languages: {} });
+const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, homeland: '', styles: {}, expertise: {}, options: {}, optionArts: {}, languages: {} });
 
 // The character in the address: its choices as JSON, base64url.
 const encode = state => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(state)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -66,8 +67,8 @@ export async function initBuilder(panel) {
   const status = form.querySelector('.builder-status');
   let book, srd, languages, tongueNames;
   try {
-    const [s, e, c, l, t, a] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl, subclassesUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
-    srd = s; book = rulebook(s, e, c, a); languages = l.data;
+    const [s, e, c, l, t, a, g] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl, subclassesUrl, itemsUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
+    srd = s; book = rulebook(s, e, c, a, g.data); languages = l.data;
     // What a language field suggests: the real tongues of the cultures the
     // book names (the ribbons' list), then the rules' own languages.
     tongueNames = [...new Set([...t.tongues.map(x => x.language), ...book.languages.standard, ...book.languages.rare])];
@@ -83,8 +84,6 @@ export async function initBuilder(panel) {
   // ---------- the controls, built once; the parts whose shape depends on
   // earlier choices are rebuilt only when that shape changes.
   const problemSlot = field => h('p', { class: 'b-problem', id: idFor(field), hidden: true });
-  // A rule's consequence of a legal choice, beside it, said and not blocked.
-  const warningSlot = field => h('p', { class: 'b-warning', id: `warning-${idFor(field)}`, hidden: true });
   const section = (title, ...body) => h('fieldset', { class: 'b-section' }, h('legend', {}, title), ...body);
 
   const nameInput = h('input', { name: 'name', type: 'text', autocomplete: 'off', maxlength: 80, value: state.name });
@@ -137,10 +136,6 @@ export async function initBuilder(panel) {
   const featsBox = h('div', { class: 'b-feats' });
   const originBox = h('div', { class: 'b-origin' });
   const skillNotes = h('ul', { class: 'b-notes' });
-  const armorSelect = h('select', { name: 'armor', 'aria-describedby': `${idFor('armor')} warning-${idFor('armor')}` }, h('option', { value: '' }, 'No armor'),
-    ['Light', 'Medium', 'Heavy'].map(cat => h('optgroup', { label: `${cat} armor` }, options(book.armor.items.filter(a => a.category === cat).map(a => a.name), state.armor))));
-  const shieldCheck = h('input', { type: 'checkbox', name: 'shield', checked: Boolean(state.shield) });
-  const trainingNote = h('p', { class: 'b-note' });
   const spellsBox = h('div', { class: 'b-spells' });
 
   // The choices a class's own features ask: shown only when there are some.
@@ -158,7 +153,6 @@ export async function initBuilder(panel) {
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
     section('Languages', tongueList, languageBox, languageAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
-    section('Armour', h('label', { class: 'b-field' }, h('span', {}, 'Armor'), armorSelect), h('label', { class: 'b-check' }, shieldCheck, ' A Shield'), trainingNote, problemSlot('armor'), warningSlot('armor')),
     section('Skills', skillsBox, expertiseBox, skillNotes),
     section('Tools', toolsBox),
     section('Feats', styleBox, featureOriginBox, featsBox),
@@ -174,8 +168,6 @@ export async function initBuilder(panel) {
   backgroundSelect.addEventListener('change', () => set(s => { s.background = backgroundSelect.value; s.increases = {}; }));
   homelandSelect.addEventListener('change', () => set(s => { s.homeland = homelandSelect.value; }));
   methodGroup.addEventListener('change', e => set(s => { s.method = e.target.value; s.base = {}; }));
-  armorSelect.addEventListener('change', () => set(s => { s.armor = armorSelect.value; }));
-  shieldCheck.addEventListener('change', () => set(s => { s.shield = shieldCheck.checked; }));
   addClass.addEventListener('click', () => {
     set(s => { s.classes.push({ class: '', level: 1, subclass: '' }); });
     classList.lastElementChild?.querySelector('select')?.focus();
@@ -707,15 +699,6 @@ export async function initBuilder(panel) {
     }));
   }
 
-  // Armour: what the classes train, said beside the choice.
-  function renderArmor(result) {
-    armorSelect.value = state.armor ?? '';
-    shieldCheck.checked = Boolean(state.shield);
-    trainingNote.textContent = result.training.length
-      ? `Your classes train you in ${result.training.map(t => (t === 'Shield' ? 'Shields' : `${t} armor`)).join(', ')}.`
-      : 'Your classes give no armor training.';
-  }
-
   // The spells: each caster's and each feat's, by level, as the engine
   // bounds them; a feat's list where the player chooses it.
   const openLevels = new Set();
@@ -773,22 +756,17 @@ export async function initBuilder(panel) {
     rebuild(spellsBox, ...(lists.length || groups.length || books.length ? [...books, ...lists, ...groups] : [h('p', { class: 'b-note' }, 'Your spellcasting classes and feats bring their spells here.')]));
   }
 
-  // The problems, each beside the choice it belongs to; the warnings and
-  // notes, beside theirs.
+  // The problems, each beside the choice it belongs to; the notes, beside
+  // theirs.
   function renderProblems(result) {
     const by = list => {
       const out = new Map();
       for (const p of list) out.set(idFor(p.field), [...(out.get(idFor(p.field)) ?? []), p.message]);
       return out;
     };
-    const problems = by(result.problems), warnings = by(result.warnings);
+    const problems = by(result.problems);
     for (const slot of form.querySelectorAll('.b-problem')) {
       const messages = problems.get(slot.id) ?? [];
-      slot.textContent = messages.join(' ');
-      slot.hidden = !messages.length;
-    }
-    for (const slot of form.querySelectorAll('.b-warning')) {
-      const messages = warnings.get(slot.id.replace(/^warning-/, '')) ?? [];
       slot.textContent = messages.join(' ');
       slot.hidden = !messages.length;
     }
@@ -805,6 +783,7 @@ export async function initBuilder(panel) {
   function renderSheet(result) {
     for (const d of sheet.querySelectorAll('details[data-key]')) if (d.open) open.add(d.dataset.key); else open.delete(d.dataset.key);
     const det = (key, summary, ...body) => h('details', { 'data-key': key, open: open.has(key) }, h('summary', {}, summary), ...body);
+    const gear = result.equipment;
     const classLine = result.classes.map(c => `${c.class} ${c.level}${c.subclass ? ` (${c.subclass})` : ''}`).join(' / ');
     const homeland = places.regions.find(r => r.name === state.homeland);
     const placed = result.species && book.placement(result.species.name);
@@ -850,8 +829,22 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Speed'), h('dd', {}, result.speed ? `${result.speed} feet` : '—'),
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
           h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception)),
-          result.masteryChoices.some(c => c.chosen.length) ? [h('dt', {}, 'Weapon Mastery'), h('dd', {}, result.masteryChoices.flatMap(c => c.chosen).map(w => `${w.name} (${w.mastery})`).join(', '))] : null),
-        result.warnings.length ? h('ul', { class: 'sheet-warnings' }, result.warnings.map(w => h('li', {}, w.message))) : null),
+          result.masteryChoices.some(c => c.chosen.length) ? [h('dt', {}, 'Weapon Mastery'), h('dd', {}, result.masteryChoices.flatMap(c => c.chosen).map(w => `${w.name} (${w.mastery})`).join(', '))] : null)),
+      // The gear the builder sets the character up with: the kits, the armour
+      // it chose, the money left, and the magic items for its level.
+      h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-equipment' },
+        h('h3', { id: 'sheet-equipment' }, 'Equipment'),
+        h('dl', { class: 'sheet-facts' },
+          h('dt', {}, 'Armor'), h('dd', {}, `${result.armor?.name ?? 'None'}${result.shield ? ' and a Shield' : ''}${gear.bought ? `, the armor bought for ${gear.bought.cost.toLocaleString('en')} GP` : ''}`),
+          h('dt', {}, 'Training'), h('dd', {}, result.training.length ? listed(result.training.map(t => (t === 'Shield' ? 'Shields' : `${t} armor`))) : 'None'),
+          gear.kits.map(k => [h('dt', {}, `${k.from}’s kit`), h('dd', {}, k.items.join(', ') || 'Nothing but the coin')]),
+          h('dt', {}, 'Money'), h('dd', {}, `${gear.gold.toLocaleString('en')} GP${gear.levelGold ? `, with the ${gear.levelGold.toLocaleString('en')} GP a character starting at level ${result.level} has; roll ${gear.roll} more` : ''}`)),
+        gear.magicItems.length ? [h('h4', {}, 'Magic items'),
+          h('ul', { class: 'sheet-items' }, gear.magicItems.map((m, i) => h('li', {}, m.item
+            ? det(`item-${i}`, `${m.rarity}: ${m.item.name}${m.item.member ? ` (${m.item.member})` : ''}${m.item.bonus ? `, ${m.item.bonus}` : ''}${m.item.attunement ? ', requires Attunement' : ''}`, h('div', { html: blocks(m.item.text) }))
+            : `${m.rarity}: none of the books’ items fits; the DM’s choice`)))] : null,
+        gear.forSale.length ? [h('h4', {}, 'The books’ gear you could buy'),
+          h('ul', { class: 'sheet-gear' }, gear.forSale.map(x => h('li', {}, `${x.name}${x.of ? ` (${x.of})` : ''}${x.countsAs ? `, counts as ${x.countsAs.join(' or ')}` : ''}, ${x.cost === null ? x.note : `${x.cost.toLocaleString('en')} GP${x.note ? ` (${x.note})` : ''}`}`)))] : null),
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-skills' },
         h('h3', { id: 'sheet-skills' }, 'Skills'),
         h('ul', { class: 'sheet-skills' }, result.skills.map(s => h('li', { class: s.proficient ? 'is-proficient' : null },
@@ -938,7 +931,6 @@ export async function initBuilder(panel) {
     renderHomeland();
     renderStyles(result);
     renderExpertise(result);
-    renderArmor(result);
     renderSkills(result);
     renderFeats(result);
     renderSpells(result);

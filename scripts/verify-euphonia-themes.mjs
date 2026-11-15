@@ -29,6 +29,31 @@ const LITERAL = new RegExp(`#[0-9a-f]{3,8}\\b|\\b(?:rgba?|hsla?|hwb|lab|lch|okla
 const SOURCES = ['styles/euphonia.css', 'scripts/euphonia-page.js', 'euphonia/index.html', ...readdirSync(new URL('src/euphonia/', ROOT)).filter(f => f.endsWith('.js') && f !== 'euphonia.themes.js').map(f => `src/euphonia/${f}`)];
 const EXEMPT = /^\s*mask-image:/;
 
+// The literal text of a line's strings: a template's ${…} is code, not text
+// (`${gear.gold} GP` names a property, not a colour), and a template inside
+// one is text again.
+function literals(line) {
+  const out = [], stack = [];
+  let quote = null, text = '';
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      if (c === '\\') { text += line[++i] ?? ''; continue; }
+      if (c === quote) { out.push(text); text = ''; quote = stack.pop()?.quote ?? null; continue; }
+      if (quote === '`' && c === '$' && line[i + 1] === '{') { out.push(text); text = ''; stack.push({ quote, depth: 0 }); quote = null; i++; continue; }
+      text += c;
+    } else if (c === "'" || c === '"' || c === '`') {
+      if (stack.length) stack.push({ quote: null, depth: stack.at(-1).depth });
+      quote = c;
+    } else if (stack.length && c === '{') stack.at(-1).depth++;
+    else if (stack.length && c === '}') {
+      if (stack.at(-1).depth-- === 0) { stack.pop(); quote = '`'; }
+    }
+  }
+  if (text) out.push(text);
+  return out.join(' ');
+}
+
 export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES, khipu = drawKhipu } = {}) {
   const errors = [], measured = [];
   // Colours only in the theme data.
@@ -39,7 +64,7 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES, khipu
     const script = file.endsWith('.js');
     text.split('\n').forEach((line, i) => {
       if (EXEMPT.test(line)) return;
-      const where = script ? [...line.matchAll(/'[^']*'|"[^"]*"|`[^`]*`/g)].map(m => m[0]).join(' ') : line.replace(/&#x?[0-9a-f]+;/gi, '');
+      const where = script ? literals(line) : line.replace(/&#x?[0-9a-f]+;/gi, '');
       const m = LITERAL.exec(where);
       if (m) errors.push(`${file}:${i + 1}: a colour outside the themes (${m[0]})`);
     });

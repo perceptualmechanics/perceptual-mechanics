@@ -14526,7 +14526,8 @@
     "dex": true,
     "dex_max": null,
     "strength": null,
-    "stealth_disadvantage": true
+    "stealth_disadvantage": true,
+    "cost": 5
    },
    {
     "name": "Leather Armor",
@@ -14535,7 +14536,8 @@
     "dex": true,
     "dex_max": null,
     "strength": null,
-    "stealth_disadvantage": false
+    "stealth_disadvantage": false,
+    "cost": 10
    },
    {
     "name": "Studded Leather Armor",
@@ -14544,7 +14546,8 @@
     "dex": true,
     "dex_max": null,
     "strength": null,
-    "stealth_disadvantage": false
+    "stealth_disadvantage": false,
+    "cost": 45
    },
    {
     "name": "Hide Armor",
@@ -14553,7 +14556,8 @@
     "dex": true,
     "dex_max": 2,
     "strength": null,
-    "stealth_disadvantage": false
+    "stealth_disadvantage": false,
+    "cost": 10
    },
    {
     "name": "Chain Shirt",
@@ -14562,7 +14566,8 @@
     "dex": true,
     "dex_max": 2,
     "strength": null,
-    "stealth_disadvantage": false
+    "stealth_disadvantage": false,
+    "cost": 50
    },
    {
     "name": "Scale Mail",
@@ -14571,7 +14576,8 @@
     "dex": true,
     "dex_max": 2,
     "strength": null,
-    "stealth_disadvantage": true
+    "stealth_disadvantage": true,
+    "cost": 50
    },
    {
     "name": "Breastplate",
@@ -14580,7 +14586,8 @@
     "dex": true,
     "dex_max": 2,
     "strength": null,
-    "stealth_disadvantage": false
+    "stealth_disadvantage": false,
+    "cost": 400
    },
    {
     "name": "Half Plate Armor",
@@ -14589,7 +14596,8 @@
     "dex": true,
     "dex_max": 2,
     "strength": null,
-    "stealth_disadvantage": true
+    "stealth_disadvantage": true,
+    "cost": 750
    },
    {
     "name": "Ring Mail",
@@ -14598,7 +14606,8 @@
     "dex": false,
     "dex_max": null,
     "strength": null,
-    "stealth_disadvantage": true
+    "stealth_disadvantage": true,
+    "cost": 30
    },
    {
     "name": "Chain Mail",
@@ -14607,7 +14616,8 @@
     "dex": false,
     "dex_max": null,
     "strength": 13,
-    "stealth_disadvantage": true
+    "stealth_disadvantage": true,
+    "cost": 75
    },
    {
     "name": "Splint Armor",
@@ -14616,7 +14626,8 @@
     "dex": false,
     "dex_max": null,
     "strength": 15,
-    "stealth_disadvantage": true
+    "stealth_disadvantage": true,
+    "cost": 200
    },
    {
     "name": "Plate Armor",
@@ -14625,14 +14636,16 @@
     "dex": false,
     "dex_max": null,
     "strength": 15,
-    "stealth_disadvantage": true
+    "stealth_disadvantage": true,
+    "cost": 1500
    },
    {
     "name": "Shield",
     "category": "Shield",
     "bonus": 2,
     "strength": null,
-    "stealth_disadvantage": false
+    "stealth_disadvantage": false,
+    "cost": 10
    }
   ],
   "strength_speed_penalty": 10
@@ -16584,6 +16597,28 @@
     "8": "1",
     "9": "1",
     "Level": "20"
+   }
+  ],
+  "higher_level_equipment": [
+   {
+    "Starting Level": "2–4",
+    "Equipment and Money": "Normal starting equipment",
+    "Magic Items": "1 Common"
+   },
+   {
+    "Starting Level": "5–10",
+    "Equipment and Money": "500 GP plus 1d10 × 25 GP plus normal starting equipment",
+    "Magic Items": "1 Common, 1 Uncommon"
+   },
+   {
+    "Starting Level": "11–16",
+    "Equipment and Money": "5,000 gp plus 1d10 × 250 GP plus normal starting equipment",
+    "Magic Items": "2 Common, 3 Uncommon, 1 Rare"
+   },
+   {
+    "Starting Level": "17–20",
+    "Equipment and Money": "20,000 GP plus 1d10 × 250 GP plus normal starting equipment",
+    "Magic Items": "2 Common, 4 Uncommon, 3 Rare, 1 Very Rare"
    }
   ]
  }

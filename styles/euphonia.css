@@ -412,10 +412,8 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-tools .b-note { flex-basis: 100%; margin: 0; }
 .b-note { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 0.7rem; }
 .b-problem { color: var(--signal-text); font-size: 0.88rem; margin: -0.3rem 0 0.7rem; }
-.b-warning { color: var(--accent); font-size: 0.88rem; margin: -0.3rem 0 0.7rem; }
-.b-warning[hidden] { display: none; }
 /* Problems tuck under the field they're about; under a button they stand clear of it. */
-.b-button + :is(.b-problem, .b-warning) { margin-top: 0.6rem; }
+.b-button + .b-problem { margin-top: 0.6rem; }
 .b-check { display: block; margin: 0 0 0.7rem; }
 .b-notes { margin: 0 0 0.7rem; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.85rem; }
 .b-notes:empty { display: none; }
@@ -509,8 +507,11 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .sheet a { color: var(--sheet-mark); }
 .sheet-facts dt { color: var(--sheet-muted); }
 .sheet-placement { color: var(--sheet-muted); font-size: 0.9rem; font-style: italic; margin: 0 0 0.5rem; }
-.sheet-warnings { margin: 0.4rem 0 0; padding-left: 1.1rem; color: var(--sheet-mark); font-size: 0.9rem; }
 .sheet-spell-list ul { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; columns: 2 14rem; column-gap: 1.6rem; }
+/* Each magic item opens on its rules, as a feat does; the gear is a plain list. */
+.sheet-items { list-style: none; margin: 0 0 0.6rem; padding: 0; font-size: 0.92rem; }
+.sheet-gear { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; columns: 2 16rem; column-gap: 1.6rem; }
+.sheet-gear li { break-inside: avoid; }
 .sheet-credit { margin-top: 1.8rem; border-top: 1px solid var(--frame-edge); padding-top: 0.6rem; color: var(--sheet-muted); font-size: 0.8rem; }
 .sheet-credit p { margin: 0 0 0.3rem; overflow-wrap: anywhere; }
 

@@ -17,11 +17,11 @@ const someone = (classes, extra = {}) => ({
   method: 'rolled', base: ABLE, classes, originFeats: { 'Human Versatile': 'Alert' }, styles: { 'Fighter 1 Fighting Style': 'Archery' }, tools: { 'Soldier tools': ['Gaming Set (Dice)'] }, ...extra,
 });
 
-export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes'), setting = read('characters'), subclasses = read('subclasses') } = {}) {
+export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes'), setting = read('characters'), subclasses = read('subclasses'), items = read('items').data } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
   let book;
-  try { book = engine.rulebook(srd, euphonia, setting, subclasses); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
+  try { book = engine.rulebook(srd, euphonia, setting, subclasses, items); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
   // Weapon Mastery and languages have checks of their own (below); a build
   // that doesn't name its weapons takes the first kinds the engine offers,
   // and one that doesn't name its languages takes as many distinct ones as
@@ -301,7 +301,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   // multiclass rules to build with.
   for (const where of ['level 2 feature', 'Level 2: A Planted Feature', 'As a Multiclass Character']) {
     try {
-      const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · ${where}`, reasons: ['bracket'] }] }, setting, subclasses);
+      const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · ${where}`, reasons: ['bracket'] }] }, setting, subclasses, items);
       if (planted.classNamed(whole.name) || !planted.unfinished.includes(whole.name)) fail(`a withheld ${where} planted in ${whole.name} doesn't set it aside`);
     } catch (e) { fail(`a withheld ${where} planted in ${whole.name}: ${e.message}`); }
   }
@@ -326,22 +326,61 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (mixed !== 3) fail(`Draconic Resilience counts Sorcerer levels, not the character's: ${mixed} at Sorcerer 3 / Fighter 2, not 3`);
   if (!(sorcerer(3) === 3 && sorcerer(20) === 20)) fail(`Draconic Resilience adds ${sorcerer(3)} at Sorcerer 3 and ${sorcerer(20)} at 20, not 3 and 20`);
   if (!(dwarf(1) === 1 && dwarf(5) === 5)) fail(`Dwarven Toughness adds ${dwarf(1)} at level 1 and ${dwarf(5)} at 5, not 1 and 5`);
-  // The SRD's armour example: “if you wear Leather Armor, your base AC is 11
-  // plus your Dexterity modifier, whereas your AC is 16 in Chain Mail”; a
-  // Shield's +2 only with training; Unarmored Defense with a Shield for a
-  // Barbarian, not for a Monk; Chain Mail's Strength 13 or 10 feet slower.
-  const worn = (cls, armor, shield, base = ABLE) => run(someone([{ class: cls, level: 1 }], { armor, shield, base }), `${cls} in ${armor || 'no armor'}`);
-  const leather = worn('Fighter', 'Leather Armor', false), chain = worn('Fighter', 'Chain Mail', false);
-  if (leather?.armorClass.ac !== 11 + leather.mod.Dexterity || chain?.armorClass.ac !== 16) fail(`Leather Armor gives ${leather?.armorClass.ac} and Chain Mail ${chain?.armorClass.ac}, not 11 + Dexterity and 16`);
-  if (worn('Fighter', 'Chain Mail', true)?.armorClass.ac !== 18 || worn('Wizard', '', true)?.armorClass.ac !== 10 + book.modifier(ABLE.Dexterity + 1)) fail('a Shield adds +2 without training, or not with it');
-  const barbarian = worn('Barbarian', '', true), monk = worn('Monk', '', true);
-  if (!barbarian?.unarmored.some(u => u.from === 'Unarmored Defense') || monk?.unarmored.some(u => u.from === 'Unarmored Defense')) fail('Unarmored Defense with a Shield: the Barbarian\'s should hold and the Monk\'s shouldn\'t');
-  // Medium armour takes Dexterity up to +2: Half Plate at Dexterity 18 is 17.
-  const nimble = worn('Fighter', 'Half Plate Armor', false, { ...ABLE, Dexterity: 17 });
-  if (nimble?.armorClass.ac !== 17) fail(`Half Plate at Dexterity 18 gives ${nimble?.armorClass.ac}, not 15 + 2`);
-  const weak = worn('Fighter', 'Chain Mail', false, { ...ABLE, Strength: 11 });
-  if (weak?.speed !== 30 - srd.armor.strength_speed_penalty || chain?.speed !== 30) fail(`Chain Mail at Strength 12 leaves speed ${weak?.speed}, at 16 ${chain?.speed}`);
-  if (!worn('Wizard', 'Plate Armor', false)?.warnings.some(w => /can't cast spells/.test(w.message))) fail('a Wizard in Plate Armor isn\'t warned about the training it lacks');
+  // The gear the builder chooses: the kits, then the best armour the
+  // character is trained in, has the Strength for and can buy, held to the
+  // SRD's armour: “if you wear Leather Armor, your base AC is 11 plus your
+  // Dexterity modifier, whereas your AC is 16 in Chain Mail”; a Shield's +2;
+  // Medium armour's Dexterity up to +2; Unarmored Defense with a Shield for a
+  // Barbarian, not for a Monk; and past level 1, the table's money.
+  const geared = (classes, base = ABLE) => run(someone(classes, { base }), classes.map(c => `${c.class} ${c.level}`).join(' / '));
+  const fighter1 = geared([{ class: 'Fighter', level: 1 }]), rogue1 = geared([{ class: 'Rogue', level: 1 }]);
+  if (!(fighter1?.armor?.name === 'Chain Mail' && fighter1.armorClass.ac === 16 && !fighter1.equipment.bought && fighter1.equipment.gold === 4 + 14)) fail(`a level 1 Fighter should wear the kit's Chain Mail (AC 16) with 18 GP left: ${JSON.stringify(fighter1 && [fighter1.armor?.name, fighter1.armorClass, fighter1.equipment.gold])}`);
+  if (!(rogue1?.armor?.name === 'Leather Armor' && rogue1.armorClass.ac === 11 + rogue1.mod.Dexterity)) fail(`a level 1 Rogue's kit Leather Armor gives ${rogue1?.armorClass.ac}, not 11 + Dexterity`);
+  const paladin1 = geared([{ class: 'Paladin', level: 1 }]), wizard1 = geared([{ class: 'Wizard', level: 1 }]);
+  if (!(paladin1?.shield && paladin1.armorClass.ac === 18)) fail(`a level 1 Paladin's Chain Mail and Shield give ${paladin1?.armorClass.ac}, not 18`);
+  if (!(wizard1 && !wizard1.armor && wizard1.armorClass.ac === 10 + wizard1.mod.Dexterity)) fail('a Wizard, trained in no armor, should wear none');
+  const fighter5 = geared([{ class: 'Fighter', level: 5, subclass: 'Champion' }]), weak5 = geared([{ class: 'Fighter', level: 5, subclass: 'Champion' }], { ...ABLE, Strength: 12 });
+  if (!(fighter5?.armor?.name === 'Splint Armor' && fighter5.armorClass.ac === 17 && fighter5.equipment.gold === 4 + 14 + 500 - 200 && fighter5.equipment.levelGold === 500 && fighter5.equipment.roll === '1d10 × 25 GP'))
+    fail(`a level 5 Fighter should buy Splint Armor with the table's 500 GP, 318 left: ${JSON.stringify(fighter5 && [fighter5.armor?.name, fighter5.equipment.gold, fighter5.equipment.roll])}`);
+  if (!(weak5 && weak5.armor?.name === 'Breastplate' && weak5.armorClass.ac === 16 && weak5.speed === 30)) fail(`at Strength 13 a level 5 Fighter can't wear Splint, and takes the Breastplate over Chain Mail (the same AC, no Disadvantage on Stealth): ${weak5?.armor?.name}, ${weak5?.armorClass.ac}`);
+  const barbarian11 = geared([{ class: 'Barbarian', level: 11, subclass: 'Path of the Berserker' }], { ...ABLE, Dexterity: 17 });
+  if (!(barbarian11?.armor?.name === 'Half Plate Armor' && barbarian11.armorClass.ac === 17)) fail(`Half Plate at Dexterity 18 gives ${barbarian11?.armorClass.ac}, not 15 + 2`);
+  const monkish = geared([{ class: 'Cleric', level: 1 }, { class: 'Monk', level: 1 }], { ...ABLE, Dexterity: 17, Wisdom: 18 });
+  const raging = geared([{ class: 'Cleric', level: 1 }, { class: 'Barbarian', level: 1 }], { ...ABLE, Dexterity: 17, Constitution: 17 });
+  if (!(monkish?.armorClass.from === 'Unarmored Defense' && !monkish.shield && monkish.armorClass.ac === 10 + monkish.mod.Dexterity + monkish.mod.Wisdom)) fail(`a Cleric/Monk should set down the kit's Shield for Unarmored Defense: ${JSON.stringify(monkish?.armorClass)}`);
+  if (!(raging?.shield && raging.armorClass.ac === 10 + raging.mod.Dexterity + raging.mod.Constitution + 2)) fail(`a Cleric/Barbarian's Unarmored Defense should keep the kit's Shield: ${JSON.stringify(raging?.armorClass)}`);
+  // The magic items, the table's count of each rarity, from the books': none
+  // at level 1; a subclass's own family member first; a rarity a family
+  // gives one member (the Gunner's Spare Barrel) only to that member; an
+  // item in several rarities at the rarest slot it fills; none twice, none
+  // the DM hands out, each one the character can use.
+  if (fighter1?.equipment.magicItems.length) fail('a level 1 character has magic items; the table begins at level 2');
+  const magic = (cls, level, subclass) => geared([{ class: cls, level, subclass }])?.equipment.magicItems ?? [];
+  const named = list => list.map(m => (m.item ? `${m.rarity} ${m.item.name}${m.item.member ? ` (${m.item.member})` : ''}${m.item.bonus ?? ''}` : `${m.rarity} —`));
+  const factor = magic('Counsellor', 5, 'Factor'), gunner = magic('Mhizha', 11, 'Gunner'), chemist = magic('Mhizha', 17, 'Chemist');
+  if (named(factor).join() !== 'Common Cipher Wheel,Uncommon Keepsakes of the Disciplines (House Ledger)') fail(`a level 5 Factor Counsellor's magic items: ${named(factor).join(', ')}`);
+  if (!named(gunner).includes("Rare Master's Piece (Spare Barrel)") || named(gunner).some(n => /^Uncommon Master's Piece/.test(n))) fail(`a level 11 Gunner's Master's Piece should be the Rare Spare Barrel: ${named(gunner).join(', ')}`);
+  if (!named(chemist).includes("Uncommon Master's Piece (Athanor)") || !named(chemist).includes('Very Rare Tuned Arc Gun+3')) fail(`a level 17 Chemist should have the Athanor and the Tuned Arc Gun at +3: ${named(chemist).join(', ')}`);
+  for (const c of book.classes) {
+    const sub = c.subclasses.find(x => x.source === 'Euphonia') ?? c.subclasses[0];
+    const got = geared([{ class: c.name, level: 17, subclass: sub.name }]);
+    if (!got) continue;
+    const table = book.higherLevelEquipment.find(r => r.lo <= 17 && r.hi >= 17).magic;
+    if (got.equipment.magicItems.length !== table.reduce((n, r) => n + r.count, 0)) fail(`${c.name} 17: ${got.equipment.magicItems.length} magic item slots, not the table's`);
+    const picked = got.equipment.magicItems.filter(m => m.item).map(m => book.items.find(i => i.name === m.item.name));
+    if (new Set(picked.map(i => i.name)).size !== picked.length) fail(`${c.name} 17: an item given twice`);
+    for (const i of picked) {
+      if (i.dm) fail(`${c.name} 17: ${i.name} is one the DM hands out`);
+      if (i.who && !(i.who.class === c.name && (!i.who.subclasses || i.who.subclasses.includes(sub.name)))) fail(`${c.name} (${sub.name}) 17: given ${i.name}, which requires Attunement by ${i.attunement.by}`);
+    }
+  }
+  // The books' gear to buy: the period weapons that count as one the
+  // character is proficient with, and a class chapter's gear only for that
+  // class.
+  const forSale = cls => geared([{ class: cls, level: 5, subclass: book.classNamed(cls).subclasses[0].name }])?.equipment.forSale.map(x => x.name) ?? [];
+  const wizardGear = forSale('Wizard'), philosopherGear = forSale('Natural Philosopher');
+  if (!(wizardGear.includes('Bagh nakh') && !wizardGear.includes('Sword cane') && !wizardGear.includes('Weatherglass') && philosopherGear.includes('Weatherglass')))
+    fail(`the gear to buy: a Wizard's ${wizardGear.join(', ')}; a Natural Philosopher's ${philosopherGear.join(', ')}`);
   // A Human's Versatile takes an Origin feat, and Skilled from it up to
   // three skills.
   const versatile = run(someone([{ class: 'Fighter', level: 1 }], { originFeats: { 'Human Versatile': 'Skilled' }, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'], 'feat Versatile (Human)': ['Stealth', 'Nature', 'Religion'] } }), 'versatile');
@@ -479,12 +518,12 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     if (!(casting?.prepared === 2 && casting.verb === 'known' && casting.cantrips === 2 && casting.given.map(s => s.name).join() === 'Prestidigitation,Mending,Message' && casting.list.some(sp => sp.name === 'Friends'))) fail(`the Courtier's spells read ${JSON.stringify(casting && { known: casting.prepared, verb: casting.verb, cantrips: casting.cantrips, given: casting.given.map(s => s.name) })}`);
     if (!(every?.count === 2 && every.from.join() === 'Deception,Insight,Intimidation,Persuasion')) fail('Every Table doesn\'t ask two of its four skills');
   }
-  const fighter = (lv, styles, armor) => run(someone([{ class: 'Fighter', level: lv, subclass: lv >= 3 ? 'Champion' : '' }], { styles, armor, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'] }, improvements: Object.fromEntries([4, 6].filter(x => x <= lv).map(x => [`Fighter ${x}`, { feat: 'Ability Score Improvement', increases: { Strength: 1, Constitution: 1 } }])) }), 'Fighting Style');
-  const champion = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Defense' }, 'Chain Mail');
-  const same = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Archery' }, 'Chain Mail');
-  const bare = fighter(1, { 'Fighter 1 Fighting Style': 'Defense' }, '');
-  if (!(champion?.problems.length === 0 && champion.armorClass.ac === 17 && same?.problems.some(p => /already yours/.test(p.message)) && bare?.armorClass.ac === 10 + bare.mod.Dexterity))
-    fail(`Fighting Style: the Champion's second, Defense's +1 in armour and not out of it: ${JSON.stringify([champion?.problems, champion?.armorClass, bare?.armorClass])}`);
+  const fighter = (lv, styles) => run(someone([{ class: 'Fighter', level: lv, subclass: lv >= 3 ? 'Champion' : '' }], { styles, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'] }, improvements: Object.fromEntries([4, 6].filter(x => x <= lv).map(x => [`Fighter ${x}`, { feat: 'Ability Score Improvement', increases: { Strength: 1, Constitution: 1 } }])) }), 'Fighting Style');
+  const champion = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Defense' });
+  const same = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Archery' });
+  const defended = fighter(1, { 'Fighter 1 Fighting Style': 'Defense' });
+  if (!(champion?.problems.length === 0 && champion.armorClass.ac === 17 + 1 && same?.problems.some(p => /already yours/.test(p.message)) && defended?.armorClass.ac === 16 + 1 && defended.unarmored[0].ac === 10 + defended.mod.Dexterity))
+    fail(`Fighting Style: the Champion's second, Defense's +1 in armour and not out of it: ${JSON.stringify([champion?.problems, champion?.armorClass, defended?.armorClass, defended?.unarmored])}`);
 
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
@@ -493,7 +532,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
 
   const log = problems.length
     ? [`\neuphonia builder: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes and the books’ ${booked} subclasses for the SRD’s, offered first, built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; the setting's ${backgrounds} backgrounds built${book.unfinished.length ? `, and ${book.unfinished.join(', ')} set aside as still being written` : ''}; ${book.species.length} species placed and ${book.feats.length} feats read`];
+    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes and the books’ ${booked} subclasses for the SRD’s, offered first, built to level 20, and ${levels} class levels showing their own tables' bonus and slots; the gear for each level, armour, shields, magic items, the hit points sentences add, origin feats and spell choices held to their rules; the setting's ${backgrounds} backgrounds built${book.unfinished.length ? `, and ${book.unfinished.join(', ')} set aside as still being written` : ''}; ${book.species.length} species placed and ${book.feats.length} feats read`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

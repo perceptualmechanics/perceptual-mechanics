@@ -137,11 +137,25 @@ export function spellTables(f) {
 // prepared", from the land chosen.
 const ALWAYS_PREPARED = /always have the listed spells? prepared|you have the spells listed for your \w+ level and lower prepared/;
 
+// A starting equipment's packages, each a choice ("Choose A or B: (A)
+// Leather Armor, 2 Daggers, …, and 19 GP; or (B) 90 GP"): its items, and its
+// gold apart from them.
+function packagesOf(text, where) {
+  const found = [...text.replace(/\*/g, '').matchAll(/\(([A-C])\) (.+?)(?=;? (?:or )?\([A-C]\)|\.?$)/g)].map(m => {
+    const parts = m[2].split(/,\s*(?:and\s+)?|\s+and\s+/).map(x => x.trim());
+    const gold = parts.filter(x => /^[\d,]+ GP$/i.test(x));
+    return { label: m[1], items: parts.filter(x => !gold.includes(x)), gold: gold.reduce((n, x) => n + number(x.split(' ')[0]), 0) };
+  });
+  if (found.length < 2) throw new Error(`${where}: starting equipment "${text}" doesn't read as packages`);
+  return found;
+}
+
 // The rules as the builder uses them: the SRD's tables and options, every
 // class and background, the SRD's and the setting's own, in one shape, and
 // where the setting places each species. `added` holds the subclasses the
-// books add to the SRD's classes.
-export function rulebook(srd, euphonia, setting, added) {
+// books add to the SRD's classes, and `goods` the books' items and period
+// weapons.
+export function rulebook(srd, euphonia, setting, added, goods) {
   const skills = srd.tables.skills.map(r => r.Skill);
   const modifiers = srd.tables.ability_modifiers.map(r => {
     const [lo, hi = lo] = r.Score.split('–').map(Number);
@@ -222,9 +236,46 @@ export function rulebook(srd, euphonia, setting, added) {
       // the group it's listed in.
       revelations: c.cosmography ? c.cosmography.groups.flatMap(g => g.revelations.map(r => ({ ...r, group: g.name }))) : null,
       multiclassSkills: skillGrant(c.multiclass.gains, skills, choice.from),
+      packages: packagesOf(trait(c, 'Starting Equipment'), c.name),
     };
   });
+  // Who an item is for, as its attunement line names them: a class ("a
+  // Revelator"), a subclass and its class ("an Envoy Warlock", "a
+  // Chirurgeon"), a class's subclass a family's member is for ("a Counsellor
+  // of the Keepsake's Subclass"), or a class's subclasses in the item's own
+  // chapter ("a Sorcerer of an Origin in This Chapter"). A family's members
+  // each name a subclass of the class whose chapter carries it; one is the
+  // member for that subclass only where its line or its text says so ("works
+  // only for a Mhizha of that subclass"). A class still being written
+  // keeps its items back with it.
+  const subclassesNamed = (cls, words) => cls.subclasses.filter(sc => sc.name === words || new RegExp(`(?:^|\\s)${words.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s|$)`).test(sc.name));
+  const waiting = new RegExp(`\\b(?:${unfinished.join('|') || '(?!)'})\\b`);
+  const items = goods.items.filter(item => !waiting.test(`${item.place.class_name ?? ''} ${item.attunement?.by ?? ''}`)).map(item => {
+    const home = classes.find(c => c.name === item.place.class_name) ?? null;
+    let who = null;
+    if (item.attunement?.by) {
+      const by = item.attunement.by.replace(/^an? /, ''), family = by.match(/^(.+?) of the \w+'s (?:Subclass|Pathway)$/), chapter = by.match(/^(.+?) of an? \w+ in This Chapter$/);
+      const cls = classes.find(c => c.name === (family ?? chapter)?.[1] || c.name === by) ?? classes.find(c => by.endsWith(` ${c.name}`));
+      if (family && cls) who = { class: cls.name, member: true };
+      else if (chapter && cls) who = { class: cls.name, subclasses: cls.subclasses.filter(sc => sc.book === item.place.book).map(sc => sc.name) };
+      else if (cls && cls.name === by) who = { class: cls.name };
+      else {
+        const [c, sc] = cls ? [cls, subclassesNamed(cls, by.slice(0, -cls.name.length - 1))] : classes.map(c => [c, subclassesNamed(c, by)]).find(([, x]) => x.length) ?? [];
+        if (sc?.length !== 1) throw new Error(`${item.name}: "Requires Attunement by ${item.attunement.by}" names no one class or subclass`);
+        who = { class: c.name, subclasses: [sc[0].name] };
+      }
+    }
+    const members = item.members.map(mb => {
+      const of = home ? subclassesNamed(home, mb.subclass) : [];
+      if (of.length !== 1) throw new Error(`${item.name}: its ${mb.name} is for "${mb.subclass}", which names no one subclass of ${item.place.class_name}`);
+      return { ...mb, subclass: of[0].name };
+    });
+    const bound = Boolean(who?.member) || new RegExp(`works only for an? ${item.place.class_name} of that subclass`).test(item.text);
+    for (const r of item.rarities) if (r.member && !members.some(mb => mb.name === r.member)) throw new Error(`${item.name}: it's ${r.rarity} for the ${r.member}, which isn't one of its members`);
+    return { ...item, who, members, bound };
+  });
   return {
+    items, periodWeapons: goods.weapons,
     skills: srd.tables.skills.map(r => ({ name: r.Skill, ability: r.Ability })),
     modifier: score => {
       const band = modifiers.find(b => score >= b.lo && score <= b.hi);
@@ -239,7 +290,23 @@ export function rulebook(srd, euphonia, setting, added) {
     pointBudget: srd.ability_scores.point_budget,
     backgroundIncreases: srd.ability_scores.background,
     species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
-    backgrounds: [...srd.backgrounds.map(b => ({ ...b, source: 'SRD 5.2.1' })), ...setting.data.backgrounds.map(b => ({ ...b, source: 'Euphonia' }))],
+    backgrounds: [...srd.backgrounds.map(b => ({ ...b, source: 'SRD 5.2.1' })), ...setting.data.backgrounds.map(b => ({ ...b, source: 'Euphonia' }))]
+      .map(b => ({ ...b, packages: packagesOf(b.equipment, b.name) })),
+    // What a character starting past level 1 adds to its starting equipment:
+    // the money's fixed part ("500 GP plus 1d10 × 25 GP" counts 500; the roll
+    // is the table's to make) and the magic items, by the levels each row
+    // covers.
+    higherLevelEquipment: srd.tables.higher_level_equipment.map(r => {
+      const [lo, hi = lo] = r['Starting Level'].split('–').map(Number);
+      const money = r['Equipment and Money'], gold = money.match(/^([\d,]+) GP plus 1d10 × [\d,]+ GP plus normal starting equipment$/i);
+      if (!gold && money !== 'Normal starting equipment') throw new Error(`Starting Equipment at Higher Levels, ${r['Starting Level']}: "${money}" doesn't read as the builder reads it`);
+      const magic = r['Magic Items'].split(/,\s*/).map(x => {
+        const m = x.match(/^(\d+) (Common|Uncommon|Rare|Very Rare|Legendary)$/);
+        if (!m) throw new Error(`Starting Equipment at Higher Levels, ${r['Starting Level']}: "${x}" isn't a count of magic items of one rarity`);
+        return { count: +m[1], rarity: m[2] };
+      });
+      return { lo, hi, gold: gold ? number(gold[1]) : 0, roll: gold ? money.match(/1d10 × [\d,]+ GP/i)[0] : null, magic };
+    }),
     placement: name => {
       const row = setting.data.species.find(x => x.species.includes(name));
       return row ? { line: row.line, status: setting.data.species_status } : null;
@@ -319,12 +386,10 @@ export function casterLevel(classes) {
 // what's missing or broken comes back as problems, keyed to the choice they
 // belong to, and everything that can still be worked out is.
 export function character(book, state) {
-  // Problems stop a character being built as chosen; warnings are the rules'
-  // consequences of a legal choice (armour without training), and notes are
-  // facts worth saying (a skill granted twice).
-  const problems = [], warnings = [], notes = [];
+  // Problems stop a character being built as chosen; notes are facts worth
+  // saying (a skill granted twice).
+  const problems = [], notes = [];
   const fail = (field, message) => problems.push({ field, message });
-  const warn = (field, message) => warnings.push({ field, message });
   const species = book.species.find(s => s.name === state.species) ?? null;
   const background = book.backgrounds.find(b => b.name === state.background) ?? null;
   if (!species) fail('species', 'Choose a species.');
@@ -970,7 +1035,6 @@ export function character(book, state) {
   }
   const skills = book.skills.map(s => ({ ...s, proficient: proficient.has(s.name), expertise: expert.has(s.name), extra: checkBonus[s.name] ?? [],
     bonus: mod[s.ability] + (proficient.has(s.name) ? bonus : 0) * (expert.has(s.name) ? 2 : 1) + (checkBonus[s.name] ?? []).reduce((n, x) => n + x.value, 0) }));
-  const stealthy = book.armor.items.find(a => a.name === state.armor)?.stealth_disadvantage;
 
   // Hit points: the first class's die at level 1, then each level's fixed
   // half die plus one, each with the Constitution modifier, at least 1.
@@ -1359,15 +1423,12 @@ export function character(book, state) {
     ...known.slice(1).flatMap(c => trainedIn(c.rules.multiclass.gains.match(/training with (.+)$/)?.[1] ?? '')),
     // A feature's own ("training with Heavy armor", the Protector's).
     ...features.flatMap(f => trainedIn(f.text.match(/training with (\w+) armor/)?.[1] ?? ''))])];
-  const worn = book.armor.items.find(a => a.name === state.armor && a.category !== 'Shield') ?? null;
-  if (state.armor && !worn) fail('armor', `There's no armor "${state.armor}".`);
-  const shield = state.shield ? book.armor.items.find(a => a.category === 'Shield') : null;
-  const shieldBonus = shield && training.includes('Shield') ? shield.bonus : 0;
-  if (worn && !training.includes(worn.category)) warn('armor', `Without training in ${worn.category} armor, you have Disadvantage on any D20 Test that involves Strength or Dexterity, and you can't cast spells.`);
-  if (shield && !training.includes('Shield')) warn('armor', 'Without training with Shields, a Shield gives no Armor Class.');
-  // By the modifiers it's worked from: the character's, or a form's that
-  // swaps scores (the Monster's card).
-  const armorWith = mods => {
+  // The Armor Class a body armour and a Shield give (either may be none),
+  // by the modifiers it's worked from: the character's, or a form's that
+  // swaps scores (the Monster's card). Without armour, each feature's own
+  // base, and a Shield only where its sentence allows one.
+  const acOf = (mods, worn, shield) => {
+    const shieldBonus = shield?.bonus ?? 0;
     const unarmored = [{ from: 'No armor', ac: 10 + mods.Dexterity + shieldBonus }];
     for (const f of features) {
       const sentence = f.text.split(/(?<=\.)\s+/).find(x => /base Armor Class equals 10 plus your (\w+) and (\w+) modifiers/.test(x));
@@ -1389,7 +1450,68 @@ export function character(book, state) {
     }
     return { unarmored, ac };
   };
-  const { unarmored, ac: armorClass } = armorWith(mod);
+  // Gear, as the rules set a character up at its level: the first class's
+  // starting kit and the background's (each one's package A, which carries
+  // the weapons, focus and tools the other packages leave the player to buy),
+  // and past level 1 the money the Starting Equipment at Higher Levels table
+  // adds. The armour is the builder's, not the player's: without armour, in
+  // a kit's, or in any the character is trained in, has the Strength for
+  // (without it, Speed drops) and can buy with that money, the highest Armor
+  // Class, then one that doesn't hinder Stealth, then the least spent. A
+  // Shield only as a kit gives one, carried where it adds (not where it ends
+  // Unarmored Defense).
+  const kits = [first && { from: first.name, ...first.packages[0] }, background && { from: background.name, ...background.packages[0] }].filter(Boolean);
+  const higher = book.higherLevelEquipment.find(r => total >= r.lo && total <= r.hi) ?? null;
+  const items = kits.flatMap(k => k.items), money = kits.reduce((n, k) => n + k.gold, 0) + (higher?.gold ?? 0);
+  const armorNamed = item => book.armor.items.find(a => a.name === item);
+  const wearable = a => a.category !== 'Shield' && training.includes(a.category) && (!a.strength || scores.Strength >= a.strength);
+  const kitShield = items.map(armorNamed).find(a => a?.category === 'Shield' && training.includes('Shield'));
+  const owned = items.map(armorNamed).filter(a => a && wearable(a));
+  const wears = [[null, 0], ...owned.map(a => [a, 0]), ...book.armor.items.filter(a => wearable(a) && a.cost <= money && !owned.includes(a)).map(a => [a, a.cost])];
+  let gear = null;
+  for (const shield of kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of wears) {
+    const ac = acOf(mod, worn, shield).ac.ac, quiet = !worn?.stealth_disadvantage;
+    if (!gear || ac > gear.ac || (ac === gear.ac && (quiet > gear.quiet || (quiet === gear.quiet && spent < gear.spent)))) gear = { ac, quiet, spent, worn, shield };
+  }
+  const { worn, shield } = gear;
+  const { unarmored, ac: armorClass } = acOf(mod, worn, shield);
+  // Magic items, as many of each rarity as the table gives past level 1,
+  // from the books' own: one for no one in particular, or for one of the
+  // character's classes or its subclass (a family's member for that
+  // subclass), never one the DM hands out. The builder chooses, as with
+  // armour: first what's made for its subclass (its chapter's, or the
+  // family member for it), then its classes', then the setting's own, then
+  // other classes' chapters, each in the books' order; the rarest slots
+  // first, so an item that comes in several rarities (+1, +2, +3) fills the
+  // rarest it can. A rarity no item fits is left for the DM to fill.
+  const has = cls => known.some(k => k.class === cls);
+  const subclassOf = cls => known.find(k => k.class === cls && k.level >= k.rules.subclassLevel)?.subclass || null;
+  const memberFor = item => item.members.find(mb => mb.subclass === subclassOf(item.place.class_name)) ?? null;
+  const usable = item => (!item.who || (has(item.who.class) && (!item.who.subclasses || item.who.subclasses.includes(subclassOf(item.who.class))))) && (!item.bound || memberFor(item));
+  // A rarity a family gives one member ("Uncommon, or Rare for the Spare
+  // Barrel") is that member's, and the others take the rest.
+  const ratedAt = (item, member) => (item.rarities.some(r => r.member && r.member === member?.name) ? item.rarities.filter(r => r.member === member.name) : item.rarities.filter(r => !r.member));
+  const nearness = item => ((item.place.subclass && item.place.subclass === subclassOf(item.place.class_name)) || memberFor(item) ? 0 : has(item.place.class_name) || (item.who && has(item.who.class)) ? 1 : item.place.class_name ? 3 : 2);
+  const taken = new Set();
+  const RARITIES = ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Legendary'];
+  const magicItems = (higher?.magic ?? []).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).flatMap(({ count, rarity }) => Array.from({ length: count }, () => {
+    const pick = book.items.filter(i => i.magical && !i.dm && !taken.has(i.name) && usable(i))
+      .map(i => ({ item: i, member: memberFor(i), at: ratedAt(i, memberFor(i)).find(r => r.rarity === rarity) }))
+      .filter(x => x.at).sort((a, b) => nearness(a.item) - nearness(b.item))[0];
+    if (!pick) return { rarity, item: null };
+    taken.add(pick.item.name);
+    return { rarity, item: { name: pick.item.name, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: Boolean(pick.item.attunement), text: pick.item.text } };
+  })).toSorted((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
+  // The books' gear, for the player to buy at the table with what's left:
+  // the setting's own and its classes' chapters', each piece of a priced set
+  // on its own, and the period's weapons that count as one the character is
+  // proficient with, whatever it can afford (or the books leave unpriced).
+  const left = money - gear.spent, affordable = x => x.cost === null || x.cost <= left;
+  const forSale = [
+    ...book.items.filter(i => !i.magical && (!i.place.class_name || has(i.place.class_name))).flatMap(i => (i.pieces.length ? i.pieces.map(p => ({ name: p.name, cost: p.cost, of: i.name, note: null })) : [{ name: i.name, cost: i.cost, of: null, note: i.note }])),
+    ...book.periodWeapons.filter(w => w.counts_as.some(n => proficientWeapons.some(p => p.name === n))).map(w => ({ name: w.name, cost: w.cost, of: null, note: null, countsAs: w.counts_as })),
+  ].filter(affordable);
+  const equipment = { kits: kits.map(k => ({ from: k.from, items: k.items })), bought: gear.spent ? { name: worn.name, cost: gear.spent } : null, gold: left, levelGold: higher?.gold ?? 0, roll: higher?.roll ?? null, magicItems, forSale };
   // The Monster's card, for one who carries it, as Monster Form writes it:
   // the scores it swaps ("Your Strength and Intelligence scores swap, and
   // your Dexterity and Wisdom scores swap"), and with them the Armor Class
@@ -1411,7 +1533,7 @@ export function character(book, state) {
     const mods = Object.fromEntries(ABILITIES.map(a => [a, book.modifier(swapped[a])]));
     const die = grown(/Unarmed Strike die in Monster Form becomes a d(\d+)/) ? +r.growth.find(g => /becomes a d\d+/.test(g)).match(/becomes a d(\d+)/)[1] : +strike[2];
     r.card = {
-      scores: swapped, mods, armorClass: armorWith(mods).ac,
+      scores: swapped, mods, armorClass: acOf(mods, worn, shield).ac,
       saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mods[a] + (saves.includes(a) ? advancement.bonus : 0) })),
       tempHp: 2 * at * (grown(/Temporary Hit Points you gain on transformation are doubled/) ? 2 : 1),
       strike: { attack: mods[strike[3]] + advancement.bonus, damage: `${strike[1]}d${die}${mods[strike[3]] ? ` ${mods[strike[3]] > 0 ? '+' : '−'} ${Math.abs(mods[strike[3]])}` : ''} ${strike[4]}`, attacks: /attack twice/.test(form) ? 2 : 1 },
@@ -1424,21 +1546,19 @@ export function character(book, state) {
   if (options && !options.names.includes(state.option)) fail('option', `Choose your ${options.label}.`);
   const optionRow = species && Object.values(species.tables ?? {}).flat().find(r => Object.values(r)[0] === state.option);
   const faster = Object.values(optionRow ?? {}).join(' ').match(/Your Speed increases to (\d+) feet/)?.[1];
-  const slowed = worn?.strength && scores.Strength < worn.strength ? book.armor.strength_speed_penalty : 0;
-  if (slowed) warn('armor', `${worn.name} needs Strength ${worn.strength}; it takes ${slowed} feet off your speed.`);
-  const speed = Number(faster ?? species?.speed.match(/^(\d+)/)?.[1] ?? 0) - slowed;
+  const speed = Number(faster ?? species?.speed.match(/^(\d+)/)?.[1] ?? 0);
   const sizes = species?.size.match(/\b(Tiny|Small|Medium|Large)\b/g) ?? [];
   if (sizes.length > 1 && !sizes.includes(state.size)) fail('size', `Choose ${sizes.join(' or ')}.`);
   const size = sizes.length > 1 ? state.size : sizes[0];
 
   return {
-    problems, warnings, notes, species, option: options?.names.includes(state.option) ? state.option : null, size, background, scores, base, mod, level: total, bonus,
+    problems, notes, species, option: options?.names.includes(state.option) ? state.option : null, size, background, scores, base, mod, level: total, bonus,
     xp: advancement.xp, nextXp: book.advancement[total]?.xp ?? null,
     classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
-    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, languageChoices, stealthDisadvantage: Boolean(stealthy), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
+    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
-    features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), training,
+    features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,
   };
 }
