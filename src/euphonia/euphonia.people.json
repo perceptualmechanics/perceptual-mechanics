@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "7b7fde6d9dffaae2ac7b5661b71bf66d2bed2e4748aa5429f3364c0f9ddeb465",
-  "modified": "2026-11-15T10:27:51-05:00",
+  "sha256": "6f64b5863de869c6763ff17b93e67ac7011022814c8edd4ff955a30662d6b9da",
+  "modified": "2026-11-15T10:44:15-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 20,
   "rules": {
@@ -24,14 +24,7 @@
    "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
   }
  },
- "withheld": [
-  {
-   "where": "Mutapa and the Indian Ocean · People · Mwalimu Bakari Shee",
-   "reasons": [
-    "banned word 5 of the rules"
-   ]
-  }
- ],
+ "withheld": [],
  "data": {
   "regions": [
    {
@@ -139,6 +132,10 @@
      {
       "name": "Dona Catarina de Sá",
       "text": "An Afro-Portuguese prazo heiress who lost her land below Tete when Mutapa kept its mines, and now runs the platinum runners of Sofala. Find her at a cook-shop by the fish market at the hottest hour, shelling prawns and asking after your family by name, though she has never met them. Nobody caught with platinum in Sofala can say where it came from, because she makes sure they never knew, and she pays her runners' widows. A villain or contact on the Monsoon Road; a Lisbon lawyer says a European court might honor her deed, and she hasn't decided whether she wants it back."
+     },
+     {
+      "name": "Mwalimu Bakari Shee",
+      "text": "A Bajuni pilot of Faza, a water elemental-blood who went over the side in a squall at fourteen and came up three days later a mile out, breathing easily, with a promise to someone in the deep that he still keeps. Find him sitting on an upturned hull on the beach at Faza or the Lamu waterfront when a captain needs a pilot for deep water. He knows which waters take a toll, leaves a gift over certain soundings without explaining, and wants one passage on which nothing below asks him for anything. An ally or contact, and a Dreamlord Warlock of the deep in person."
      }
     ]
    },
@@ -512,6 +509,30 @@
     },
     {
      "kind": "paragraph",
+     "text": "Two more, not on the cover: a Gamester and a Courtier, a couple who work as a pair, written as player characters a table can take as they are, or meet as rivals across a gaming table. They're English, in their twenties, and banned from more houses than most people have visited. Louche, loud, very funny about the English, and much better brought up than they let on."
+    },
+    {
+     "kind": "paragraph",
+     "text": "**Kit Harrow**, Counsellor (Gamester), 24. A Cavalier baronet's daughter. Her father came home with the king in 1660 and lost the estate at hazard at the Groom Porter's inside two years. Kit learned the game to win it back, and found she was better at it than anyone she'd ever met. She never stopped. She plays in breeches because skirts catch on the table, and because the playhouses have made breeches on a woman the fashion. She does the season like a campaign: Whitehall in the winter, Tunbridge Wells for the waters and the card rooms in summer, Paris when London gets too hot, and the bear garden at Bankside when she's bored, in a borrowed coat and a borrowed accent. She keeps a pocketbook of every debt anyone owes her, including the ones she's forgiven, and she's never once been seen to count. She is owed money by two earls and a bishop. She owes it to one moneylender in Lombard Street, who is very patient, and very frightening."
+    },
+    {
+     "kind": "paragraph",
+     "text": "**Ned Ashcombe**, Courtier (College of Verse), 26. The younger son of a Royalist colonel killed at Worcester, raised on a promise the Restoration hasn't kept. He came to Whitehall with nothing but a good leg, a better ear and a talent for lampoons. His lampoons are portraits of types, not people: the clerk who keeps his wife's miniature in his desk and his mistress's in his hat, the country squire up for the season who bets the harvest on a cockfight, the courtier so fashionable he's out of date by Tuesday. Everyone in London can sing them, and everyone is sure the next verse is about the man beside them. One got him banished from the court for a season; he spent it in Paris and came back with better French and worse habits. He fences well and insists he doesn't, which the men he lampoons find out when they come looking for him. He has fought five duels and lost none, mostly because he made his opponents laugh."
+    },
+    {
+     "kind": "paragraph",
+     "text": "**The couple.** They met across a hazard table at the Groom Porter's, where Ned tried to cheat her and Kit let him, to see how good he was. They were married a year later in the Fleet, by a parson who asked no questions, on a bet Kit won. Ned maintains it doesn't count and has never once tried to prove it. They fight in public, in verse and in arithmetic, and the town takes sides; nobody has ever seen either of them take a side against the other."
+    },
+    {
+     "kind": "paragraph",
+     "text": "**The act.** The Gamester never leaves her chair; the Wit never seems to be at the table at all. Kit plays, and Ned works the room: who's drunk, who's desperate, who has a wife who'd like to know where her pearls went. A couplet in his mouth is a signal to her (a rhyme on the king means the bank is weak; a line of Donne means the man on her left is cheating), and nobody in Europe listens to Ned closely enough to notice. When the house turns ugly, she counts and he ripostes, and they leave by the window. Neither of them has ever left a gaming house by the front door twice. They end most nights at dawn in St James's Park, among the king's new ducks and the clerks walking to work, with somebody else's money and nowhere in particular to be."
+    },
+    {
+     "kind": "paragraph",
+     "text": "**Where they're banned.** The Groom Porter's, for a season; the Duke of York's apartments, for a lampoon; two *académies de jeu* in Paris, for winning; a Rhenish bishop's palace, for reasons both tell differently. Venice's Ridotto still lets them in, wearing masks like everyone else, which suits them both."
+    },
+    {
+     "kind": "paragraph",
      "text": "**At the table.**"
     },
     {
@@ -540,6 +561,18 @@
      "kind": "heading",
      "level": 3,
      "text": "Gottlieb von Schleich"
+    },
+    {
+     "kind": "paragraph",
+     "text": "A Counsellor (Spymaster) and Wizard, about fifty, and the man nobody invites. He's a Freiherr from a corner of Franconia, and envoy to the Perpetual Diet at Regensburg for an imperial county so small that it shares one vote with a whole bench of counts. The Diet opened in 1663 and never closed, so Schleich has had five years with nothing to do, and he has filled them by going everywhere."
+    },
+    {
+     "kind": "paragraph",
+     "text": "He is at every reception in Regensburg and Vienna, every wedding, every lying-in-state, every opera and every hunt, at the edge of every conversation that matters, holding a glass he never drinks. Three courts have licensed him as a wizard, because none of them could find a reason not to. He's damp, attentive and agreeable; he laughs a moment after everyone else; he remembers your mother's name and your debts. He writes it all down in a small green book. He is never quite rude enough to be shown the door, and he always knows which door you came in by."
+    },
+    {
+     "kind": "paragraph",
+     "text": "**At the table.** The party meets him in every city, and he has always heard. He offers help nobody asked for, and it's always good. The table's slow discovery is that he is never wrong, and that somebody is paying for the green book: his county can't afford his coat."
     },
     {
      "kind": "heading",
