@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "70ff15ac0bec157317a5fa8e268dae8d1eac1f6a282025deb4a62e8f4892b24e",
-  "modified": "2026-11-15T09:02:18-05:00",
+  "sha256": "23b476c1410a3183bbf59e25b09dd52208f80103a460e9fcca713c9579ace2b1",
+  "modified": "2026-11-15T09:31:12-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 19,
   "rules": {
@@ -24,20 +24,7 @@
    "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
   }
  },
- "withheld": [
-  {
-   "where": "Warlock · Envoy Patron · introduction",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Warlock · Dreamlord Patron · introduction",
-   "reasons": [
-    "names a placeholder"
-   ]
-  }
- ],
+ "withheld": [],
  "data": [
   {
    "class_name": "Druid",
@@ -549,7 +536,7 @@
    "class_name": "Warlock",
    "name": "Envoy Patron",
    "book": "Euphonia: The Classes",
-   "lead": "",
+   "lead": "*Every Heaven Sends Its Messengers*\n\nYou have made a pact with an angel: a being of the tier that gods send when they want something done. In exchange for your service, you can call on that tier yourself. Your angels come in bursts. Each lands, does one errand, and returns; it has a busy eternity ahead of it.\n\n> **The Envoy at a Glance**\n>\n> **Call an Angel** is your button. As a Bonus Action, spend a Pact Magic slot: an angel lands beside the fight, does one errand, and leaves.\n>\n> - **Strike:** it attacks a creature you name for two of its turns, or until that creature drops.\n> - **Guard:** it stays beside an ally (or you), takes the hits meant for them, and catches them if they fall.\n> - **Mend:** it carries a store of healing and spends it on your friends.\n> - **Bear:** it carries a message or a small thing up to a mile, within the minute.\n>\n> | Feature | What it does | From |\n> |---|---|---|\n> | Call an Angel | the angel and its errand | Level 3 |\n> | Tongue of Fire | Celestial; the names and ranks of the messengers | Level 3 |\n> | Messenger | *Sending* borne by an angel; the protocol of any court | Level 6 |\n> | Greater Angels | brighter angels that find a new target; the hospitality owed to angels | Level 10 |\n> | Archangel | once per Long Rest, an archangel that flattens and frightens; a weekly visitation; the ladder between the heavens | Level 14 |\n>\n> **A good turn:** call the angel with your Bonus Action, then cast *Eldritch Blast* with your action. The angel takes its turn right after yours.",
    "features": [
     {
      "level": 3,
@@ -1031,7 +1018,7 @@
    "class_name": "Warlock",
    "name": "Dreamlord Patron",
    "book": "Euphonia: Life on the Border",
-   "lead": "",
+   "lead": "*Take Them Under the Hill*\n\n> **The Dreamlord at a Glance**\n>\n> **Step into the Hidden** is yours from 3rd level: cast, then step behind the world, and take a friend with you if one is beside you.\n>\n> **Spirited Away** is your button from 6th. As a Bonus Action, a creature you can see makes a Charisma save or the Hidden take it until the start of your next turn: out of the fight, its Concentration broken. A willing ally can choose to go.\n>\n> | Feature | What it does | From |\n> |---|---|---|\n> | Step into the Hidden | Bonus Action: teleport 30 feet, Invisible until your next turn; take a willing friend with you | Level 3 |\n> | Manners | know whether a fae bargain binds; Advantage to bargain with Hidden creatures | Level 3 |\n> | Spirited Away | a creature vanishes until your next turn | Level 6 |\n> | Hidden Tracks | see who has been to the Realm; know thin ground by touch | Level 6 |\n> | Iron and Oaths | Immunity to Charmed; know when a promise to you breaks; know fairy gold by touch | Level 10 |\n> | The Long Taking | keep a taken creature up to a minute; lead a party under the hill | Level 14 |\n>\n> **A good turn:** at 3rd, cast your spell with your action, then Step into the Hidden, taking the friend who's about to be cut down. From 6th, cast, then Spirit Away the brute about to swing, or the caster holding a spell.\n\n**Not a Hidden Creature.** A Dreamlord Warlock bargains with the Hidden and carries nothing of it.",
    "features": [
     {
      "level": 3,

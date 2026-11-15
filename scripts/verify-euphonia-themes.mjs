@@ -23,6 +23,10 @@ export const contrast = (fg, bg, ground) => { const [x, y] = [luminance(over(fg,
 // colours (CSS Color 4, section 6.1), as values.
 const NAMED = 'aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen'.split(' ');
 const LITERAL = new RegExp(`#[0-9a-f]{3,8}\\b|\\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\(\\s*[\\d.]|(?<![\\w-])(?:${NAMED.join('|')})(?![\\w-])`, 'i');
+// In a script's string a named colour is a value: the whole string ('red'),
+// a declaration's (color: red) or an attribute's (fill="red"); a word in a
+// sentence (the Red Sea) is not one.
+const FORMED = new RegExp(`#[0-9a-f]{3,8}\\b|\\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\(\\s*[\\d.]|^\\s*(?:${NAMED.join('|')})\\s*$|[:=]\\s*["']?(?:${NAMED.join('|')})(?![\\w-])`, 'i');
 
 // Where the page's colours may come from: the theme data alone. The ribbons'
 // fade is a mask, whose black and transparent are opacities, not colours.
@@ -51,7 +55,7 @@ function literals(line) {
     }
   }
   if (text) out.push(text);
-  return out.join(' ');
+  return out;
 }
 
 export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES, khipu = drawKhipu } = {}) {
@@ -64,8 +68,7 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES, khipu
     const script = file.endsWith('.js');
     text.split('\n').forEach((line, i) => {
       if (EXEMPT.test(line)) return;
-      const where = script ? literals(line) : line.replace(/&#x?[0-9a-f]+;/gi, '');
-      const m = LITERAL.exec(where);
+      const m = script ? literals(line).map(x => FORMED.exec(x)).find(Boolean) : LITERAL.exec(line.replace(/&#x?[0-9a-f]+;/gi, ''));
       if (m) errors.push(`${file}:${i + 1}: a colour outside the themes (${m[0]})`);
     });
   }

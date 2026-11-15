@@ -372,6 +372,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     if (new Set(picked.map(i => i.name)).size !== picked.length) fail(`${c.name} 17: an item given twice`);
     for (const i of picked) {
       if (i.dm) fail(`${c.name} 17: ${i.name} is one the DM hands out`);
+      if (/No one starts play with/.test(i.text)) fail(`${c.name} 17: ${i.name} starts play, though "No one starts play with" one`);
       if (i.who && !(i.who.class === c.name && (!i.who.subclasses || i.who.subclasses.includes(sub.name)))) fail(`${c.name} (${sub.name}) 17: given ${i.name}, which requires Attunement by ${i.attunement.by}`);
     }
   }
@@ -404,14 +405,15 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     }
   }
   const named11 = h => (from(h)?.magicItems ?? []).map(m => m.item?.name);
-  if (!named11('The Americas').includes('Khipu of Record') || !named11('East and Southeast Asia').includes('Talisman Papers (fu)') || !named11('India').includes('Lahore Astrolabe'))
+  if (!named11('The Americas').includes('Khipu of Record') || !named11('East and Southeast Asia').includes('Talisman Papers (fu)') || !named11('India').includes('Lahore Astrolabe') || !named11('India').includes('Talismanic Shirt'))
     fail(`a homeland's items first: the Americas' ${named11('The Americas').join(', ')}; East and Southeast Asia's ${named11('East and Southeast Asia').join(', ')}; India's ${named11('India').join(', ')}`);
   const lamp = (homeland, market) => run({ ...someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), homeland, market }, `a lamp bought by ${homeland || 'no one'} in ${market || 'the homeland'}`)?.equipment.forSale.find(x => x.name === 'Self-Lighting Lamp');
   const base = items.items.find(i => i.name === 'Mutapan Curiosities').pieces.find(p => p.name === 'Self-Lighting Lamp').cost;
-  const LAMPS = [['Mutapa and the Indian Ocean', '', base], ['India', '', 5 * base], ['Europe', '', 10 * base], ['The Americas', '', 10 * base], ['East and Southeast Asia', '', null], ['East and Southeast Asia', 'China', 10 * base],
-    ['East and Southeast Asia', 'a Monsoon Road port, such as Surat, Malacca or Aceh', 5 * base], ['East and Southeast Asia', 'Japan, at Nagasaki', null], ['Europe', 'a court', null], ['West and Central Africa', '', null], ['', '', null]];
+  const LAMPS = [['Mutapa and the Indian Ocean', 'Sofala', base], ['India', '', 5 * base], ['Europe', '', 10 * base], ['The Americas', '', 10 * base], ['East and Southeast Asia', '', null], ['East and Southeast Asia', 'China', 10 * base],
+    ['East and Southeast Asia', 'Malacca or Aceh', 5 * base], ['East and Southeast Asia', 'Japan, at Nagasaki', null], ['Europe', 'a court', null], ['West and Central Africa', '', null], ['', '', null],
+    ['Mutapa and the Indian Ocean', '', null], ['Mutapa and the Indian Ocean', 'the Swahili coast', 5 * base], ['The Ottomans, Persia and the Horn', '', 5 * base]];
   const lamps = LAMPS.map(([h, m]) => lamp(h, m));
-  if (!LAMPS.every(([, , cost], i) => lamps[i] && lamps[i].cost === cost) || !/whatever the buyer will bear/.test(lamps[7]?.note) || !/the DM sets it/.test(lamps[9]?.note) || !/by place/.test(lamps[4]?.note))
+  if (!LAMPS.every(([, , cost], i) => lamps[i] && lamps[i].cost === cost) || !/whatever the buyer will bear/.test(lamps[7]?.note) || !/the DM sets it/.test(lamps[9]?.note) || !/by place/.test(lamps[4]?.note) || !/by place/.test(lamps[11]?.note))
     fail(`Self-Lighting Lamps: ${LAMPS.map(([h, m], i) => `${h || 'no homeland'}${m ? ` in ${m}` : ''} ${lamps[i]?.cost ?? 'no price'} (${lamps[i]?.note})`).join('; ')}`);
   // Every form "Requires Attunement by …" takes, each given to one who
   // qualifies and never to one who doesn't: a class (a multiclass character

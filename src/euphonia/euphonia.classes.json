@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "70ff15ac0bec157317a5fa8e268dae8d1eac1f6a282025deb4a62e8f4892b24e",
-  "modified": "2026-11-15T09:02:18-05:00",
+  "sha256": "23b476c1410a3183bbf59e25b09dd52208f80103a460e9fcca713c9579ace2b1",
+  "modified": "2026-11-15T09:31:12-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 19,
   "rules": {
@@ -370,7 +370,7 @@
       {
        "level": 3,
        "name": "Letters of Credit",
-       "text": "You are a factor of a house: a bank, a merchant company, or a guild, which you and the DM choose together. You gain proficiency in the Persuasion skill and with Calligrapher's Supplies; if you already have either, choose another skill or tool. In any settlement where your house has standing (the DM decides where; most towns and cities), you can deposit coin and valuables with it and draw them out again in any other settlement where it has standing, so your wealth travels as a letter instead of a wagon.\n\nSome houses at work around 1668:\n\n| House | Where | Known for |\n|---|---|---|\n| The Genoese bankers | Genoa, and the court at Madrid | Lending to the Spanish crown against its silver fleets (the *asentistas*) |\n| The Bank of Amsterdam | Amsterdam (the *Wisselbank*, 1609) | The exchange bank of Europe's trade; its bank money was trusted further than coin |\n| Stockholms Banco, and the Riksbank | Stockholm | Europe's first banknotes (1661); the bank failed, and the Estates founded the Riksbank in its place in 1668 |\n| The goldsmith-bankers | London (Lombard Street) | Holding merchants' deposits and lending to Charles II |\n| The court factors | The German courts | Supplying and financing princes and their armies (the *Hoffaktoren*) |\n| The sarrafs | Istanbul and the Ottoman cities | Changing, lending, and remitting money for the court and its tax-farmers |\n| The Armenian merchants of New Julfa | Isfahan, and from London to Manila | A trading network run on partnership contracts and letters |\n| The Gujarati financiers | Surat, and the Indian Ocean | Moving money by the *hundi*, a bill of exchange honored from Mughal India to the Persian Gulf; Virji Vora of Surat lent to the East India Companies |\n| The House of the Bird | Sofala, Mutapa's capital, and the Cape | A royal treasury that learned credit from the Swahili and Gujarati merchants it hosts, and banks platinum's wealth as paper |"
+       "text": "You are a factor of a house: a bank, a merchant company, or a guild, which you and the DM choose together. You gain proficiency in the Persuasion skill and with Calligrapher's Supplies; if you already have either, choose another skill or tool. In any settlement where your house has standing (the DM decides where; most towns and cities), you can deposit coin and valuables with it and draw them out again in any other settlement where it has standing, so your wealth travels as a letter instead of a wagon.\n\nSome houses at work around 1668:\n\n| House | Where | Known for |\n|---|---|---|\n| The Genoese bankers | Genoa, and the court at Madrid | Lending to the Spanish crown against its silver fleets (the *asentistas*) |\n| The Bank of Amsterdam | Amsterdam (the *Wisselbank*, 1609) | The exchange bank of Europe's trade; its bank money was trusted further than coin |\n| Stockholms Banco, and the Riksbank | Stockholm | Europe's first banknotes (1661); the bank failed, and the Estates founded the Riksbank in its place in 1668 |\n| The goldsmith-bankers | London (Lombard Street) | Holding merchants' deposits and lending to Charles II |\n| The court factors | The German courts | Supplying and financing princes and their armies (the *Hoffaktoren*) |\n| The sarrafs | Istanbul and the Ottoman cities | Changing, lending, and remitting money for the court and its tax-farmers |\n| The Armenian merchants of New Julfa | Isfahan, and from London to Manila | A trading network run on partnership contracts and letters |\n| The Gujarati financiers | Surat, and the Indian Ocean | Moving money by the *hundi*, a bill of exchange honored from Mughal India to the Persian Gulf; Virji Vora of Surat lent to the East India Companies |\n| The House of the Bird | Sofala, Mutapa's great port, and the Cape | A royal treasury that learned credit from the Swahili and Gujarati merchants it hosts, and banks platinum's wealth as paper |"
       },
       {
        "level": 3,
@@ -527,7 +527,7 @@
       {
        "level": 14,
        "name": "Unmade",
-       "text": "When you reduce a creature to 0 Hit Points, you can choose one creature within 30 feet of you that saw it happen. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it has the Frightened condition until the end of its next turn. Once you use this feature, you can't use it again until you finish a Short or Long Rest."
+       "text": "When you reduce a creature to 0 Hit Points, you can choose one creature within 30 feet of you that saw it happen. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it has the Frightened condition until the end of its next turn."
       }
      ]
     },
@@ -2205,7 +2205,7 @@
       {
        "level": 6,
        "name": "Field Repairs",
-       "text": "When you finish a Short Rest, your construct regains Hit Points equal to half its Hit Point maximum if it's still working.\n\n*Restart.* As a Magic action with Tinker's Tools, you can restart your stopped construct within 5 feet of you, under fire or after the fight; it starts working again with Hit Points equal to half your Mhizha level (round down). Once you restart it, you can't do so again until you finish a Long Rest.\n\n*Loaded.* You can throw a Preparation, or use Flare, as if you were standing in your construct's space.\n\n*Sentry.* Your construct doesn't sleep. While you rest, it can keep watch; if it sees or hears a creature it doesn't know within 60 feet of itself, it wakes you with a chime only you can hear."
+       "text": "When you finish a Short Rest, your construct regains Hit Points equal to half its Hit Point maximum if it's still working.\n\n*Restart.* As a Magic action with Tinker's Tools, you can restart your stopped construct within 5 feet of you, under fire or after the fight; it starts working again with Hit Points equal to your Mhizha level. Once you restart it, you can't do so again until you finish a Long Rest.\n\n*Loaded.* You can throw a Preparation, or use Flare, as if you were standing in your construct's space.\n\n*Sentry.* Your construct doesn't sleep. While you rest, it can keep watch; if it sees or hears a creature it doesn't know within 60 feet of itself, it wakes you with a chime only you can hear."
       },
       {
        "level": 10,
@@ -2924,28 +2924,28 @@
       "Proficiency Bonus": "+6",
       "Class Features": "Eureka!",
       "Calculated Shot": "5d8",
-      "Mechanism": "7d8"
+      "Mechanism": "6d8"
      },
      {
       "Level": "18",
       "Proficiency Bonus": "+6",
       "Class Features": "Skeptic",
       "Calculated Shot": "5d8",
-      "Mechanism": "7d8"
+      "Mechanism": "6d8"
      },
      {
       "Level": "19",
       "Proficiency Bonus": "+6",
       "Class Features": "Epic Boon",
       "Calculated Shot": "5d8",
-      "Mechanism": "7d8"
+      "Mechanism": "6d8"
      },
      {
       "Level": "20",
       "Proficiency Bonus": "+6",
       "Class Features": "The System of the World",
       "Calculated Shot": "5d8",
-      "Mechanism": "7d8"
+      "Mechanism": "6d8"
      }
     ]
    },
@@ -3018,7 +3018,7 @@
     {
      "level": 15,
      "name": "Explosion",
-     "text": "You bring the reaction with you. As a Utilize action, you set off an explosion centered on a point you can see within 60 feet of yourself; it needs no feature you're studying. Each creature of your choice in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw against your Mechanism's save DC. On a failed save, a creature takes Fire damage equal to the Mechanism column's dice in the Natural Philosopher Features table (6d8 at level 15, 7d8 at level 17) and is pushed 10 feet straight away from the center. On a successful save, it takes half as much damage only. Flammable objects in the area that aren't being worn or carried catch fire. Once you use this feature, you can't use it again until you finish a Long Rest."
+     "text": "You bring the reaction with you. As a Utilize action, you set off an explosion centered on a point you can see within 60 feet of yourself; it needs no feature you're studying. Each creature of your choice in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw against your Mechanism's save DC. On a failed save, a creature takes Fire damage of twice the Mechanism column's dice in the Natural Philosopher Features table (12d8) and is pushed 10 feet straight away from the center. On a successful save, it takes half as much damage only. Flammable objects in the area that aren't being worn or carried catch fire. Once you use this feature, you can't use it again until you finish a Long Rest."
     },
     {
      "level": 17,
@@ -3141,7 +3141,7 @@
       {
        "level": 3,
        "name": "Experiments",
-       "text": "When you finish a Long Rest, you can spend 1 hour of it with your Alchemist's Supplies and Glassblower's Tools to prepare two experiments: charged globes, sealed vessels, primed jars, each one a set of reagents kept apart until the moment you mix them. An experiment lasts until you finish your next Long Rest, and it works only in your hands. You can't prepare experiments without your tools.\n\nAs a Utilize action, you release an experiment at a point you can see within 60 feet of yourself, choosing as you mix it one of the five energies in the table below: Fire, Lightning, Thunder, Cold, or Acid. It needs no feature you're studying. Each creature of your choice in a 20-foot Cube whose point of origin is that point (for Lightning, a Line 60 feet long and 5 feet wide from you) makes a saving throw against your Mechanism's save DC. On a failed save, a creature takes damage of one die fewer than the Mechanism column of the Natural Philosopher Features table (minimum 2d8, so 2d8 at level 3 and 6d8 at level 17) and suffers the energy's effect. On a successful save, it takes half as much damage only.\n\n| Energy | Save | Damage | On a failed save |\n|---|---|---|---|\n| Fire | Dexterity | Fire | Flammable objects in the area that aren't being worn or carried catch fire. |\n| Lightning | Dexterity | Lightning | It can't take Reactions until the start of its next turn. A creature wearing metal armor has Disadvantage on the save. |\n| Thunder | Constitution | Thunder | Pushed 10 feet away from the Cube's point of origin, and Deafened until the end of its next turn. The blast can be heard 300 feet away. |\n| Cold | Constitution | Cold | Its Speed is halved until the end of its next turn. |\n| Acid | Dexterity | Acid | Its Armor Class decreases by 1 until it finishes a Long Rest: armor, shell, or hide eaten away. This doesn't stack. |"
+       "text": "When you finish a Long Rest, you can spend 1 hour of it with your Alchemist's Supplies and Glassblower's Tools to prepare two experiments: charged globes, sealed vessels, primed jars, each one a set of reagents kept apart until the moment you mix them. An experiment lasts until you finish your next Long Rest, and it works only in your hands. You can't prepare experiments without your tools.\n\nAs a Utilize action, you release an experiment at a point you can see within 60 feet of yourself, choosing as you mix it one of the five energies in the table below: Fire, Lightning, Thunder, Cold, or Acid. It needs no feature you're studying. Each creature of your choice in a 20-foot Cube whose point of origin is that point (for Lightning, a Line 60 feet long and 5 feet wide from you) makes a saving throw against your Mechanism's save DC. On a failed save, a creature takes damage of one die fewer than the Mechanism column of the Natural Philosopher Features table (minimum 2d8, so 2d8 at level 3 and 5d8 from level 13) and suffers the energy's effect. On a successful save, it takes half as much damage only.\n\n| Energy | Save | Damage | On a failed save |\n|---|---|---|---|\n| Fire | Dexterity | Fire | Flammable objects in the area that aren't being worn or carried catch fire. |\n| Lightning | Dexterity | Lightning | It can't take Reactions until the start of its next turn. A creature wearing metal armor has Disadvantage on the save. |\n| Thunder | Constitution | Thunder | Pushed 10 feet away from the Cube's point of origin, and Deafened until the end of its next turn. The blast can be heard 300 feet away. |\n| Cold | Constitution | Cold | Its Speed is halved until the end of its next turn. |\n| Acid | Dexterity | Acid | Its Armor Class decreases by 1 until it finishes a Long Rest: armor, shell, or hide eaten away. This doesn't stack. |"
       },
       {
        "level": 3,
@@ -7360,7 +7360,7 @@
     {
      "level": 15,
      "name": "Blasé",
-     "text": "The Hidden doesn't let its own be led. You have Immunity to the Charmed and Frightened conditions.\n\nThe Hidden know you now for what you are. A Hidden creature that remembers treats you as a guest of standing until you give it cause not to: it offers you hospitality before it offers you harm, and it tells you its terms before it holds you to them. In the Hidden itself, you can't become lost, and you always know the way back to the threshold you came in by."
+     "text": "The Hidden doesn't let its own be led. You have Immunity to the Charmed and Frightened conditions.\n\n**Of the Court.** The Hidden know you now for what you are. A Hidden creature that remembers treats you as a guest of standing until you give it cause not to: it offers you hospitality before it offers you harm, and it tells you its terms before it holds you to them. In the Hidden itself, you can't become lost, and you always know the way back to the threshold you came in by."
     },
     {
      "level": 17,

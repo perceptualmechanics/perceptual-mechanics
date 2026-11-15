@@ -276,7 +276,10 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     for (const r of item.rarities) if (r.member && !members.some(mb => mb.name === r.member)) throw new Error(`${item.name}: it's ${r.rarity} for the ${r.member}, which isn't one of its members`);
     const living = LIVING.find(x => x.item === item.name)?.homelands ?? null;
     if (!living && /\*A living tradition\.\*/.test(item.text)) throw new Error(`${item.name}: the books call it a living tradition, and euphonia.provenance.js doesn't say whose`);
-    return { ...item, who, members, bound, living, from: FROM.find(x => x.item === item.name)?.homelands ?? [], prices: PRICES.find(x => x.item === item.name) ?? null };
+    // An item that comes only in the story ("No one starts play with a pair")
+    // isn't starting gear.
+    const story = /\bNo one starts play with\b/.test(item.text);
+    return { ...item, who, members, bound, living, story, from: FROM.find(x => x.item === item.name)?.homelands ?? [], prices: PRICES.find(x => x.item === item.name) ?? null };
   });
   for (const x of [...LIVING, ...FROM, ...PRICES]) if (!goods.items.some(i => i.name === x.item)) throw new Error(`euphonia.provenance.js: there's no item "${x.item}"`);
   return {
@@ -1483,7 +1486,8 @@ export function character(book, state) {
   // Magic items, as many of each rarity as the table gives past level 1,
   // from the books' own: one for no one in particular, or for one of the
   // character's classes or its subclass (a family's member for that
-  // subclass), never one the DM hands out. The builder chooses, as with
+  // subclass), never one the DM hands out or one that comes only in the
+  // story. The builder chooses, as with
   // armour: first what's made for its subclass (its chapter's, or the
   // family member for it), then its classes', then the setting's own, then
   // other classes' chapters, each the homeland's first, then in the books'
@@ -1504,7 +1508,7 @@ export function character(book, state) {
   const taken = new Set();
   const RARITIES = ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Legendary'];
   const magicItems = (higher?.magic ?? []).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).flatMap(({ count, rarity }) => Array.from({ length: count }, () => {
-    const pick = book.items.filter(i => i.magical && !i.dm && !taken.has(i.name) && usable(i))
+    const pick = book.items.filter(i => i.magical && !i.dm && !i.story && !taken.has(i.name) && usable(i))
       .map(i => ({ item: i, member: memberFor(i), at: ratedAt(i, memberFor(i)).find(r => r.rarity === rarity) }))
       .filter(x => x.at).sort((a, b) => nearness(a.item) - nearness(b.item) || athome(b.item) - athome(a.item))[0];
     if (!pick) return { rarity, item: null };

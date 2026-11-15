@@ -154,7 +154,7 @@ export async function initBuilder(panel) {
     section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
       h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink,
       h('label', { class: 'b-field' }, h('span', {}, 'Buying in'), marketSelect),
-      h('p', { class: 'b-note' }, 'Mutapan curiosities cost more the farther they travel from Mutapa’s capital.')),
+      h('p', { class: 'b-note' }, `Mutapan curiosities cost more the farther they travel from ${book.items.find(i => i.prices)?.prices.home}, where they’re made.`)),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
     section('Languages', tongueList, languageBox, languageAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
