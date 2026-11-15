@@ -72,9 +72,13 @@ function optionsOf(c) {
     if (!art && !/forgoes no art/.test(s.lead ?? '')) throw new Error(`${c.name}: the ${s.name} subclass doesn't say which art it forgoes`);
     return [s.name, art ?? null];
   }));
-  const given = Object.fromEntries(c.subclasses.map(s => [s.name, s.features.flatMap(x => [...x.text.matchAll(new RegExp(`You have ([A-Z][\\w' ]+?) without spending an? ${noun} on it`, 'g'))].map(m => {
+  // One a subclass gives ("You have The Code without spending an
+  // accomplishment on it"), and, where it says so, what it gives instead to
+  // one who has it already ("if you already have it, you gain one more
+  // accomplishment from the art of Arms instead").
+  const given = Object.fromEntries(c.subclasses.map(s => [s.name, s.features.flatMap(x => [...x.text.matchAll(new RegExp(`You have ([A-Z][\\w' ]+?) without spending an? ${noun} on it(?: \\(if you already have it, you gain one more ${noun} from the art of (\\w+) instead\\))?`, 'g'))].map(m => {
     if (!list.some(o => o.name === m[1])) throw new Error(`${c.name}: ${s.name} gives "${m[1]}", which isn't one of its ${noun}s`);
-    return { name: m[1], level: x.level, from: x.name };
+    return { name: m[1], level: x.level, from: x.name, instead: m[2] ?? null };
   }))]));
   return { feature: f.name, column, noun, list, forgoes, given };
 }
@@ -110,6 +114,28 @@ function sectionOptions(c) {
   for (const o of list) for (const r of o.requires) if (!list.some(x => x.name === r)) throw new Error(`${c.name}: ${o.name} needs "${r}", which isn't one of its options`);
   return { feature: f.name, column, base: NUMBERS.indexOf(first[1]), more, noun: first[2].replace(/s$/, ''), list, forgoes: {}, given: {} };
 }
+
+// A feature's spell tables, a class level and the spells it brings in each
+// row: the setting's, read by the exporter; the SRD's, as markdown in its
+// text, its two columns a level ("Cleric Level") and spells ("Prepared
+// Spells", "Circle Spells"). A feature with several, one per land, names
+// each set in bold above it.
+const SPELL_TABLE = /(?:^\*\*([^*\n]+)\*\*\n\n)?^\| *[^|\n]*Level *\| *[^|\n]*Spells? *\|\n\|[-| :]+\|\n((?:\|[^\n]*\|\n?)+)/gm;
+export function spellTables(f) {
+  if (f.spells) return [{ set: null, rows: f.spells }];
+  return [...f.text.matchAll(SPELL_TABLE)].map(m => ({
+    set: m[1] ?? null,
+    rows: m[2].trim().split('\n').map(line => {
+      const [lv, list] = line.split('|').slice(1, -1).map(x => x.trim());
+      if (!/^\d+$/.test(lv)) throw new Error(`${f.name}: a spell table row for level "${lv}"`);
+      return { level: +lv, spells: list.split(/,\s*/).map(x => x.replace(/\*/g, '').trim()) };
+    }),
+  }));
+}
+// "You thereafter always have the listed spells prepared"; the Circle of the
+// Land's "you have the spells listed for your Druid level and lower
+// prepared", from the land chosen.
+const ALWAYS_PREPARED = /always have the listed spells? prepared|you have the spells listed for your \w+ level and lower prepared/;
 
 // The rules as the builder uses them: the SRD's tables and options, every
 // class and background, the SRD's and the setting's own, in one shape, and
@@ -160,7 +186,7 @@ export function rulebook(srd, euphonia, setting, added) {
     const inline = f => f.text.search(/^\*\*From .+? level \d+\*\*$/m);
     const features = c.features.map(f => (f.name === choices?.feature && inline(f) >= 0 ? { ...f, text: f.text.slice(0, inline(f)).trim() } : f));
     return {
-      ...c, features, die, saves, skills: choice, subclassLevel: grants[0].level, spellList: spells,
+      ...c, features, die, saves, skills: choice, subclassLevel: grants[0].level, subclassFeature: grants[0].name, spellList: spells,
       // Its subclasses, the setting's first: an SRD class takes the books'
       // beside its own, found after the feature that grants them, whose text
       // names only the SRD's. Each says where it's from.
@@ -182,6 +208,19 @@ export function rulebook(srd, euphonia, setting, added) {
       givenCantrips: cantripLine ? [...cantripLine[1].matchAll(/\*([^*]+)\*/g)].map(m => m[1]) : [],
       choices,
       pact: c.table.columns.includes('Slot Level'),
+      // A class that keeps a spellbook prepares from it: so many level 1
+      // spells to start ("It starts with six level 1 Wizard spells of your
+      // choice"), so many more each level after 1, each of a level it has
+      // slots for.
+      spellbook: (() => {
+        const text = c.features.map(f => f.text).join('\n');
+        const start = text.match(/(?:starts with|contains) (\w+) level 1 [\w ]+? spells of your choice/), more = text.match(/gain an? [\w ]+? level after 1, (?:you can )?add (\w+) [\w ]+? spells of your choice to your spellbook/);
+        if (!start !== !more) throw new Error(`${c.name}: a spellbook the builder half reads`);
+        return start ? { start: NUMBERS.indexOf(start[1]), more: NUMBERS.indexOf(more[1]) } : null;
+      })(),
+      // Every Revelation its Cosmography holds (the Revelator's), each with
+      // the group it's listed in.
+      revelations: c.cosmography ? c.cosmography.groups.flatMap(g => g.revelations.map(r => ({ ...r, group: g.name }))) : null,
       multiclassSkills: skillGrant(c.multiclass.gains, skills, choice.from),
     };
   });
@@ -199,13 +238,17 @@ export function rulebook(srd, euphonia, setting, added) {
     standardArray: srd.ability_scores.standard_array,
     pointBudget: srd.ability_scores.point_budget,
     backgroundIncreases: srd.ability_scores.background,
-    species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, languages: srd.languages, classes,
+    species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
     backgrounds: [...srd.backgrounds.map(b => ({ ...b, source: 'SRD 5.2.1' })), ...setting.data.backgrounds.map(b => ({ ...b, source: 'Euphonia' }))],
     placement: name => {
       const row = setting.data.species.find(x => x.species.includes(name));
       return row ? { line: row.line, status: setting.data.species_status } : null;
     },
     classNamed: name => classes.find(c => c.name === name),
+    // What each spell deals and how it's cast: the SRD's, and the spells the
+    // setting's classes add (Arc is a Sorcerer and Wizard spell the
+    // Physician's chapter carries).
+    spellFacts: new Map([...(srd.spells ?? []), ...euphonia.data.flatMap(c => c.new_spells ?? [])].map(sp => [sp.name, sp])),
     unfinished,
   };
 }
@@ -330,6 +373,14 @@ export function character(book, state) {
   // grants one, and the feats its improvement levels bring.
   const features = [];
   const improvements = [];
+  // Every feature the engine reads into a grant or a choice, by class,
+  // level and name: verify-euphonia-builder holds each feature that asks
+  // for a lasting choice to be one of them.
+  const read = new Set();
+  const reads = f => read.add(`${f.class} ${f.level} ${f.name}`);
+  // Spells beyond a feature's own count that another rule adds, by class
+  // (The Monster Within's Deeper Draw adds one to Font-Touched).
+  const moreTouched = {};
   for (const c of known) {
     for (const f of c.rules.features) if (f.level <= c.level) features.push({ class: c.class, level: f.level, name: f.name, text: f.text });
     if (c.level >= c.rules.subclassLevel) {
@@ -337,7 +388,8 @@ export function character(book, state) {
       if (!sub) fail(`subclass:${c.class}`, `Choose a ${c.class} subclass.`);
       else for (const f of sub.features) if (f.level <= c.level) features.push({ class: c.class, subclass: sub.name, level: f.level, name: f.name, text: f.text });
     } else if (c.subclass) fail(`subclass:${c.class}`, `${c.class} gains a subclass at level ${c.rules.subclassLevel}.`);
-    for (const imp of c.rules.improvements) if (imp.level <= c.level) improvements.push({ key: `${c.class} ${imp.level}`, class: c.class, ...imp });
+    for (const imp of c.rules.improvements) if (imp.level <= c.level) { improvements.push({ key: `${c.class} ${imp.level}`, class: c.class, ...imp }); reads({ class: c.class, level: imp.level, name: imp.kind }); }
+    if (c.level >= c.rules.subclassLevel) reads({ class: c.class, level: c.rules.subclassLevel, name: c.rules.subclassFeature });
   }
   // The options a class's table counts (the Courtier's accomplishments): as
   // many as its column says at its level, each from those its level opens
@@ -360,25 +412,33 @@ export function character(book, state) {
       if (!arts.includes(art)) fail(field, `Choose which art ${x.name} counts as: ${arts.join(' or ')}.`);
       return arts.includes(art) ? art : null;
     };
-    const given = (sub ? o.given[sub.name] ?? [] : []).filter(g => g.level <= c.level).map(g => {
-      const x = o.list.find(y => y.name === g.name), field = `option:${c.class}:given:${g.name}`;
-      return { ...x, from: g.from, field, art: artOf(x, state.optionArts?.[`${c.class} ${g.name}`], field) };
-    });
     const picks = state.options?.[c.class] ?? [];
+    // One the subclass gives that's taken already gives one more instead,
+    // of the art it names: a further choice, after the column's.
+    const offered = (sub ? o.given[sub.name] ?? [] : []).filter(g => g.level <= c.level);
+    const twice = offered.filter(g => g.instead && picks.slice(0, count).some(p => p?.name === g.name));
+    const extra = twice.map(g => ({ art: g.instead, from: g.from }));
+    const given = offered.filter(g => !twice.includes(g)).map(g => {
+      const x = o.list.find(y => y.name === g.name), field = `option:${c.class}:given:${g.name}`;
+      return { ...x, from: g.from, instead: g.instead, field, art: artOf(x, state.optionArts?.[`${c.class} ${g.name}`], field) };
+    });
     const taken = [];
-    for (let i = 0; i < count; i++) {
-      const field = `option:${c.class}:${i}`, pick = picks[i];
-      const x = open.find(y => y.name === pick?.name);
+    for (let i = 0; i < count + extra.length; i++) {
+      const field = `option:${c.class}:${i}`, pick = picks[i], instead = i >= count ? extra[i - count] : null;
+      const x = open.find(y => y.name === pick?.name && (!instead || artsOf(y).includes(instead.art)));
+      if (instead && !x) { fail(field, pick?.name ? `${pick.name} isn't of the art of ${instead.art}, which ${instead.from} gives instead.` : `Choose one more ${o.noun} of the art of ${instead.art}, which ${instead.from} gives instead.`); continue; }
       if (!x) { fail(field, pick?.name ? `${pick.name} isn't open to a level ${c.level} ${c.class}${forgone ? ` of ${sub.name}, which forgoes ${forgone}` : ''}.` : `Choose ${o.noun} ${i + 1} of ${count}.`); continue; }
       const had = [...given, ...taken].filter(t => t.name === x.name).length;
       if (had >= x.repeat) { fail(field, `${x.name} can be taken ${x.repeat === 1 ? 'once' : 'twice'}${given.some(g => g.name === x.name) ? `, and ${given.find(g => g.name === x.name).from} gives it` : ''}.`); continue; }
-      taken.push({ ...x, field, index: i, art: x.arts.length ? artOf(x, pick.art, field) : null });
+      taken.push({ ...x, field, index: i, art: instead ? instead.art : x.arts.length ? artOf(x, pick.art, field) : null });
     }
     // An option that needs another ("Pact of the Blade Invocation") needs it
     // among those taken.
     for (const t of taken) for (const r of t.requires ?? []) if (![...given, ...taken].some(x => x.name === r)) fail(t.field, `${t.name} needs ${r}.`);
     const regard = new Set([...given, ...taken].map(t => t.art).filter(Boolean)).size;
-    optionChoices.push({ class: c.class, noun: o.noun, column: o.column, count, open, forgone, subclass: sub?.name ?? null, given, taken, regard, arts: [...new Set(o.list.flatMap(x => x.arts))] });
+    optionChoices.push({ class: c.class, noun: o.noun, column: o.column, count, extra, open, forgone, subclass: sub?.name ?? null, given, taken, regard, arts: [...new Set(o.list.flatMap(x => x.arts))] });
+    const lists = features.find(f => f.class === c.class && f.name === o.feature);
+    if (lists) reads(lists);
     for (const t of [...given, ...taken]) features.push({ class: c.class, level: t.level, name: t.name, text: t.text, key: `${c.class} ${o.noun} ${t.index ?? t.name}`, option: o.noun, label: t.index === undefined ? `${t.name} (from ${t.from})` : `${t.name} (${c.class} ${o.noun} ${t.index + 1})` });
   }
   // A feature that offers "one of the following … of your choice", each a
@@ -389,13 +449,17 @@ export function character(book, state) {
   // "the following skills" is a skill choice, read with the skills; one named
   // in its own sentence ("one of the following tools of your choice:
   // Cartographer's Tools, Mason's Tools, or Navigator's Tools") is a tool,
-  // which the sheet shows as text, as it shows a background's.
+  // read with the tools. Its named paragraphs can follow another (the
+  // Hunter's Prey: "Whenever you finish a Short or Long Rest, you can
+  // replace the chosen option").
   const pickChoices = [];
   for (const f of [...features]) {
     const offers = f.text.match(/\bone of the following (?:[\w ]+ )?of your choice(?:[^.\n]*)[.:]\s*(\S)?/);
-    if (!offers || /one of the following skills/.test(f.text) || offers[1] !== '*') continue;
+    if (!offers || /one of the following skills/.test(f.text) || offers[1] === '-') continue;
     const offered = [...f.text.matchAll(/^\*\*([^*]+?)\.\*\* (.+)$/gm)].map(m => ({ name: m[1], text: m[2] }));
-    if (offered.length < 2) throw new Error(`${f.name}: "one of the following" names ${offered.length} option(s)`);
+    if (offered.length < 2 && offers[1] === '*') throw new Error(`${f.name}: "one of the following" names ${offered.length} option(s)`);
+    if (offered.length < 2) continue;
+    reads(f);
     const key = `${f.class} ${f.level} ${f.name}`, chosen = offered.find(x => x.name === state.picks?.[key]);
     // The feature keeps its lead; its options are the choice, the one taken a
     // feature of its own, so nothing reads the one not taken.
@@ -404,6 +468,180 @@ export function character(book, state) {
     if (!chosen) { fail(`pick:${key}`, `Choose ${listed(offered.map(x => x.name), 'or')} for ${f.name}.`); continue; }
     features.push({ class: f.class, level: f.level, name: `${f.name}: ${chosen.name}`, text: chosen.text, key: `${key} ${chosen.name}` });
   }
+  // A class's optional rule, taken where the DM allows it (The Monster
+  // Within): who may take it and when ("only an Immortalist can take it. You
+  // choose it when you reach Physician level 4"), and the record it keeps,
+  // as its text lays out: each Rite at the levels it names passed, failed or
+  // declined; a pass the next of the Ascendance list's boons, the first
+  // failure the Monster carried and each after it the next of the
+  // Overgrowth list's; what The Shifting Balance gives a carrier by level;
+  // and at the Final Rite's level, for one who attempted every Rite,
+  // resignation or the outcome rolled at the table. Deeper Draw and the first
+  // boon each add a spell to Font-Touched; Mastery brings Wish, always
+  // prepared. Its sections are features from then on, the record's with them.
+  const optionalRules = [], optionalSpells = [];
+  for (const c of known) for (const rule of c.rules.optional_rules ?? []) {
+    const who = rule.lead.match(/only an? (\w+) can take it\. You choose it when you reach \w+ level (\d+)/);
+    if (!who) throw new Error(`${c.class}: the optional rule ${rule.name} doesn't say who may take it`);
+    const key = `${c.class} ${rule.name}`, kept = state.optional?.[key] ?? {}, at = +who[2];
+    if (c.subclass !== who[1] || c.level < at) continue;
+    const section = name => rule.sections.find(x => x.name === name)?.text ?? '';
+    const numbered = (text, title) => (text.match(new RegExp(`\\*\\*[^*]*${title}[^*]*\\*\\*[^\\n]*`))?.[0].split(/\*\*\(\d\)\*\*\s*/).slice(1) ?? []).map(x => x.replace(/[;.]\s*$/, '').trim());
+    const rites = section('The Rites'), ascendance = numbered(rites, 'Ascendance'), overgrowth = numbered(rites, 'the Monster');
+    const riteLevels = [at, ...(rites.match(/and again when you reach levels ([\d, and]+)/)?.[1].match(/\d+/g) ?? []).map(Number)].filter(l => c.level >= l);
+    const entry = { key, class: c.class, name: rule.name, at, lead: rule.lead, taken: Boolean(kept.taken), rites: [], ascendance, overgrowth, boons: [], growth: [], carries: false, final: null };
+    optionalRules.push(entry);
+    if (!entry.taken) continue;
+    let passed = 0, failed = 0, declined = false;
+    for (const level of riteLevels) {
+      const outcome = ['passed', 'failed', ...(level === at ? [] : ['declined'])].find(o => o === kept.rites?.[level]) ?? null;
+      entry.rites.push({ level, outcome });
+      if (!outcome) { fail(`optional:${key} ${level}`, `Say how the Rite at level ${level} went.`); continue; }
+      if (outcome === 'passed') entry.boons.push(ascendance[passed++]);
+      if (outcome === 'failed') { if (failed++) entry.growth.push(overgrowth[failed - 2]); entry.carries = true; }
+      if (outcome === 'declined') declined = true;
+    }
+    const finalText = section('The Final Rite'), finalAt = +(finalText.match(/When you reach \w+ level (\d+)/)?.[1] ?? 0);
+    const outcomes = [...finalText.matchAll(/^\*\*(Resignation|Mastery|The Arrival|The Eruption|Acceptance)\.\*\*/gm)].map(m => m[1]);
+    if (finalAt && c.level >= finalAt && !declined && entry.rites.length === riteLevels.length && riteLevels.length) {
+      const offered = passed === 0 && entry.rites.every(r => r.outcome === 'failed') ? ['Acceptance'] : outcomes.filter(o => o !== 'Acceptance');
+      const chosen = offered.find(o => o === kept.final) ?? (offered.length === 1 ? offered[0] : null);
+      entry.final = { level: finalAt, offered, chosen };
+      if (!chosen) fail(`optional:${key} final`, `Say how the Final Rite went: ${listed(offered, 'or')}.`);
+      if (chosen === 'Resignation' && passed < ascendance.length) entry.boons.push(ascendance[passed]);
+      if (chosen === 'Mastery') { entry.boons = [...ascendance]; if (entry.carries) entry.growth = [...overgrowth]; optionalSpells.push({ class: c.class, name: finalText.match(/\*\*Mastery\.\*\* You learn the \*([^*]+)\* spell/)?.[1], from: rule.name }); }
+    }
+    // Deeper Draw ("You also choose one additional spell with your
+    // Font-Touched feature") and the boon that says the same.
+    const touched = n => /choose one additional spell with your Font-Touched feature/.test(n);
+    moreTouched[c.class] = (moreTouched[c.class] ?? 0) + (touched(section('Deeper Draw')) ? 1 : 0) + entry.boons.filter(touched).length;
+    const balance = section('The Shifting Balance');
+    const shown = rule.sections.filter(x => x.name !== 'The Shifting Balance' && (x.name !== 'Monster Form' || entry.carries));
+    for (const x of shown) { features.push({ class: c.class, subclass: c.subclass, level: at, name: `${rule.name}: ${x.name}`, text: x.text, optional: true }); reads({ class: c.class, level: at, name: `${rule.name}: ${x.name}` }); }
+    if (entry.carries) for (const m of balance.matchAll(/^- \*\*Level (\d+) — ([^.]+)\.\*\* (.+)$/gm)) if (c.level >= +m[1]) features.push({ class: c.class, subclass: c.subclass, level: +m[1], name: `${rule.name}: ${m[2]}`, text: m[3], optional: true });
+  }
+  // A lasting choice a feature writes as a list in a sentence of its own:
+  // "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant" (the
+  // Immortalist's Attuned Energy), "Choose one of those types: Acid, …"
+  // (Elemental Affinity), "Choose the light half or the dark half" (the
+  // Danae's Half). A choice made inside a "when" is made in play, and isn't
+  // one. The one chosen is a feature from then on, with what the feature
+  // sets beside it: its rows of a table ("| Light | **Spring** |"), or its
+  // line of a list ("**Fire.** *Fire Bolt*, then …").
+  const kindChoices = [];
+  for (const f of [...features]) {
+    const named = f.text.match(/(?:^|[.!]\s+)Choose (?:an? |one of (?:those|these) )([a-z ]+?): ((?:[A-Z][\w']*(?: [A-Z][\w']*)*, )+or [A-Z][\w']*(?: [A-Z][\w']*)*)\./);
+    const pair = f.text.match(/(?:^|[.!]\s+)Choose the (\w+) (\w+) or the (\w+) \2\./);
+    if (!named && !pair) continue;
+    // "One of those types" asks for one type.
+    const noun = named ? named[1].replace(/s$/, '') : pair[2], cap = x => x[0].toUpperCase() + x.slice(1);
+    const offered = named ? list(named[2]) : [cap(pair[1]), cap(pair[3])];
+    const key = f.key ?? `${f.class} ${f.level} ${f.name}`, chosen = offered.find(x => x === state.kinds?.[key]) ?? null;
+    kindChoices.push({ key, class: f.class, label: `${f.name} (${f.class} ${f.level})`, noun, offered, chosen });
+    reads(f);
+    if (!chosen) { fail(`kind:${key}`, `Choose ${/^[aeiou]/.test(noun) ? 'an' : 'a'} ${noun} for ${f.name}.`); continue; }
+    const rows = f.text.split('\n').filter(l => new RegExp(`^\\| ${chosen} \\||^> \\*\\*${chosen}\\.\\*\\*`).test(l));
+    const head = rows[0]?.startsWith('|') ? f.text.split('\n').find(l => /^\| [A-Z]/.test(l)) : null;
+    features.push({ class: f.class, subclass: f.subclass, level: f.level, name: `${f.name}: ${chosen}`, kind: true, text: rows.length ? [head, head && head.replace(/[^|]+/g, '---'), ...rows].filter(Boolean).map(l => l.replace(/^> /, '')).join('\n') : `${chosen}.` });
+  }
+
+  // The Revelations a class with a Cosmography knows: those its features
+  // name ("You start knowing two, …: the Hidden and the Ghostlands", "You
+  // know the Revelation of Elysium"), every one once a feature says so, and
+  // one for each feature that teaches "one Revelation of your choice from
+  // the Cosmography's Near Planes, …", from the groups it names and not one
+  // already known. A choice is the player's, kept apart from the rest.
+  const revelationChoices = [], revelationsKnown = [];
+  const plane = name => name.toLowerCase().replace(/^the /, '');
+  for (const c of known.filter(k => k.rules.revelations)) {
+    const own = features.filter(f => f.class === c.class);
+    const find = (name, f) => {
+      const r = c.rules.revelations.find(x => plane(x.name) === plane(name.trim()));
+      if (!r) throw new Error(`${c.class}: ${f.name} names the Revelation of "${name}", which its Cosmography doesn't hold`);
+      return r;
+    };
+    const granted = new Map();
+    for (const f of own) {
+      const start = f.text.match(/You start knowing \w+, [^:]+: (.+?)\./);
+      const names = [...(start ? start[1].split(/,\s*|\s+and\s+/) : []), ...[...f.text.matchAll(/You know the Revelation of ([^,.]+)/g)].map(m => m[1])];
+      for (const n of names) granted.set(find(n, f).name, { ...find(n, f), from: f.name });
+      if (names.length || /Revelations? (?:of your choice|are the planes you know)|You know every Revelation/.test(f.text)) reads(f);
+    }
+    const every = own.find(f => /You know every Revelation in the Cosmography/.test(f.text));
+    const chosen = [];
+    for (const f of own) {
+      const teaches = f.text.match(/You learn one Revelation of your choice from the Cosmography's (.+?)[:.](?:\s|$)/);
+      if (!teaches) continue;
+      const groups = teaches[1].split(/,\s*(?:or\s+)?|\s+or\s+/).map(g => {
+        const group = c.rules.cosmography.groups.find(x => plane(x.name) === plane(g));
+        if (!group) throw new Error(`${c.class}: ${f.name} teaches from the Cosmography's "${g}", which it doesn't have`);
+        return group.name;
+      });
+      const key = `${c.class} ${f.level} ${f.name}`;
+      reads(f);
+      const options = c.rules.revelations.filter(r => groups.includes(r.group) && !granted.has(r.name));
+      const pick = options.find(r => r.name === state.revelations?.[key]) ?? null;
+      if (state.revelations?.[key] && !pick) fail(`revelation:${key}`, `${f.name} can't teach ${state.revelations[key]}.`);
+      else if (pick && chosen.some(x => x.name === pick.name)) fail(`revelation:${key}`, `${pick.name} is already chosen.`);
+      else if (!pick && !every) fail(`revelation:${key}`, `Choose a Revelation for ${f.name}.`);
+      if (pick) chosen.push({ ...pick, from: f.name });
+      revelationChoices.push({ key, class: c.class, label: `${f.name} (${c.class} ${f.level})`, groups, options, chosen: pick?.name ?? null, moot: Boolean(every) });
+    }
+    const list = every ? c.rules.revelations.map(r => ({ ...r, from: granted.get(r.name)?.from ?? every.name })) : [...granted.values(), ...chosen.filter(x => !granted.has(x.name))];
+    revelationsKnown.push({ class: c.class, every: Boolean(every), known: list });
+  }
+
+  // A choice of someone or somewhere, with no rules to choose among: "a
+  // patron at one court or great house of your choice", "artist to one
+  // sovereign of your choice", "a fencing school in a city of your choice",
+  // "Choose one gaming house, salon, or court", "Choose one of the laws the
+  // DM named for it", "a house: a bank, a merchant company, or a guild,
+  // which you and the DM choose together". Named in the player's words, and
+  // kept on the sheet.
+  // Only someone or somewhere: a court, a great house, a sovereign, a city,
+  // a guild, an order and their like, the nouns the books choose them by.
+  const NAMED = /\b(?:at|to|in) (?:one|a) ((?:court or great house|great house|court|sovereign|city|town|guild|house|order|temple|school|kingdom)) of your choice|Choose one ([\w ,]+?) where|Choose one of the (laws) the DM named|(?:of a )?(house): ([\w ,]+?), which you and the DM choose together/;
+  const noteChoices = [];
+  for (const f of features) {
+    const m = f.text.match(NAMED);
+    if (!m) continue;
+    reads(f);
+    const key = f.key ?? `${f.class} ${f.level} ${f.name}`, what = (m[1] ?? m[2] ?? m[3] ?? `${m[4]} (${m[5]})`).trim(), named = String(state.notes?.[key] ?? '').trim();
+    noteChoices.push({ key, label: f.label ?? `${f.name} (${f.class} ${f.level})`, what, named });
+    if (!named) fail(`note:${key}`, `Name your ${what.replace(/^(?:court or great house|gaming house, salon, or court)$/, x => x.replace(/, or | or /, ' or '))} for ${f.name}.`);
+  }
+  // A Revelation that counts as walked (Soul's Journey's First Voyage):
+  // "one Revelation you know, other than your earth end or the Border
+  // Ethereal", the player's.
+  const walkedChoices = [];
+  for (const k of revelationsKnown) for (const f of features.filter(x => x.class === k.class)) {
+    const m = f.text.match(/one Revelation you know, other than (.+?), counts as walked/);
+    if (!m) continue;
+    reads(f);
+    const not = m[1].split(/,\s*(?:or\s+)?|\s+or\s+/), key = `${f.class} ${f.level} ${f.name}`;
+    const offered = k.known.filter(r => !not.some(n => (/earth end/.test(n) ? r.group === 'The Earth Ends' : plane(r.name) === plane(n)))).map(r => r.name);
+    const pick = offered.find(n => n === state.walked?.[key]) ?? null;
+    walkedChoices.push({ key, label: `${f.name} (${f.class} ${f.level})`, offered, chosen: pick });
+    if (!pick) fail(`walked:${key}`, `Choose the Revelation your first voyage walked, for ${f.name}.`);
+  }
+  // Wild Shape's known forms: so many Beasts, each within the Challenge
+  // Rating the feature's table gives the class's level and with a Fly Speed
+  // only once it allows one ("| 2 | 4 | 1/4 | No |"), from the SRD's Beast
+  // stat blocks.
+  const formChoices = [];
+  for (const f of features) {
+    if (!/You know \w+ Beast forms for this feature, chosen from among Beast stat blocks/.test(f.text)) continue;
+    reads(f);
+    const c = known.find(k => k.class === f.class);
+    const rows = [...f.text.matchAll(/^\| (\d+) \| (\d+) \| ([\d/]+) \| (Yes|No) \|$/gm)].map(m => ({ level: +m[1], count: +m[2], cr: m[3].split('/').map(Number).reduce((a, b) => a / b), fly: m[4] === 'Yes' })).filter(r => r.level <= c.level);
+    const row = rows.at(-1);
+    if (!row) continue;
+    const key = `${f.class} ${f.level} ${f.name}`, from = (book.beasts ?? []).filter(b => b.challenge <= row.cr && (row.fly || !b.fly));
+    const got = (state.forms?.[key] ?? []).filter(n => from.some(b => b.name === n));
+    formChoices.push({ key, label: `${f.name} (${f.class} ${c.level})`, count: row.count, cr: row.cr, fly: row.fly, from, chosen: got });
+    if (got.length !== row.count || new Set(got).size !== got.length) fail(`forms:${key}`, `Choose ${row.count} Beast forms for ${f.name}, up to Challenge Rating ${f.text.match(new RegExp(`^\\| ${row.level} \\| \\d+ \\| ([\\d/]+)`, 'm'))[1]}${row.fly ? '' : ', none that flies'}.`);
+  }
+
   // In the order they come: by level, and at one level the class's before
   // its subclass's (the sort is stable, and they were gathered that way).
   features.sort((a, b) => a.level - b.level);
@@ -436,12 +674,21 @@ export function character(book, state) {
     feats.push({ from: `${imp.class} ${imp.level}`, feat });
   }
   // A feature that grants "a Fighting Style feat of your choice" (or
-  // "another"): a feat from that category, the player's.
-  const styleChoices = [];
+  // "another", or "proficiency with Martial weapons and a Fighting Style feat
+  // of your choice"): a feat from that category, the player's, or the option
+  // the feature offers instead ("Instead of choosing one of those feats, you
+  // can choose the option below. **Blessed Warrior.** You learn two Cleric
+  // cantrips of your choice"), whose cantrips count as the class's.
+  const styleChoices = [], warriorCantrips = [];
   for (const f of features) {
-    if (!/gain (?:a|another) Fighting Style feat of your choice/.test(f.text)) continue;
+    if (!/gain (?:proficiency with [^.]+? and )?(?:a|another) Fighting Style feat of your choice/.test(f.text)) continue;
+    reads(f);
     const key = f.key ?? `${f.class} ${f.level} ${f.name}`, from = `${f.class} ${f.level}`;
-    styleChoices.push({ key, label: f.label ?? `${f.name} (${from})` });
+    const instead = /Instead of choosing one of those feats, you can choose the option below/.test(f.text)
+      ? [...f.text.matchAll(/^\*\*([^*]+?)\.\*\* You learn (\w+) (\w+) cantrips of your choice/gm)].map(m => ({ name: m[1], count: NUMBERS.indexOf(m[2]), list: m[3] })) : [];
+    styleChoices.push({ key, label: f.label ?? `${f.name} (${from})`, instead });
+    const alt = instead.find(x => x.name === state.styles?.[key]);
+    if (alt) { warriorCantrips.push({ key: `${key} ${alt.name}`, label: `${alt.name} (${f.class})`, class: f.class, ...alt }); continue; }
     const feat = book.feats.find(x => x.name === state.styles?.[key] && x.category === 'Fighting Style');
     if (!feat) { fail(`style:${key}`, `Choose a Fighting Style feat for ${f.name}.`); continue; }
     if (feats.some(x => x.feat.name === feat.name)) fail(`style:${key}`, `${feat.name} is already yours; choose another.`);
@@ -454,6 +701,7 @@ export function character(book, state) {
   const originChoices = [];
   const grantsOrigin = [...(species?.traits ?? []).filter(t => /^You gain an Origin feat of your choice\b/.test(t.text)).map(t => ({ key: `${species.name} ${t.name}`, from: `${t.name} (${species.name})`, name: t.name, source: 'species' })),
     ...features.filter(f => /gain one Origin feat of your choice/.test(f.text)).map(f => ({ key: f.key ?? `${f.class} ${f.level} ${f.name}`, from: f.label ?? `${f.name} (${f.class})`, name: f.name, source: 'feature' }))];
+  for (const f of features) if (/gain one Origin feat of your choice/.test(f.text)) reads(f);
   for (const t of grantsOrigin) {
     const { key, from } = t;
     originChoices.push({ key, label: from, source: t.source });
@@ -478,7 +726,17 @@ export function character(book, state) {
   // Proficiencies: the first class's saves and skills; a later class's
   // skill, the background's, and what the species' traits grant.
   const first = known[0]?.rules ?? null;
-  const saves = first?.saves ?? [];
+  const saves = [...(first?.saves ?? [])], saveChoices = [];
+  for (const f of features) {
+    const m = f.text.match(/You gain proficiency in (\w+) saving throws\.(?: If you already have it, you instead gain proficiency in (\w+) or (\w+) saving throws \(your choice\))?/);
+    if (!m) continue;
+    reads(f);
+    if (!saves.includes(m[1])) { saves.push(m[1]); continue; }
+    if (!m[2]) continue;
+    const key = `${f.class} ${f.level} ${f.name}`, pick = [m[2], m[3]].find(x => x === state.saves?.[key] && !saves.includes(x)) ?? null;
+    saveChoices.push({ key, label: `${f.name} (${f.class} ${f.level})`, offered: [m[2], m[3]].filter(x => !saves.includes(x)), chosen: pick });
+    if (pick) saves.push(pick); else fail(`save:${key}`, `Choose ${m[2]} or ${m[3]} saving throws for ${f.name}.`);
+  }
   const sources = new Map(), choices = [];
   const grant = (skill, source) => sources.set(skill, [...(sources.get(skill) ?? []), source]);
   // A grant of one named skill is given; a choice of several is the
@@ -509,12 +767,31 @@ export function character(book, state) {
     const key = f.key ?? `${f.class} ${f.level} ${f.name}`, label = f.label ?? `${f.name} (${f.class} ${f.level})`;
     const some = f.text.match(/You gain proficiency in (\w+) of (?:these skills|the following skills of your choice): (.+?)\./);
     if (some) {
+      reads(f);
       if (NUMBERS.indexOf(some[1]) < 1) throw new Error(`${f.name}: a skill count the builder doesn't read: "${some[1]}"`);
       chosen(key, list(some[2]), NUMBERS.indexOf(some[1]), state.skills?.[key], label);
       continue;
     }
+    // Skills it names, each one ("proficiency in the Insight and Medicine
+    // skills", "in the Stealth skill"): granted; one already the character's,
+    // where the feature says "choose another skill" (from a class's list, if
+    // it names one), is replaced by one of the player's choice.
+    const all = f.text.match(/proficiency (?:with [^.]+? and )?in the ([A-Z][\w ]+?(?:,? and [A-Z][\w ]+?)?) skills?\b/);
+    if (all && !/\bor\b/.test(all[1])) {
+      reads(f);
+      const instead = f.text.match(/choose another skill(?: from the (.+?)[’']s skill list)?/);
+      for (const sk of list(all[1])) {
+        if (!book.skills.some(x => x.name === sk)) throw new Error(`${f.name}: "${sk}" isn't a skill`);
+        const k = `${key} instead of ${sk}`;
+        if (sources.has(sk) && instead) chosen(k, (instead[1] ? book.classNamed(instead[1])?.skills.from : null) ?? book.skills.map(x => x.name), 1, state.skills?.[k], `${label}, instead of ${sk}`);
+        else grant(sk, label);
+      }
+      continue;
+    }
+    const any = f.text.match(/proficiency with (\w+) skills of your choice/);
+    if (any) { reads(f); chosen(key, book.skills.map(x => x.name), NUMBERS.indexOf(any[1]), state.skills?.[key], label); continue; }
     const from = skillGrant(f.text, book.skills.map(s => s.name), book.classNamed(f.class)?.skills.from);
-    if (from) chosen(key, from, 1, state.skills?.[key], label);
+    if (from) { reads(f); chosen(key, from, 1, state.skills?.[key], label); }
   }
   for (const f of feats) {
     const m = [f.feat.description, ...f.feat.benefits.map(b => b.text)].join(' ').match(/proficiency in any combination of (\w+) skills or tools of your choice/);
@@ -545,7 +822,11 @@ export function character(book, state) {
     const listed = f.text.match(/Choose one of the following skills in which you have proficiency: (.+?)\. You have Expertise in the chosen skill\./);
     if (listed) asks.push({ count: 1, from: list(listed[1]) });
     const named = f.text.match(/You gain Expertise in the ([A-Z][\w ]*?)(?: or ([A-Z][\w ]*?))? skill, gaining proficiency in it first if you lack it/);
-    if (named) asks.push({ count: 1, from: [named[1], named[2]].filter(Boolean), grants: true });
+    // Or, where that skill has Expertise already, "Expertise in another
+    // skill you're proficient in".
+    const already = named && /if you already have Expertise in it, you gain Expertise in another skill you're proficient in/.test(f.text) && [named[1], named[2]].filter(Boolean).every(sk => expert.has(sk));
+    if (named) asks.push(already ? { count: 1, from: null } : { count: 1, from: [named[1], named[2]].filter(Boolean), grants: true });
+    if (asks.length) reads(f);
     for (const [k, ask] of asks.entries()) {
       if (ask.count < 1) throw new Error(`${f.name}: an Expertise count the builder doesn't read`);
       const key = `${f.key ?? `${f.class} ${f.level} ${f.name}`}${k ? ` ${k + 1}` : ''}`;
@@ -561,8 +842,123 @@ export function character(book, state) {
       }
     }
   }
+  // Tools, as the SRD's Tools section names them, a Gaming Set's and a
+  // Musical Instrument's variants each "a separate proficiency": from the
+  // first class's Tool Proficiencies, a later class's multiclass gain, the
+  // background, the features ("proficiency with the Poisoner's Kit",
+  // "Painter's Supplies and one other type of Artisan's Tools", "your
+  // choice of Tinker's Tools or Woodcarver's Tools", "one of the following
+  // tools of your choice: …"), and the Skilled feat's tools beside its
+  // skills. One already the character's, where the feature says "choose
+  // another tool" (or "another type of Artisan's Tools", or "another tool
+  // from the Natural Philosopher's tool list"), is replaced by the player's
+  // choice. Expertise with tools: "Choose two of your tool proficiencies".
+  const toolBook = book.tools ?? [];
+  const concrete = toolBook.flatMap(t => (t.variants ? t.variants.map(v => `${t.name} (${v})`) : [t.name]));
+  const norm = x => x.replace(/'/g, '’').replace(/^(?:the|a|an) /i, '').trim().toLowerCase();
+  const toolNamed = x => concrete.find(t => norm(t) === norm(x)) ?? null;
+  const classTools = name => {
+    const t = book.classNamed(name)?.traits.find(x => x.trait === 'Tool Proficiencies')?.value ?? '';
+    return toolPhrase(t, name).flatMap(x => x.from ?? [x]);
+  };
+  // A category as concrete tools: "one type of Artisan's Tools", "a Gaming
+  // Set (one of your choice)", "Musical Instruments", "one tool of your
+  // choice from the Danae's tool list", "one tool".
+  function toolCategory(phrase) {
+    const p = norm(phrase).replace(/^(?:one|two|three|another|other) /, '').replace(/^(?:other )?(?:type|kind)s? of /, '').replace(/ \(one of your choice\)| of your choice$/g, '');
+    const list = p.match(/^tool of your choice from the (.+?)’s tool list$/) ?? p.match(/^tool from the (.+?)’s tool list$/);
+    if (list) return classTools(list[1].replace(/\b\w/g, c => c.toUpperCase()));
+    if (/^artisan’s tools$/.test(p)) return toolBook.filter(t => t.category === 'Artisan’s Tools').map(t => t.name);
+    if (/^gaming sets?$/.test(p)) return concrete.filter(t => t.startsWith('Gaming Set ('));
+    if (/^musical instruments?$/.test(p)) return concrete.filter(t => t.startsWith('Musical Instrument ('));
+    if (/^tools?$/.test(p)) return concrete;
+    return null;
+  }
+  // A phrase's tools: each named (a string), or so many from a list or a
+  // category ({ count, from }).
+  function toolPhrase(text, where) {
+    const t = text.replace(/\*/g, '').replace(/\s*\(see “Equipment”\)/, '').trim();
+    if (!t) return [];
+    const flat = items => [...new Set(items.flatMap(x => { const named = toolNamed(x); if (named) return [named]; const c = toolCategory(x); if (!c) throw new Error(`${where}: "${x}" isn't a tool the builder knows`); return c; }))];
+    const choose = t.match(/^Choose (\w+):? (.+)$/i);
+    if (choose && !/^(?:type|kind) of /.test(choose[2])) {
+      const count = /^\d+$/.test(choose[1]) ? +choose[1] : NUMBERS.indexOf(choose[1].toLowerCase());
+      const many = choose[2].match(/^(Musical Instruments|Gaming Sets)$/);
+      return [{ count, from: many ? toolCategory(many[1]) : flat(list(choose[2])) }];
+    }
+    const kind = t.match(/^Choose (\w+) (?:type|kind) of (.+)$/i);
+    if (kind) return [{ count: NUMBERS.indexOf(kind[1].toLowerCase()), from: flat(list(kind[2])) }];
+    const pick = t.match(/^(?:your choice of|one of the following tools of your choice:) (.+)$/i);
+    if (pick) return [{ count: 1, from: flat(list(pick[1])) }];
+    // "one musical instrument, one type of Artisan's Tools, or the Disguise
+    // Kit": one of them all.
+    if (/,? or /.test(t) && !/ and /.test(t)) return [{ count: 1, from: flat(list(t)) }];
+    return t.split(/,\s*(?:and\s+)?|\s+and\s+/).map(x => x.trim()).filter(Boolean).map(x => {
+      const named = toolNamed(x);
+      if (named) return named;
+      const some = x.match(/^(two|three) (.+)$/i), c = toolCategory(some ? some[2] : x);
+      if (!c) throw new Error(`${where}: "${x}" isn't a tool the builder knows`);
+      return { count: some ? NUMBERS.indexOf(some[1].toLowerCase()) : 1, from: c };
+    });
+  }
+  const toolSources = new Map(), toolChoices = [];
+  const ownTool = (name, from) => toolSources.set(name, [...(toolSources.get(name) ?? []), from]);
+  const takeTools = (parts, key, label, instead = null) => parts.forEach((x, i) => {
+    if (typeof x === 'string') {
+      if (!toolSources.has(x) || !instead) { ownTool(x, label); return; }
+      x = { count: 1, from: instead, replaces: x };
+    }
+    const k = `${key}${parts.length > 1 ? ` ${i + 1}` : ''}${x.replaces ? ` instead of ${x.replaces}` : ''}`;
+    const got = (state.tools?.[k] ?? []).filter(t => x.from.includes(t));
+    toolChoices.push({ key: k, label: x.replaces ? `${label}, instead of ${x.replaces}` : label, count: x.count, from: x.from, chosen: got });
+    if (got.length !== x.count) fail(`tools:${k}`, `Choose ${x.count} tool${x.count === 1 ? '' : 's'} for ${label}.`);
+    for (const t of got) ownTool(t, label);
+  });
+  if (first) takeTools(toolPhrase(first.traits.find(t => t.trait === 'Tool Proficiencies')?.value ?? '', first.name), first.name, first.name);
+  for (const c of known.slice(1)) {
+    const m = c.rules.multiclass.gains.match(/proficiency with ((?:one |two )?[^,]*?(?:Tools|Kit|Supplies|Instrument|tool)[^,]*?)(?:,| and training)/);
+    if (m) takeTools(toolPhrase(m[1], c.class), `${c.class} multiclass tools`, `${c.class}, as a multiclass`);
+  }
+  if (background?.tool) takeTools(toolPhrase(background.tool, background.name), `${background.name} tools`, background.name);
+  for (const f of features) {
+    const key = `tools ${f.key ?? `${f.class} ${f.level} ${f.name}`}`, label = f.label ?? `${f.name} (${f.class} ${f.level})`;
+    for (const m of f.text.matchAll(/gain proficiency (?:in the [\w ]+? skills? and )?with ([^.;]+?)(?=[.;]| \(if| and you (?:have|always)| and learn| and the master)/g)) {
+      if (!/Tools|Kit|Supplies|Utensils|Gaming Sets?|[Ii]nstruments?|\btools?\b/.test(m[1]) || /weapons?\b/.test(m[1])) continue;
+      reads(f);
+      const instead = f.text.match(/choose another (skill or tool|tool from the [\w ]+?[’']s tool list|type of Artisan['’]s Tools|tool)/);
+      takeTools(toolPhrase(m[1], f.name), key, label, instead ? toolCategory(instead[1].replace(/^skill or /, '')) : null);
+    }
+  }
+  for (const f of feats) {
+    if (!/proficiency in any combination of (\w+) skills or tools of your choice/.test(f.feat.description ?? '')) continue;
+    const count = NUMBERS.indexOf(f.feat.description.match(/combination of (\w+)/)[1]), skillsTaken = (state.skills?.[`feat ${f.from}`] ?? []).filter(Boolean).length;
+    if (count - skillsTaken > 0) takeTools([{ count: count - skillsTaken, from: concrete }], `feat ${f.from}`, `${f.feat.name}, from ${f.from}: the rest in tools`);
+  }
+  // A tool chosen that's the character's already, from another source or
+  // another choice, gives nothing: one more of the list's instead.
+  for (const c of toolChoices) for (const t of c.chosen) if (toolSources.get(t).length > 1) fail(`tools:${c.key}`, `${t} is already yours; choose another for ${c.label}.`);
   const bonus = advancement.bonus;
   // Expertise doubles the Proficiency Bonus.
+  // Expertise with tools: "Choose two of your tool proficiencies. You have
+  // Expertise with them", or "two of your tool proficiencies, or one tool
+  // proficiency and the Investigation skill (gaining proficiency in
+  // Investigation first if you lack it)".
+  const toolExpertise = [], toolExpert = new Set();
+  for (const f of features) {
+    const m = f.text.match(/Choose (\w+) of your tool proficiencies(?:, or one tool proficiency and the (\w+) skill)?/);
+    if (!m) continue;
+    reads(f);
+    const key = `tool expertise ${f.class} ${f.level} ${f.name}`, count = NUMBERS.indexOf(m[1]);
+    const from = [...toolSources.keys(), ...(m[2] ? [m[2]] : [])];
+    const got = (state.tools?.[key] ?? []).filter(t => from.includes(t));
+    toolExpertise.push({ key, label: `${f.name} (${f.class} ${f.level})`, count, from, skill: m[2] ?? null, chosen: got });
+    if (got.length !== count || (m[2] && got.filter(t => t !== m[2]).length < count - 1)) fail(`tools:${key}`, `Choose ${count} for ${f.name}${m[2] ? `: tools you're proficient with, or one of them and ${m[2]}` : ' from your tool proficiencies'}.`);
+    for (const t of got) {
+      if (t === m[2]) { if (expert.has(t)) fail(`tools:${key}`, `${t} already has Expertise.`); expert.add(t); grant(t, f.name); proficient.add(t); }
+      else toolExpert.add(t);
+    }
+  }
+  const tools = [...toolSources].map(([name, from]) => ({ name, from, expertise: toolExpert.has(name) }));
   // A feature's bonus to checks with skills it names ("a bonus to your
   // Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom
   // modifier (minimum of +1)"), the Thaumaturge's and the Magician's.
@@ -627,23 +1023,136 @@ export function character(book, state) {
   // Every spell once, the SRD's record first: it carries the school and the
   // Special column (C, R, M) the setting's lists leave out.
   const allSpells = [...book.classes.flatMap(c => c.spellList).reduce((all, sp) => (all.has(sp.name) ? all : all.set(sp.name, sp)), new Map()).values()];
-  const pickSpells = (key, label, list, cantrips, prepared, highest, { verb = 'prepared', given = [] } = {}) => {
+  // Each choice so many cantrips and so many spells of level 1+, or, mixed,
+  // so many of either (Magical Discoveries' "a cantrip or a spell").
+  const pickSpells = (key, label, list, cantrips, prepared, highest, { verb = 'prepared', given = [], always = [], mixed = false } = {}) => {
     const got = (state.spells?.[key] ?? []).map(n => list.find(sp => sp.name === n)).filter(Boolean);
     if (got.length !== (state.spells?.[key] ?? []).length) fail(`spells:${key}`, `A spell chosen isn't on the ${label} list.`);
-    const c = got.filter(sp => sp.level === 0), p = got.filter(sp => sp.level > 0);
+    const c = mixed ? [] : got.filter(sp => sp.level === 0), p = mixed ? got : got.filter(sp => sp.level > 0);
     if (c.length > cantrips) fail(`spells:${key}`, `${label} knows ${cantrips} cantrip${cantrips === 1 ? '' : 's'} of its choice; ${c.length} are chosen.`);
     if (p.length > prepared) fail(`spells:${key}`, `${label} ${verb === 'known' ? 'knows' : 'prepares'} ${prepared} spell${prepared === 1 ? '' : 's'}; ${p.length} are chosen.`);
     if (p.some(sp => sp.level > highest)) fail(`spells:${key}`, `${label}'s spells go up to level ${highest}.`);
-    spellChoices.push({ key, label, list: list.filter(sp => sp.level <= highest && !given.includes(sp.name)), cantrips, prepared, highest, verb, given: given.map(n => allSpells.find(sp => sp.name === n) ?? { name: n, level: 0 }), chosen: got });
+    spellChoices.push({ key, label, list: list.filter(sp => sp.level <= highest && !given.includes(sp.name) && !always.some(a => a.name === sp.name)), cantrips: mixed ? 0 : cantrips, prepared, mixed, highest, verb, given: given.map(n => allSpells.find(sp => sp.name === n) ?? { name: n, level: 0 }), always, chosen: got });
   };
+  // Spells a class's features grant by name, as they word it: always
+  // prepared ("You always have the Divine Smite spell prepared", "You always
+  // have *Sending* prepared"); a cantrip known besides those chosen ("you
+  // learn the *Mind Sliver* cantrip", "You know *Vicious Mockery*", and one
+  // more of the list's if it was already known); a spell added to the
+  // spellbook ("You add *Telekinesis* and *Resilient Sphere* to your
+  // spellbook", "**Level 5.** You add *Fly* …" from that level); and an
+  // Attunement's set, its cantrip known and a spell of each level from 1 to
+  // 5 added to the spellbook once the class can cast it.
+  const byName = name => allSpells.find(sp => sp.name === name) ?? { name, level: null };
+  // The highest level of spell a class casts at its level: its slots', or
+  // its Pact Magic's.
+  const casterHighest = c => {
+    const row = c.rules.table.rows[c.level - 1];
+    return c.rules.pact ? number(row['Slot Level']) : Math.max(0, ...c.rules.slotLevels.filter(l => number(row[l])));
+  };
+  const granted = [], swapChoices = [];
+  for (const f of features) {
+    const c = known.find(k => k.class === f.class), give = (name, how, from = f.name) => { granted.push({ ...byName(name), class: f.class, how, from }); reads(f); };
+    for (const m of f.text.matchAll(/always have (?:the )?\*?([A-Z][^*.]*?)\*?(?: and \*?([A-Z][^*.]*?)\*?)? (?:spells? )?prepared/g)) for (const n of [m[1], m[2]].filter(Boolean)) give(n, 'prepared');
+    for (const m of f.text.matchAll(/(?:learn|know) the \*([^*]+)\* cantrip|You know \*([^*]+)\*(?=[;.])/g)) give(m[1] ?? m[2], 'cantrip');
+    for (const line of f.text.split('\n')) {
+      const at = line.match(/^- \*\*Level (\d+)\.\*\*/);
+      if (at && c.level < +at[1]) continue;
+      for (const m of line.matchAll(/You add \*([^*]+)\*(?: and \*([^*]+)\*)? to your spellbook/g)) for (const n of [m[1], m[2]].filter(Boolean)) give(n, 'book');
+    }
+    const set = f.kind && f.text.match(/^\*\*\w+\.\*\* \*([^*]+)\*.*?then \*([^*]+)\*/m);
+    if (set) {
+      // "You can swap any of them … for another spell of the same level that
+      // deals your attuned damage type, from the Bard, Cleric, … spell list.
+      // If no spell of a given level deals your attuned damage type, you can
+      // choose one of a lower level that does."
+      const whole = features.find(x => x.class === f.class && x.level === f.level && f.name.startsWith(`${x.name}: `));
+      const swap = whole?.text.match(/You can swap any of them, .*? for another spell of the same level that deals your attuned damage type, from the (.+?) spell lists?\./);
+      const type = f.name.split(': ')[1];
+      const lists = swap ? swap[1].split(/,\s*(?:or\s+)?|\s+or\s+/) : [];
+      const pool = [...new Map([...lists.flatMap(n => book.classNamed(n)?.spellList ?? []), ...[...book.spellFacts.values()].filter(sp => sp.classes?.some(n => lists.includes(n)))].map(sp => [sp.name, sp])).values()]
+        .filter(sp => book.spellFacts.get(sp.name)?.damage.includes(type));
+      [set[1], ...set[2].replace(/\.$/, '').split(/\s*·\s*/)].forEach((own, level) => {
+        if (level && casterHighest(c) < level) return;
+        const levelOf = sp => book.spellFacts.get(sp.name)?.level ?? sp.level;
+        const key = `${whole?.name ?? f.name} ${type} ${level}`, at = pool.filter(sp => levelOf(sp) === level);
+        // None of this level deals it only where the set's own spell is of a
+        // lower one (Call Lightning at 4); one the data doesn't hold (a
+        // Player's Handbook spell, Witch Bolt) is of the level it's set at.
+        const none = !at.length && book.spellFacts.has(own) && book.spellFacts.get(own).level < level;
+        const offered = [...new Set([own, ...(none ? pool.filter(sp => levelOf(sp) < level && levelOf(sp) >= 1) : at).map(sp => sp.name)])];
+        const pick = swap ? offered.find(n => n === state.swaps?.[key]) ?? own : own;
+        if (swap) { swapChoices.push({ key, class: f.class, label: `${whole.name}: ${level ? `the level ${level} spell` : 'the cantrip'}`, own, offered, chosen: pick }); reads(whole); }
+        give(pick, level ? 'book' : 'cantrip');
+      });
+    }
+  }
+  // The spells a class's features keep always prepared, to its level, from
+  // their tables: besides those it chooses, not counted among them. Where a
+  // feature has several (a land each), the one chosen ("choose one type of
+  // land") is the player's.
+  const spellSetChoices = [];
+  const alwaysPrepared = c => features.filter(f => f.class === c.class && ALWAYS_PREPARED.test(f.text)).flatMap(f => {
+    reads(f);
+    const tables = spellTables(f);
+    let rows = tables[0]?.rows ?? [];
+    if (tables.length > 1) {
+      const key = `${c.class} ${f.level} ${f.name}`, sets = tables.map(t => t.set), chosen = sets.find(x => x === state.spellSets?.[key]) ?? null;
+      const noun = f.text.match(/choose one ([\w ]+?):/)?.[1] ?? 'one';
+      spellSetChoices.push({ key, class: c.class, label: `${f.name} (${c.class} ${f.level})`, noun, sets: tables.map(t => ({ name: t.set, spells: t.rows.filter(r => r.level <= c.level).flatMap(r => r.spells) })), chosen });
+      if (!chosen) { fail(`spellset:${key}`, `Choose a ${noun} for ${f.name}.`); return []; }
+      rows = tables.find(t => t.set === chosen).rows;
+    }
+    return rows.filter(r => r.level <= c.level).flatMap(r => r.spells.map(name => ({ ...(allSpells.find(sp => sp.name === name) ?? { name, level: null }), from: f.name })));
+  });
+  const spellbooks = [];
   const spellcasting = known.filter(c => c.rules.slotLevels.length || c.rules.pact).map(c => {
     const row = c.rules.table.rows[c.level - 1];
     const verb = c.rules.spellsColumn === 'Spells Known' ? 'known' : 'prepared';
     // A feature's "one extra cantrip from the Cleric spell list" adds to it.
     const extra = features.filter(f => f.class === c.class && new RegExp(`You know one extra cantrip from the ${c.class} spell list`).test(f.text)).length;
-    const granted = c.rules.cantripGrants ? c.rules.cantripGrants.filter(g => g.level <= c.level).reduce((n, g) => n + g.count, 0) : number(row.Cantrips);
-    const entry = { class: c.class, cantrips: granted + extra, given: c.rules.givenCantrips, prepared: number(row[c.rules.spellsColumn]), verb, highest: c.rules.pact ? number(row['Slot Level']) : Math.max(0, ...c.rules.slotLevels.filter(l => number(row[l]))) };
-    if (c.rules.spellList.length) pickSpells(c.class, c.class, c.rules.spellList, entry.cantrips, entry.prepared, entry.highest, { verb, given: entry.given });
+    for (const f of features.filter(x => x.class === c.class && new RegExp(`cantrips? (?:of your choice )?from the ${c.class} spell list|${c.class} cantrips of your choice|level 1 ${c.class} spells|You know one extra cantrip|spells of your choice from the ${c.class} spell list`).test(x.text))) reads(f);
+    const count = c.rules.cantripGrants ? c.rules.cantripGrants.filter(g => g.level <= c.level).reduce((n, g) => n + g.count, 0) : number(row.Cantrips);
+    const own = how => granted.filter(g => g.class === c.class && g.how === how);
+    // A cantrip a feature names that's known already brings one of the
+    // list's instead ("if you already did, learn another cantrip").
+    const named = [...new Set(own('cantrip').map(g => g.name))], twice = own('cantrip').length - named.length + named.filter(n => c.rules.givenCantrips.includes(n)).length;
+    const entry = { class: c.class, cantrips: count + extra + twice, given: [...new Set([...c.rules.givenCantrips, ...named])], always: [...alwaysPrepared(c), ...own('prepared'), ...optionalSpells.filter(o => o.class === c.class && o.name).map(o => ({ ...byName(o.name), from: o.from }))], book: own('book'), prepared: number(row[c.rules.spellsColumn]), verb, highest: casterHighest(c) };
+    // The book: the player's spells (each on the list, of a level with
+    // slots, the first ones level 1), what features write in, and any a
+    // feature lets the player add free ("two Wizard spells from the
+    // Evocation school, each of which must be no higher than level 2", and
+    // one at each new level of slots). Its level 1+ spells are what the class
+    // prepares from.
+    let list = c.rules.spellList;
+    const secrets = features.find(f => f.class === c.class && /choose any of your new prepared spells from the (.+?) spell lists/.test(f.text));
+    if (secrets) {
+      reads(secrets);
+      const lists = secrets.text.match(/choose any of your new prepared spells from the (.+?) spell lists/)[1].split(/,\s*(?:and\s+)?|\s+and\s+/);
+      list = [...new Map(lists.flatMap(n => book.classNamed(n)?.spellList ?? []).map(sp => [sp.name, sp])).values()];
+    }
+    if (c.rules.spellbook) {
+      const { start, more } = c.rules.spellbook, free = start + more * (c.level - 1);
+      const key = `book ${c.class}`, offered = c.rules.spellList.filter(sp => sp.level > 0 && sp.level <= entry.highest);
+      const picks = (state.spellbooks?.[c.class] ?? []).map(n => offered.find(sp => sp.name === n)).filter(Boolean);
+      reads(features.find(f => f.class === c.class && /\*\*Spellbook\.\*\*/.test(f.text)) ?? {});
+      if (picks.length !== (state.spellbooks?.[c.class] ?? []).length) fail(`spells:${key}`, `A spell in the ${c.class}'s spellbook isn't a ${c.class} spell it has slots for.`);
+      else if (picks.length !== free) fail(`spells:${key}`, `The ${c.class}'s spellbook takes ${free} spells of your choice; ${picks.length} are written in.`);
+      else if (picks.filter(sp => sp.level === 1).length < Math.min(start, free)) fail(`spells:${key}`, `The ${c.class}'s spellbook starts with ${start} level 1 spells.`);
+      const extra = features.filter(f => f.class === c.class).map(f => ({ f, m: f.text.match(/Choose (\w+) [\w ]+? spells from the (\w+) school, each of which must be no higher than level (\d), and add them to your spellbook for free/) })).filter(x => x.m).map(({ f, m }) => {
+        reads(f);
+        const count = NUMBERS.indexOf(m[1]) + (/whenever you gain access to a new level of spell slots/.test(f.text) ? Math.max(0, entry.highest - +m[3]) : 0);
+        const from = c.rules.spellList.filter(sp => sp.school === m[2] && sp.level > 0 && sp.level <= entry.highest);
+        const fkey = `book ${c.class} ${f.name}`, got = (state.spellbooks?.[fkey] ?? []).map(n => from.find(sp => sp.name === n)).filter(Boolean);
+        if (got.length !== count) fail(`spells:${fkey}`, `${f.name} writes ${count} ${m[2]} spells into the spellbook; ${got.length} are chosen.`);
+        return { key: fkey, label: `${f.name} (${c.class} ${f.level})`, count, from, chosen: got };
+      });
+      const written = [...new Map([...picks, ...entry.book, ...extra.flatMap(x => x.chosen)].map(sp => [sp.name, sp])).values()];
+      spellbooks.push({ class: c.class, key, free, start, offered, chosen: picks, granted: entry.book, extra, written });
+      list = [...c.rules.spellList.filter(sp => sp.level === 0), ...written];
+    }
+    entry.list = list;
+    if (list.length) pickSpells(c.class, c.class, list, entry.cantrips, entry.prepared, entry.highest, { verb, given: entry.given, always: entry.always });
     return entry;
   });
   // A feature's own spell: one of the player's choice from the list it names,
@@ -656,6 +1165,7 @@ export function character(book, state) {
     // another at each class level the feature names ("13 (level 7 spell)").
     const arcanum = f.text.match(/Choose one level (\d) (.+?) spell as this arcanum/);
     if (arcanum) {
+      reads(f);
       const at = known.find(c => c.class === f.class)?.level ?? 0, list = book.classNamed(arcanum[2]).spellList;
       const levels = [{ level: +arcanum[1], from: f.level }, ...[...f.text.matchAll(/(\d+) \(level (\d) spell\)/g)].map(m => ({ level: +m[2], from: +m[1] }))];
       for (const l of levels.filter(x => at >= x.from)) pickSpells(`${key} ${l.level}`, `${f.name}, level ${l.level} (${f.class})`, list.filter(sp => sp.level === l.level), 0, 1, l.level, { verb: 'known' });
@@ -663,16 +1173,60 @@ export function character(book, state) {
     // A book of spells (Pact of the Tome): so many cantrips and so many level
     // 1 rituals (R in the spell's Special column) from any class's list.
     const tome = f.text.match(/choose (\w+) cantrips, and choose (\w+) level 1 spells that have the Ritual tag\. The spells can be from any class[’']s spell list/);
+    if (tome) reads(f);
     if (tome) pickSpells(key, label, allSpells.filter(sp => sp.level === 0 || (sp.level === 1 && /\bR\b/.test(sp.special ?? ''))), NUMBERS.indexOf(tome[1]), NUMBERS.indexOf(tome[2]), 1, { verb: 'known' });
     const own = f.text.match(/You learn one spell of your choice from the (.+?) spell list, of a level for which you have spell slots/);
+    if (own) reads(f);
     if (own) pickSpells(key, label, book.classNamed(own[1]).spellList.filter(sp => sp.level > 0), 0, 1, spellcasting.find(s => s.class === f.class)?.highest ?? 0, { verb: 'known' });
+    // Spells a feature has the player choose and keeps always prepared:
+    // "Choose two spells from the Cleric spell list, each of a level for which
+    // the Physician Features table gives you spell slots" (and "an additional
+    // spell this way at Physician levels 10 and 14"), "You learn two spells
+    // of your choice. These spells can come from the Cleric, Druid, or Wizard
+    // spell list" (a cantrip or a level with slots), "Choose a level 1 and a
+    // level 2 spell in your spellbook", "Choose two level 3 spells in your
+    // spellbook".
+    const caster = spellcasting.find(sc => sc.class === f.class), highest = caster?.highest ?? 0, at = known.find(k => k.class === f.class)?.level ?? 0;
+    const touched = f.text.match(/Choose (\w+) spells from the (\w+) spell list, each of a level for which the [\w ]+? table gives you spell slots/);
+    if (touched) {
+      const more = f.text.match(/You choose an additional spell this way at [\w ]+? levels ([\d, and]+)/);
+      const count = NUMBERS.indexOf(touched[1]) + (more ? more[1].match(/\d+/g).map(Number).filter(t => at >= t).length : 0) + (moreTouched[f.class] ?? 0);
+      reads(f);
+      pickSpells(key, label, book.classNamed(touched[2]).spellList.filter(sp => sp.level > 0), 0, count, highest, { verb: 'always prepared' });
+    }
+    const discoveries = f.text.match(/You learn (\w+) spells of your choice\. These spells can come from the (.+?) spell list or any combination/);
+    if (discoveries) {
+      reads(f);
+      const lists = discoveries[2].split(/,\s*(?:or\s+)?|\s+or\s+/), from = [...new Map(lists.flatMap(n => book.classNamed(n)?.spellList ?? []).map(sp => [sp.name, sp])).values()];
+      pickSpells(key, label, from, NUMBERS.indexOf(discoveries[1]), NUMBERS.indexOf(discoveries[1]), highest, { verb: 'always prepared', mixed: true });
+    }
+    const written = spellbooks.find(b => b.class === f.class)?.written ?? [];
+    const mastery = f.text.match(/Choose a level (\d) and a level (\d) spell in your spellbook( that have a casting time of an action)?/);
+    if (mastery) { reads(f); for (const lv of [+mastery[1], +mastery[2]]) pickSpells(`${key} ${lv}`, `${f.name}, level ${lv} (${f.class})`, written.filter(sp => sp.level === lv && (!mastery[3] || book.spellFacts.get(sp.name)?.casting === 'Action')), 0, 1, lv, { verb: 'always prepared' }); }
+    const signature = f.text.match(/Choose (\w+) level (\d) spells in your spellbook/);
+    if (signature) { reads(f); pickSpells(key, label, written.filter(sp => sp.level === +signature[2]), 0, NUMBERS.indexOf(signature[1]), +signature[2], { verb: 'always prepared' }); }
     const any = f.text.match(/You learn one level (\d) spell of your choice from any class's spell list/);
     if (any) {
+      reads(f);
       const at = known.find(c => c.class === f.class)?.level ?? 0;
       const steps = f.text.match(/when you reach \w+ levels ([\d, and]+), you can replace the spell with one a level higher/);
       const highest = +any[1] + (steps ? steps[1].match(/\d+/g).map(Number).filter(t => at >= t).length : 0);
       pickSpells(key, label, allSpells.filter(sp => sp.level >= +any[1]), 0, 1, highest, { verb: 'known' });
     }
+  }
+  for (const w of warriorCantrips) pickSpells(w.key, w.label, book.classNamed(w.list).spellList.filter(sp => sp.level === 0), w.count, 0, 0, { verb: 'known' });
+  // An option that improves one of the class's known cantrips ("Choose one of
+  // your known Warlock cantrips that deals damage", Agonizing Blast): which,
+  // of those chosen.
+  const cantripTargets = [];
+  for (const f of features) {
+    const m = f.text.match(/Choose one of your known (\w+) cantrips(?: that ([^.]+))?\./);
+    if (!m) continue;
+    reads(f);
+    const key = f.key ?? `${f.class} ${f.level} ${f.name}`, mine = spellChoices.find(sc => sc.key === m[1])?.chosen.filter(sp => sp.level === 0) ?? [];
+    const pick = mine.find(sp => sp.name === state.cantripTargets?.[key]) ?? null;
+    cantripTargets.push({ key, label: f.label ?? `${f.name} (${f.class} ${f.level})`, condition: m[2] ?? null, from: mine.map(sp => sp.name), chosen: pick?.name ?? null });
+    if (!pick) fail(`cantrip:${key}`, mine.length ? `Choose which ${m[1]} cantrip ${f.name} improves.` : `${f.name} improves a ${m[1]} cantrip you know; choose one first.`);
   }
   const featLists = [], listChoices = [];
   for (const f of feats) {
@@ -711,6 +1265,18 @@ export function character(book, state) {
   };
   const proficientWith = [...(first ? weaponRules(first.traits.find(t => t.trait === 'Weapon Proficiencies')?.value ?? '') : []),
     ...known.slice(1).flatMap(c => weaponRules(c.rules.multiclass.gains)), ...features.flatMap(f => weaponRules(f.text.match(/proficiency with Martial weapons/)?.[0] ?? ''))];
+  // And one weapon of the player's choice ("proficiency with one Martial
+  // weapon of your choice", the Courtier's Second Weapon).
+  const weaponChoices = [];
+  for (const f of features) {
+    const m = f.text.match(/proficiency with one (Simple|Martial) weapon of your choice/);
+    if (!m) continue;
+    reads(f);
+    const key = f.key ?? `${f.class} ${f.level} ${f.name}`, from = (book.weapons ?? []).filter(w => w.category === m[1]);
+    const pick = from.find(w => w.name === state.weapons?.[key]) ?? null;
+    weaponChoices.push({ key, label: f.label ?? `${f.name} (${f.class} ${f.level})`, category: m[1], from, chosen: pick?.name ?? null });
+    if (pick) proficientWith.push(w => w.name === pick.name); else fail(`weapon:${key}`, `Choose a ${m[1]} weapon for ${f.name}.`);
+  }
   const proficientWeapons = (book.weapons ?? []).filter(w => proficientWith.some(r => r(w)));
   // Weapon Mastery: so many kinds of weapon, by the class's Weapon Mastery
   // column where it has one or by its sentence ("three kinds of Simple or
@@ -720,16 +1286,23 @@ export function character(book, state) {
   // character is proficient with.
   const masteryChoices = [];
   for (const f of features) {
-    const m = f.text.match(/use the mastery properties of (\w+) kinds of (.+?) of your choice( with which you have proficiency)?/);
+    // Or one kind ("the mastery property of one kind of crossbow or firearm
+    // you're proficient with"), a firearm what the feature says one is ("A
+    // firearm is a Pistol, a Musket, or …").
+    const m = f.text.match(/use the mastery properties of (\w+) kinds of (.+?) of your choice( with which you have proficiency)?/)
+      ?? f.text.match(/use the mastery property of (one) kind of ((?:weapon|crossbow|firearm)(?: or (?:crossbow|firearm))?)( you're proficient with)/);
     if (!m) continue;
+    reads(f);
     const c = known.find(x => x.class === f.class), key = f.key ?? `${f.class} ${f.level} ${f.name}`;
     const column = c.rules.table.columns.includes('Weapon Mastery') ? number(c.rules.table.rows[c.level - 1]?.['Weapon Mastery']) : 0;
     const count = column || NUMBERS.indexOf(m[1]);
     if (count < 1) throw new Error(`${f.name}: a count the builder doesn't read: "${m[1]}"`);
-    const kind = m[2].match(/^(?:(Simple|Martial)(?: or (Simple|Martial))? )?(?:(Melee|Ranged) )?(?:(Slashing|Piercing|Bludgeoning) )?weapons$/);
+    const firearms = f.text.match(/A firearm is (.+?), or a period firearm/)?.[1].split(/,\s*/).map(x => x.replace(/^an? /, '')) ?? [];
+    const named = /crossbow|firearm/.test(m[2]) ? w => (/crossbow/.test(m[2]) && /Crossbow/.test(w.name)) || (/firearm/.test(m[2]) && firearms.includes(w.name)) : null;
+    const kind = named ? [] : m[2].match(/^(?:(Simple|Martial)(?: or (Simple|Martial))? )?(?:(Melee|Ranged) )?(?:(Slashing|Piercing|Bludgeoning) )?weapons?$/);
     if (!kind) throw new Error(`${f.name}: "${m[2]}", weapons the builder doesn't read`);
     const categories = [kind[1], kind[2]].filter(Boolean);
-    const from = (m[3] ? proficientWeapons : book.weapons ?? []).filter(w => (!categories.length || categories.includes(w.category)) && (!kind[3] || w.range === kind[3]) && (!kind[4] || w.damage.includes(kind[4])));
+    const from = (m[3] ? proficientWeapons : book.weapons ?? []).filter(w => (named ? named(w) : true) && (!categories.length || categories.includes(w.category)) && (!kind[3] || w.range === kind[3]) && (!kind[4] || w.damage.includes(kind[4])));
     const got = (state.mastery?.[key] ?? []).filter(Boolean);
     masteryChoices.push({ key, label: `${f.name} (${f.class} ${f.level})`, count, from, chosen: from.filter(w => got.includes(w.name)) });
     if (got.length !== count || new Set(got).size !== got.length || !got.every(n => from.some(w => w.name === n))) fail(`mastery:${key}`, `Choose ${count} kind${count === 1 ? '' : 's'} of weapon for ${f.name}${from.length < (book.weapons ?? []).length ? `, from ${m[2]}${m[3] ? ' you\'re proficient with' : ''}` : ''}.`);
@@ -745,16 +1318,20 @@ export function character(book, state) {
   // each once.
   const languageChoices = [];
   const tongues = book.languages;
+  // A language a feature names outright ("You know Sylvan."), one of the
+  // rules' own.
+  const languageNamed = tongues && new RegExp(`[Yy]ou know (${[...tongues.standard, ...tongues.rare].map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?=[.,;])`);
   if (tongues) {
     languageChoices.push({ key: 'Common', label: 'Common', count: tongues.known.length, given: [] }, { key: 'standard', label: 'Standard languages', count: NUMBERS.indexOf(tongues.choose.count), given: [] });
     for (const f of features) {
       const key = f.key ?? `${f.class} ${f.level} ${f.name}`, label = f.label ?? `${f.name} (${f.class} ${f.level})`;
       const plus = f.text.match(/You know ([A-Z][\w’' ]+?) and (\w+) other languages? of your choice/);
-      const named = f.text.match(/You know ([A-Z][\w’' ]+?), the secret language/);
-      const some = f.text.match(/You (?:know|learn) (\w+) languages of your choice/);
+      const named = f.text.match(/You know ([A-Z][\w’' ]+?), the secret language/) ?? f.text.match(languageNamed);
+      const some = f.text.match(/(?:know|learn) (\w+) languages? of your choice/);
       const ask = plus ? { given: [plus[1]], count: NUMBERS.indexOf(plus[2]) } : named ? { given: [named[1]], count: 0 } : some ? { given: [], count: NUMBERS.indexOf(some[1]) } : null;
       if (!ask) continue;
       if (ask.count < 0) throw new Error(`${f.name}: a language count the builder doesn't read`);
+      reads(f);
       languageChoices.push({ key, label, ...ask });
     }
     const seen = new Set();
@@ -788,24 +1365,60 @@ export function character(book, state) {
   const shieldBonus = shield && training.includes('Shield') ? shield.bonus : 0;
   if (worn && !training.includes(worn.category)) warn('armor', `Without training in ${worn.category} armor, you have Disadvantage on any D20 Test that involves Strength or Dexterity, and you can't cast spells.`);
   if (shield && !training.includes('Shield')) warn('armor', 'Without training with Shields, a Shield gives no Armor Class.');
-  const unarmored = [{ from: 'No armor', ac: 10 + mod.Dexterity + shieldBonus }];
-  for (const f of features) {
-    const sentence = f.text.split(/(?<=\.)\s+/).find(x => /base Armor Class equals 10 plus your (\w+) and (\w+) modifiers/.test(x));
-    if (!sentence) continue;
-    const m = sentence.match(/base Armor Class equals 10 plus your (\w+) and (\w+) modifiers/);
-    const noShield = /wearing (?:any )?armor or wielding a Shield/.test(sentence);
-    if (shield && noShield) continue;
-    unarmored.push({ from: f.name, ac: 10 + mod[m[1]] + mod[m[2]] + shieldBonus });
-  }
-  const armorClass = worn
-    ? { from: worn.name, ac: worn.base + (worn.dex ? Math.min(mod.Dexterity, worn.dex_max ?? Infinity) : 0) + shieldBonus }
-    : { ...unarmored.reduce((best, u) => (u.ac > best.ac ? u : best)) };
-  if (shieldBonus) armorClass.from += ' and Shield';
-  // A feat's own sentence: "While you’re wearing Light, Medium, or Heavy
-  // armor, you gain a +1 bonus to Armor Class" (Defense).
-  for (const f of feats) {
-    const m = f.feat.description?.match(/While you’re wearing (.+?) armor, you gain a \+(\d+) bonus to Armor Class/);
-    if (m && worn && list(m[1]).includes(worn.category)) { armorClass.ac += +m[2]; armorClass.from += ` and ${f.feat.name}`; }
+  // By the modifiers it's worked from: the character's, or a form's that
+  // swaps scores (the Monster's card).
+  const armorWith = mods => {
+    const unarmored = [{ from: 'No armor', ac: 10 + mods.Dexterity + shieldBonus }];
+    for (const f of features) {
+      const sentence = f.text.split(/(?<=\.)\s+/).find(x => /base Armor Class equals 10 plus your (\w+) and (\w+) modifiers/.test(x));
+      if (!sentence) continue;
+      const m = sentence.match(/base Armor Class equals 10 plus your (\w+) and (\w+) modifiers/);
+      const noShield = /wearing (?:any )?armor or wielding a Shield/.test(sentence);
+      if (shield && noShield) continue;
+      unarmored.push({ from: f.name, ac: 10 + mods[m[1]] + mods[m[2]] + shieldBonus });
+    }
+    const ac = worn
+      ? { from: worn.name, ac: worn.base + (worn.dex ? Math.min(mods.Dexterity, worn.dex_max ?? Infinity) : 0) + shieldBonus }
+      : { ...unarmored.reduce((best, u) => (u.ac > best.ac ? u : best)) };
+    if (shieldBonus) ac.from += ' and Shield';
+    // A feat's own sentence: "While you’re wearing Light, Medium, or Heavy
+    // armor, you gain a +1 bonus to Armor Class" (Defense).
+    for (const f of feats) {
+      const m = f.feat.description?.match(/While you’re wearing (.+?) armor, you gain a \+(\d+) bonus to Armor Class/);
+      if (m && worn && list(m[1]).includes(worn.category)) { ac.ac += +m[2]; ac.from += ` and ${f.feat.name}`; }
+    }
+    return { unarmored, ac };
+  };
+  const { unarmored, ac: armorClass } = armorWith(mod);
+  // The Monster's card, for one who carries it, as Monster Form writes it:
+  // the scores it swaps ("Your Strength and Intelligence scores swap, and
+  // your Dexterity and Wisdom scores swap"), and with them the Armor Class
+  // and saving throws; Temporary Hit Points ("twice your Physician level",
+  // doubled by the first Overgrowth); the Unarmed Strike ("1d10 plus your
+  // Strength modifier Bludgeoning damage", a d12 by the second), twice an
+  // Attack action; the skills it keeps ("You lose your skill proficiencies
+  // and gain proficiency in Athletics and Intimidation"); the Monstrous
+  // Aura's reach and save DC.
+  for (const r of optionalRules.filter(x => x.carries)) {
+    const form = features.find(f => f.optional && f.class === r.class && f.name === `${r.name}: Monster Form`)?.text ?? '';
+    const swaps = [...form.matchAll(/your (\w+) and (\w+) scores swap/gi)].map(m => [m[1], m[2]]);
+    const temp = form.match(/Temporary Hit Points equal to twice your (\w+) level/), strike = form.match(/Unarmed Strikes deal (\d+)d(\d+) plus your (\w+) modifier (\w+) damage/);
+    const kept = form.match(/You lose your skill proficiencies and gain proficiency in (.+?)\./), aura = form.match(/within (\d+) feet of you must succeed on a (\w+) saving throw \(DC 8 plus your Proficiency Bonus plus your (\w+) modifier\)/);
+    if (!swaps.length || !temp || !strike || !kept || !aura) throw new Error(`${r.class}: ${r.name}'s Monster Form doesn't read as the card is worked from`);
+    const at = known.find(k => k.class === temp[1])?.level ?? 0, grown = n => r.growth.some(g => n.test(g));
+    const swapped = { ...scores };
+    for (const [a, b] of swaps) [swapped[a], swapped[b]] = [scores[b], scores[a]];
+    const mods = Object.fromEntries(ABILITIES.map(a => [a, book.modifier(swapped[a])]));
+    const die = grown(/Unarmed Strike die in Monster Form becomes a d(\d+)/) ? +r.growth.find(g => /becomes a d\d+/.test(g)).match(/becomes a d(\d+)/)[1] : +strike[2];
+    r.card = {
+      scores: swapped, mods, armorClass: armorWith(mods).ac,
+      saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mods[a] + (saves.includes(a) ? advancement.bonus : 0) })),
+      tempHp: 2 * at * (grown(/Temporary Hit Points you gain on transformation are doubled/) ? 2 : 1),
+      strike: { attack: mods[strike[3]] + advancement.bonus, damage: `${strike[1]}d${die}${mods[strike[3]] ? ` ${mods[strike[3]] > 0 ? '+' : '−'} ${Math.abs(mods[strike[3]])}` : ''} ${strike[4]}`, attacks: /attack twice/.test(form) ? 2 : 1 },
+      skills: list(kept[1]).map(sk => ({ name: sk, bonus: mods[book.skills.find(x => x.name === sk).ability] + advancement.bonus })),
+      aura: { feet: grown(/radius of Monstrous Aura becomes (\d+) feet/) ? +r.growth.find(g => /Monstrous Aura becomes/.test(g)).match(/becomes (\d+) feet/)[1] : +aura[1], save: aura[2], dc: 8 + advancement.bonus + mods[aura[3]] },
+      resistance: r.growth.find(g => /Resistance to/.test(g))?.match(/Resistance to (.+?) damage/)?.[1] ?? null,
+    };
   }
   const options = speciesOptions(species);
   if (options && !options.names.includes(state.option)) fail('option', `Choose your ${options.label}.`);
@@ -823,9 +1436,9 @@ export function character(book, state) {
     xp: advancement.xp, nextXp: book.advancement[total]?.xp ?? null,
     classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
-    skills, choices, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, masteryChoices, proficientWeapons, languageChoices, stealthDisadvantage: Boolean(stealthy), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
+    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, languageChoices, stealthDisadvantage: Boolean(stealthy), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
-    features, feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), training,
+    features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,
   };
 }

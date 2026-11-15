@@ -703,6 +703,89 @@ function weapons() {
   });
 }
 
+// ---------- tools: the Artisan's Tools and the Other Tools, each an item
+// with its price in brackets ("Alchemist’s Supplies (50 GP)"), then its
+// entries, a line or more each: Ability, Utilize, Craft, and Variants where
+// it has them (a Gaming Set's dice and cards, each "a separate proficiency").
+function tools() {
+  const out = [];
+  for (const [title, category] of [['Artisan’s Tools', 'Artisan’s Tools'], ['Other Tools', 'Other']]) {
+    const from = lines.findIndex(l => l.kind === 'section' && l.text === title);
+    if (from < 0) throw new Error(`the SRD has no ${title}`);
+    const to = lines.findIndex((l, k) => k > from && l.kind === 'section');
+    for (let i = from + 1; i < to; i++) {
+      const head = lines[i].kind === 'item' && lines[i].text.match(/^(.+?) \((?:[\d,]+ [GSC]P|Varies)\)$/);
+      if (!head) continue;
+      const end = lines.findIndex((l, k) => k > i && l.kind !== 'table');
+      // A word broken across a line ("dul-", "cimer") is the typesetter's,
+      // here always: a tool's entries break no compound at a line's end.
+      const text = lines.slice(i + 1, end).map(l => l.text).reduce((all, t) => (/\p{L}-$/u.test(all) && /^\p{Ll}/u.test(t) ? all.slice(0, -1) + t : `${all} ${t}`));
+      const entry = label => text.match(new RegExp(`${label}: (.+?)(?= (?:Weight|Utilize|Craft|Variants):|$)`))?.[1].trim() ?? null;
+      const ability = entry('Ability');
+      if (!ability) throw new Error(`the tool "${head[1]}" has no Ability`);
+      const variants = entry('Variants')?.split(/,\s*(?![^(]*\))/).map(v => v.replace(/ \(.*\)$/, '').replace(/^\w/, c => c.toUpperCase()));
+      out.push({ name: head[1], category, ability, utilize: entry('Utilize'), craft: entry('Craft'), ...(variants ? { variants } : {}) });
+    }
+  }
+  return out;
+}
+
+// ---------- beasts: every Beast stat block (a Druid's Wild Shape forms come
+// from them), each a 14.8 pt heading, then its size and type ("Large Beast
+// (Dinosaur), Unaligned"), its Speed ("Speed 40 ft., Fly 60 ft.") and its
+// Challenge Rating ("CR 1/4 (XP 50; PB +2)"), in the lines set beside it.
+const STAT_BLOCK_PT = 14.8;
+function beasts() {
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].kind !== 'section' || Math.abs(lines[i].size - STAT_BLOCK_PT) > 0.05) continue;
+    const block = [];
+    for (let k = i + 1; k < lines.length && !(lines[k].kind === 'section'); k++) if (lines[k].kind === 'aside') block.push(lines[k].text);
+    const type = block[0]?.match(/^(Tiny|Small|Medium|Large|Huge|Gargantuan) (\w+)/);
+    if (type?.[2] !== 'Beast') continue;
+    // A spell's creature (Giant Insect) has no Challenge Rating, and Wild
+    // Shape counts its forms by theirs.
+    const speed = block.find(t => /^Speed /.test(t)), cr = block.find(t => /^CR /.test(t))?.match(/^CR ([\d/]+)/)?.[1];
+    if (!cr) continue;
+    if (!speed) throw new Error(`the Beast "${lines[i].text}" has no Speed`);
+    const [num, den] = cr.split('/').map(Number);
+    out.push({ name: lines[i].text, size: type[1], cr, challenge: den ? num / den : num, speed: speed.replace(/^Speed /, ''), fly: /\bFly \d/.test(speed), swim: /\bSwim \d/.test(speed) });
+  }
+  if (!out.length) throw new Error('the SRD has no Beasts');
+  return out;
+}
+
+// ---------- spells: each spell's level, school and casting time, and the
+// damage types its text deals ("takes 1d10 Fire damage"), for the rules that
+// turn on them (an Attunement's spells "that deal your attuned damage
+// type", Spell Mastery's "casting time of an action"). Each is an item, then
+// its line ("Level 3 Evocation (Sorcerer, Wizard)", "Evocation Cantrip
+// (…)"), its Casting Time, and its text to the next item.
+const DAMAGE = ['Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic', 'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder'];
+// Damage dealt, not resisted: dice, or "takes", "take" or "deals", before the
+// type in its clause ("takes 3d6 Fire damage", "an extra 1d6 Radiant
+// damage"); "Immunity to Poison and Psychic damage" (Wall of Stone) isn't.
+const dealt = d => new RegExp(`(?:\\d+d\\d+|\\btakes?\\b|\\bdeals?\\b|\\bdealing\\b)[^.;]{0,40}?\\b${d} damage`);
+function spells() {
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].kind !== 'item') continue;
+    // A long list of classes wraps its line onto the next ("… Druid,",
+    // "Paladin, Ranger)").
+    let k = i + 1, line = lines[k]?.text ?? '';
+    while (/^(?:Level \d \w+|\w+ Cantrip) \([^)]*$/.test(line) && lines[k + 1]) line += ` ${lines[++k].text}`;
+    const head = line.match(/^(?:Level (\d) (\w+)|(\w+) Cantrip) \((.+)\)$/);
+    if (!head) continue;
+    const end = nextOf(i, ['item', 'section']);
+    const text = join(lines.slice(k + 1, end).map(l => l.text));
+    const casting = text.match(/Casting Time: (.+?) Range:/)?.[1];
+    if (!casting) throw new Error(`the spell "${lines[i].text}" has no Casting Time`);
+    out.push({ name: lines[i].text, level: head[1] ? +head[1] : 0, school: head[2] ?? head[3], classes: head[4].split(/,\s*/), casting, damage: DAMAGE.filter(d => dealt(d).test(text)) });
+  }
+  if (!out.length) throw new Error('the SRD has no spells');
+  return out;
+}
+
 // ---------- languages: the rule a character starts by ("Common plus two
 // languages you roll or choose from the Standard Languages table"), and both
 // tables' languages, the rare table set in two halves.
@@ -815,7 +898,7 @@ const data = {
   },
   ...(() => {
     const changes = [];
-    const read = { backgrounds: backgrounds(), species: species(), feats: feats(), classes: coreClasses() };
+    const read = { backgrounds: backgrounds(), species: species(), feats: feats(), classes: coreClasses(), spells: spells() };
     holdsToSource(read);
     const content = adapt(read, '', changes);
     return { adapted: { rule: 'euphonia.rules.json fey_type', changes }, ...content };
@@ -823,6 +906,8 @@ const data = {
   ability_scores: { ...scoreMethods(), background: backgroundIncreases() },
   armor: { items: armor(), strength_speed_penalty: armorStrengthPenalty() },
   weapons: weapons(),
+  tools: tools(),
+  beasts: beasts(),
   languages: languages(),
   hit_points: { level_1: hitPoints('Level 1 Hit Points by Class', 'Hit Point Maximum'), fixed: hitPoints('Fixed Hit Points by Class', 'Hit Points per Level') },
   tables: {

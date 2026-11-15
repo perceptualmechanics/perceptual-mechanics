@@ -1,11 +1,11 @@
 {
  "provenance": {
   "source": "Euphonia.md",
-  "master": "~/mnt/euphonia/Euphonia.md",
-  "sha256": "1179b05e88d80f02e36f6a74eb2c5d1403061186ce69dfb69d3a0e4652da7560",
-  "modified": "2026-11-13T12:43:33+00:00",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "4c638a35f929c823113d837ae0b3142f4b7dca45d7da8bae63235b090d006fc1",
+  "modified": "2026-11-14T19:10:07-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 15,
+  "exporter_version": 18,
   "rules": {
    "banned": [
     "eladrin",
@@ -31,7 +31,7 @@
    "kind": "Intrigue",
    "where": "The courts of Europe, and Mutapa's service in them",
    "read_with": "Powers and Factions; in The State of the World, Europe, and Mutapa and the Indian Ocean",
-   "summary": "**The pitch.** Every court in Europe has a minister of magic, and in 1668 every one has just learned it is behind: Mutapa is about to leap the magical gap on a metal nobody else can work, and Spain, it turns out, has the same metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
+   "summary": "**The pitch.** In 1668 every ministry of magic in Europe has learned two things: it is behind Mutapa, and Spain has Mutapa's metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
    "hooks": [
     "A court painter has finished a miniature of the young King of Spain for the Emperor's court, and three services want it before it reaches Vienna.",
     "A Viennese clerk has been copying the Emperor's register of licensed casters for another court; whoever catches him first will use him rather than hang him.",
@@ -68,12 +68,12 @@
    "kind": "Frontier",
    "where": "Any village at the edge of the Hidden",
    "read_with": "Running Euphonia; *Euphonia: Life on the Border*",
-   "summary": "The frontier game belongs to no region: every society has villages on its outskirts and a Hidden past them. The Border can be a Highland glen, a Japanese mountain village, a Swedish chapelry in the year the Blåkulla trials begin, or the almost suburban edge of one of Mutapa's fast-growing cities, where modern artifice meets the water spirits who take people under the pools and send some back as healers. Pick the border your table knows.",
+   "summary": "The frontier game belongs to no region: every society has villages on its outskirts and a Hidden past them. The Border can be a Highland glen, a Japanese mountain village, a Swedish chapelry in the year the Blåkulla trials begin, or the almost suburban edge of one of Mutapa's fast-growing cities, where modern artifice meets the water spirits of the pools (The State of the World, Mutapa and the Indian Ocean). Pick the border your table knows.",
    "hooks": [
     "A child says she was carried to a feast inside a hill, and the examiner who comes to hear it is looking for witches.",
     "The village's Killer is seventy and her knees are going.",
     "A Mutapan survey crew has pegged out a new street across a pool that belongs to someone.",
-    "The taken came back a hundred years late and remembers everything."
+    "One of the taken came home last night, ten years gone and not a day older, and she has brought someone back with her."
    ],
    "regions": [
     "Mutapa and the Indian Ocean"

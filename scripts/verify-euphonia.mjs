@@ -128,6 +128,14 @@ export function verifyEuphonia(d = euphoniaData()) {
     }
   }
 
+  // A Cosmography's summary names each of its Revelations once, and nothing
+  // else (a Dominion's Revelation by its realm's: "The Sphere of the Moon").
+  for (const c of d.classes.data.filter(x => x.cosmography)) {
+    const names = c.cosmography.groups.flatMap(g => g.revelations.map(r => r.name.replace(/^.+?: /, '')));
+    const rows = c.cosmography.summary.rows.map(r => r.Plane);
+    const missing = names.filter(n => !rows.includes(n)), extra = rows.filter(n => !names.includes(n));
+    if (missing.length || extra.length || rows.length !== names.length) fail(`${c.name}'s Cosmography: the summary lacks ${missing.join(', ') || 'none'} and adds ${extra.join(', ') || 'none'}`);
+  }
   // The subclasses the books add to the core classes: each to an SRD class,
   // named as none of its own is, beginning at the level the class takes its
   // subclass (the builder offers it beside the SRD's there), from a book the

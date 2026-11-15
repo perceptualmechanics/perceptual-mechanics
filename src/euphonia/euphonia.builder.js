@@ -108,6 +108,18 @@ export async function initBuilder(panel) {
   const styleBox = h('div', { class: 'b-styles' });
   const optionBox = h('div', { class: 'b-options' });
   const pickBox = h('div', { class: 'b-picks' });
+  const revelationBox = h('div', { class: 'b-picks' });
+  const spellSetBox = h('div', { class: 'b-picks' });
+  const kindBox = h('div', { class: 'b-picks' });
+  const saveBox = h('div', { class: 'b-picks' });
+  const weaponBox = h('div', { class: 'b-picks' });
+  const targetBox = h('div', { class: 'b-picks' });
+  const ruleBox = h('div', { class: 'b-picks' });
+  const formBox = h('div', { class: 'b-picks' });
+  const swapBox = h('div', { class: 'b-picks' });
+  const walkedBox = h('div', { class: 'b-picks' });
+  const noteBox = h('div', { class: 'b-picks' });
+  const toolsBox = h('div', { class: 'b-skill-groups' });
   const masteryBox = h('div', { class: 'b-mastery' });
   const featureOriginBox = h('div', { class: 'b-origin' });
   const languageBox = h('div', { class: 'b-languages' });
@@ -132,7 +144,7 @@ export async function initBuilder(panel) {
   const spellsBox = h('div', { class: 'b-spells' });
 
   // The choices a class's own features ask: shown only when there are some.
-  const optionSection = h('fieldset', { class: 'b-section', hidden: true }, h('legend', {}, 'Class choices'), pickBox, masteryBox, optionBox);
+  const optionSection = h('fieldset', { class: 'b-section', hidden: true }, h('legend', {}, 'Class choices'), kindBox, swapBox, pickBox, revelationBox, walkedBox, spellSetBox, formBox, saveBox, weaponBox, masteryBox, optionBox, targetBox, noteBox, ruleBox);
 
   status.remove();
   form.append(
@@ -148,6 +160,7 @@ export async function initBuilder(panel) {
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
     section('Armour', h('label', { class: 'b-field' }, h('span', {}, 'Armor'), armorSelect), h('label', { class: 'b-check' }, shieldCheck, ' A Shield'), trainingNote, problemSlot('armor'), warningSlot('armor')),
     section('Skills', skillsBox, expertiseBox, skillNotes),
+    section('Tools', toolsBox),
     section('Feats', styleBox, featureOriginBox, featsBox),
     section('Spells', spellsBox),
   );
@@ -358,6 +371,156 @@ export async function initBuilder(panel) {
       return group;
     }));
   }
+  // A Revelation a feature teaches (The Near Planes, The Circuit): a radio
+  // for each plane it can, its Spirit Aspect, Influence and Planar Strike in
+  // a line, its rules a click away; one another choice took can't be taken
+  // twice. Once a feature grants every Revelation, the choice is moot.
+  const partName = p => p.label.replace(/^(Spirit Aspect|Influence): /, '');
+  const revelationLine = r => r.parts.map(p => (p.label === 'Planar Strike' ? `Strike: ${p.text.replace(/ damage\.?$/, '')}` : p.label.includes(':') ? `${p.label.split(':')[0]}: ${partName(p)}` : null)).filter(Boolean).join(' · ');
+  const revelationRules = r => h('div', { class: 'b-pick-text', html: blocks(r.parts.map(p => `***${p.label}.*** ${p.text}`).join('\n\n')) });
+  function renderRevelations(result) {
+    const live = result.revelationChoices.filter(c => !c.moot);
+    const shape = JSON.stringify(live.map(c => [c.key, c.chosen, c.options.length]));
+    if (revelationBox.dataset.for === shape) return;
+    revelationBox.dataset.for = shape;
+    rebuild(revelationBox, ...live.map(c => {
+      const elsewhere = new Set(live.filter(o => o !== c).map(o => o.chosen).filter(Boolean));
+      return h('fieldset', { class: 'b-pick', 'aria-describedby': idFor(`revelation:${c.key}`) },
+        h('legend', {}, `${c.label}: a Revelation from ${listed(c.groups)}`),
+        c.options.map(r => h('div', { class: 'b-pick-row' },
+          h('label', { class: 'b-pick-option' },
+            h('input', { type: 'radio', name: `revelation-${c.key}`, value: r.name, 'data-key': `revelation-${c.key}-${r.name}`, checked: c.chosen === r.name || null, disabled: (elsewhere.has(r.name) && c.chosen !== r.name) || null, onchange: () => set(s => { s.revelations = { ...s.revelations, [c.key]: r.name }; }) }),
+            h('span', {}, h('strong', {}, r.name), h('span', { class: 'b-pick-text' }, revelationLine(r)))),
+          h('details', { class: 'b-pick-rules' }, h('summary', {}, `What ${r.name} gives`), revelationRules(r)))),
+        problemSlot(`revelation:${c.key}`));
+    }));
+  }
+  // A feature with a spell table for each of several sets (the Circle of
+  // the Land's lands): a radio for each, the spells it brings at this level.
+  function renderSpellSets(result) {
+    const shape = JSON.stringify(result.spellSetChoices.map(c => [c.key, c.chosen, c.sets]));
+    if (spellSetBox.dataset.for === shape) return;
+    spellSetBox.dataset.for = shape;
+    rebuild(spellSetBox, ...result.spellSetChoices.map(c => h('fieldset', { class: 'b-pick', 'aria-describedby': idFor(`spellset:${c.key}`) },
+      h('legend', {}, `${c.label}: your ${c.noun}`),
+      c.sets.map(x => h('label', { class: 'b-pick-option' },
+        h('input', { type: 'radio', name: `spellset-${c.key}`, value: x.name, 'data-key': `spellset-${c.key}-${x.name}`, checked: c.chosen === x.name || null, onchange: () => set(s => { s.spellSets = { ...s.spellSets, [c.key]: x.name }; }) }),
+        h('span', {}, h('strong', {}, x.name), h('span', { class: 'b-pick-text' }, `Always prepared: ${listed(x.spells)}.`)))),
+      problemSlot(`spellset:${c.key}`))));
+  }
+  // A choice of one, as radios, each named: a feature's list (Attuned
+  // Energy's damage type, the Danae's Half), a saving throw (Closed Mind).
+  const oneOf = (c, field, store, legend, line = () => null) => h('fieldset', { class: 'b-pick', 'aria-describedby': idFor(`${field}:${c.key}`) },
+    h('legend', {}, legend),
+    c.offered.map(x => h('label', { class: 'b-pick-option' },
+      h('input', { type: 'radio', name: `${field}-${c.key}`, value: x, 'data-key': `${field}-${c.key}-${x}`, checked: c.chosen === x || null, onchange: () => set(s => { s[store] = { ...s[store], [c.key]: x }; }) }),
+      h('span', {}, h('strong', {}, x), line(x) ? h('span', { class: 'b-pick-text' }, line(x)) : null))),
+    problemSlot(`${field}:${c.key}`));
+  const fresh = (box, shape) => { if (box.dataset.for === shape) return false; box.dataset.for = shape; return true; };
+  function renderKinds(result) {
+    if (!fresh(kindBox, JSON.stringify(result.kindChoices))) return;
+    rebuild(kindBox, ...result.kindChoices.map(c => oneOf(c, 'kind', 'kinds', `${c.label}: your ${c.noun}`)));
+  }
+  function renderSaves(result) {
+    if (!fresh(saveBox, JSON.stringify(result.saveChoices))) return;
+    rebuild(saveBox, ...result.saveChoices.map(c => oneOf(c, 'save', 'saves', `${c.label}: a saving throw, as you already have the one it names`)));
+  }
+  // A weapon of the player's choice, and the known cantrip an option
+  // improves: a select each.
+  function renderWeapons(result) {
+    if (!fresh(weaponBox, JSON.stringify(result.weaponChoices.map(c => [c.key, c.chosen])))) return;
+    rebuild(weaponBox, ...result.weaponChoices.map(c => [
+      h('label', { class: 'b-field' }, h('span', {}, `${c.label}: a ${c.category} weapon`),
+        h('select', { 'data-key': `weapon-${c.key}`, 'aria-describedby': idFor(`weapon:${c.key}`), onchange: e => set(s => { s.weapons = { ...s.weapons, [c.key]: e.target.value }; }) }, options(c.from.map(w => w.name), c.chosen, 'Choose a weapon'))),
+      problemSlot(`weapon:${c.key}`)]).flat());
+  }
+  function renderTargets(result) {
+    if (!fresh(targetBox, JSON.stringify(result.cantripTargets))) return;
+    rebuild(targetBox, ...result.cantripTargets.map(c => [
+      h('label', { class: 'b-field' }, h('span', {}, `${c.label}: the cantrip it improves${c.condition ? ` (one that ${c.condition})` : ''}`),
+        h('select', { 'data-key': `cantrip-${c.key}`, 'aria-describedby': idFor(`cantrip:${c.key}`), onchange: e => set(s => { s.cantripTargets = { ...s.cantripTargets, [c.key]: e.target.value }; }) }, options(c.from, c.chosen, c.from.length ? 'Choose a cantrip' : 'Choose your cantrips first'))),
+      problemSlot(`cantrip:${c.key}`)]).flat());
+  }
+  // An optional rule, where the DM allows it (The Monster Within): taken or
+  // not, then each Rite reached and, at its level, the Final Rite; what the
+  // record brings, said beneath.
+  function renderRules(result) {
+    if (!fresh(ruleBox, JSON.stringify(result.optionalRules))) return;
+    const keep = (key, change) => set(s => { const was = s.optional?.[key] ?? {}; s.optional = { ...s.optional, [key]: change(was) }; });
+    rebuild(ruleBox, ...result.optionalRules.map(r => h('fieldset', { class: 'b-pick' },
+      h('legend', {}, `${r.name}, an optional rule (${r.class} ${r.at})`),
+      h('div', { class: 'b-pick-text', html: blocks(r.lead) }),
+      h('label', { class: 'b-check' }, h('input', { type: 'checkbox', 'data-key': `rule-${r.key}`, checked: r.taken || null, onchange: e => keep(r.key, was => ({ ...was, taken: e.target.checked })) }), ` Take ${r.name} (the DM turns it on)`),
+      r.taken ? r.rites.map(rite => h('label', { class: 'b-field' }, h('span', {}, `The Rite at level ${rite.level}`),
+        h('select', { 'data-key': `rite-${r.key}-${rite.level}`, 'aria-describedby': idFor(`optional:${r.key} ${rite.level}`), onchange: e => keep(r.key, was => ({ ...was, rites: { ...was.rites, [rite.level]: e.target.value } })) },
+          options(rite.level === r.at ? ['passed', 'failed'] : ['passed', 'failed', 'declined'], rite.outcome, 'How did it go?')))) : null,
+      r.taken ? r.rites.map(rite => problemSlot(`optional:${r.key} ${rite.level}`)) : null,
+      r.final ? [h('label', { class: 'b-field' }, h('span', {}, `The Final Rite (level ${r.final.level})`),
+        h('select', { 'data-key': `rite-${r.key}-final`, 'aria-describedby': idFor(`optional:${r.key} final`), onchange: e => keep(r.key, was => ({ ...was, final: e.target.value })) }, options(r.final.offered, r.final.chosen, 'Resign, or the outcome rolled'))), problemSlot(`optional:${r.key} final`)] : null,
+      r.taken ? h('p', { class: 'b-note' }, `${r.boons.length ? `Ascendance: ${r.boons.length} of ${r.ascendance.length} boons. ` : ''}${r.carries ? `You carry the Monster${r.growth.length ? `, grown ${r.growth.length} of ${r.overgrowth.length} times` : ''}.` : 'You don’t carry the Monster.'}`) : null)));
+  }
+  // Wild Shape's known forms, by Challenge Rating; the Revelation a first
+  // voyage walked; a name for each someone or somewhere a feature has the
+  // player choose.
+  const crText = cr => (cr < 1 && cr > 0 ? `1/${Math.round(1 / cr)}` : String(cr));
+  function renderForms(result) {
+    if (!fresh(formBox, JSON.stringify(result.formChoices.map(c => [c.key, c.count, c.cr, c.fly, c.chosen])))) return;
+    rebuild(formBox, ...result.formChoices.map(c => {
+      const read = () => set(s => { s.forms = { ...s.forms, [c.key]: [...box.querySelectorAll('input:checked')].map(x => x.value) }; });
+      const crs = [...new Set(c.from.map(b => b.challenge))].sort((a, b) => a - b);
+      const box = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`forms:${c.key}`) },
+        h('legend', {}, `${c.label}: ${c.chosen.length} of ${c.count} Beast forms, up to Challenge Rating ${crText(c.cr)}${c.fly ? '' : ', none that flies'}`),
+        crs.map(cr => h('details', {}, h('summary', {}, `Challenge Rating ${crText(cr)}`),
+          h('div', { class: 'b-checks' }, c.from.filter(b => b.challenge === cr).map(b => h('label', {}, h('input', { type: 'checkbox', value: b.name, 'data-key': `form-${c.key}-${b.name}`, checked: c.chosen.includes(b.name), onchange: read }), ` ${b.name}`, h('span', { class: 'b-mark' }, ` ${b.size}, ${b.speed}`)))))),
+        problemSlot(`forms:${c.key}`));
+      return box;
+    }));
+  }
+  // An Attunement's set, each place its own spell or another of its level
+  // that deals the attuned type.
+  function renderSwaps(result) {
+    if (!fresh(swapBox, JSON.stringify(result.swapChoices))) return;
+    rebuild(swapBox, ...(result.swapChoices.length ? [h('fieldset', { class: 'b-pick' },
+      h('legend', {}, `${result.swapChoices[0].label.split(':')[0]}: your set, each spell its own or another that deals your damage type`),
+      result.swapChoices.map(c => h('label', { class: 'b-field' }, h('span', {}, capital(c.label.split(': ')[1])),
+        h('select', { 'data-key': `swap-${c.key}`, onchange: e => set(s => { s.swaps = { ...s.swaps, [c.key]: e.target.value }; }) },
+          c.offered.map(n => h('option', { value: n, selected: n === c.chosen || null }, n === c.own ? `${n} (the set's)` : n))))))] : []));
+  }
+  function renderWalked(result) {
+    if (!fresh(walkedBox, JSON.stringify(result.walkedChoices))) return;
+    rebuild(walkedBox, ...result.walkedChoices.map(c => oneOf(c, 'walked', 'walked', `${c.label}: the Revelation your first voyage walked`)));
+  }
+  function renderNotes(result) {
+    if (!fresh(noteBox, JSON.stringify(result.noteChoices.map(c => [c.key, c.what])))) return;
+    rebuild(noteBox, ...result.noteChoices.map(c => [
+      h('label', { class: 'b-field' }, h('span', {}, `${c.label}: your ${c.what}`),
+        h('input', { type: 'text', 'data-key': `note-${c.key}`, value: c.named, autocomplete: 'off', 'aria-describedby': idFor(`note:${c.key}`), onchange: e => set(s => { s.notes = { ...s.notes, [c.key]: e.target.value }; }) })),
+      problemSlot(`note:${c.key}`)]).flat());
+  }
+  // Tools: those given, a choice of so many from a list or a kind, and
+  // Expertise with tools; a tool taken in one choice leaves the others.
+  function renderTools(result) {
+    const given = result.tools.filter(t => !result.toolChoices.some(c => c.chosen.includes(t.name))).map(t => t.name);
+    if (!fresh(toolsBox, JSON.stringify([result.toolChoices.map(c => [c.key, c.count, c.from, c.chosen]), result.toolExpertise.map(c => [c.key, c.from, c.chosen]), result.tools]))) return;
+    // A tool the character has from anywhere else can't be taken again: its
+    // box is disabled and says so. Expertise is with tools already had.
+    const elsewhere = (c, t) => result.tools.some(x => x.name === t && x.from.some(src => src !== c.label));
+    const checks = (c, store, legend, field, owned = true) => {
+      const read = () => set(s => { s[store] = { ...s[store], [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
+      const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`${field}:${c.key}`) }, h('legend', {}, legend),
+        h('div', { class: 'b-checks' }, c.from.map(t => {
+          const yours = owned && elsewhere(c, t) && !c.chosen.includes(t);
+          return h('label', { class: yours ? 'is-yours' : null }, h('input', { type: 'checkbox', value: t, 'data-key': `tool-${c.key}-${t}`, checked: c.chosen.includes(t), disabled: yours || null, onchange: read }), ` ${t}`, yours ? h('span', { class: 'b-mark' }, ' (already yours)') : null);
+        })),
+        problemSlot(`${field}:${c.key}`));
+      return group;
+    };
+    rebuild(toolsBox,
+      given.length ? h('p', { class: 'b-note' }, `Yours already: ${listed(given)}.`) : null,
+      ...result.toolChoices.map(c => checks(c, 'tools', `${c.label}: choose ${c.count}`, 'tools')),
+      ...result.toolExpertise.map(c => checks(c, 'tools', `${c.label}: Expertise with ${c.count}${c.skill ? `, ${c.skill} among them if you like` : ''}`, 'tools', false)),
+      !given.length && !result.toolChoices.length ? h('p', { class: 'b-note' }, 'Your class, background and features bring their tools here.') : null);
+  }
   // A feature's one-of choice (Divine Order, Elemental Fury): a radio for
   // each option, its rule under its name.
   function renderPicks(result) {
@@ -393,7 +556,7 @@ export async function initBuilder(panel) {
     }));
   }
   function renderOptions(result) {
-    const shape = JSON.stringify([result.optionChoices.map(o => [o.class, o.count, o.forgone, o.open.map(x => x.name), o.given.map(g => g.name), o.regard]), state.options, state.optionArts]);
+    const shape = JSON.stringify([result.optionChoices.map(o => [o.class, o.count, o.extra, o.forgone, o.open.map(x => x.name), o.given.map(g => g.name), o.regard]), state.options, state.optionArts]);
     if (optionBox.dataset.for === shape) return;
     optionBox.dataset.for = shape;
     const artPick = (label, arts, chosen, key, onchange) => h('label', { class: 'b-field b-art' }, h('span', {}, label),
@@ -413,17 +576,20 @@ export async function initBuilder(panel) {
           h('p', { class: 'b-given' }, `${g.name}, given by ${g.from}`),
           artsOf(g).length > 1 ? artPick(`${g.name} counts as`, artsOf(g), state.optionArts?.[`${o.class} ${g.name}`], `option-art-${o.class}-${g.name}`, v => set(s => { s.optionArts = { ...s.optionArts, [`${o.class} ${g.name}`]: v }; })) : null,
           about(g, `option-about-${o.class}-${g.name}`), problemSlot(g.field))),
-        Array.from({ length: o.count }, (_, i) => {
-          const pick = picks[i], x = o.open.find(y => y.name === pick?.name);
-          const elsewhere = name => [...o.given.map(g => g.name), ...picks.filter((p, j) => j !== i && j < o.count).map(p => p?.name)].filter(n => n === name).length;
+        // After the column's, one more of an art a subclass gives instead of
+        // one already taken ("one more accomplishment from the art of Arms").
+        Array.from({ length: o.count + o.extra.length }, (_, i) => {
+          const pick = picks[i], instead = i >= o.count ? o.extra[i - o.count] : null;
+          const x = o.open.find(y => y.name === pick?.name);
+          const elsewhere = name => [...o.given.map(g => g.name), ...picks.filter((p, j) => j !== i && j < o.count + o.extra.length).map(p => p?.name)].filter(n => n === name).length;
           const select = h('select', { 'data-key': `option-${o.class}-${i}`, 'aria-describedby': idFor(`option:${o.class}:${i}`), onchange: e => setPick(i, () => ({ name: e.target.value })) },
             h('option', { value: '' }, `Choose ${/^[aeiou]/i.test(o.noun) ? 'an' : 'a'} ${o.noun}`),
-            levels.map(lv => h('optgroup', { label: `From ${o.class} level ${lv}` }, o.open.filter(y => y.level === lv).map(y => h('option', { value: y.name, selected: y.name === pick?.name || null, disabled: (y.name !== pick?.name && elsewhere(y.name) >= y.repeat) || null },
+            levels.map(lv => h('optgroup', { label: `From ${o.class} level ${lv}` }, o.open.filter(y => y.level === lv && (!instead || artsOf(y).includes(instead.art))).map(y => h('option', { value: y.name, selected: y.name === pick?.name || null, disabled: (y.name !== pick?.name && elsewhere(y.name) >= y.repeat) || null },
               `${y.name}${y.arts.length ? ` (${artsOf(y).join(', ')})` : y.cost ? ` (${y.cost})` : y.requires?.length ? ` (needs ${listed(y.requires)})` : ''}`)))));
           return h('div', { class: 'b-option' },
             h('div', { class: 'b-option-row' },
-              h('label', { class: 'b-field' }, h('span', {}, `${capital(o.noun)} ${i + 1}`), select),
-              x && artsOf(x).length > 1 ? artPick('Counts as', artsOf(x), pick.art, `option-art-${o.class}-${i}`, v => setPick(i, p => ({ ...p, art: v }))) : null),
+              h('label', { class: 'b-field' }, h('span', {}, instead ? `One more ${o.noun} of ${instead.art} (${instead.from})` : `${capital(o.noun)} ${i + 1}`), select),
+              x && !instead && artsOf(x).length > 1 ? artPick('Counts as', artsOf(x), pick.art, `option-art-${o.class}-${i}`, v => setPick(i, p => ({ ...p, art: v }))) : null),
             x ? about(x, `option-about-${o.class}-${i}`) : null,
             problemSlot(`option:${o.class}:${i}`));
         }));
@@ -518,8 +684,10 @@ export async function initBuilder(panel) {
     styleBox.dataset.for = shape;
     const styles = book.feats.filter(f => f.category === 'Fighting Style').map(f => f.name);
     rebuild(styleBox, ...result.styleChoices.map(c => [
-      h('label', { class: 'b-field' }, h('span', {}, `${c.label}: a Fighting Style feat`),
-        h('select', { 'data-key': `style-${c.key}`, 'aria-describedby': idFor(`style:${c.key}`), onchange: e => set(s => { s.styles = { ...s.styles, [c.key]: e.target.value }; }) }, options(styles, state.styles?.[c.key], 'Choose a feat'))),
+      h('label', { class: 'b-field' }, h('span', {}, `${c.label}: a Fighting Style feat${c.instead.length ? ` or ${listed(c.instead.map(x => x.name), 'or')}` : ''}`),
+        h('select', { 'data-key': `style-${c.key}`, 'aria-describedby': idFor(`style:${c.key}`), onchange: e => set(s => { s.styles = { ...s.styles, [c.key]: e.target.value }; }) },
+          c.instead.length ? [h('option', { value: '' }, 'Choose a feat or the option'), h('optgroup', { label: 'Fighting Style feats' }, options(styles, state.styles?.[c.key])), h('optgroup', { label: 'Instead of a feat' }, options(c.instead.map(x => x.name), state.styles?.[c.key]))]
+            : options(styles, state.styles?.[c.key], 'Choose a feat'))),
       problemSlot(`style:${c.key}`),
     ]).flat());
   }
@@ -552,7 +720,7 @@ export async function initBuilder(panel) {
   // bounds them; a feat's list where the player chooses it.
   const openLevels = new Set();
   function renderSpells(result) {
-    const shape = [...result.listChoices.map(l => `${l.from}:${l.chosen}`), ...result.spellChoices.map(c => `${c.key}:${c.cantrips}:${c.prepared}:${c.highest}:${c.chosen.map(sp => sp.name).join()}`)].join('|');
+    const shape = [JSON.stringify(result.spellbooks.map(b => [b.key, b.free, b.offered.length, b.chosen.map(sp => sp.name), b.granted.map(sp => sp.name), b.extra.map(x => [x.key, x.count, x.chosen.map(sp => sp.name)])])), ...result.listChoices.map(l => `${l.from}:${l.chosen}`), ...result.spellChoices.map(c => `${c.key}:${c.cantrips}:${c.prepared}:${c.highest}:${c.chosen.map(sp => sp.name).join()}:${c.always.map(sp => sp.name).join()}:${c.given.map(sp => sp.name).join()}:${c.list.map(sp => sp.name).join()}`)].join('|');
     if (spellsBox.dataset.for === shape) return;
     spellsBox.dataset.for = shape;
     for (const d of spellsBox.querySelectorAll('details[data-key]')) if (d.open) openLevels.add(d.dataset.key); else openLevels.delete(d.dataset.key);
@@ -561,14 +729,35 @@ export async function initBuilder(panel) {
         h('select', { 'data-key': `list-${l.from}`, 'aria-describedby': idFor(l.field), onchange: e => set(s => { s.featLists = { ...s.featLists, [l.from]: e.target.value }; }) }, options(l.lists, l.chosen, 'Choose a list'))),
       result.spellChoices.some(c => c.key === l.field.replace(/^spells:/, '')) ? null : problemSlot(l.field),
     ]).flat();
+    // A spellbook: the spells written in by choice, a level at a time, what
+    // features wrote in, and any a feature adds free of a school.
+    const byLevel = (key, offered, picked, read) => [...new Set(offered.map(sp => sp.level))].sort((a, b) => a - b).map(level => {
+      const k = `${key}-${level}`, here = offered.filter(sp => sp.level === level), n = here.filter(sp => picked.has(sp.name)).length;
+      return h('details', { 'data-key': k, open: openLevels.has(k) || null }, h('summary', {}, `Level ${level}${n ? `: ${n} written` : ''}`),
+        h('div', { class: 'b-checks' }, here.map(sp => h('label', {}, h('input', { type: 'checkbox', value: sp.name, 'data-key': `book-${key}-${sp.name}`, checked: picked.has(sp.name), onchange: read }), ` ${sp.name}`))));
+    });
+    const books = result.spellbooks.flatMap(b => {
+      const write = (key, box) => () => set(s => { s.spellbooks = { ...s.spellbooks, [key]: [...box.querySelectorAll('input:checked')].map(x => x.value) }; });
+      const main = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${b.key}`) },
+        h('legend', {}, `${b.class}'s spellbook: ${b.chosen.length} of ${b.free} spells of your choice, the first ${b.start} of level 1`),
+        b.granted.length ? h('p', { class: 'b-note' }, `Written in by features: ${listed([...new Set(b.granted.map(sp => `${sp.name} (${sp.from})`))])}.`) : null);
+      main.append(...byLevel(b.key, b.offered, new Set(b.chosen.map(sp => sp.name)), write(b.class, main)), problemSlot(`spells:${b.key}`));
+      const extra = b.extra.map(x => {
+        const box = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${x.key}`) }, h('legend', {}, `${x.label}: ${x.chosen.length} of ${x.count} free`));
+        box.append(...byLevel(x.key, x.from, new Set(x.chosen.map(sp => sp.name)), write(x.key, box)), problemSlot(`spells:${x.key}`));
+        return box;
+      });
+      return [main, ...extra];
+    });
     const groups = result.spellChoices.map(c => {
       const picked = new Set(c.chosen.map(sp => sp.name));
       const read = () => set(s => { s.spells = { ...s.spells, [c.key]: [...box.querySelectorAll('input:checked')].map(x => x.value) }; });
       const levels = [...new Set(c.list.map(sp => sp.level))].sort((a, b) => a - b);
       const count = level => c.chosen.filter(sp => (level ? sp.level > 0 : sp.level === 0)).length;
       const box = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${c.key}`) },
-        h('legend', {}, `${c.label}: ${c.cantrips ? `${count(0)} of ${c.cantrips} ${c.cantrips === 1 ? 'cantrip' : 'cantrips'}, ` : ''}${count(1)} of ${c.prepared} ${c.verb} ${c.prepared === 1 ? 'spell' : 'spells'}, up to level ${c.highest}`),
+        h('legend', {}, c.mixed ? `${c.label}: ${c.chosen.length} of ${c.prepared}, cantrips or spells up to level ${c.highest}, ${c.verb}` : `${c.label}: ${c.cantrips ? `${count(0)} of ${c.cantrips} ${c.cantrips === 1 ? 'cantrip' : 'cantrips'}, ` : ''}${count(1)} of ${c.prepared} ${c.verb} ${c.prepared === 1 ? 'spell' : 'spells'}, up to level ${c.highest}`),
         c.given.length ? h('p', { class: 'b-note' }, `Always known: ${listed(c.given.map(sp => sp.name))}.`) : null,
+        c.always.length ? h('p', { class: 'b-note' }, `Always prepared, besides these: ${[...new Set(c.always.map(sp => sp.from))].map(from => `${listed(c.always.filter(sp => sp.from === from).map(sp => sp.name))} (${from})`).join('; ')}.`) : null,
         levels.map(level => {
           const key = `${c.key}-${level}`;
           const here = c.list.filter(sp => sp.level === level);
@@ -581,7 +770,7 @@ export async function initBuilder(panel) {
         problemSlot(`spells:${c.key}`));
       return box;
     });
-    rebuild(spellsBox, ...(lists.length || groups.length ? [...lists, ...groups] : [h('p', { class: 'b-note' }, 'Your spellcasting classes and feats bring their spells here.')]));
+    rebuild(spellsBox, ...(lists.length || groups.length || books.length ? [...books, ...lists, ...groups] : [h('p', { class: 'b-note' }, 'Your spellcasting classes and feats bring their spells here.')]));
   }
 
   // The problems, each beside the choice it belongs to; the warnings and
@@ -628,10 +817,10 @@ export async function initBuilder(panel) {
         h('tbody', {}, h('tr', {}, h('th', { scope: 'row' }, 'Slots'), result.slots.map(n => (n ? h('td', {}, String(n)) : null))))) : null,
       result.pacts.map(p => h('p', {}, `Pact Magic (${p.class}): ${p.slots} slot${p.slots === 1 ? '' : 's'} of level ${p.level}.`)),
       h('ul', {}, result.spellcasting.map(s => h('li', {}, `${s.class}: ${s.cantrips ? `${s.cantrips} cantrips${s.given.length ? ` and ${s.given.length} always known` : ''}, ` : ''}${s.prepared} ${s.verb} spells, up to level ${s.highest}.`)))] : [];
-    const chosenSpells = result.spellChoices.filter(c => c.chosen.length || c.given.length).map(c => h('div', { class: 'sheet-spell-list' },
+    const chosenSpells = result.spellChoices.filter(c => c.chosen.length || c.given.length || c.always.length).map(c => h('div', { class: 'sheet-spell-list' },
       h('h4', {}, c.label),
-      h('ul', {}, [...c.given.map(sp => ({ ...sp, always: true })), ...c.chosen].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(sp => h('li', {},
-        `${sp.level ? `Level ${sp.level}` : 'Cantrip'}: ${sp.name}${sp.school ? `, ${sp.school}` : ''}${sp.special && !/^[—–]$/.test(sp.special) ? ` (${sp.special})` : ''}${sp.always ? ', always known' : ''}`)))));
+      h('ul', {}, [...c.given.map(sp => ({ ...sp, kept: 'always known' })), ...c.always.map(sp => ({ ...sp, kept: `always prepared, from ${sp.from}` })), ...c.chosen].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(sp => h('li', {},
+        `${sp.level ? `Level ${sp.level}` : 'Cantrip'}: ${sp.name}${sp.school ? `, ${sp.school}` : ''}${sp.special && !/^[—–]$/.test(sp.special) ? ` (${sp.special})` : ''}${sp.kept ? `, ${sp.kept}` : ''}`)))));
     rebuild(sheet,
       h('header', { class: 'sheet-head' },
         h('h2', { id: 'sheet-title' }, state.name.trim() || 'Your character'),
@@ -683,6 +872,32 @@ export async function initBuilder(panel) {
         h('h3', { id: `sheet-options-${o.class.replace(/\W+/g, '-')}` }, `${capital(o.noun)}s`),
         h('p', {}, `Regard ${o.regard}${o.forgone ? ` (${o.subclass} forgoes ${o.forgone})` : ''}`),
         [...o.given, ...o.taken].map(t => det(`option-${o.class}-${t.index ?? t.name}`, `${t.name}${t.art ? ` (${t.art})` : ''}${t.from ? `, from ${t.from}` : ''}`, h('div', { html: blocks(t.text) })))) : null)),
+      ...result.optionalRules.filter(r => r.card).map(r => h('section', { class: 'sheet-block', 'aria-labelledby': `sheet-card-${r.key.replace(/\W+/g, '-')}` },
+        h('h3', { id: `sheet-card-${r.key.replace(/\W+/g, '-')}` }, 'Monster Form'),
+        h('table', { class: 'sheet-scores' }, h('caption', {}, 'Ability scores, swapped'), h('tbody', {}, ABILITIES.map(a => h('tr', {}, h('th', { scope: 'row' }, a), h('td', {}, Number.isFinite(r.card.scores[a]) ? String(r.card.scores[a]) : '—'), h('td', {}, signed(r.card.mods[a])))))),
+        h('ul', {},
+          h('li', {}, `Armor Class ${Number.isFinite(r.card.armorClass.ac) ? r.card.armorClass.ac : '—'} (${r.card.armorClass.from})`),
+          h('li', {}, `${r.card.tempHp} Temporary Hit Points on transforming`),
+          h('li', {}, `Unarmed Strike ${signed(r.card.strike.attack)} to hit, ${r.card.strike.damage}${r.card.strike.attacks > 1 ? `; ${r.card.strike.attacks} attacks when you take the Attack action` : ''}`),
+          h('li', {}, `Saving throws: ${r.card.saves.map(x => `${x.ability} ${signed(x.bonus)}${x.proficient ? '*' : ''}`).join(', ')}`),
+          h('li', {}, `Skills: ${r.card.skills.map(x => `${x.name} ${signed(x.bonus)}`).join(', ')}; no others`),
+          h('li', {}, `Monstrous Aura: ${r.card.aura.feet} feet, ${r.card.aura.save} save DC ${r.card.aura.dc}`),
+          r.card.resistance ? h('li', {}, `Resistance to ${r.card.resistance} damage`) : null))),
+      result.noteChoices.some(c => c.named) || result.walkedChoices.some(c => c.chosen) || result.formChoices.some(c => c.chosen.length) ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-choices' }, h('h3', { id: 'sheet-choices' }, 'Chosen'),
+        h('ul', {},
+          result.noteChoices.filter(c => c.named).map(c => h('li', {}, `${c.label}: ${c.named}`)),
+          result.walkedChoices.filter(c => c.chosen).map(c => h('li', {}, `${c.label}: ${c.chosen}, walked`)),
+          result.formChoices.filter(c => c.chosen.length).map(c => h('li', {}, `${c.label}: ${listed(c.chosen)}`)))) : null,
+      result.tools.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-tools' }, h('h3', { id: 'sheet-tools' }, 'Tools'),
+        h('ul', {}, result.tools.map(t => h('li', {}, `${t.name}${t.expertise ? ', with Expertise' : ''} (${listed(t.from)})`)))) : null,
+      result.spellbooks.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-books' }, h('h3', { id: 'sheet-books' }, 'Spellbooks'),
+        result.spellbooks.map(b => h('div', { class: 'sheet-spell-list' }, h('h4', {}, `${b.class}'s spellbook`),
+          h('ul', {}, [...b.written].sort((x, y) => x.level - y.level || x.name.localeCompare(y.name)).map(sp => h('li', {}, `Level ${sp.level}: ${sp.name}${sp.school ? `, ${sp.school}` : ''}${sp.from ? `, from ${sp.from}` : ''}`)))))) : null,
+      result.revelationsKnown.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-revelations' },
+        h('h3', { id: 'sheet-revelations' }, 'Revelations'),
+        result.revelationsKnown.map(k => h('div', { class: 'sheet-revelations' },
+          h('h4', {}, `${k.class}: ${k.every ? `every Revelation (${k.known.length})` : `${k.known.length} known`}`),
+          k.known.map(r => det(`revelation-${k.class}-${r.name}`, `${r.name}, from ${r.from}`, h('p', { class: 'b-note' }, revelationLine(r)), revelationRules(r)))))) : null,
       result.classes.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-features' },
         h('h3', { id: 'sheet-features' }, 'Class features'),
         result.classes.map(c => h('div', { class: 'sheet-class' },
@@ -700,8 +915,20 @@ export async function initBuilder(panel) {
     const result = character(book, state);
     renderClasses(result);
     renderLanguages(result);
-    optionSection.hidden = !(result.optionChoices.length || result.pickChoices.length || result.masteryChoices.length);
+    optionSection.hidden = ![result.optionChoices, result.pickChoices, result.masteryChoices, result.spellSetChoices, result.kindChoices, result.saveChoices, result.weaponChoices, result.cantripTargets, result.optionalRules, result.formChoices, result.walkedChoices, result.noteChoices, result.swapChoices].some(x => x.length) && !result.revelationChoices.some(c => !c.moot);
+    renderForms(result);
+    renderSwaps(result);
+    renderWalked(result);
+    renderNotes(result);
+    renderKinds(result);
+    renderSaves(result);
+    renderWeapons(result);
+    renderTargets(result);
+    renderRules(result);
+    renderTools(result);
     renderPicks(result);
+    renderRevelations(result);
+    renderSpellSets(result);
     renderMastery(result);
     renderOptions(result);
     renderSpecies(result);

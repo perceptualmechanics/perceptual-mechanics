@@ -204,6 +204,21 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
   const weapons = srd.weapons ?? [];
   if (!weapons.length) fail('no weapons');
   for (const w of weapons) if (!w.name || !['Simple', 'Martial'].includes(w.category) || !['Melee', 'Ranged'].includes(w.range) || !/^[A-Z][a-z]+$/.test(w.mastery)) fail(`the weapon ${JSON.stringify(w)}`);
+  // The tools: the Artisan's Tools and the Other Tools, each with its
+  // ability, a Gaming Set's and a Musical Instrument's variants each a
+  // proficiency of its own. The Beasts a Druid's Wild Shape takes, each with
+  // a Challenge Rating and a speed, the forms the class recommends among
+  // them at theirs.
+  const tools = srd.tools ?? [], ABILITY = /^(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)$/;
+  const artisans = tools.filter(t => t.category === 'Artisan’s Tools'), others = tools.filter(t => t.category === 'Other');
+  if (artisans.length !== 17 || others.length !== 8) fail(`${artisans.length} Artisan's Tools and ${others.length} others, where the SRD lists 17 and 8`);
+  for (const t of tools) if (!ABILITY.test(t.ability) || !t.utilize || /\p{L}-\s|\s-\p{L}/u.test(JSON.stringify(t))) fail(`the tool ${JSON.stringify(t).slice(0, 120)}`);
+  const variants = name => tools.find(t => t.name === name)?.variants?.length ?? 0;
+  if (variants('Gaming Set') !== 4 || variants('Musical Instrument') !== 10) fail(`the Gaming Set has ${variants('Gaming Set')} variants and the Musical Instrument ${variants('Musical Instrument')}, where the SRD lists 4 and 10`);
+  const beasts = srd.beasts ?? [];
+  for (const b of beasts) if (!Number.isFinite(b.challenge) || !/^\d+(?:\/\d+)?$/.test(b.cr) || !/^\d+ ft\./.test(b.speed) || b.fly !== /Fly \d/.test(b.speed)) fail(`the Beast ${JSON.stringify(b)}`);
+  const recommended = { Rat: '0', 'Riding Horse': '1/4', Spider: '0', Wolf: '1/4' };
+  for (const [name, cr] of Object.entries(recommended)) if (beasts.find(b => b.name === name)?.cr !== cr) fail(`Wild Shape's recommended ${name} isn't among the Beasts at CR ${cr}`);
   const tongues = srd.languages;
   if (!tongues?.known?.every(l => tongues.standard.includes(l)) || !tongues.standard.length || !tongues.rare.length) fail(`the languages ${JSON.stringify(tongues)}`);
   const options = classes.flatMap(c => (c.options ?? []).flatMap(o => o.items.map(i => ({ c, i }))));
@@ -211,7 +226,7 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
 
   const log = problems.length
     ? [`\neuphonia srd: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: SRD 5.2.1 under its CC-BY attribution, ${srd.adapted.changes.length} change(s) recorded; ${checked} strings clean under the site's rules; ${srd.backgrounds.length} backgrounds, ${srd.species.length} species, ${srd.feats.length} feats and ${classes.length} classes resolving; ${slotRows} class levels' spell slots the Multiclass Spellcaster table's; advancement, modifiers, point costs and ${slots.length} rows of multiclass slots agreeing with the rules they tabulate; ${weapons.length} weapons with their masteries, ${tongues.standard.length + tongues.rare.length} languages and ${options.length} class options read`];
+    : [`ok: SRD 5.2.1 under its CC-BY attribution, ${srd.adapted.changes.length} change(s) recorded; ${checked} strings clean under the site's rules; ${srd.backgrounds.length} backgrounds, ${srd.species.length} species, ${srd.feats.length} feats and ${classes.length} classes resolving; ${slotRows} class levels' spell slots the Multiclass Spellcaster table's; advancement, modifiers, point costs and ${slots.length} rows of multiclass slots agreeing with the rules they tabulate; ${weapons.length} weapons with their masteries, ${tools.length} tools, ${beasts.length} Beasts, ${tongues.standard.length + tongues.rare.length} languages and ${options.length} class options read`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

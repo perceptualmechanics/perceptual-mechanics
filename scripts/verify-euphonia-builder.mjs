@@ -14,7 +14,7 @@ const ABLE = { Strength: 15, Dexterity: 14, Constitution: 13, Intelligence: 13, 
 const POINT_BUY = { Strength: 15, Dexterity: 14, Constitution: 13, Intelligence: 12, Wisdom: 10, Charisma: 8 };
 const someone = (classes, extra = {}) => ({
   species: 'Human', size: 'Medium', background: 'Soldier', increases: { Strength: 1, Dexterity: 1, Constitution: 1 },
-  method: 'rolled', base: ABLE, classes, originFeats: { 'Human Versatile': 'Alert' }, styles: { 'Fighter 1 Fighting Style': 'Archery' }, ...extra,
+  method: 'rolled', base: ABLE, classes, originFeats: { 'Human Versatile': 'Alert' }, styles: { 'Fighter 1 Fighting Style': 'Archery' }, tools: { 'Soldier tools': ['Gaming Set (Dice)'] }, ...extra,
 });
 
 export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes'), setting = read('characters'), subclasses = read('subclasses') } = {}) {
@@ -56,6 +56,34 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
       state.originFeats = { ...Object.fromEntries(got.originChoices.map(c => [c.key, 'Skilled'])), ...state.originFeats };
       // A skill choice a feature brings, from what it offers.
       state.skills = { ...Object.fromEntries(got.choices.map(c => [c.key, c.from.slice(0, c.count)])), ...state.skills };
+      // Tools: each choice its first that no other took; Expertise with the
+      // first tools it offers. A list's choice (a damage type, a half), a
+      // saving throw, a weapon, a Revelation, a land: the first offered, a
+      // Revelation not chosen elsewhere.
+      const tooled = new Set();
+      const had = c => new Set(got.tools.filter(t => t.from.some(src => src !== c.label)).map(t => t.name));
+      state.tools = Object.fromEntries([...got.toolChoices.map(c => { const pick = c.from.filter(t => !tooled.has(t) && !had(c).has(t)).slice(0, c.count); pick.forEach(t => tooled.add(t)); return [c.key, pick]; }),
+        ...got.toolExpertise.map(c => [c.key, c.from.filter(t => t !== c.skill).slice(0, c.count)])]);
+      state.kinds = Object.fromEntries(got.kindChoices.map(c => [c.key, state.kinds?.[c.key] ?? c.offered[0]]));
+      state.saves = Object.fromEntries(got.saveChoices.map(c => [c.key, c.offered[0]]));
+      state.weapons = Object.fromEntries(got.weaponChoices.map(c => [c.key, c.from[0].name]));
+      const revealed = new Set();
+      state.revelations = Object.fromEntries(got.revelationChoices.map(c => { const r = c.options.find(x => !revealed.has(x.name)); revealed.add(r.name); return [c.key, r.name]; }));
+      state.spellSets = Object.fromEntries(got.spellSetChoices.map(c => [c.key, c.sets[0].name]));
+      // A spellbook: its first level 1 spells, then the lowest others, to
+      // its count; a school's free picks, the first it offers. A class's
+      // cantrips, the first on its list (an invocation improves one).
+      state.spellbooks = Object.fromEntries(got.spellbooks.flatMap(b => {
+        const first = b.offered.filter(sp => sp.level === 1).slice(0, b.start), rest = b.offered.filter(sp => !first.includes(sp)).slice(0, b.free - first.length);
+        return [[b.class, [...first, ...rest].map(sp => sp.name)], ...b.extra.map(x => [x.key, x.from.slice(0, x.count).map(sp => sp.name)])];
+      }));
+      state.spells = { ...Object.fromEntries(got.spellcasting.map(sc => [sc.class, got.spellChoices.find(c => c.key === sc.class)?.list.filter(sp => sp.level === 0).slice(0, sc.cantrips).map(sp => sp.name) ?? []])), ...state.spells };
+      state.cantripTargets = Object.fromEntries(got.cantripTargets.map(c => [c.key, c.from[0]]));
+      // Wild Shape's forms, the first it allows; a name for each named
+      // choice; the first Revelation that can count as walked.
+      state.forms = Object.fromEntries(got.formChoices.map(c => [c.key, c.from.slice(0, c.count).map(b => b.name)]));
+      state.notes = Object.fromEntries(got.noteChoices.map(c => [c.key, `A ${c.what}`]));
+      state.walked = Object.fromEntries(got.walkedChoices.map(c => [c.key, c.offered[0]]));
     }
     return state;
   };
@@ -126,6 +154,76 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     else if (got.features.filter(f => f.subclass === s.name).length !== s.features.length) fail(`${c.name} (${s.name}): its features don't all come through at level 20`);
     else booked++;
   }
+
+  // Coverage: every feature of every class and subclass offered, every
+  // option a class's features list, and every section of an optional rule,
+  // that asks the player for a lasting choice, the engine reads into one.
+  // A choice made in play isn't one: a sentence framed by the moment it's
+  // made ("When you cast…", "Whenever you finish a Long Rest…", "As a Bonus
+  // Action…"), or choosing whom or where an effect lands ("each creature of
+  // your choice", "a point you choose", "a willing creature can choose to
+  // fail"). Each is built at level 20 with its subclass, every choice made,
+  // and each option taken alone.
+  // A choice is asked in its own words, or in what a feature has the player
+  // pick without saying "choose": forms known ("You know four Beast forms"),
+  // a Revelation that "counts as walked", "another skill", "one more
+  // accomplishment", an Attunement's spells ("You can swap any of them").
+  const CHOICE = /\b(?:of your choice|[Cc]hoose|your choice|You know \w+ Beast forms|counts as walked|another (?:skill|tool|cantrip)|one more \w+ from|swap any of them)\b/;
+  const INPLAY = new RegExp([
+    '^(?:When|Whenever|If|As (?:a|an|part)|Once|Each (?:time|turn)|Until|While|On (?:each|a|your)|At (?:the start|the end|any point)|Immediately|After|Before|In addition, when|For (?:1|one) (?:minute|hour)|Outside combat|Out of a fight)\\b',
+    '\\b(?:when|whenever|each time) you (?:cast|use|take|make|hit|open|call|spend|expend|finish|roll|curse|draw|go|create|gain an? \\w+ level|reach|replace|transform|teleport|inscribe|travel|end|sing|study|start|set)',
+    '\\b(?:creatures?|points?|spaces?|direction|ally|allies|targets?|objects?|places?|patients?|one|two) (?:of your choice|you choose|that you choose)',
+    '\\byou choose (?:which|for each|when|whether|the|one of them|either|how)\\b', '\\bwhen you choose\\b', '\\bChoose (?:a|any) number of\\b', '\\bcan choose to\\b', '\\byour choice for each\\b', '\\bChoose one:',
+    '\\bChoose (?:a|an|one|any number of) (?:creature|point|Observed creature|ability score|damage type, other than)',
+  ].join('|'));
+  // Sentences by paragraph, a sidebar (a blockquote: the book's commentary
+  // and summaries) left out. A sentence after one made in play, in its
+  // paragraph, tells what that does, and is in play too ("As a Bonus Action,
+  // choose a creature … you learn one of the following facts about it of
+  // your choice"); so is a list a paragraph made in play leads ("When you
+  // cast Find Familiar, … the following benefits. **Aerial or Aquatic.** …
+  // a Fly Speed or a Swim Speed (your choice)"). One that refuses a choice
+  // ("can't choose to fail", "don't choose sides") asks none.
+  const sentencesOf = text => {
+    let framed = false;
+    return text.replace(/^>.*$/gm, '').replace(/^\|.*\|$/gm, '').replace(/\n(?=- )/g, ' ').split(/\n{2,}/).filter(par => par.trim()).flatMap(par => {
+      const all = par.replace(/\n/g, ' ').split(/(?<=[.!?:])\s+(?=[A-Z*_(>-])/).map(x => x.replace(/^[\s>*_-]+/, '').replace(/^\*{0,3}[^*]{1,60}?\.\*{0,3}\s+/, ''));
+      const item = /^\s*(?:\*\*|- |\*[A-Z])/.test(par);
+      if (!item) framed = false;
+      const open = [];
+      for (const x of all) { if (INPLAY.test(x)) framed = true; else if (!framed) open.push(x); }
+      // The frame carries into the list a paragraph leads ("… the following
+      // benefits.", "…:"), and on through its items.
+      framed = framed && (item || /(?:following \w+\.?|:)\s*$/.test(par.trim()));
+      return open;
+    });
+  };
+  const asks = text => sentencesOf(text).filter(x => CHOICE.test(x) && !INPLAY.test(x) && !/\b(?:can't|cannot|don't|doesn't) choose\b/.test(x));
+  const unread = [];
+  let units = 0;
+  const cover = (c, got, f) => {
+    units++;
+    const left = asks(f.text);
+    if (left.length && !got.read.includes(`${c.name} ${f.level} ${f.name}`)) unread.push(`${c.name}${f.subclass ? ` (${f.subclass})` : ''} ${f.level}, ${f.name}: "${left[0].slice(0, 90)}"`);
+  };
+  for (const c of book.classes) {
+    for (const sub of c.subclasses) {
+      const base = { method: 'point', base: POINT_BUY, skills: { [c.name]: c.skills.from.slice(0, c.skills.count), 'Human Skillful': ['Arcana'] },
+        improvements: Object.fromEntries(c.improvements.map(i => [`${c.name} ${i.level}`, { feat: 'Ability Score Improvement', increases: { Dexterity: 1, Wisdom: 1 } }])),
+        optional: Object.fromEntries((c.optional_rules ?? []).map(r => [`${c.name} ${r.name}`, { taken: true, rites: { 4: 'passed', 8: 'failed', 12: 'failed', 16: 'passed' }, final: 'Mastery' }])) };
+      const got = run(complete(someone([{ class: c.name, level: 20, subclass: sub.name }], base), `${c.name} ${sub.name}`), `${c.name} ${sub.name}`);
+      if (!got) continue;
+      for (const f of got.features.filter(x => x.class === c.name && (!x.subclass || x.subclass === sub.name) && !x.option && !x.kind && (x.subclass || sub === c.subclasses[0]))) cover(c, got, { ...f, subclass: f.subclass });
+      // Each option alone, the first subclass's character taking it.
+      if (sub !== c.subclasses[0]) continue;
+      for (const o of got.optionChoices) for (const x of [...o.open, ...o.given]) {
+        const one = run({ ...complete(someone([{ class: c.name, level: 20, subclass: sub.name }], base), c.name), options: { [c.name]: [{ name: x.name, art: x.arts?.[0] }] } }, `${c.name} ${x.name}`);
+        const f = one?.features.find(y => y.option && y.name === x.name);
+        if (f) cover(c, one, f);
+      }
+    }
+  }
+  if (unread.length) fail(`${unread.length} feature(s) ask a lasting choice the builder doesn't offer:\n    ${unread.join('\n    ')}`);
 
   // Every class, to level 20 alone, with its first subclass, its feats and
   // its skills: nothing it can't read, and only the problems the choices
@@ -279,9 +377,13 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   for (const b of book.backgrounds.filter(x => x.source === 'Euphonia')) {
     const [a1, a2, a3] = b.ability_scores;
     const initiate = b.feat.startsWith('Magic Initiate');
-    const got = run({ ...someone([{ class: 'Fighter', level: 1 }]), background: b.name, increases: { [a1]: 1, [a2]: 1, [a3]: 1 },
+    const asked = { ...someone([{ class: 'Fighter', level: 1 }]), background: b.name, increases: { [a1]: 1, [a2]: 1, [a3]: 1 },
       originFeats: { 'Human Versatile': b.feat === 'Alert' ? 'Skilled' : 'Alert' }, featLists: { [b.name]: 'Wizard' },
-      skills: { Fighter: ['Animal Handling', 'Persuasion'].filter(x => !b.skills.includes(x)).concat(['Acrobatics']).slice(0, 2), 'Human Skillful': ['Arcana'], [`${b.name} skills`]: b.skill_choice?.from.slice(0, 1) } }, b.name);
+      skills: { Fighter: ['Animal Handling', 'Persuasion'].filter(x => !b.skills.includes(x)).concat(['Acrobatics']).slice(0, 2), 'Human Skillful': ['Arcana'], [`${b.name} skills`]: b.skill_choice?.from.slice(0, 1) } };
+    // Its tools, the first each choice offers (Skilled's are its three, as
+    // no skills are taken with it here).
+    const first = run(asked, b.name);
+    const got = first && run({ ...asked, tools: Object.fromEntries(first.toolChoices.map(c => [c.key, c.from.filter(t => !first.tools.some(x => x.name === t && x.from.some(src => src !== c.label))).slice(0, c.count)])) }, b.name);
     if (got?.problems.length) fail(`${b.name}: ${got.problems.map(p => p.message).join(' ')}`);
     else if (!got?.feats.some(f => f.from === b.name) || (initiate && !got.spellChoices.some(c => c.key === `feat ${b.name}`))) fail(`${b.name}: its feat doesn't come through`);
     else backgrounds++;
@@ -306,7 +408,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (!(r1?.problems.length === 0 && stealth(r1).bonus === r1.mod.Dexterity + 2 * r1.bonus && r6?.problems.length === 0 && r6.expertiseChoices.length === 2
     && twice?.problems.some(p => /already has Expertise/.test(p.message)) && unskilled?.problems.some(p => p.field === 'expertise:Rogue 1 Expertise')))
     fail(`a Rogue's Expertise isn't doubled, two and two more, once a skill, among its proficiencies: ${JSON.stringify([r1?.problems, r6?.problems])}`);
-  const scholar = pick => run(someone([{ class: 'Wizard', level: 2 }], { skills: { Wizard: ['Arcana', 'History'], 'Human Skillful': ['Athletics'] }, expertise: { 'Wizard 2 Scholar': pick } }), 'Scholar')?.problems.length;
+  const scholar = pick => run(someone([{ class: 'Wizard', level: 2 }], { skills: { Wizard: ['Arcana', 'History'], 'Human Skillful': ['Athletics'] }, expertise: { 'Wizard 2 Scholar': pick } }), 'Scholar')?.problems.filter(p => p.field.startsWith('expertise:')).length;
   if (!(scholar(['Arcana']) === 0 && scholar(['Athletics']) === 1)) fail('the Wizard\'s Scholar isn\'t held to its own list of skills');
   const crowner = run(someone([{ class: 'Natural Philosopher', level: 3, subclass: 'Crowner' }], { skills: { 'Natural Philosopher': ['Arcana', 'History', 'Insight'], 'Human Skillful': ['Athletics'] }, expertise: { 'Natural Philosopher 2 Instruments': [], 'Natural Philosopher 3 Reconstruction': ['Investigation'] } }), 'Crowner');
   const investigation = crowner?.skills.find(x => x.name === 'Investigation');
@@ -334,7 +436,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     const inv = r => r?.optionChoices.find(o => o.class === 'Warlock');
     const w12 = warlock(12, ['Witch Sight', 'Devouring Blade', 'Agonizing Blast', 'Agonizing Blast']);
     if (!(inv(warlock(1, []))?.count === 1 && inv(w12)?.count === 8)) fail(`Eldritch Invocations count ${inv(warlock(1, []))?.count} and ${inv(w12)?.count}, not 1 and 8`);
-    if (!(w12?.problems.some(p => p.field === 'option:Warlock:0' && /isn't open/.test(p.message)) && w12.problems.some(p => /Devouring Blade needs Thirsting Blade/.test(p.message)) && !w12.problems.some(p => /Agonizing Blast/.test(p.message)))) fail('invocations\' prerequisites, or Agonizing Blast\'s repeat, aren\'t held');
+    if (!(w12?.problems.some(p => p.field === 'option:Warlock:0' && /isn't open/.test(p.message)) && w12.problems.some(p => /Devouring Blade needs Thirsting Blade/.test(p.message)) && !w12.problems.some(p => p.field.startsWith('option:') && /Agonizing Blast/.test(p.message)))) fail('invocations\' prerequisites, or Agonizing Blast\'s repeat, aren\'t held');
     const meta = lv => as('Sorcerer', lv).optionChoices.find(o => o.class === 'Sorcerer')?.count;
     if (`${meta(2)},${meta(10)},${meta(17)}` !== '2,4,6') fail(`Metamagic counts ${meta(2)}, ${meta(10)}, ${meta(17)}, not 2, 4, 6`);
     const arcanum = lv => warlock(lv, []).spellChoices.filter(s => /Mystic Arcanum/.test(s.label)).map(s => s.highest).join();

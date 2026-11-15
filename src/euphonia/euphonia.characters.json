@@ -1,11 +1,11 @@
 {
  "provenance": {
   "source": "Euphonia.md",
-  "master": "~/mnt/euphonia/Euphonia.md",
-  "sha256": "1179b05e88d80f02e36f6a74eb2c5d1403061186ce69dfb69d3a0e4652da7560",
-  "modified": "2026-11-13T12:43:33+00:00",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "4c638a35f929c823113d837ae0b3142f4b7dca45d7da8bae63235b090d006fc1",
+  "modified": "2026-11-14T19:10:07-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 15,
+  "exporter_version": 18,
   "rules": {
    "banned": [
     "eladrin",
@@ -155,7 +155,7 @@
     ],
     "tool": "Carpenter's Tools",
     "equipment": "Choose A or B: (A) Spear, Shortsword, Carpenter's Tools, Leather Armor, Shovel, Healer's Kit, Traveler's Clothes, Bedroll, 11 GP; or (B) 50 GP",
-    "about": "You were in the Empire's war of 1618 to 1648, when every crown in Europe fought over German ground and the war fed on the villages it crossed: at Breitenfeld or Lützen, or a child the army took along, and the peace sent you home to find no home. Your trade is the one the war taught: drill by numbers, dig in, build the palisade, keep the men fed. If you're young for it, you learned it in Portugal's war or on Candia's walls. Every crown with a quarrel hires veterans; a mercenary colonel is as much your faction as any king, and the Agitators recruit men who have seen what crowns do to villages (see Powers and Factions). Fighters above all, Battle Masters in particular; Barbarians who found the rage in a breach; Clerics who buried too many; the Natural Philosopher who learned ballistics from a gunner.",
+    "about": "You were in the Empire's war of 1618 to 1648, when every crown in Europe fought over German ground and the war fed on the villages it crossed: at Breitenfeld or Lützen, or a child the army took along, and the peace sent you home to find no home. Your trade is the one the war taught: drill by numbers, dig in, build the palisade, keep the men fed. If you're young for it, you learned it in Portugal's war or on Candia's walls. Every crown with a quarrel hires veterans; a mercenary colonel is as much your faction as any king, and the Agitators recruit veterans who have seen what crowns do to villages (see Powers and Factions). Fighters above all, Battle Masters in particular; Barbarians who found the rage in a breach; Clerics who buried too many; the Natural Philosopher who learned ballistics from a gunner.",
     "door": "Any mercenary colonel's camp feeds you, and most will hire you.",
     "debt": "The Agitators think you owe the villages the war ate, and they've come to collect."
    },
@@ -173,7 +173,7 @@
     ],
     "tool": "Smith's Tools",
     "equipment": "Choose A or B: (A) Smith's Tools, Sling, 20 Sling Bullets, Dagger, Hunting Trap, 10 Iron Spikes, Hooded Lantern, Oil, Traveler's Clothes, Pouch of salt, 14 GP; or (B) 50 GP",
-    "about": "You grew up where the Hidden come over. The village ironed and salted its doors every night of the dark half, Samhain to Beltane; the smith was the most important man in it, and you were his hand. You know the tide by the moon, which fields nobody plows and why the fiddler who came home last spring is a hundred years out of date. Somebody you knew was taken, and somebody went to get them back, or didn't. You sleep light: you came back from the open night because you heard it coming. Your country's name for the Hidden is in The State of the World. A Border-Born may have grown up on either side of the border (*Euphonia: Life on the Border*). In the courts, you're the one who notices the iron is missing from the doorframe.",
+    "about": "You grew up where the Hidden come over. The village ironed and salted its doors every night of the dark half, Samhain to Beltane; the smith was the most important person in it, and you were her hand. You know the tide by the moon, which fields nobody plows and why the fiddler who came home last spring is a hundred years out of date. Somebody you knew was taken, and somebody went to get them back, or didn't. You sleep light: you came back from the open night because you heard it coming. Your country's name for the Hidden is in The State of the World. A Border-Born may have grown up on either side of the border (*Euphonia: Life on the Border*). In the courts, you're the one who notices the iron is missing from the doorframe.",
     "door": "Any border village takes you in and asks you to look at its doors.",
     "debt": "Somebody you knew was taken, and nobody has brought them back."
    },
@@ -243,6 +243,6 @@
     "line": "A fiendish mark from the hells. In a Europe that burns people for the Devil's pact, a tiefling is proof of a crime nobody committed; Spain's Inquisition, which demands evidence, is safer ground than a prince-bishop's court"
    }
   ],
-  "species_status": "draft"
+  "species_status": "final"
  }
 }

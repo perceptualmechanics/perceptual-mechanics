@@ -1,11 +1,11 @@
 {
  "provenance": {
   "source": "Euphonia.md",
-  "master": "~/mnt/euphonia/Euphonia.md",
-  "sha256": "1179b05e88d80f02e36f6a74eb2c5d1403061186ce69dfb69d3a0e4652da7560",
-  "modified": "2026-11-13T12:43:33+00:00",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "4c638a35f929c823113d837ae0b3142f4b7dca45d7da8bae63235b090d006fc1",
+  "modified": "2026-11-14T19:10:07-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 15,
+  "exporter_version": 18,
   "rules": {
    "banned": [
     "eladrin",
@@ -100,8 +100,7 @@
      "Proficiency Bonus",
      "Class Features",
      "Computation Die",
-     "Exploit",
-     "Exploit on Your Read"
+     "Exploit"
     ],
     "rows": [
      {
@@ -109,160 +108,140 @@
       "Proficiency Bonus": "+2",
       "Class Features": "Calculation, Encyclopedic, Observe, Exploit, Sidestep",
       "Computation Die": "—",
-      "Exploit": "2d4",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d4"
      },
      {
       "Level": "2",
       "Proficiency Bonus": "+2",
       "Class Features": "Direct, Anticipate, Deduction, Mental Index",
       "Computation Die": "d4",
-      "Exploit": "2d4",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d4"
      },
      {
       "Level": "3",
       "Proficiency Bonus": "+2",
       "Class Features": "Counsellor Discipline",
       "Computation Die": "d4",
-      "Exploit": "2d4",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d4"
      },
      {
       "Level": "4",
       "Proficiency Bonus": "+2",
       "Class Features": "Ability Score Improvement, Read About It",
       "Computation Die": "d4",
-      "Exploit": "2d4",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d4"
      },
      {
       "Level": "5",
       "Proficiency Bonus": "+3",
       "Class Features": "Wider Gaze",
       "Computation Die": "d8",
-      "Exploit": "2d8",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d8"
      },
      {
       "Level": "6",
       "Proficiency Bonus": "+3",
       "Class Features": "",
       "Computation Die": "d8",
-      "Exploit": "2d8",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d8"
      },
      {
       "Level": "7",
       "Proficiency Bonus": "+3",
       "Class Features": "Agile Nerves, Outdo",
       "Computation Die": "d8",
-      "Exploit": "2d8",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d8"
      },
      {
       "Level": "8",
       "Proficiency Bonus": "+3",
       "Class Features": "Ability Score Improvement",
       "Computation Die": "d8",
-      "Exploit": "2d8",
-      "Exploit on Your Read": "—"
+      "Exploit": "2d8"
      },
      {
       "Level": "9",
       "Proficiency Bonus": "+4",
       "Class Features": "Total Recall",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "—"
+      "Exploit": "3d8"
      },
      {
       "Level": "10",
       "Proficiency Bonus": "+4",
       "Class Features": "",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "—"
+      "Exploit": "3d8"
      },
      {
       "Level": "11",
       "Proficiency Bonus": "+4",
       "Class Features": "Cold Read",
       "Computation Die": "d8",
-      "Exploit": "2d8",
-      "Exploit on Your Read": "4d8"
+      "Exploit": "4d8"
      },
      {
       "Level": "12",
       "Proficiency Bonus": "+4",
       "Class Features": "Ability Score Improvement",
       "Computation Die": "d8",
-      "Exploit": "2d8",
-      "Exploit on Your Read": "4d8"
+      "Exploit": "4d8"
      },
      {
       "Level": "13",
       "Proficiency Bonus": "+5",
       "Class Features": "Closed Mind",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "5d8"
+      "Exploit": "5d8"
      },
      {
       "Level": "14",
       "Proficiency Bonus": "+5",
       "Class Features": "",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "5d8"
+      "Exploit": "5d8"
      },
      {
       "Level": "15",
       "Proficiency Bonus": "+5",
       "Class Features": "Never Surprised",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "5d8"
+      "Exploit": "5d8"
      },
      {
       "Level": "16",
       "Proficiency Bonus": "+5",
       "Class Features": "Ability Score Improvement",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "5d8"
+      "Exploit": "5d8"
      },
      {
       "Level": "17",
       "Proficiency Bonus": "+6",
       "Class Features": "Far Projection",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "6d8"
+      "Exploit": "6d8"
      },
      {
       "Level": "18",
       "Proficiency Bonus": "+6",
       "Class Features": "Unreadable",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "6d8"
+      "Exploit": "6d8"
      },
      {
       "Level": "19",
       "Proficiency Bonus": "+6",
       "Class Features": "Epic Boon",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "6d8"
+      "Exploit": "6d8"
      },
      {
       "Level": "20",
       "Proficiency Bonus": "+6",
       "Class Features": "Checkmate",
       "Computation Die": "d8",
-      "Exploit": "3d8",
-      "Exploit on Your Read": "6d8"
+      "Exploit": "6d8"
      }
     ]
    },
@@ -305,7 +284,7 @@
     {
      "level": 2,
      "name": "Deduction",
-     "text": "You can go quiet and compute. You can spend 10 minutes in stillness, doing nothing but thinking, and then ask the DM one question about a creature, an object, a place, or an event that you have Observed or seen, or whose evidence you have examined. The DM answers with the most likely truth that follows from what you have observed, in a sentence or two. If what you have observed isn't enough to support an answer, the DM tells you so, and the use isn't expended.\n\nThe answer is about what is and what is likely to happen: where the smuggler took the cargo, which of three doors is trapped, how many guards will be on the wall at midnight. It never tells you what a creature thinks or feels. If anything you based the answer on was false (a forged letter, a disguise, a lie you believed), the answer follows from the false data, and the DM doesn't tell you so.\n\nThe answer is the next step, not the last one: where to look, who to ask, what doesn't fit. A question that would end a mystery gets the piece of it the evidence supports. The DM can hold an answer until the end of the scene or your next rest; the use isn't expended until the answer is given.\n\nDeduction isn't an ability check, and there's nothing to roll: an Intelligence (Investigation) check finds the clues, and Deduction is what you conclude from them. You can use Deduction a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+     "text": "You can go quiet and compute. You can spend 10 minutes in stillness, doing nothing but thinking, and then ask the DM one question about a creature, an object, a place, or an event that you have Observed or seen, or whose evidence you have examined. The DM answers with the most likely truth that follows from what you have observed, in a sentence or two. If what you have observed isn't enough to support an answer, the DM tells you so, and the use isn't expended.\n\nThe answer is about what is and what is likely to happen: where the smuggler took the cargo, which of three doors is trapped, how many guards will be on the wall at midnight. It never tells you what a creature thinks or feels. If anything you based the answer on was false (a forged letter, a disguise, a lie you believed), the answer follows from the false data, and the DM doesn't tell you so.\n\nThe answer moves the case forward without closing it: where to look, who to ask, what doesn't fit. A question that would end a mystery gets the piece of it the evidence supports. The DM can hold an answer until the end of the scene or your next rest; the use isn't expended until the answer is given.\n\nDeduction isn't an ability check, and there's nothing to roll: an Intelligence (Investigation) check finds the clues, and Deduction is what you conclude from them. You can use Deduction a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
     },
     {
      "level": 2,
@@ -350,7 +329,7 @@
     {
      "level": 11,
      "name": "Cold Read",
-     "text": "When you roll Initiative, you can Observe one creature you can see (no action required).\n\n**Your Read.** From now on, one creature at a time takes the full weight of what you see. Whenever you Observe a creature you can see, you can make it your **read**. It stays your read until you make another creature your read, it drops to 0 Hit Points, or it stops being Observed. When you use Exploit on a hit against your read, it deals the extra damage in the Exploit on Your Read column of the Counsellor Features table: two more dice than the Exploit column (three more from level 17). The full weight of what you see has moved to your read, so against any other creature Exploit now deals fewer dice than before (the Exploit column drops from 3d8 to 2d8 at this level)."
+     "text": "When you roll Initiative, you can Observe one creature you can see (no action required). Exploit's dice also grow at this level, and again at levels 13 and 17, as the Exploit column of the Counsellor Features table shows."
     },
     {
      "level": 13,
@@ -380,7 +359,7 @@
     {
      "level": 20,
      "name": "Checkmate",
-     "text": "You see every piece at once. Your Intelligence score increases by 2, to a maximum of 22. In addition, when you roll Initiative, you Observe every creature you can see (no action required). You learn Observe's facts about only one of them, your choice, and you can make that one your read. The others stay Observed only until the end of the first round of the combat, unless you Observe them again: the opening is yours.\n\n> **Playing a Counsellor**\n>\n> You don't have to be a genius to play one. The rules do the computing: Observe and Deduction are questions, and the DM answers them the way a trained mind would. Your job is to ask the right question at the right time. \"What's it weakest against?\" on turn one; \"Where did the smuggler take the cargo?\" after you've walked the docks.\n>\n> Say what you see. When you Observe, tell the table what you've learned, then say what it means: \"It favors its left side. Hit it there.\" Exploit only works when someone hits, so the party needs to hear where to aim. From 11th, make your read whatever the party is already hitting; the bigger dice follow the table's choice, not the other way round.\n>\n> Don't hang back. Sidestep takes half the blow and moves you out of it, and you learn more about anything you're close enough to touch. A Counsellor at the back with a crossbow is safe; one at the Fighter's shoulder sees more and is gone before the second swing.\n>\n> Being right is the fun, and being right is also the friction. Direct is advice, and your allies can ignore it. Let them. A Counsellor who's right and gets overruled is a better scene than one who's obeyed. Deduction runs on what you observed: if someone has fed you a lie, you'll be confidently wrong, and you won't know it.\n>\n> If you play one of the Hollowed, make sure your table has talked about boundaries beforehand. A mind that computes without feeling is a hard fit for a party, and each table works out for itself how hard. Know the pitfalls going in, and keep the coldness in character.\n\n> **Answering a Counsellor (for the DM)**\n>\n> Deduction and the Disciplines' questions (Staff Officer, Lay of the Land, Siegecraft, The Hum, Follow the Money) ask you for true answers on the spot. A few habits keep that easy.\n>\n> **Give the next step, not the last.** \"Who killed the factor?\" in the first scene gets the lead the evidence supports: the ink on the cuff, the clerk who was paid twice, the door that was locked from the wrong side. The player gets a true answer every time; you hand over a scene to play, not the end of the story.\n>\n> **Take your time.** You can hold an answer until the end of the scene or the next rest, and a Far Projection until the start of the next session; the use isn't spent until you answer. If you haven't decided the thing they're asking about, decide it now, or tell them when they'll know.\n>\n> **Planted evidence is your friend.** If the Counsellor reasoned from a forgery or a disguise, the answer follows the lie, and you don't say so. That's a session, not a spoiled one."
+     "text": "You see every piece at once. Your Intelligence score increases by 2, to a maximum of 22. In addition, when you roll Initiative, you Observe every creature you can see (no action required). You learn Observe's facts about only one of them, your choice. The others stay Observed only until the end of the first round of the combat, unless you Observe them again: the opening is yours.\n\n> **Playing a Counsellor**\n>\n> You don't have to be a genius to play one. The rules do the computing: Observe and Deduction are questions, and the DM answers them the way a trained mind would. Your job is to ask the right question at the right time. \"What's it weakest against?\" on turn one; \"Where did the smuggler take the cargo?\" after you've walked the docks.\n>\n> Say what you see. When you Observe, tell the table what you've learned, then say what it means: \"It favors its left side. Hit it there.\" Exploit only works when someone hits, so the party needs to hear where to aim.\n>\n> Don't hang back. Sidestep takes half the blow and moves you out of it, and you learn more about anything you're close enough to touch. A Counsellor at the back with a crossbow is safe; one at the Fighter's shoulder sees more and is gone before the second swing.\n>\n> Being right is the fun, and being right is also the friction. Direct is advice, and your allies can ignore it. Let them. A Counsellor who's right and gets overruled is a better scene than one who's obeyed. Deduction runs on what you observed: if someone has fed you a lie, you'll be confidently wrong, and you won't know it.\n>\n> If you play one of the Hollowed, make sure your table has talked about boundaries beforehand. A mind that computes without feeling is a hard fit for a party, and each table works out for itself how hard. Know the pitfalls going in, and keep the coldness in character.\n\n> **Answering a Counsellor (for the DM)**\n>\n> Deduction and the Disciplines' questions (Staff Officer, Lay of the Land, Siegecraft, The Hum, Follow the Money) ask you for true answers on the spot. A few habits keep that easy.\n>\n> **Give the next step, not the last.** \"Who killed the factor?\" in the first scene gets the lead the evidence supports: the ink on the cuff, the clerk who was paid twice, the door that was locked from the wrong side. The player gets a true answer every time; you hand over a scene to play, not the end of the story.\n>\n> **Take your time.** You can hold an answer until the end of the scene or the next rest, and a Far Projection until the start of the next session; the use isn't spent until you answer. If you haven't decided the thing they're asking about, decide it now, or tell them when they'll know.\n>\n> **Planted evidence is your friend.** If the Counsellor reasoned from a forgery or a disguise, the answer follows the lie, and you don't say so. That's a session, not a spoiled one."
     }
    ],
    "subclasses": [
@@ -391,7 +370,7 @@
       {
        "level": 3,
        "name": "Letters of Credit",
-       "text": "You are a factor of a house: a bank, a merchant company, or a guild, which you and the DM choose together. You gain proficiency in the Persuasion skill and with Calligrapher's Supplies; if you already have either, choose another skill or tool. In any settlement where your house has standing (the DM decides where; most towns and cities), you can deposit coin and valuables with it and draw them out again in any other settlement where it has standing, so your wealth travels as a letter instead of a wagon.\n\nSome houses at work around 1668:\n\n| House | Where | Known for |\n|---|---|---|\n| The Genoese bankers | Genoa, and the court at Madrid | Lending to the Spanish crown against its silver fleets (the *asentistas*) |\n| The Bank of Amsterdam | Amsterdam (the *Wisselbank*, 1609) | The exchange bank of Europe's trade; its bank money was trusted further than coin |\n| Stockholms Banco, and the Riksbank | Stockholm | Europe's first banknotes (1661); the bank failed, and the Estates founded the Riksbank in its place in 1668 |\n| The goldsmith-bankers | London (Lombard Street) | Holding merchants' deposits and lending to Charles II |\n| The court factors | The German courts | Supplying and financing princes and their armies (the *Hoffaktoren*) |\n| The sarrafs | Istanbul and the Ottoman cities | Changing, lending, and remitting money for the court and its tax-farmers |\n| The Armenian merchants of New Julfa | Isfahan, and from London to Manila | A trading network run on partnership contracts and letters |\n| The Gujarati financiers | Surat, and the Indian Ocean | Moving money by the *hundi*, a bill of exchange honored from Mughal India to the Persian Gulf; Virji Vora of Surat lent to the East India Companies |\n| The House of the Bird | Mutapa's court, Sofala, and the Cape | A royal treasury that learned credit from the Swahili and Gujarati merchants it hosts, and banks platinum's wealth as paper |"
+       "text": "You are a factor of a house: a bank, a merchant company, or a guild, which you and the DM choose together. You gain proficiency in the Persuasion skill and with Calligrapher's Supplies; if you already have either, choose another skill or tool. In any settlement where your house has standing (the DM decides where; most towns and cities), you can deposit coin and valuables with it and draw them out again in any other settlement where it has standing, so your wealth travels as a letter instead of a wagon.\n\nSome houses at work around 1668:\n\n| House | Where | Known for |\n|---|---|---|\n| The Genoese bankers | Genoa, and the court at Madrid | Lending to the Spanish crown against its silver fleets (the *asentistas*) |\n| The Bank of Amsterdam | Amsterdam (the *Wisselbank*, 1609) | The exchange bank of Europe's trade; its bank money was trusted further than coin |\n| Stockholms Banco, and the Riksbank | Stockholm | Europe's first banknotes (1661); the bank failed, and the Estates founded the Riksbank in its place in 1668 |\n| The goldsmith-bankers | London (Lombard Street) | Holding merchants' deposits and lending to Charles II |\n| The court factors | The German courts | Supplying and financing princes and their armies (the *Hoffaktoren*) |\n| The sarrafs | Istanbul and the Ottoman cities | Changing, lending, and remitting money for the court and its tax-farmers |\n| The Armenian merchants of New Julfa | Isfahan, and from London to Manila | A trading network run on partnership contracts and letters |\n| The Gujarati financiers | Surat, and the Indian Ocean | Moving money by the *hundi*, a bill of exchange honored from Mughal India to the Persian Gulf; Virji Vora of Surat lent to the East India Companies |\n| The House of the Bird | Sofala, Mutapa's capital, and the Cape | A royal treasury that learned credit from the Swahili and Gujarati merchants it hosts, and banks platinum's wealth as paper |"
       },
       {
        "level": 3,
@@ -411,7 +390,7 @@
       {
        "level": 6,
        "name": "Underwrite",
-       "text": "When you finish a Long Rest, you can underwrite one creature: yourself or an ally. You spend the house's money on it:. The first time before your next Long Rest that the underwritten creature drops to 0 Hit Points without dying outright, the policy pays: it regains Hit Points equal to a roll of your Exploit dice (from level 11, the Exploit on Your Read column), as long as you don't have the Incapacitated condition (unless the underwritten creature is you). A policy that can't pay because you have that condition isn't spent: it pays the next time the creature drops to 0 Hit Points before your next Long Rest while you don't have it."
+       "text": "When you finish a Long Rest, you can underwrite one creature: yourself or an ally. You spend the house's money on it:. The first time before your next Long Rest that the underwritten creature drops to 0 Hit Points without dying outright, the policy pays: it regains Hit Points equal to a roll of your Exploit dice."
       },
       {
        "level": 6,
@@ -715,8 +694,11 @@
     "score": 13,
     "gains": "Hit Point Die",
     "spell_slots": null,
-    "text": "You must have an Intelligence score of 13 or higher. Gain the following trait from the Core Counsellor Traits table: Hit Point Die. Gain the Counsellor's level 1 features, which are listed in the Counsellor Features table. Your computation die and Exploit's dice come only from your Counsellor levels. If you have more levels in another class than in this one, Sidestep and Anticipate keep their combined pool of uses, equal to your Counsellor level (minimum of two), even from level 5 (Wider Gaze doesn't lift the limit); Exploit has a separate pool of uses equal to your Counsellor level; and you regain all expended uses of these features only when you finish a Long Rest. If you can cast spells, Cold Read's extra dice don't apply after you cast a spell until the start of your next turn."
-   }
+    "text": "You must have an Intelligence score of 13 or higher. Gain the following trait from the Core Counsellor Traits table: Hit Point Die. Gain the Counsellor's level 1 features, which are listed in the Counsellor Features table. If you have more levels in another class than in this one, Exploit, Sidestep, and Anticipate share one pool of uses equal to twice your Counsellor level, and you regain all expended uses when you finish a Long Rest."
+   },
+   "cosmography": null,
+   "optional_rules": [],
+   "new_spells": []
   },
   {
    "name": "Courtier",
@@ -1153,7 +1135,7 @@
       {
        "level": 3,
        "name": "The Sword or the Book",
-       "text": "None of your accomplishments can count as Letters, so your Regard can be no higher than 4, and an accomplishment that lists only Letters is closed to you. In exchange, you gain proficiency in the Athletics skill (if you already have it, choose another skill instead), and the master of any fencing school will open the salle to you and let you train there.\n\n**Affairs of Honor.** You have The Code without spending an accomplishment on it (if you already have it, you gain one more accomplishment from the art of Arms instead), and people of rank bring you their quarrels: a duel you arrange is fought by its terms, and the magistrates hear of it last. Roll on the table below when someone comes to you for satisfaction."
+       "text": "Your college forgoes Letters. In exchange, you gain proficiency in the Athletics skill (if you already have it, choose another skill instead), and the master of any fencing school will open the salle to you and let you train there.\n\n**Affairs of Honor.** You have The Code without spending an accomplishment on it (if you already have it, you gain one more accomplishment from the art of Arms instead), and people of rank bring you their quarrels: a duel you arrange is fought by its terms, and the magistrates hear of it last. Roll on the table below when someone comes to you for satisfaction."
       },
       {
        "level": 3,
@@ -1162,13 +1144,13 @@
       },
       {
        "level": 3,
-       "name": "Economy",
-       "text": "When you take the Attack action and could make more than one attack, you can make one attack instead. On a hit, it deals extra damage equal to a second roll of the weapon's damage dice plus your Charisma modifier, and your next use of The Riposte before the start of your next turn costs no Ease. Until you can make more than one attack (Extra Attack, at Courtier level 5), this feature waits; from then on, every turn asks the duelist's question: two cuts, or one cut and wait."
+       "name": "The Circle",
+       "text": "Your Challenge draws the circle for you. While your Challenge lasts, the creature you've challenged provokes an Opportunity Attack from you when it enters your reach, and you don't provoke Opportunity Attacks from it."
       },
       {
        "level": 6,
-       "name": "The Circle",
-       "text": "Your Challenge draws the circle for you. While your Challenge lasts, the creature you've challenged provokes an Opportunity Attack from you when it enters your reach, and you don't provoke Opportunity Attacks from it."
+       "name": "Economy",
+       "text": "When you take the Attack action and could make more than one attack, you can make one attack instead. On a hit, it deals extra damage equal to a second roll of the weapon's damage dice plus your Charisma modifier, and your next use of The Riposte before the start of your next turn costs no Ease. Every turn asks the duelist's question: two cuts, or one cut and wait."
       },
       {
        "level": 10,
@@ -1189,7 +1171,7 @@
       {
        "level": 3,
        "name": "What the Eye Can See",
-       "text": "None of your accomplishments can count as Mysteries, so your Regard can be no higher than 4, and an accomplishment that lists only Mysteries is closed to you. A Great Work counts as Arts for you: your masterpiece is a painting (a different work from The Masterpiece, your level 14 feature). In exchange, you gain proficiency with Painter's Supplies and one other type of Artisan's Tools (if you already have either, choose another tool instead)."
+       "text": "Your college forgoes Mysteries. In exchange, you gain proficiency with Painter's Supplies and one other type of Artisan's Tools (if you already have either, choose another tool instead)."
       },
       {
        "level": 3,
@@ -1256,7 +1238,7 @@
       {
        "level": 3,
        "name": "People, Not Canvases",
-       "text": "None of your accomplishments can count as Arts, so your Regard can be no higher than 4, and an accomplishment that lists only Arts is closed to you. In exchange, you gain proficiency in the Insight and Medicine skills (if you already have either, choose another skill instead), and the physicians of any hospital will let you work beside them."
+       "text": "Your college forgoes Arts. In exchange, you gain proficiency in the Insight and Medicine skills (if you already have either, choose another skill instead), and the physicians of any hospital will let you work beside them."
       },
       {
        "level": 3,
@@ -1287,7 +1269,7 @@
       {
        "level": 3,
        "name": "The Stage over the Field",
-       "text": "None of your accomplishments can count as Arms, so your Regard can be no higher than 4, and an accomplishment that lists only Arms is closed to you. In exchange, you gain proficiency in the Performance skill and with the Disguise Kit (if you already have either, choose another skill or tool instead), and you can perform anything you've seen performed, even once. You also gain a Fighting Style feat of your choice: stage swordplay is choreography, but it's choreography with a real blade.\n\n**The Repertory.** A company or a patron will take you on for a season wherever plays are licensed, and some will hide you where they aren't. Roll on the table below when you're between engagements."
+       "text": "Your college forgoes Arms. In exchange, you gain proficiency in the Performance skill and with the Disguise Kit (if you already have either, choose another skill or tool instead), and you can perform anything you've seen performed, even once. You also gain a Fighting Style feat of your choice: stage swordplay is choreography, but it's choreography with a real blade.\n\n**The Repertory.** A company or a patron will take you on for a season wherever plays are licensed, and some will hide you where they aren't. Roll on the table below when you're between engagements."
       },
       {
        "level": 3,
@@ -1641,8 +1623,11 @@
      "fraction": 0.5,
      "round": "up"
     },
-    "text": "You must have a Charisma score of 13 or higher. Gain the following traits from the Core Courtier Traits table: Hit Point Die, proficiency in one skill of your choice, and training with Light armor. Gain the Courtier's level 1 features, which are listed in the Courtier Features table. For multiclass spell slots, add half your Courtier levels (round up). If you have more levels in another class than in this one, your Ease maximum can't exceed your Courtier level, you regain expended Ease only when you finish a Long Rest, and Telling Cut adds your Regard instead of your Charisma modifier."
-   }
+    "text": "You must have a Charisma score of 13 or higher. Gain the following traits from the Core Courtier Traits table: Hit Point Die, proficiency in one skill of your choice, and training with Light armor. Gain the Courtier's level 1 features, which are listed in the Courtier Features table. For multiclass spell slots, add half your Courtier levels (round up). If you have more levels in another class than in this one, your Ease maximum can't exceed your Courtier level, and you regain expended Ease only when you finish a Long Rest."
+   },
+   "cosmography": null,
+   "optional_rules": [],
+   "new_spells": []
   },
   {
    "name": "Mhizha",
@@ -1688,6 +1673,7 @@
      "Class Features",
      "Arc Gun",
      "Devices",
+     "Preparations",
      "Cantrips",
      "Prepared Spells",
      "1",
@@ -1703,6 +1689,7 @@
       "Class Features": "Spellcasting, Arc Gun, Tinker, Preparations",
       "Arc Gun": "1d10",
       "Devices": "—",
+      "Preparations": "2",
       "Cantrips": "2",
       "Prepared Spells": "2",
       "1": "2",
@@ -1717,6 +1704,7 @@
       "Class Features": "Devices",
       "Arc Gun": "1d10",
       "Devices": "1",
+      "Preparations": "2",
       "Cantrips": "2",
       "Prepared Spells": "3",
       "1": "2",
@@ -1731,6 +1719,7 @@
       "Class Features": "Mhizha Subclass",
       "Arc Gun": "1d10",
       "Devices": "2",
+      "Preparations": "2",
       "Cantrips": "2",
       "Prepared Spells": "4",
       "1": "3",
@@ -1745,6 +1734,7 @@
       "Class Features": "Ability Score Improvement",
       "Arc Gun": "1d10",
       "Devices": "2",
+      "Preparations": "2",
       "Cantrips": "2",
       "Prepared Spells": "5",
       "1": "3",
@@ -1759,6 +1749,7 @@
       "Class Features": "Overcharge",
       "Arc Gun": "2d10",
       "Devices": "2",
+      "Preparations": "3",
       "Cantrips": "2",
       "Prepared Spells": "6",
       "1": "4",
@@ -1773,6 +1764,7 @@
       "Class Features": "",
       "Arc Gun": "2d10",
       "Devices": "3",
+      "Preparations": "3",
       "Cantrips": "2",
       "Prepared Spells": "6",
       "1": "4",
@@ -1787,6 +1779,7 @@
       "Class Features": "Field Workshop, Flare",
       "Arc Gun": "3d10",
       "Devices": "3",
+      "Preparations": "3",
       "Cantrips": "2",
       "Prepared Spells": "7",
       "1": "4",
@@ -1801,6 +1794,7 @@
       "Class Features": "Ability Score Improvement",
       "Arc Gun": "3d10",
       "Devices": "3",
+      "Preparations": "3",
       "Cantrips": "2",
       "Prepared Spells": "7",
       "1": "4",
@@ -1815,6 +1809,7 @@
       "Class Features": "How It Works",
       "Arc Gun": "3d10",
       "Devices": "3",
+      "Preparations": "4",
       "Cantrips": "2",
       "Prepared Spells": "9",
       "1": "4",
@@ -1829,6 +1824,7 @@
       "Class Features": "",
       "Arc Gun": "3d10",
       "Devices": "4",
+      "Preparations": "4",
       "Cantrips": "3",
       "Prepared Spells": "9",
       "1": "4",
@@ -1843,6 +1839,7 @@
       "Class Features": "Arc Chain",
       "Arc Gun": "3d10",
       "Devices": "4",
+      "Preparations": "4",
       "Cantrips": "3",
       "Prepared Spells": "10",
       "1": "4",
@@ -1857,6 +1854,7 @@
       "Class Features": "Ability Score Improvement",
       "Arc Gun": "3d10",
       "Devices": "4",
+      "Preparations": "4",
       "Cantrips": "3",
       "Prepared Spells": "10",
       "1": "4",
@@ -1871,6 +1869,7 @@
       "Class Features": "Master Artisan",
       "Arc Gun": "3d10",
       "Devices": "4",
+      "Preparations": "5",
       "Cantrips": "3",
       "Prepared Spells": "11",
       "1": "4",
@@ -1885,6 +1884,7 @@
       "Class Features": "",
       "Arc Gun": "3d10",
       "Devices": "5",
+      "Preparations": "5",
       "Cantrips": "4",
       "Prepared Spells": "11",
       "1": "4",
@@ -1899,6 +1899,7 @@
       "Class Features": "Overload",
       "Arc Gun": "4d10",
       "Devices": "5",
+      "Preparations": "5",
       "Cantrips": "4",
       "Prepared Spells": "12",
       "1": "4",
@@ -1913,6 +1914,7 @@
       "Class Features": "Ability Score Improvement",
       "Arc Gun": "4d10",
       "Devices": "5",
+      "Preparations": "5",
       "Cantrips": "4",
       "Prepared Spells": "12",
       "1": "4",
@@ -1927,6 +1929,7 @@
       "Class Features": "The Sealed Art",
       "Arc Gun": "4d10",
       "Devices": "5",
+      "Preparations": "6",
       "Cantrips": "4",
       "Prepared Spells": "14",
       "1": "4",
@@ -1941,6 +1944,7 @@
       "Class Features": "Grounded",
       "Arc Gun": "4d10",
       "Devices": "5",
+      "Preparations": "6",
       "Cantrips": "4",
       "Prepared Spells": "14",
       "1": "4",
@@ -1955,6 +1959,7 @@
       "Class Features": "Epic Boon",
       "Arc Gun": "4d10",
       "Devices": "5",
+      "Preparations": "6",
       "Cantrips": "4",
       "Prepared Spells": "15",
       "1": "4",
@@ -1969,6 +1974,7 @@
       "Class Features": "Lightning Itself",
       "Arc Gun": "5d10",
       "Devices": "5",
+      "Preparations": "6",
       "Cantrips": "4",
       "Prepared Spells": "15",
       "1": "4",
@@ -1998,7 +2004,7 @@
     {
      "level": 1,
      "name": "Preparations",
-     "text": "You make your own smoke, slick, and flash. When you finish a Long Rest, you can spend 1 hour of it with Tinker's Tools to make a number of Preparations equal to your Proficiency Bonus; from level 2, it's the same hour in which you build your devices. They last until you finish your next Long Rest, and only you know how to use them. Preparations aren't magical.\n\nAs a Bonus Action, you expend a Preparation and throw it at a point you can see within 30 feet of yourself, and choose which kind it is. Its saving throw uses your spell save DC.\n\n- *Smoke.* A 10-foot-radius Sphere centered on that point is Heavily Obscured until the end of your next turn. A strong wind disperses it.\n- *Slick.* A 10-foot square centered on that point is Difficult Terrain for 1 minute. Each creature in the square when it appears, and each creature that enters it or starts its turn there, makes a Dexterity saving throw; on a failed save, it has the Prone condition. (A Prone creature is easy for your friends' blades and hard to hit from range, your Arc Gun included.)\n- *Flash.* Each creature in a 5-foot-radius Sphere centered on that point makes a Constitution saving throw. On a failed save, it has the Blinded condition until the end of its next turn."
+     "text": "You make your own smoke, slick, and flash. When you finish a Long Rest, you can spend 1 hour of it with Tinker's Tools to make the number of Preparations shown in the Preparations column of the Mhizha Features table. They last until you finish your next Long Rest, and only you know how to use them. Preparations aren't magical.\n\nAs a Bonus Action, you expend a Preparation and throw it at a point you can see within 30 feet of yourself, and choose which kind it is. Its saving throw uses your spell save DC.\n\n- *Smoke.* A 10-foot-radius Sphere centered on that point is Heavily Obscured until the end of your next turn. A strong wind disperses it.\n- *Slick.* A 10-foot square centered on that point is Difficult Terrain for 1 minute. Each creature in the square when it appears, and each creature that enters it or starts its turn there, makes a Dexterity saving throw; on a failed save, it has the Prone condition. (A Prone creature is easy for your friends' blades and hard to hit from range, your Arc Gun included.)\n- *Flash.* Each creature in a 5-foot-radius Sphere centered on that point makes a Constitution saving throw. On a failed save, it has the Blinded condition until the end of its next turn."
     },
     {
      "level": 2,
@@ -2068,7 +2074,7 @@
     {
      "level": 20,
      "name": "Lightning Itself",
-     "text": "The Arc Gun's damage (the shot's, including extra damage your features add to the shot) ignores Resistance, and a creature with Immunity to the shot's damage type has Resistance to it instead. Its damage rises to 5d10, as shown in the Arc Gun column of the Mhizha Features table.\n\n> **Playing a Mhizha**\n>\n> You're the party's workshop. Each morning you build the day's devices and hand most of them out: the Shock Gauntlet and the Charged Plate to whoever stands in front, Spring Boots or the Grapple Line to whoever has to get up the wall. When you know tonight what tomorrow's job is, build for it.\n>\n> In a fight, fire the Arc Gun every turn and spend your Bonus Action on a Preparation: Smoke to cover a retreat, Flash on the most dangerous enemy, Slick to drop a crowd for your friends' blades (not for your Arc Gun, since a Prone target is hard to hit from range). From 5th level, Overcharge turns a spell slot into a heavy hit; from 7th, Flare can blind an attacker before its roll.\n>\n> Keep a tool in your hand: every Mhizha spell is cast through one. Out of a fight, your hands open doors. You mend, you take things apart to see how they work, and abroad a drifting Mutapan lamp gets you into houses a letter of introduction wouldn't.\n\n## Mhizha Spell List\n\n#### Cantrips (Level 0 Mhizha Spells)\n\nDancing Lights, Guidance, Light, Mage Hand, Mending, Message, Prestidigitation, Resistance, Spare the Dying\n\n#### Level 1 Mhizha Spells\n\nAlarm, Cure Wounds, Detect Magic, Disguise Self, Expeditious Retreat, Faerie Fire, False Life, Feather Fall, Floating Disk, Identify, Jump, Longstrider, Purify Food and Drink, Sanctuary, Thunderwave, Unseen Servant\n\n#### Level 2 Mhizha Spells\n\nAcid Arrow, Aid, Alter Self, Arcane Lock, Blur, Continual Flame, Darkvision, Enhance Ability, Enlarge/Reduce, Heat Metal, Invisibility, Knock, Lesser Restoration, Levitate, Locate Object, Magic Mouth, Magic Weapon, Rope Trick, See Invisibility, Spider Climb, Web\n\n#### Level 3 Mhizha Spells\n\nBlink, Dispel Magic, Fly, Gaseous Form, Glyph of Warding, Haste, Lightning Bolt, Protection from Energy, Revivify, Tiny Hut, Water Breathing, Water Walk\n\n#### Level 4 Mhizha Spells\n\nArcane Eye, Fabricate, Faithful Hound, Fire Shield, Freedom of Movement, Resilient Sphere, Secret Chest, Stone Shape, Stoneskin\n\n#### Level 5 Mhizha Spells\n\nAnimate Objects, Arcane Hand, Creation, Greater Restoration, Passwall, Telekinesis, Wall of Stone"
+     "text": "The Arc Gun's damage (the shot's, including extra damage your features add to the shot) ignores Resistance, and a creature with Immunity to the shot's damage type has Resistance to it instead. Its damage rises to 5d10, as shown in the Arc Gun column of the Mhizha Features table.\n\n> **Playing a Mhizha**\n>\n> You're the party's workshop. Each morning you build the day's devices and hand most of them out: the Shock Gauntlet and the Charged Plate to whoever stands in front, Spring Boots or the Grapple Line to whoever has to get up the wall.\n>\n> In a fight, fire the Arc Gun every turn and spend your Bonus Action on a Preparation: Smoke to cover a retreat, Flash on the most dangerous enemy, Slick to drop a crowd for your friends' blades. From 5th level, Overcharge turns a spell slot into a heavy hit; from 7th, Flare can blind an attacker before its roll.\n>\n> Keep a tool in your hand: every Mhizha spell is cast through one. Out of a fight, your hands open doors: you mend, retune and take things apart to see how they work.\n\n## Mhizha Spell List\n\n#### Cantrips (Level 0 Mhizha Spells)\n\nDancing Lights, Guidance, Light, Mage Hand, Mending, Message, Prestidigitation, Resistance, Spare the Dying\n\n#### Level 1 Mhizha Spells\n\nAlarm, Cure Wounds, Detect Magic, Disguise Self, Expeditious Retreat, Faerie Fire, False Life, Feather Fall, Floating Disk, Identify, Jump, Longstrider, Purify Food and Drink, Sanctuary, Thunderwave, Unseen Servant\n\n#### Level 2 Mhizha Spells\n\nAcid Arrow, Aid, Alter Self, Arcane Lock, Blur, Continual Flame, Darkvision, Enhance Ability, Enlarge/Reduce, Heat Metal, Invisibility, Knock, Lesser Restoration, Levitate, Locate Object, Magic Mouth, Magic Weapon, Rope Trick, See Invisibility, Spider Climb, Web\n\n#### Level 3 Mhizha Spells\n\nBlink, Dispel Magic, Fly, Gaseous Form, Glyph of Warding, Haste, Lightning Bolt, Protection from Energy, Revivify, Tiny Hut, Water Breathing, Water Walk\n\n#### Level 4 Mhizha Spells\n\nArcane Eye, Fabricate, Faithful Hound, Fire Shield, Freedom of Movement, Resilient Sphere, Secret Chest, Stone Shape, Stoneskin\n\n#### Level 5 Mhizha Spells\n\nAnimate Objects, Arcane Hand, Creation, Greater Restoration, Passwall, Telekinesis, Wall of Stone"
     }
    ],
    "subclasses": [
@@ -2136,7 +2142,7 @@
       {
        "level": 10,
        "name": "Citrinitas",
-       "text": "The Work wakes. Your Salt elixir restores 3d8 Hit Points plus your Intelligence modifier, and each batch of elixirs you make has four elixirs. In addition, when you make your elixirs, you can combine any two of them into a single draught (which uses up both), and it grants both effects when it's drunk.\n\n*A Drop on the Tongue.* You can identify a potion, poison, or drug by tasting a drop of it over 1 minute. You learn what it is and what it does, and you suffer none of its effects from the taste."
+       "text": "The Work wakes. Your Salt elixir restores 3d8 Hit Points plus your Intelligence modifier. In addition, when you make your elixirs, you can combine any two of them into a single draught (which uses up both), and it grants both effects when it's drunk.\n\n*A Drop on the Tongue.* You can identify a potion, poison, or drug by tasting a drop of it over 1 minute. You learn what it is and what it does, and you suffer none of its effects from the taste."
       },
       {
        "level": 14,
@@ -2147,7 +2153,7 @@
     },
     {
      "name": "Constructor",
-     "lead": "Whether a construct is ever more than a machine: hint, don't answer.",
+     "lead": "<!-- design note (was a mark): whether a construct is ever more than a machine: hint, don't answer. -->",
      "features": [
       {
        "level": 3,
@@ -2330,7 +2336,7 @@
       {
        "level": 3,
        "name": "Powered Suit",
-       "text": "If you have training with Medium armor, you gain Heavy armor training (a multiclass Mhizha with only Light armor training gains none, and wears the suit untrained). With Tinker's Tools and 1 hour of work, you can make any armor you wear into your suit. Whatever it was made from, the suit is Heavy armor with a base Armor Class of 18 (your Dexterity doesn't add to it), it has no Strength requirement for you, and you have Disadvantage on Dexterity (Stealth) checks while you wear it. You can have only one suit at a time; if you make another, the old one is ordinary armor again. The suit's systems run down both arms, so while you hold a Shield, you can't benefit from the suit's Armor Class, and it gives none of the following benefits. While you wear it, the following benefits apply:\n\n- *Built In.* The Arc Gun is built into the suit; you fire it without holding it, and the suit is your Spellcasting Focus, so you don't need to hold a tool to cast a Mhizha spell.\n- *Gauntlets.* You can deliver the Arc Gun's shot as a blow: firing it at a creature within 5 feet of you doesn't give you Disadvantage, and you can have that shot deal Force damage instead of Lightning damage. Your Unarmed Strikes deal Force damage equal to 1 plus your Intelligence modifier, and you use Intelligence for their attack rolls.\n- *Tailored.* A suit is cut to pass. Out of a fight, it can look like ordinary clothes of your station: court dress, a merchant's coat, a laborer's wrap. A creature that looks closely can tell it's armor with a successful Wisdom (Perception) check against your spell save DC.\n- *Model.* When you finish a Long Rest, choose the suit's model. *Infiltrator:* the suit doesn't give you Disadvantage on Dexterity (Stealth) checks, and your Speed increases by 10 feet. *Guardian:* the suit is built for the gate: you gain a +1 bonus to Armor Class while you wear it. In addition, when a creature you can see hits an ally within 5 feet of you with an attack roll, you can take a Reaction to reduce the damage by 1d10 plus your Intelligence modifier; you can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+       "text": "You gain Heavy armor training. With Tinker's Tools and 1 hour of work, you can make any armor you wear into your suit. Whatever it was made from, the suit is Heavy armor with a base Armor Class of 18 (your Dexterity doesn't add to it), it has no Strength requirement for you, and you have Disadvantage on Dexterity (Stealth) checks while you wear it. You can have only one suit at a time; if you make another, the old one is ordinary armor again. The suit's systems run down both arms, so it gives you its Armor Class and the following benefits only while you aren't holding a Shield:\n\n- *Built In.* The Arc Gun is built into the suit; you fire it without holding it, and the suit is your Spellcasting Focus, so you don't need to hold a tool to cast a Mhizha spell.\n- *Gauntlets.* You can deliver the Arc Gun's shot as a blow: firing it at a creature within 5 feet of you doesn't give you Disadvantage, and you can have that shot deal Force damage instead of Lightning damage. Your Unarmed Strikes deal Force damage equal to 1 plus your Intelligence modifier, and you use Intelligence for their attack rolls.\n- *Tailored.* A suit is cut to pass. Out of a fight, it can look like ordinary clothes of your station: court dress, a merchant's coat, a laborer's wrap. A creature that looks closely can tell it's armor with a successful Wisdom (Perception) check against your spell save DC.\n- *Model.* When you finish a Long Rest, choose the suit's model. *Infiltrator:* the suit doesn't give you Disadvantage on Dexterity (Stealth) checks, and your Speed increases by 10 feet. *Guardian:* the suit is built for the gate: you gain a +1 bonus to Armor Class while you wear it. In addition, when a creature you can see hits an ally within 5 feet of you with an attack roll, you can take a Reaction to reduce the damage by 1d10 plus your Intelligence modifier; you can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 3,
@@ -2408,7 +2414,7 @@
       {
        "level": 3,
        "name": "Contour Lines",
-       "text": "As a Bonus Action, you expend two folds and draw the ground steeper than it is. Each creature of your choice in a 10-foot-radius Sphere centered on a point you can see within 60 feet of yourself makes a Strength saving throw against your spell save DC. On a failed save, a creature takes Force damage equal to the Arc Gun's dice, has the Prone condition, and has a Speed of 0 until the end of its next turn. On a successful save, it takes half as much damage only. (As with Slick, a creature you knock Prone is for the blades, not your Arc Gun.)"
+       "text": "As a Bonus Action, you expend two folds and draw the ground steeper than it is. Each creature of your choice in a 10-foot-radius Sphere centered on a point you can see within 60 feet of yourself makes a Strength saving throw against your spell save DC. On a failed save, a creature takes Force damage equal to the Arc Gun's dice, has the Prone condition, and has a Speed of 0 until the end of its next turn. On a successful save, it takes half as much damage only."
       },
       {
        "level": 6,
@@ -2749,8 +2755,11 @@
      "fraction": 0.5,
      "round": "up"
     },
-    "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Mhizha Traits table: Hit Point Die, proficiency with Tinker's Tools, and training with Light armor. Gain the Mhizha's level 1 features, which are listed in the Mhizha Features table. For multiclass spell slots, add half your Mhizha levels (round up), as you would Paladin or Ranger levels. If you have more levels in another class than in this one, you build one device instead of the number shown in the Devices column of the Mhizha Features table, and you make a number of Preparations equal to half your Mhizha levels (round up) instead of your Proficiency Bonus."
-   }
+    "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Mhizha Traits table: Hit Point Die, proficiency with Tinker's Tools, and training with Light armor. Gain the Mhizha's level 1 features, which are listed in the Mhizha Features table. For multiclass spell slots, add half your Mhizha levels (round up)."
+   },
+   "cosmography": null,
+   "optional_rules": [],
+   "new_spells": []
   },
   {
    "name": "Natural Philosopher",
@@ -2969,7 +2978,7 @@
     {
      "level": 3,
      "name": "Mechanism",
-     "text": "You turn the place against the people in it, using a law of nature the place already obeys. You need a feature you're studying: a structure under load, a slope, a body of water held back, a fire or a store of powder, a pocket of gas or smoke, a strong light. It has to be part of the place: nothing you or your allies placed, lit, or created there.\n\n**Finding the feature.** When you study the place around you (a Bonus Action, or 1 minute outside combat), the DM names one feature in it you could set off, which laws from the Mechanism table it allows, and what it can reach, and you're now studying that feature. A place worth fighting in has at least one: a chandelier or a beam overhead, a staircase or a slope, a canal or a cistern, a hearth or a powder store, a window in the sun. A rich place (a foundry, a ship's deck, a mill) has two or three, and studying it again finds the next. If a place truly has none, the DM says so, and the study costs you no action. Scouting a room for a minute before the door opens is time well spent.\n\nAs a Utilize action, you set off the feature you're studying with one precise act from where you stand: a cut rope, a kicked wedge, an opened sluice, a tipped brazier, an angled lens, or, at a distance, a shot, a thrown stone, or a tug on a line already rigged. Choose one of the laws the DM named for it. Each creature of your choice in a 20-foot Cube that lies within the feature's reach, with its point of origin within 60 feet of you, makes a saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). Everything was settled when you studied the place, so nothing waits on a ruling now.\n\nOn a failed save, a creature takes the damage shown in the Mechanism column of the Natural Philosopher Features table and suffers the law's effect. On a successful save, it takes half as much damage only. The feature is then spent, though what it leaves behind stays: what's left (rubble, a flooded floor) isn't a new feature until the DM says the place has changed enough to hold one.\n\nYou can use this feature five times, and you regain all expended uses when you finish a Long Rest.\n\n| Law | The feature | Save | Damage | On a failed save |\n|---|---|---|---|---|\n| Mechanics | A load, a slope, a hanging weight | Dexterity | Bludgeoning | Restrained (pinned) until the end of its next turn. The area becomes Difficult Terrain (rubble). |\n| Heat | A fire, a furnace, powder, a sealed vessel | Dexterity | Fire | Pushed 10 feet away from the feature, and has Disadvantage on attack rolls until the end of its next turn, scorched and dazzled. Flammable objects in the area catch fire. |\n| Pneumatics | Gas, smoke, foul air | Constitution | Poison | Poisoned until the end of its next turn. The area is Heavily Obscured until the end of your next turn. |\n| Hydrostatics | Water held back: a sluice, a cistern, a dam | Strength | Bludgeoning | Pushed 10 feet away from the feature and Prone. The area becomes Difficult Terrain for 1 minute. |\n| Optics | Strong light, and a lens, mirror, or glass that's part of the place | Constitution | Radiant | Blinded until the end of its next turn. |\n\nOutside a fight, the same knowledge springs a trap from a safe distance, opens a sluice gate to flood a cellar, or brings down a wall where you want it to fall.\n\n> **Features by Place**\n>\n> For the DM: what a study of the place can turn up. Name the first one that fits; a second study names the next.\n>\n> | Place | Features (laws) |\n> |---|---|\n> | Tavern, hall, or palace room | A chandelier or a roof beam (Mechanics); the hearth, lamp oil, or spirits (Heat); a tall window at noon (Optics) |\n> | Street, square, or market | Scaffolding, a hanging sign, barrels stacked on a slope (Mechanics); a forge or cookfires (Heat); a fountain, a well, or a canal lock (Hydrostatics) |\n> | Ship's deck | A boom, a yard, cargo in the hoist (Mechanics); the powder room or the galley fire (Heat); the sea through a gunport (Hydrostatics) |\n> | Temple, church, or mosque | A bell, a gallery, scaffolding (Mechanics); candles, lamps, or censers (Heat); colored glass or a mirror in the sun (Optics) |\n> | Mine, cellar, or sewer | Pit props, ore buckets (Mechanics); firedamp or foul air (Pneumatics); sump water (Hydrostatics) |\n> | Workshop, foundry, or mill | A crane, a millwheel (Mechanics); the furnace or crucible (Heat); fumes (Pneumatics); the millrace (Hydrostatics) |\n> | Forest or hillside | A dead tree, a scree slope, a balanced boulder (Mechanics); a swollen stream or a dam (Hydrostatics); a charcoal burner's mound (Heat or Pneumatics) |\n> | Marsh, paddy, or riverbank | A dike or a sluice (Hydrostatics); marsh gas (Pneumatics); a cut bank (Mechanics) |\n> | Open road or field | Often nothing; sometimes a hayrick (Heat) or a steep bank (Mechanics). The Experimentalist brings its own. |"
+     "text": "You turn the place against the people in it, using a law of nature the place already obeys. You need a feature you're studying: a structure under load, a slope, a body of water held back, a fire or a store of powder, a pocket of gas or smoke, a strong light. It has to be part of the place: nothing you or your allies placed, lit, or created there.\n\n**Finding the feature.** When you study the place around you (a Bonus Action, or 1 minute outside combat), the DM names one feature in it you could set off, which laws from the Mechanism table it allows, and what it can reach, and you're now studying that feature. A place worth fighting in has at least one: a chandelier or a beam overhead, a staircase or a slope, a canal or a cistern, a hearth or a powder store, a window in the sun. A rich place (a foundry, a ship's deck, a mill) has two or three, and studying it again finds the next. If a place truly has none, the DM says so, and the study costs you no action. Scouting a room for a minute before the door opens is time well spent.\n\nAs a Utilize action, you set off the feature you're studying with one precise act from where you stand: a cut rope, a kicked wedge, an opened sluice, a tipped brazier, an angled lens, or, at a distance, a shot, a thrown stone, or a tug on a line already rigged. Choose one of the laws the DM named for it. Each creature of your choice in a 20-foot Cube that lies within the feature's reach, with its point of origin within 60 feet of you, makes a saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus).\n\nOn a failed save, a creature takes the damage shown in the Mechanism column of the Natural Philosopher Features table and suffers the law's effect. On a successful save, it takes half as much damage only. The feature is then spent, though what it leaves behind stays: what's left (rubble, a flooded floor) isn't a new feature until the DM says the place has changed enough to hold one.\n\nYou can use this feature five times, and you regain all expended uses when you finish a Long Rest.\n\n| Law | The feature | Save | Damage | On a failed save |\n|---|---|---|---|---|\n| Mechanics | A load, a slope, a hanging weight | Dexterity | Bludgeoning | Restrained (pinned) until the end of its next turn. The area becomes Difficult Terrain (rubble). |\n| Heat | A fire, a furnace, powder, a sealed vessel | Dexterity | Fire | Pushed 10 feet away from the feature, and has Disadvantage on attack rolls until the end of its next turn, scorched and dazzled. Flammable objects in the area catch fire. |\n| Pneumatics | Gas, smoke, foul air | Constitution | Poison | Poisoned until the end of its next turn. The area is Heavily Obscured until the end of your next turn. |\n| Hydrostatics | Water held back: a sluice, a cistern, a dam | Strength | Bludgeoning | Pushed 10 feet away from the feature and Prone. The area becomes Difficult Terrain for 1 minute. |\n| Optics | Strong light, and a lens, mirror, or glass that's part of the place | Constitution | Radiant | Blinded until the end of its next turn. |\n\nOutside a fight, the same knowledge springs a trap from a safe distance, opens a sluice gate to flood a cellar, or brings down a wall where you want it to fall.\n\n> **Features by Place**\n>\n> For the DM: what a study of the place can turn up. Name the first one that fits; a second study names the next.\n>\n> | Place | Features (laws) |\n> |---|---|\n> | Tavern, hall, or palace room | A chandelier or a roof beam (Mechanics); the hearth, lamp oil, or spirits (Heat); a tall window at noon (Optics) |\n> | Street, square, or market | Scaffolding, a hanging sign, barrels stacked on a slope (Mechanics); a forge or cookfires (Heat); a fountain, a well, or a canal lock (Hydrostatics) |\n> | Ship's deck | A boom, a yard, cargo in the hoist (Mechanics); the powder room or the galley fire (Heat); the sea through a gunport (Hydrostatics) |\n> | Temple, church, or mosque | A bell, a gallery, scaffolding (Mechanics); candles, lamps, or censers (Heat); colored glass or a mirror in the sun (Optics) |\n> | Mine, cellar, or sewer | Pit props, ore buckets (Mechanics); firedamp or foul air (Pneumatics); sump water (Hydrostatics) |\n> | Workshop, foundry, or mill | A crane, a millwheel (Mechanics); the furnace or crucible (Heat); fumes (Pneumatics); the millrace (Hydrostatics) |\n> | Forest or hillside | A dead tree, a scree slope, a balanced boulder (Mechanics); a swollen stream or a dam (Hydrostatics); a charcoal burner's mound (Heat or Pneumatics) |\n> | Marsh, paddy, or riverbank | A dike or a sluice (Hydrostatics); marsh gas (Pneumatics); a cut bank (Mechanics) |\n> | Open road or field | Often nothing; sometimes a hayrick (Heat) or a steep bank (Mechanics). The Experimentalist brings its own. |"
     },
     {
      "level": 3,
@@ -3029,7 +3038,7 @@
     {
      "level": 20,
      "name": "The System of the World",
-     "text": "You see the whole of it. You're studying every creature you can see within 60 feet of yourself, and each of your attack rolls with a crossbow or a firearm against them has Advantage, as if you had Aimed. Calculated Shot and your subclass's features work against any of them. You still learn a fact only from a creature you study with your Bonus Action. When you finish a Short Rest, you regain one expended use of Mechanism.\n\n> **Running a Natural Philosopher**\n>\n> This class asks the DM for true answers more often than any other: Study, First Causes, Correspondence, Experimentum Crucis, Eureka!, and most of the subclasses' features. Three rules carry nearly all of it.\n>\n> - **Answer with facts, not conclusions.** \"The ash is from oak, and the fire was laid this morning\" is a fact; \"the innkeeper did it\" is a conclusion. The class learns the what and leaves the who and the why for play. None of its features tells what a creature thinks, feels, or intends.\n> - **One or two sentences.** The answer is the next step in the mystery, not the last one.\n> - **When you don't know, say \"not enough to examine.\"** The use isn't spent, and the player looks somewhere else.\n>\n> Settle the place when it's studied, not when it's used. When the Philosopher studies a room, name the feature, its laws, and its reach then (Features by Place has a list), so that setting it off later waits on nothing. When the class's work earns money (a Master Gunner's wage, a Cabinet's specimens), use the defaults in the text and adjust to the place. And the features that hand you a story are yours to pull on: a letter answered, a display noticed by whoever paid for the feast, a name made in the learned world."
+     "text": "You see the whole of it. You're studying every creature you can see within 60 feet of yourself, and each of your attack rolls with a crossbow or a firearm against them has Advantage, as if you had Aimed. Calculated Shot and your subclass's features work against any of them. You still learn a fact only from a creature you study with your Bonus Action. When you finish a Short Rest, you regain one expended use of Mechanism.\n\n> **Running a Natural Philosopher**\n>\n> This class asks the DM for true answers more often than any other: Study, First Causes, Correspondence, Experimentum Crucis, Eureka!, and most of the subclasses' features. Three rules carry nearly all of it.\n>\n> - **Answer with facts, not conclusions.** \"The ash is from oak, and the fire was laid this morning\" is a fact; \"the innkeeper did it\" is a conclusion. The class learns the what and leaves the who and the why for play. None of its features tells what a creature thinks, feels, or intends.\n> - **One or two sentences.** A lead, not the solution.\n> - **When you don't know, say \"not enough to examine.\"** The use isn't spent, and the player looks somewhere else.\n>\n> Settle the place when it's studied, not when it's used. When the Philosopher studies a room, name the feature, its laws, and its reach then (Features by Place has a list), so that setting it off later waits on nothing. When the class's work earns money (a Master Gunner's wage, a Cabinet's specimens), use the defaults in the text and adjust to the place. And the features that hand you a story are yours to pull on: a letter answered, a patron impressed by the fireworks, a name made in the learned world."
     }
    ],
    "subclasses": [
@@ -3234,7 +3243,7 @@
       {
        "level": 3,
        "name": "Reading the Currents",
-       "text": "When a creature you can see hits an ally within 30 feet of you with an attack roll, you can take a Reaction to halve the attack's damage against that ally (round down). Each use comes from the supply you share with Course Correction."
+       "text": "When a creature you can see hits an ally within 30 feet of you with an attack roll, you can take a Reaction to halve the attack's damage against that ally (round down)."
       },
       {
        "level": 6,
@@ -3278,8 +3287,11 @@
     "score": 13,
     "gains": "Hit Point Die, proficiency with one tool of your choice from the Natural Philosopher's tool list, and training with Light armor",
     "spell_slots": null,
-    "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Natural Philosopher Traits table: Hit Point Die, proficiency with one tool of your choice from the Natural Philosopher's tool list, and training with Light armor. Gain the Natural Philosopher's level 1 features, which are listed in the Natural Philosopher Features table. If you have levels in another class, you can use Mechanism a number of times equal to your Natural Philosopher level (maximum of five), instead of five times."
-   }
+    "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Natural Philosopher Traits table: Hit Point Die, proficiency with one tool of your choice from the Natural Philosopher's tool list, and training with Light armor. Gain the Natural Philosopher's level 1 features, which are listed in the Natural Philosopher Features table."
+   },
+   "cosmography": null,
+   "optional_rules": [],
+   "new_spells": []
   },
   {
    "name": "Physician",
@@ -3724,7 +3736,7 @@
     {
      "level": 2,
      "name": "Treatment",
-     "text": "You can end an affliction with skill rather than magic. As a Utilize action, you can expend one use of a Healer's Kit and make an Intelligence (Medicine) check to treat your patient, who must be within your reach. The DC depends on what you are treating; ending the Poisoned condition needs no check unless a spell or other effect with a save DC imposed it:\n\n| Treatment | DC |\n|---|---|\n| End the Poisoned condition | No check |\n| End the Blinded or Deafened condition (if not permanent) | 12 |\n| Cure one disease | 13 |\n| End the Paralyzed condition | 15 |\n| Remove one level of Exhaustion (once per creature per Long Rest) | 15 |\n\nIf a spell or other effect with a save DC imposed the condition, the DC is that save DC instead whenever it's higher (for the Poisoned condition, it always is). A disease you cure with Treatment is beaten the slow way, and the creature can't catch that disease again.\n\nOn a success, the chosen effect ends; if a spell or other ongoing effect imposed the condition, that effect ends on the creature. Either way, the use of the Healer's Kit is spent, and you can't attempt the same treatment on that creature again until it finishes a Short or Long Rest."
+     "text": "You can end an affliction with skill rather than magic. As a Utilize action, you can expend one use of a Healer's Kit and make an Intelligence (Medicine) check to treat your patient, who must be within your reach. The DC depends on what you are treating:\n\n| Treatment | DC |\n|---|---|\n| End the Poisoned condition | No check |\n| End the Blinded or Deafened condition (if not permanent) | 12 |\n| Cure one disease | 13 |\n| End the Paralyzed condition | 15 |\n| Remove one level of Exhaustion (once per creature per Long Rest) | 15 |\n\nIf a spell or other effect with a save DC imposed the condition, the DC is that save DC instead whenever it's higher (for the Poisoned condition, it always is). A disease you cure with Treatment is beaten the slow way, and the creature can't catch that disease again.\n\nOn a success, the chosen effect ends; if a spell or other ongoing effect imposed the condition, that effect ends on the creature. Either way, the use of the Healer's Kit is spent, and you can't attempt the same treatment on that creature again until it finishes a Short or Long Rest."
     },
     {
      "level": 3,
@@ -3877,7 +3889,7 @@
       {
        "level": 6,
        "name": "Practice",
-       "text": "In any settlement, you can set up a practice with a day's work and a room. While you practice, you earn a comfortable living, and patients talk. After a day of practice in a place, ask the DM two of the following questions about it, and the DM answers truthfully. Who here is sick, who is pregnant, and who is drinking? Who has been beaten, and who is paying for it? Who is hiding a condition, and from whom? What is this place afraid of? You can ask again after each further week of practice there. A household that has called you to a bedside will let you in again."
+       "text": "In any settlement, you can set up a practice with a day's work and a room. While you practice, you earn a comfortable living, and patients talk. After a day of practice in a place, ask the DM two of the following questions about it, and the DM answers truthfully. Who here is sick, who is pregnant, and who is drinking? Who has been beaten, and who is paying for it? Who is hiding a condition, and from whom? Who here is dying, and who would be glad of it? You can ask again after each further week of practice there. A household that has called you to a bedside will let you in again."
       },
       {
        "level": 6,
@@ -4041,7 +4053,7 @@
       {
        "level": 6,
        "name": "The Slow Way",
-       "text": "You can tell, by Diagnosis or an hour's examination, which members of a household have had a disease and come through it the slow way, and so can't catch it again, and which were cured by magic and can. You can also nurse the slow way. When you tend a creature through a natural disease over a Long Rest, without ending it with a spell or a feature, it has Advantage on its saving throws against the disease until your next Long Rest; if it recovers, it can't catch that disease again. A disease ended by Treatment counts as the slow way too."
+       "text": "You can tell, by Diagnosis or an hour's examination, which members of a household have had a disease and come through it the slow way, and so can't catch it again, and which were cured by magic and can. You can also nurse the slow way. When you tend a creature through a natural disease over a Long Rest, without ending it with a spell or a feature, it has Advantage on its saving throws against the disease until your next Long Rest; if it recovers, it can't catch that disease again."
       },
       {
        "level": 10,
@@ -4098,7 +4110,7 @@
       {
        "level": 3,
        "name": "Continuity",
-       "text": "You feel the Font everywhere: in the air you breathe, the ground under you, the sky over you, and every living thing around you, and you feel yourself as part of it. You can't be cut off from it; a cellar, a city, and a dungeon are all alive. The life you pass on runs through you on the way, and you gain the following benefits.\n\n- **Within and Without.** When you restore Hit Points to another creature with a Physician spell or Healing Prowess, you regain Hit Points equal to your Intelligence modifier (minimum of 1). You can benefit from this once on each turn.\n- **Nothing Is Wasted.** When Hit Points you restore with a Physician spell or Healing Prowess would raise a creature above its Hit Point maximum, the excess goes instead to another creature of your choice within 30 feet of you that is missing Hit Points (the most injured, unless you choose otherwise); that creature can be you. The excess passes on only once: whatever the second creature can't use is lost. You can't heal a creature that is already at its Hit Point maximum just to send the healing on.\n- **The Day Shows.** When you restore Hit Points to a creature, the world around you answers, and does it no harm. The light warms and goes golden, the air thickens and moves, insects hum, birds start up, and the nearest green things lean toward you, bud, or flower; a crack in a wall fills with moss. In November, a garrison's plane trees bud. Anyone watching knows something just happened."
+       "text": "You feel the Font everywhere: in the air you breathe, the ground under you, the sky over you, and every living thing around you, and you feel yourself as part of it. You can't be cut off from it; a cellar, a city, and a dungeon are all alive. The life you pass on runs through you on the way, and you gain the following benefits.\n\n- **Within and Without.** When you restore Hit Points to another creature with a Physician spell or Healing Prowess, you regain Hit Points equal to your Intelligence modifier (minimum of 1). You can benefit from this once on each turn.\n- **Nothing Is Wasted.** When Hit Points you restore with a Physician spell or Healing Prowess would raise a creature above its Hit Point maximum, the excess goes instead to another creature of your choice within 30 feet of you that is missing Hit Points (the most injured, unless you choose otherwise); that creature can be you. The excess passes on only once: whatever the second creature can't use is lost. You can't heal a creature that is already at its Hit Point maximum just to send the healing on.\n- **The Day Shows.** When you restore Hit Points to a creature, the world around you answers, and does it no harm. The light warms and goes golden, the air thickens and moves, insects hum, birds start up, and the nearest green things lean toward you, bud, or flower; a crack in a wall fills with moss. Anyone watching knows something just happened."
       },
       {
        "level": 3,
@@ -4138,7 +4150,7 @@
       {
        "level": 3,
        "name": "Signatures",
-       "text": "You gain proficiency in the Nature skill and with the Herbalism Kit; if you already have either, choose another skill from the Physician's skill list or another tool. By handling a plant, a stone, a fungus, or a part of an animal for 1 minute, you learn its virtues: whether it's poisonous and what it would do, what it heals or harms, and whether it could serve as a component for a spell you know. Given an hour in any place where things grow, you can find the simples for an ordinary remedy, a dye, or a poison.\n\n**Diagnose a Place.** You can use Diagnosis on a place you stand in (a field, a well, a wood, a house): you learn whether it is blighted, poisoned, diseased, or cursed, and whether it is thin ground (*Life on the Border*, Introduction, The Hidden, in the rules).\n\n**Treat a Place.** You can use Treatment on a place you have diagnosed. It takes 1 hour and a use of a Healer's Kit, and the DC is the same as for the affliction in a creature (cure a disease for a blighted field or a sickly herd, end the Poisoned condition for a poisoned well, which needs no check). On a success, the place mends over the next few days. A curse needs magic, as it would in a patient.\n\n**Respectable.** Your magic is natural magic, and to anyone trained to look it reads that way. You have Advantage on any ability check to convince an official, a licensing examiner, or an inquisitor that your magic is lawful."
+       "text": "You gain proficiency in the Nature skill and with the Herbalism Kit; if you already have either, choose another skill from the Physician's skill list or another tool. By handling a plant, a stone, a fungus, or a part of an animal for 1 minute, you learn its virtues: whether it's poisonous and what it would do, what it heals or harms, and whether it could serve as a component for a spell you know. Given an hour in any place where things grow, you can find the simples for an ordinary remedy, a dye, or a poison.\n\n**Diagnose a Place.** You can use Diagnosis on a place you stand in (a field, a well, a wood, a house): you learn whether it is blighted, poisoned, diseased, or cursed, and whether it is thin ground (*Life on the Border*, Introduction, The Hidden, in the rules).\n\n**Treat a Place.** You can use Treatment on a place you have diagnosed. It takes 1 hour and a use of a Healer's Kit, and the DC is the same as for the affliction in a creature (cure a disease for a blighted field or a sickly herd, end the Poisoned condition for a poisoned well, which needs no check). On a success, the place mends over the next few days. A curse needs magic, as it would in a patient.\n\n**Respectable.** Your magic is natural magic, the kind every crown licenses because nobody can tell where it ends and medicine, gardening and alchemy begin. You have Advantage on any ability check to convince an official, a licensing examiner, or an inquisitor that your magic is lawful."
       },
       {
        "level": 3,
@@ -4153,7 +4165,7 @@
       {
        "level": 10,
        "name": "Nothing Is Lost",
-       "text": "When Nothing Is Wasted has no creature to send the excess to, the excess stays with the creature you healed as Temporary Hit Points, up to a total equal to your Physician level.\n\n**The Herbal.** When you finish a Long Rest, you can prepare one simple with your Herbalism Kit and give it to anyone. Any creature can take a Utilize action to apply the simple to itself or to a creature within its reach; that creature regains Hit Points equal to one roll of your Prowess Die. The simple loses its virtue at your next Long Rest.\n\n**Almanac.** With a day's observation of a place, you can ask the DM two of the following questions about it, and the DM answers truthfully. Will its harvest be good or poor? Is a sickness season coming, and roughly when? When will its birds, fish, or herds move? What is this place afraid of?"
+       "text": "When Nothing Is Wasted has no creature to send the excess to, the excess stays with the creature you healed as Temporary Hit Points, up to a total equal to your Physician level.\n\n**The Herbal.** When you finish a Long Rest, you can prepare one simple with your Herbalism Kit and give it to anyone. Any creature can take a Utilize action to apply the simple to itself or to a creature within its reach; that creature regains Hit Points equal to one roll of your Prowess Die. The simple loses its virtue at your next Long Rest.\n\n**Almanac.** With a day's observation of a place, you can ask the DM two of the following questions about it, and the DM answers truthfully. Will its harvest be good or poor? Is a sickness season coming, and roughly when? When will its birds, fish, or herds move? What has gone wrong with its water, soil, or air?"
       },
       {
        "level": 14,
@@ -4656,7 +4668,137 @@
      "fraction": 1
     },
     "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Physician Traits table: Hit Point Die, proficiency in the Medicine skill, and training with Light armor. Gain the Physician's level 1 features, which are listed in the Physician Features table. For multiclass spell slots, add all your Physician levels, as you would Wizard levels. If you have levels in another class, you regain expended Prowess Dice only when you finish a Long Rest."
-   }
+   },
+   "cosmography": null,
+   "optional_rules": [
+    {
+     "name": "The Monster Within",
+     "lead": "You heard the warnings against pushing the limits of Immortalism, and you did it anyway. Now you tempt fate every time you ascend, and what awaits at the end is Mastery, the Arrival, or the Eruption, or, for one who failed every Rite, Acceptance.\n\n*This optional rule is off unless the DM turns it on for a Jekyll-and-Hyde campaign, and even then only an Immortalist can take it. You choose it when you reach Physician level 4, after a level of living with the Font, and choosing it means undertaking the first Rite at that level (see \"The Rites\"); the choice is permanent unless the DM decides otherwise. Every feature in this rule is a Physician feature.*\n\nOn this path you draw more deeply on the Font than is safe. You are tested at four points in your career and once more at the end. You either pass and gain power, or you fail and something else comes through with you. Deeper Draw and Surge come with your first Rite, pass or fail, and the rest from the Rites that follow.",
+     "sections": [
+      {
+       "name": "Font Saving Throws",
+       "text": "Several features on this path call for a **Font saving throw**: a Constitution saving throw with a DC equal to 5 plus your Physician level. When a feature says the save is made **unaided**, you roll a d20 and add only your Constitution modifier and your Proficiency Bonus (even without proficiency in Constitution saving throws): no other bonus or penalty, and no Advantage, Disadvantage, reroll, or replacement of the d20 (such as Portent), applies to it, whatever its source. You can't choose to fail a Font saving throw."
+      },
+      {
+       "name": "The Rites",
+       "text": "*Every student in a hospital hears whispers about the Rites, the secret ritual that Immortalists undertake to tap into their Font and access unimaginable power, at the risk of unleashing hell within and without. These whispers are true. Since the first Immortalist pushed at the boundaries of what was possible with the living body, there have been those who pushed farther than they should have. Some survive the Rites and unlock the power within. Some… are forever changed.*\n\n*There are five Rites an Immortalist can undertake, and the choice to begin must be made at level 4. Once the die is cast, there is no going back.*\n\n*The first four Rites unlock various aspects of the Font. Among the precious few who have ever whispered of the fifth and final Rite, the rumor is that you either unlock complete understanding of the Font, or you* become *the Font. What is better known is the fate of those who fail any of the first four Rites: the Monster. The Monster is muscle and life and glands and power and energy. It is not merely a polymorph; the failed aspirant's entire body is seemingly inverted into a terrifying monstrosity. Bestial, overmuscled, and powered by the unfettered drive of Life itself, it overrides the mind and sets the Monster out on a pure adrenaline frenzy, flesh growing at impossible rates as the Monster's body goes into overdrive. Many are the tales of a would-be aspirant whose fate instead was falling to mindless violence and destruction. Fewer are the tales of those who learn to adapt to their fate successfully. Beneath all of it is the same thing: the deep, demanding impulse of life.*\n\nSomeone who knows the Rites must teach you before your first one. A Rite works only for a creature that understands what it is choosing and chooses it freely. A Rite that is forced, tricked, or magically compelled doesn't happen.\n\nWhat a Rite involves (where it is done, what it requires, how long it takes) is left to your DM, who decides what the Rites are in their world. The rules cover only who may teach one, that you undertake it alone, and what you roll.\n\nWhen you reach Physician level 4, and again when you reach levels 8, 12, and 16, you can make a Font saving throw, unaided. The first Rite is part of choosing this path; from level 8 on you choose each time. If no one who knows the Rites can teach you when you reach level 4, you undertake the first Rite at the first opportunity at level 4 or higher, and any later Rite whose level you have already reached follows it at that time. Declining the path at level 4 is final; declining a later Rite closes only that Rite and the Final Rite. A Rite you decline is not attempted and gives you nothing; you can attempt the next one at its level as normal.\n\n**Success — Ascendance.** You make it through, and the power is yours. You gain the next boon from the Ascendance list, in order: **(1)** you choose one additional spell with your Font-Touched feature (at Physician level 6, if you don't have it yet); **(2)** once per Long Rest, once your Physician level gives you level 6 spell slots, you can draw on the Font to cast a level 6 Physician spell (6 Hit Point Dice); **(3)** a number of times equal to your Proficiency Bonus, no more than once on each of your turns, you can use Life-Fused Casting without expending a Prowess Die, and you regain all expended uses when you finish a Long Rest; **(4)** once per Long Rest, once your Physician level gives you level 7 spell slots, you can draw on the Font to cast a level 7 Physician spell (7 Hit Point Dice).\n\n**Failure — the Monster.** You immediately transform into the Monster for 1 hour (it can still end early, as described in Monster Form). If this is your first failed Rite, the Monster is born: from now on you **carry the Monster**, and a failed Font saving throw from Surge transforms you. If you already carry the Monster, it grows: gain the next benefit from the Overgrowth list, in order: **(1)** the Temporary Hit Points you gain on transformation are doubled; **(2)** the radius of Monstrous Aura becomes 15 feet, and your Unarmed Strike die in Monster Form becomes a d12; **(3)** you have Resistance to Bludgeoning, Piercing, and Slashing damage while in Monster Form. Overgrowth benefits are cumulative.\n\nA character who passes every Rite never carries the Monster, though The Due can still transform them for a minute."
+      },
+      {
+       "name": "Deeper Draw",
+       "text": "Once you have attempted your first Rite (see \"The Rites\"), whether you succeeded or failed, you can draw deeper: the number of Hit Point Dice you can spend drawing on the Font between Long Rests increases by your Proficiency Bonus. You also choose one additional spell with your Font-Touched feature (if you don't have that feature yet, you make the choice when you gain it at Physician level 6)."
+      },
+      {
+       "name": "Surge",
+       "text": "Once you have attempted your first Rite, whether you succeeded or failed, you can Surge when you draw on the Font to cast a spell. If you do, the number of Hit Point Dice you must spend is halved (round up). At the end of that turn, make a Font saving throw. On a failure, the Font takes its toll: you expend additional Physician Hit Point Dice equal to the number you saved (if you have fewer, you expend all you have and gain one level of Exhaustion), and you can't Surge again until you finish a Long Rest. If you carry the Monster (see \"The Rites\"), it also comes through: you transform into the Monster (see \"Monster Form\").\n\nYou can Surge a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "name": "Monster Form",
+       "text": "When you first carry the Monster, write its card: your swapped ability scores, Armor Class, Unarmed Strike attack and damage, and saving throws. That way, the swap is never worked out in the middle of a fight.\n\nWhen you transform, the following rules apply for the duration. Unless another feature says otherwise, the transformation lasts for 1 minute. It ends early if you drop to 0 Hit Points.\n\n**The Struggle.** At the start of each of your turns in Monster Form, make a Font saving throw. On a success, you hold on: you choose what you do, within the frenzy, and you can end the transformation at the end of the turn (no action required). On a failure, the Monster has the turn: you must take the Attack action against the creature nearest you, friend or foe (if several are equally near, the DM chooses), and you can't use Healing Prowess or end the transformation on that turn. Outside combat, you make this save once a minute, and a success lets you end the transformation.\n\n- **Ability Swap.** Your Strength and Intelligence scores swap, and your Dexterity and Wisdom scores swap; swap them before applying any item or effect that sets a score. Your Constitution and Charisma scores don't change, so your Hit Point maximum is unchanged. Any spell you are permitted to cast, and any Physician feature you are permitted to use, while transformed uses your Intelligence score as it was before the swap.\n- **Temporary Hit Points.** You gain Temporary Hit Points equal to twice your Physician level.\n- **No Spellcasting.** You can't cast spells, and your Concentration on any spell ends. You can't take actions, Bonus Actions, or Reactions granted by Physician features outside this rule, unless a feature says it works in Monster Form; their passive benefits still apply.\n- **Proficiencies.** You lose your skill proficiencies and gain proficiency in Athletics and Intimidation. When you use an Unarmed Strike to Grapple or Shove a creature, the target has Disadvantage on its saving throw. You keep your armor training and weapon proficiencies, and armor you are wearing changes with you.\n- **Unarmed Strikes.** Your Unarmed Strikes deal 1d10 plus your Strength modifier Bludgeoning damage. You can attack twice, instead of once, when you take the Attack action; this doesn't stack with Extra Attack.\n- **Slam.** When you Shove a creature you are grappling toward another creature or a solid object within 5 feet of it, the Grappled creature stops short of it, and both the Grappled creature and the creature or object take Bludgeoning damage equal to one roll of your Unarmed Strike die plus your Strength modifier.\n- **Monstrous Aura.** At the start of each of your turns, you regain Hit Points equal to one roll of your Prowess Die (no die is expended). Each creature of your choice that starts its turn within 10 feet of you must succeed on a Wisdom saving throw (DC 8 plus your Proficiency Bonus plus your Strength modifier) or have the Frightened condition until the end of that turn. A creature that has been Frightened by your Monstrous Aura can't be Frightened by it again until you next transform (for the Avatar, until you finish a Long Rest).\n\nYou keep control of your character, but the frenzy drives you: on each of your turns, if a hostile creature is within your reach, you must take the Attack action against one (an attack, a Grapple, or a Shove).\n\nWhen the transformation ends, you return to your normal form with the same number of Hit Points, and you lose any remaining Temporary Hit Points. Then the body pays: you expend Physician Hit Point Dice equal to your Proficiency Bonus (if you have fewer, you expend all you have and gain one level of Exhaustion).\n\n> **What About Their Clothes?**\n>\n> Armor changes with you, because Armor Class matters. Everything else is up to your group. Decide before the first Rite whether the Monster's clothing survives the change, so that it isn't being settled in the middle of a scene."
+      },
+      {
+       "name": "The Shifting Balance",
+       "text": "If you carry the Monster, the balance between your two forms shifts as you gain levels. You gain each of the following at the listed Physician level, or immediately upon first carrying the Monster if you are already of that level or higher.\n\n- **Level 7 — Hold It Together.** You can end Monster Form early as a Bonus Action. While in Monster Form, you can use Healing Prowess.\n- **Level 11 — Call It.** You can transform into the Monster as a Bonus Action. Once you use Call It, you can't use it again until you finish a Long Rest. While in Monster Form, you retain your Diagnosis feature, your proficiency in Medicine, and your patient, and you can cast Physician cantrips and level 1 Physician spells. You can't draw on the Font or use Life-Fused Casting while transformed.\n- **Level 15 — Turned.** Monster Form no longer ends on a Font saving throw; once transformed, you remain the Monster for its full duration unless you use Hold It Together or drop to 0 Hit Points. You can use Call It a number of times equal to your Proficiency Bonus per Long Rest. Transforming no longer breaks your Concentration, and you can cast Physician spells of level 3 or lower while in Monster Form, using spell slots only."
+      },
+      {
+       "name": "The Final Rite",
+       "text": "When you reach Physician level 19, if you attempted all four Rites, you come to the Final Rite. If you failed all four, you make no roll: your outcome is the last one below, Acceptance. Otherwise you choose: undertake the Final Rite, or resign. A Physician who declined any earlier Rite does not undertake the Final Rite and gains nothing at level 19 from this feature.\n\n**Resignation.** You don't undertake the Final Rite. You keep everything you have, and you gain the next Ascendance boon you don't yet have.\n\n**The Roll.** If you undertake the Final Rite, roll a d20, unaided: add 4 for each of the four Rites you succeeded on, and nothing else. No modifier, bonus, Advantage, reroll, or replacement of the d20 (such as Portent) applies, whatever its source. A total of 25 or higher, or a natural 20, is Mastery; a total of 20 to 24 is the Arrival; a total of 19 or lower is the Eruption. Whatever the outcome, if the d20 itself shows 16 or higher, the Font heard you: once the outcome is settled, the DM rolls on The Due.\n\n> **The Odds**\n>\n> | Rites passed | Mastery | The Arrival | The Eruption | Heard (The Due) |\n> |---|---|---|---|---|\n> | 4 | 60% | 25% | 15% | 25% |\n> | 3 | 40% | 25% | 35% | 25% |\n> | 2 | 20% | 25% | 55% | 25% |\n> | 1 | 5% | 20% | 75% | 25% |\n>\n> With a full record the Final Rite is a fair gamble. With one or two Rites passed it is a long shot that usually ends in the Eruption, and anyone who comes out of it with one Rite passed has been heard. Below three, resigning is the sensible choice.\n>\n> Say this at the table when the path is chosen at 4th level, not at 19th: the Final Rite can end a character on one roll that nothing modifies. The player always has the choice to resign.\n\n**Mastery.** You learn the *Wish* spell. It is a Physician spell for you, it is always prepared, and it doesn't count against the number of spells you can prepare. You also gain any Ascendance boons you don't yet have, and if you carry the Monster, any Overgrowth benefits you don't yet have.\n\n**Higher Symbiosis.** When you achieve Mastery, you gain the first benefit below. If your DM awards Epic Boons for play beyond level 20, you gain the next benefit each time you gain an Epic Boon, in order.\n\n- **(1) Regrowth.** While you are Bloodied and have at least 1 Hit Point, you regain Hit Points equal to one roll of your Prowess Die at the start of each of your turns (no die is expended).\n- **(2) The Deep Draw.** You can draw on the Font to cast a spell of any level.\n- **(3) The Body Keeps.** You have Resistance to Necrotic and Poison damage. You don't sleep; you can finish a Long Rest with 6 hours of light activity.\n- **(4) Unfinished.** If you die and your body isn't destroyed, you return to life at the next dawn with 1 Hit Point and 3 levels of Exhaustion. Once this happens, it can't happen again until a year has passed.\n\nA Master who carries the Monster can wish it away. This is a wish beyond duplicating a spell, with that wish's risks. If it is granted, the Monster is gone: you no longer carry it, and you lose Overgrowth and the Shifting Balance.\n\n> **After Mastery**\n>\n> Mastery is not an ending. Two directions a Master might go, for the DM and player to consider:\n>\n> - **The source.** The Font is Positive Energy, found inside a body. A Master can go looking for where it came from.\n> - **The refusal.** The one wish no one else can make: to be rid of the Font. A Master who wishes this loses *Wish*, Higher Symbiosis, and the Font, and keeps everything else. The DM decides whether the Font allows it.\n\n**The Arrival.** *You become a warped avatar of Positive Energy, ever churning, always on the verge of losing what remains of yourself to the endless pulse of life.* You do not learn *Wish*. Your original form is gone; you now appear as the **Avatar** at all times, and Monster Form, if you carried it, no longer exists apart from you. The following rules apply for the rest of your life:\n\n- **The Avatar's body.** The Monster Form rules for Proficiencies, Unarmed Strikes, Slam, and Monstrous Aura apply to you at all times, with the second Overgrowth benefit (whether or not you earned it) and without the third; the aura's regeneration is replaced by the one below. Your ability scores don't swap, you keep your proficiency in Medicine, your spellcasting, and your other Physician features, and you gain no Temporary Hit Points.\n- **The frenzy.** The Monster's frenzy (see \"Monster Form\") drives you at all times. A failed Font saving throw from Surge makes you Overtaken instead of transforming you; the Font doesn't also take its toll.\n- **Unbound.** As a Bonus Action, you can open yourself to the Font for 1 minute, and you can't end it early. While you are Unbound, you have Resistance to Bludgeoning, Piercing, and Slashing damage; when you take the Attack action, you can replace one of its attacks with casting a Physician spell of level 5 or lower that has a casting time of an action, drawing on the Font without spending Hit Point Dice (once per Unbound, the spell can be of level 6 or higher instead, and it calls for High Casting's Font saving throw below, unaided); and you can use Life-Fused Casting without expending a Prowess Die. At the end of each of your turns while you are Unbound, make a Font saving throw, unaided, against DC 12 rather than the usual DC; the DC increases by 1 for each later save in the same minute. You can become Unbound three times, and you regain all expended uses when you finish a Long Rest.\n- **Overtaken.** Whenever you fail a Font saving throw, the Font takes you. While you are Overtaken, the DM controls you: on each of your turns you attack, Grapple, or Shove the creatures nearest you, friend or foe, and if you are Unbound, your spells land among them as the DM chooses. Being Overtaken doesn't end when the fight does. It ends when you drop to 0 Hit Points, when another creature within 30 feet of you takes the Utilize or Influence action to call you back and succeeds on a DC 15 Wisdom (Medicine) or Charisma (Persuasion) check, or, if no one calls you back, at the next dawn. When it ends, Unbound ends too, and you gain one level of Exhaustion.\n- **The Absorbed.** A creature that dies within 30 feet of you while you are Overtaken is absorbed into the Font: its body is gone, and only *Wish* or *True Resurrection* can return it to life.\n- **The Ask.** Once per Long Rest, you can take a Magic action to ask the Font for anything *Wish* could do, except create objects or wealth. It answers: the effect happens, using no spell slot and carrying none of *Wish*'s stress. Asking costs you one level of Exhaustion, and then the DM rolls on The Due.\n- **High Casting.** Whenever you cast a spell of level 6 or higher, including the one Unbound allows, you must make a Font saving throw, unaided, at the end of the turn, whether or not you drew on the Font to cast it.\n- **The Dawn Wish.** At dawns of the DM's choosing, the Font casts *Wish* through you; this uses no spell slot and carries none of *Wish*'s stress. The DM chooses the wish, and it always concerns life: something restored, healed, grown, or spread. You experience it as a dream.\n- **The Pulse.** While you have at least 1 Hit Point, you regain Hit Points equal to half your Physician level (round down) at the start of each of your turns.\n\n**The Eruption.** The Font takes all of you. You die, and your body is gone into the Font. Only *Wish* or *True Resurrection* cast by another creature can return you to life, and the Font hears that request too: the DM rolls on The Due for the caster.\n\n**The Due.** When the Font answers, it chooses the price, and it chooses one that fits. The DM rolls a d6:\n\n- **1–3 — You.** The price lands on the one who asked. The Avatar is Overtaken. Any other Physician transforms into the Monster for 1 minute, whether or not they carry it, with its frenzy, and can't end the transformation early. A creature that isn't a Physician gains 2 levels of Exhaustion instead.\n- **4–5 — The one it was for.** The creature that gained the most from the request drops to 0 Hit Points; if it already had 0 Hit Points, it fails one Death Saving Throw. If no other creature gained from it, the price lands on the one who asked, as for 1–3.\n- **6 — Something that fits, for good.** The DM names one lasting price that fits the request (a memory, a name, a sense, a year, a bond) and the Font takes it. It doesn't come back.\n\n**Acceptance (All Four Failed).** <!-- Scott: the Monster's path, in his words. --> You stop fighting the Monster. You do not learn *Wish*. The following rules apply for the rest of your life:\n\n- **The Monster for good.** Monster Form has no duration. You can transform, or return to your original form, as a Bonus Action as often as you like; Call It and Hold It Together no longer have limits. A failed Font saving throw from Surge no longer transforms you; the Font only takes its toll, as described in Surge.\n- **At peace.** You no longer make the Struggle's saving throws, and the body doesn't pay when the transformation ends.\n- **No frenzy.** In Monster Form you choose your own actions; you no longer have to attack, Grapple, or Shove a hostile creature within your reach.\n- **Fully grown.** You have the first two Overgrowth benefits and every benefit of the Shifting Balance.\n- **Ready.** You gain Temporary Hit Points equal to twice your Physician level when you roll Initiative while in Monster Form, instead of when you transform.\n- **Settled aura.** A creature Frightened by your Monstrous Aura can't be Frightened by it again until you finish a Long Rest.\n- **Two bodies.** In Monster Form you can cast Physician spells of level 5 or lower using spell slots, except spells that restore Hit Points, and you can't use Healing Prowess (whatever Hold It Together says). You still can't draw on the Font or use Life-Fused Casting while transformed. The healer and the Monster take turns.\n- **Apex.** When you would drop to 0 Hit Points while in Monster Form, you can make a Font saving throw. On a success, you drop to 1 Hit Point instead. Each time you succeed, the DC increases by 5 until you finish a Long Rest.\n\n**Beyond.** When you accept the Monster, you gain the first benefit below. If your DM awards Epic Boons for play beyond level 20, you gain the next benefit each time you gain an Epic Boon, in order.\n\n- **(1) One Body.** Monstrous Aura's regeneration also works in your original form, while you are Bloodied and have at least 1 Hit Point. In Monster Form, you keep your skill proficiencies in addition to Athletics and Intimidation.\n- **(2) Deep Hunger.** In Monster Form, you can draw on the Font and use Life-Fused Casting, and you can cast Physician spells of any level using spell slots.\n- **(3) Unbending.** In Monster Form, you have Immunity to the Charmed, Frightened, and Paralyzed conditions, and you have Advantage on Strength and Constitution saving throws.\n- **(4) From Nothing.** If you die and your body isn't destroyed, you return to life in Monster Form at the next nightfall with 1 Hit Point and 3 levels of Exhaustion. Once this happens, it can't happen again until a year has passed."
+      }
+     ]
+    }
+   ],
+   "new_spells": [
+    {
+     "name": "Ambulance",
+     "level": 2,
+     "school": "Transmutation",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": []
+    },
+    {
+     "name": "Anaesthesia",
+     "level": 2,
+     "school": "Transmutation",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": []
+    },
+    {
+     "name": "Convulsion",
+     "level": 2,
+     "school": "Transmutation",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": [
+      "Lightning"
+     ]
+    },
+    {
+     "name": "Cold Storage",
+     "level": 3,
+     "school": "Transmutation",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": [
+      "Cold"
+     ]
+    },
+    {
+     "name": "Hysteria",
+     "level": 3,
+     "school": "Necromancy",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": [
+      "Psychic"
+     ]
+    },
+    {
+     "name": "Defibrillation",
+     "level": 5,
+     "school": "Transmutation",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": [
+      "Lightning"
+     ]
+    },
+    {
+     "name": "Second Breath",
+     "level": 8,
+     "school": "Evocation",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": []
+    },
+    {
+     "name": "Arc",
+     "level": 3,
+     "school": "Transmutation",
+     "classes": [
+      "Sorcerer",
+      "Wizard"
+     ],
+     "casting": "Bonus Action",
+     "damage": [
+      "Lightning"
+     ]
+    }
+   ]
   },
   {
    "name": "Revelator",
@@ -4702,6 +4844,7 @@
      "Class Features",
      "Planar Strike",
      "Revelations",
+     "Favors",
      "Prepared Spells",
      "1",
      "2",
@@ -4716,6 +4859,7 @@
       "Class Features": "Spellcasting, Vistas, Planar Strike, Planar Adept",
       "Planar Strike": "1d12",
       "Revelations": "2",
+      "Favors": "2",
       "Prepared Spells": "2",
       "1": "2",
       "2": "—",
@@ -4729,6 +4873,7 @@
       "Class Features": "The Border Ethereal, Ethereal Stride",
       "Planar Strike": "1d12",
       "Revelations": "3",
+      "Favors": "4",
       "Prepared Spells": "3",
       "1": "2",
       "2": "—",
@@ -4742,6 +4887,7 @@
       "Class Features": "Visiting Spirit, Revelator Pathway",
       "Planar Strike": "1d12",
       "Revelations": "4",
+      "Favors": "6",
       "Prepared Spells": "4",
       "1": "3",
       "2": "—",
@@ -4755,6 +4901,7 @@
       "Class Features": "Ability Score Improvement",
       "Planar Strike": "1d12",
       "Revelations": "4",
+      "Favors": "6",
       "Prepared Spells": "5",
       "1": "3",
       "2": "—",
@@ -4768,6 +4915,7 @@
       "Class Features": "The Near Planes",
       "Planar Strike": "2d12",
       "Revelations": "5",
+      "Favors": "7",
       "Prepared Spells": "6",
       "1": "4",
       "2": "2",
@@ -4781,6 +4929,7 @@
       "Class Features": "The Crossings, Guide's Hand",
       "Planar Strike": "2d12",
       "Revelations": "6",
+      "Favors": "8",
       "Prepared Spells": "6",
       "1": "4",
       "2": "2",
@@ -4794,6 +4943,7 @@
       "Class Features": "",
       "Planar Strike": "2d12",
       "Revelations": "7",
+      "Favors": "9",
       "Prepared Spells": "7",
       "1": "4",
       "2": "3",
@@ -4807,6 +4957,7 @@
       "Class Features": "Ability Score Improvement",
       "Planar Strike": "2d12",
       "Revelations": "7",
+      "Favors": "9",
       "Prepared Spells": "7",
       "1": "4",
       "2": "3",
@@ -4820,6 +4971,7 @@
       "Class Features": "Reach Beyond, Soul's Journey",
       "Planar Strike": "2d12",
       "Revelations": "7",
+      "Favors": "9",
       "Prepared Spells": "9",
       "1": "4",
       "2": "3",
@@ -4833,6 +4985,7 @@
       "Class Features": "Wider Vistas",
       "Planar Strike": "2d12",
       "Revelations": "7",
+      "Favors": "9",
       "Prepared Spells": "9",
       "1": "4",
       "2": "3",
@@ -4846,6 +4999,7 @@
       "Class Features": "",
       "Planar Strike": "3d12",
       "Revelations": "7",
+      "Favors": "9",
       "Prepared Spells": "10",
       "1": "4",
       "2": "3",
@@ -4859,6 +5013,7 @@
       "Class Features": "Ability Score Improvement",
       "Planar Strike": "3d12",
       "Revelations": "7",
+      "Favors": "9",
       "Prepared Spells": "10",
       "1": "4",
       "2": "3",
@@ -4872,6 +5027,7 @@
       "Class Features": "The Circuit",
       "Planar Strike": "3d12",
       "Revelations": "8",
+      "Favors": "10",
       "Prepared Spells": "11",
       "1": "4",
       "2": "3",
@@ -4885,6 +5041,7 @@
       "Class Features": "Ethereal Wayfarer",
       "Planar Strike": "3d12",
       "Revelations": "8",
+      "Favors": "10",
       "Prepared Spells": "11",
       "1": "4",
       "2": "3",
@@ -4898,6 +5055,7 @@
       "Class Features": "",
       "Planar Strike": "3d12",
       "Revelations": "9",
+      "Favors": "11",
       "Prepared Spells": "12",
       "1": "4",
       "2": "3",
@@ -4911,6 +5069,7 @@
       "Class Features": "Ability Score Improvement",
       "Planar Strike": "3d12",
       "Revelations": "9",
+      "Favors": "11",
       "Prepared Spells": "12",
       "1": "4",
       "2": "3",
@@ -4924,6 +5083,7 @@
       "Class Features": "The Body Follows",
       "Planar Strike": "4d12",
       "Revelations": "9",
+      "Favors": "11",
       "Prepared Spells": "14",
       "1": "4",
       "2": "3",
@@ -4937,6 +5097,7 @@
       "Class Features": "Ethereal Sight",
       "Planar Strike": "4d12",
       "Revelations": "9",
+      "Favors": "11",
       "Prepared Spells": "14",
       "1": "4",
       "2": "3",
@@ -4950,6 +5111,7 @@
       "Class Features": "Epic Boon",
       "Planar Strike": "4d12",
       "Revelations": "9",
+      "Favors": "11",
       "Prepared Spells": "15",
       "1": "4",
       "2": "3",
@@ -4962,7 +5124,8 @@
       "Proficiency Bonus": "+6",
       "Class Features": "The Circuit Made Whole",
       "Planar Strike": "4d12",
-      "Revelations": "9 (any)",
+      "Revelations": "All",
+      "Favors": "11",
       "Prepared Spells": "15",
       "1": "4",
       "2": "3",
@@ -4981,7 +5144,7 @@
     {
      "level": 1,
      "name": "Vistas",
-     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect and one Influence. You start knowing two, the echoes of the world closest to home: the Hidden and the Ghostlands. Most Revelations are granted by your features by name; two features let you choose one (The Near Planes at level 5 and The Circuit at level 13). The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced.\n\n**Favor.** Each Revelation you know grants you its plane's Favor once between rests, unless a feature says it grants it more often: you call on the Favor to open a vista. A Short or Long Rest brings every Favor back.\n\n**Opening a Vista.** As a Bonus Action, you call on the Favor of a Revelation you know and open a vista beside a creature you can see within 60 feet of yourself (it can be you), and **let in an Influence**: that Revelation's Influence takes effect on the creature. From Revelator level 3, a vista can call a spirit instead (Visiting Spirit), and the spirit steps through beside the creature you chose.\n\n**Influences.** Unless an Influence says otherwise, it lasts until the start of your next turn.\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required), or until you have the Incapacitated condition. Your open vista is the one you opened most recently that is still open; it sets the damage of your Planar Strike.\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells.\n\n> **Tracking Favors**\n>\n> Give each plane you know a box. A plane that grants its Favor more than once gets more boxes (the Border Ethereal and your earth end two each; walked planes from 9th level, the Mountain's Arete, and some items add more), never more than three. Tick a box when a plane grants its Favor. When a feature lets you **regain a Favor**, erase a tick from any plane; a Short or Long Rest erases them all."
+     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect and one Influence. You start knowing two, the echoes of the world closest to home: the Hidden and the Ghostlands. Most Revelations are granted by your features by name; two features let you choose one (The Near Planes at level 5 and The Circuit at level 13). The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced.\n\n**Favor.** The planes answer you a number of times between rests: you have the number of Favors shown in the Favors column of the Revelator Features table, plus one for each plane you have walked (Soul's Journey). Opening a vista spends one, and so do the other features that tell you to spend a Favor. Healing costs more: an Influence that restores Hit Points or grants Temporary Hit Points costs two Favors. A Short or Long Rest brings every Favor back.\n\n**Opening a Vista.** As a Bonus Action, you spend a Favor and open a vista to a Revelation you know, beside a creature you can see within 60 feet of yourself (it can be you), and **let in an Influence**: that Revelation's Influence takes effect on the creature. From Revelator level 3, a vista can call a spirit instead (Visiting Spirit), and the spirit steps through beside the creature you chose. A plane needs a breath between answers: you can't open a vista to the same plane on two of your turns in a row.\n\n**Influences.** Unless an Influence says otherwise, it lasts until the start of your next turn.\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required), or until you have the Incapacitated condition. Your open vista is the one you opened most recently that is still open; it sets the damage of your Planar Strike.\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells."
     },
     {
      "level": 1,
@@ -4996,12 +5159,12 @@
     {
      "level": 2,
      "name": "The Border Ethereal",
-     "text": "*You branch out into the tangible spirit of all things, the Ethereal Plane.*\n\nYou know the Revelation of the Border Ethereal. It's the plane you cross most often, and it grants its Favor twice between rests.\n\n**Veilsight.** You can see into the Border Ethereal within 60 feet of yourself, and you can speak with spirits and ghosts as if you shared a language."
+     "text": "*You branch out into the tangible spirit of all things, the Ethereal Plane.*\n\nYou know the Revelation of the Border Ethereal, the plane you cross most often.\n\n**Veilsight.** You can see into the Border Ethereal within 60 feet of yourself, and you can speak with spirits and ghosts as if you shared a language."
     },
     {
      "level": 2,
      "name": "Ethereal Stride",
-     "text": "*Your familiarity with the Ethereal blossoms.*\n\nAs a Bonus Action, you can call on the Favor of the Border Ethereal, or of the Deep Ethereal if you know it, to step into the Border Ethereal until the end of your turn. While there, you can move through creatures and objects as if they were Difficult Terrain, and creatures on the Material Plane can't see you unless they can see into the Ethereal. You can affect and be affected only by things in the Ethereal Plane. Ethereal Stride doesn't open a vista.\n\n**Guiding.** You can bring one willing creature you touch. It enters the Border Ethereal with you, moves with you, staying within 5 feet of you, and returns when you do.\n\nYou return to the Material Plane when the stride ends. If you would arrive inside an object or creature, you are shunted to the nearest unoccupied space and take 1d10 Force damage. The same applies to any creature you guide."
+     "text": "*Your familiarity with the Ethereal blossoms.*\n\nAs a Bonus Action, you can spend a Favor to step into the Border Ethereal until the end of your turn. While there, you can move through creatures and objects as if they were Difficult Terrain, and creatures on the Material Plane can't see you unless they can see into the Ethereal. You can affect and be affected only by things in the Ethereal Plane. Ethereal Stride doesn't open a vista.\n\n**Guiding.** You can bring one willing creature you touch. It enters the Border Ethereal with you, moves with you, staying within 5 feet of you, and returns when you do.\n\nYou return to the Material Plane when the stride ends. If you would arrive inside an object or creature, you are shunted to the nearest unoccupied space and take 1d10 Force damage. The same applies to any creature you guide."
     },
     {
      "level": 3,
@@ -5011,7 +5174,7 @@
     {
      "level": 3,
      "name": "Revelator Pathway",
-     "text": "You gain a Revelator subclass of your choice: the pathway that called you on your spirit voyage. The Bridge, the River of Life, the Mountain, the River of Death, and the Tree are detailed after this class's description. Each pathway spans the Veil from earth to sky: at level 3 you learn its earth end, where it touches the Deep Ethereal, and at levels 7 and 15 its Outer Planes. Your earth end is the plane you know best, and it grants its Favor twice between rests. For the rest of your career, you gain each of your pathway's features that are of your Revelator level or lower; the Tree also has one at level 5."
+     "text": "You gain a Revelator subclass of your choice: the pathway that called you on your spirit voyage. The Bridge, the River of Life, the Mountain, the River of Death, and the Tree are detailed after this class's description. Each pathway spans the Veil from earth to sky: at level 3 you learn its earth end, where it touches the Deep Ethereal, and at levels 7 and 15 its Outer Planes. Your earth end is the plane you know best. For the rest of your career, you gain each of your pathway's features that are of your Revelator level or lower; the Tree also has one at level 5."
     },
     {
      "level": 4,
@@ -5031,17 +5194,17 @@
     {
      "level": 6,
      "name": "Guide's Hand",
-     "text": "*Your experience allows you to help others traveling with you.*\n\n**Many Travelers.** When you use Ethereal Stride, you can guide a number of willing creatures equal to your Wisdom modifier (minimum of one), each of whom you touch or who is within 5 feet of a creature you guide.\n\n**Hold the Threshold.** When a creature you can see within 30 feet of yourself fails a Death Saving Throw, or suffers a failure by taking damage while it has 0 Hit Points, you can take a Reaction and call on the Ghostlands' Favor to turn one of those failures into a success. This doesn't open a vista."
+     "text": "*Your experience allows you to help others traveling with you.*\n\n**Many Travelers.** When you use Ethereal Stride, you can guide a number of willing creatures equal to your Wisdom modifier (minimum of one), each of whom you touch or who is within 5 feet of a creature you guide.\n\n**Hold the Threshold.** When a creature you can see within 30 feet of yourself fails a Death Saving Throw, or suffers a failure by taking damage while it has 0 Hit Points, you can take a Reaction and spend a Favor, calling on the Ghostlands, to turn one of those failures into a success. This doesn't open a vista."
     },
     {
      "level": 9,
      "name": "Reach Beyond",
-     "text": "*You can push through to the deepest, most well-guarded parts of reality, if you're brave enough.*\n\nOnce per Long Rest, as a Bonus Action, you can open a vista without calling on a Favor, reaching instead for any Revelation in the Cosmography that you don't know. You can do this even when every plane's Favor is spent. A reach within the Cosmography draws no Attention.\n\n**Past the Map.** Instead, you can reach past the Cosmography, toward what it leaves out: a single layer or realm, such as the efreet's city in the Plane of Fire or a god's hall in Valhalla; a ruler and their court, such as an archfey, Yama with his scribe, the Jade Emperor in his palace, the lord of the deepest circle of the Nine, or a demon lord in their layer; or what lies between and beyond, such as the dead gods adrift in the Astral, the crossroads of the Middle World, or the Far Realm. The vista both calls a spirit and lets in an Influence, and the Influence affects every creature of your choice within 30 feet of the vista. The DM decides what comes through from that place's nature, taking the Cosmography's Aspects and Influences as the yardstick: the nearest plane's, bent toward the place you reached. A reach past the map always draws Attention.\n\n**The Strain.** The further you reach, the more passes through you, and the body you left behind has to bear it. Reaching past the Cosmography forces you to make a Constitution saving throw: DC 15 for a particular layer or realm, or DC 20 for a god, a ruler, or the Far Realm. On a failed save, you take 6d6 Psychic damage (10d6 against DC 20); on a successful save, you take half as much damage. If you fail the DC 20 save, your spirit also takes the long way home: you can't call on any plane's Favor until you finish a Short or Long Rest. You can still Strike, cast spells, and command whatever came through. Either way, the vista opens, and you get what you reached for.\n\n**Attention.** A power of that place notices you, and you have its Attention. The DM decides what the power guards and what it wants from you; it might call in a favor, pay you a visit, set you a test, or name a debt. Powers act from their nature, not from malice, but not necessarily kindly. The debt is the cost, and it is paid in story, not in Favors. While you have a power's Attention, using Reach Beyond on its place again deepens the relationship rather than drawing new Attention."
+     "text": "*You can push through to the deepest, most well-guarded parts of reality, if you're brave enough.*\n\nOnce per Long Rest, as a Bonus Action, you can open a vista without spending a Favor, reaching instead for any Revelation in the Cosmography that you don't know. You can do this even when you have no Favors left. A reach within the Cosmography draws no Attention.\n\n**Past the Map.** Instead, you can reach past the Cosmography, toward what it leaves out: a single layer or realm, such as the efreet's city in the Plane of Fire or a god's hall in Valhalla; a ruler and their court, such as an archfey, Yama with his scribe, the Jade Emperor in his palace, the lord of the deepest circle of the Nine, or a demon lord in their layer; or what lies between and beyond, such as the dead gods adrift in the Astral, the crossroads of the Middle World, or the Far Realm. The vista both calls a spirit and lets in an Influence, and the Influence affects every creature of your choice within 30 feet of the vista. The DM decides what comes through from that place's nature, taking the Cosmography's Aspects and Influences as the yardstick: the nearest plane's, bent toward the place you reached. A reach past the map always draws Attention.\n\n**The Strain.** The further you reach, the more passes through you, and the body you left behind has to bear it. Reaching past the Cosmography forces you to make a Constitution saving throw: DC 15 for a particular layer or realm, or DC 20 for a god, a ruler, or the Far Realm. On a failed save, you take 6d6 Psychic damage (10d6 against DC 20); on a successful save, you take half as much damage. If you fail the DC 20 save, your spirit also takes the long way home: you can't spend Favors until you finish a Short or Long Rest. You can still Strike, cast spells, and command whatever came through. Either way, the vista opens, and you get what you reached for.\n\n**Attention.** A power of that place notices you, and you have its Attention. The DM decides what the power guards and what it wants from you; it might call in a favor, pay you a visit, set you a test, or name a debt. Powers act from their nature, not from malice, but not necessarily kindly. The debt is the cost, and it is paid in story, not in Favors. While you have a power's Attention, using Reach Beyond on its place again deepens the relationship rather than drawing new Attention."
     },
     {
      "level": 9,
      "name": "Soul's Journey",
-     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. How you got there doesn't matter: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane cares only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs,\" in \"Walking the Planes\" after the Cosmography). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: it grants its Favor twice between rests. Walking a plane that already grants its Favor twice, such as your earth end or the Border Ethereal, adds nothing.\n\n**The First Voyage.** When you gain this feature, one Revelation you know, other than your earth end or the Border Ethereal, counts as walked: the place your first voyage took you, back when you walked the Wheel in spirit.\n\n**The Hard Roads.** Seven places on the Wheel are walked by almost no one, and walking one leaves a mark for life. They're described in \"Walking the Planes,\" after the Cosmography."
+     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. How you got there doesn't matter: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane cares only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs,\" in \"Walking the Planes\" after the Cosmography). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: each plane you have walked adds one Favor to your pool, up to a number of extra Favors equal to your Proficiency Bonus.\n\n**The First Voyage.** When you gain this feature, one Revelation you know counts as walked: the place your first voyage took you, back when you walked the Wheel in spirit.\n\n**The Hard Roads.** Seven places on the Wheel are walked by almost no one, and walking one leaves a mark for life. They're described in \"Walking the Planes,\" after the Cosmography."
     },
     {
      "level": 10,
@@ -5076,7 +5239,7 @@
     {
      "level": 20,
      "name": "The Circuit Made Whole",
-     "text": "*You understand why the world is the shape that it is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography. You can call on any plane's Favor, but on no more than nine different planes between rests. Your earth end still grants its Favor twice, and Arete, if you have it, still works.\n\n**Old Acquaintance.** You can use Reach Beyond twice per Long Rest.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors.\n\n**Spirit of Totality.** When you call a spirit, you can call the Spirit of Totality instead: a spirit of no one plane, sent by all of them together. It is still your one spirit (with The Fare, it counts as both of your spirits), and it uses the Visiting Spirit stat block. It counts as every creature type, and it understands and speaks every language, but it has no Aspect's traits. When you command it, it uses the commands of two different Spirit Aspects of your choice; a command that needs a trait it lacks (such as an element or its light) can't be chosen. While it's with you, each time you hit with your Planar Strike you can choose its damage type from any plane's.\n\n**Walked Whole.** The hard roads add up. For every two hard roads you have walked, Favor in the Moment regains one more Favor. If you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond.\n\n> **Playing a Revelator**\n>\n> You see the world's other rooms, and each turn you open a door to one. In a fight, attack or cast with your action and open the vista the moment needs with your Bonus Action: its Influence lands on the creature beside it, and your Planar Strike hits with that plane's power. Spend Favors where they count; a Short Rest brings them all back, so a party that rests often lets you be generous. Your spirit doesn't fight: send it where it helps, as a guide, a scout or a voice in the right ear, and move it every turn. Ethereal Stride is your exit and your shortcut: step through the wall, and bring a friend. Out of a fight, you talk with ghosts, see into the Border Ethereal and know the planes better than anyone at the table. Learn what each Influence does, and you'll always have the right door to open."
+     "text": "*You understand why the world is the shape that it is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography.\n\n**Old Acquaintance.** You can use Reach Beyond twice per Long Rest.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors.\n\n**Spirit of Totality.** When you call a spirit, you can call the Spirit of Totality instead: a spirit of no one plane, sent by all of them together. It is still your one spirit (with The Fare, it counts as both of your spirits), and it uses the Visiting Spirit stat block. It counts as every creature type, and it understands and speaks every language, but it has no Aspect's traits. When you command it, it uses the commands of two different Spirit Aspects of your choice; a command that needs a trait it lacks (such as an element or its light) can't be chosen. While it's with you, each time you hit with your Planar Strike you can choose its damage type from any plane's.\n\n**Walked Whole.** The hard roads add up. For every two hard roads you have walked, Favor in the Moment regains one more Favor. If you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond.\n\n> **Playing a Revelator**\n>\n> You see the world's other rooms, and each turn you open a door to one. In a fight, attack or cast with your action and open the vista the moment needs with your Bonus Action: its Influence lands on the creature beside it, and your Planar Strike hits with that plane's power. Spend Favors where they count; a Short Rest brings them all back, so a party that rests often lets you be generous. Your spirit doesn't fight: send it where it helps, as a guide, a scout or a voice in the right ear, and move it every turn. Ethereal Stride is your exit and your shortcut: step through the wall, and bring a friend. Out of a fight, you talk with ghosts, see into the Border Ethereal and know the planes better than anyone at the table. Learn what each Influence does, and you'll always have the right door to open."
     }
    ],
    "subclasses": [
@@ -5222,7 +5385,7 @@
       {
        "level": 3,
        "name": "Wellsprings",
-       "text": "*You hold a vista to the River of Life open, allowing its waters to flow through.* As a Bonus Action, you can call on the Maelstrom's Favor to open a Wellspring in a 5-foot Cube within 30 feet of yourself. It holds two draughts, and it lasts for 1 minute or until its draughts are gone; it doesn't require Concentration, and it closes if you have the Incapacitated condition. You have one Wellspring at a time. It's a vista of its own: it doesn't close or replace your open vista, opening another vista doesn't close it, and it never counts as your open vista.\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet to a space you can see (no action required). During combat, when a Bloodied creature you can see enters the Wellspring, starts its turn there, or has the Wellspring moved onto it, you can spend a draught to have that creature regain 1d4 Hit Points (no action required). A Wellspring doesn't heal outside combat."
+       "text": "*You hold a vista to the River of Life open, allowing its waters to flow through.* As a Bonus Action, you can spend two Favors and call on the Maelstrom to open a Wellspring in a 5-foot Cube within 30 feet of yourself. It holds two draughts, and it lasts for 1 minute or until its draughts are gone; it doesn't require Concentration, and it closes if you have the Incapacitated condition. You have one Wellspring at a time. It's a vista of its own: it doesn't close or replace your open vista, opening another vista doesn't close it, and it never counts as your open vista.\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet to a space you can see (no action required). During combat, when a Bloodied creature you can see enters the Wellspring, starts its turn there, or has the Wellspring moved onto it, you can spend a draught to have that creature regain 1d4 Hit Points (no action required). A Wellspring doesn't heal outside combat."
       },
       {
        "level": 3,
@@ -5330,7 +5493,7 @@
       {
        "level": 3,
        "name": "Arete",
-       "text": "You have one extra Favor between rests, which any plane you know can grant (within the limit of three times for one plane); from Revelator level 11, you have two. You can replace a Revelation you chose when you finish a Short Rest, not only a Long Rest."
+       "text": "You have one extra Favor (two from Revelator level 11). You can replace a Revelation you chose when you finish a Short Rest, not only a Long Rest."
       },
       {
        "level": 3,
@@ -5355,12 +5518,12 @@
       {
        "level": 7,
        "name": "Many-Turning",
-       "text": "When you open a vista to let in an Influence, your spirit can take on that Revelation's Spirit Aspect, including its creature type, instead of its own, without calling on another Favor. Its current Hit Points and Hit Point maximum don't change, and it changes its Aspect only once per vista."
+       "text": "When you open a vista to let in an Influence, your spirit can take on that Revelation's Spirit Aspect, including its creature type, instead of its own, without spending another Favor. Its current Hit Points and Hit Point maximum don't change, and it changes its Aspect only once per vista."
       },
       {
        "level": 7,
        "name": "Twofold Vista",
-       "text": "When you open a vista to let in an Influence, you can call on the Favor of a second Revelation you know and let in its Influence through the same vista, on the same creature or another within 30 feet of the vista."
+       "text": "When you open a vista to let in an Influence, you can spend a second Favor and let in the Influence of a second Revelation you know through the same vista, on the same creature or another within 30 feet of the vista."
       },
       {
        "level": 11,
@@ -5385,7 +5548,7 @@
       {
        "level": 15,
        "name": "Apotheosis",
-       "text": "As a Bonus Action, you regain a number of Favors equal to half the number in your Revelations column (round up), and for 1 minute you have Advantage on attack rolls for your Planar Strikes. Once you use this feature, you can't use it again until you finish a Long Rest."
+       "text": "As a Bonus Action, you regain a number of Favors equal to half the number in your Favors column (round up), and for 1 minute you have Advantage on attack rolls for your Planar Strikes. Once you use this feature, you can't use it again until you finish a Long Rest."
       }
      ]
     },
@@ -5857,8 +6020,843 @@
      "fraction": 0.5,
      "round": "up"
     },
-    "text": "You must have a Wisdom score of 13 or higher. Gain the following traits from the Core Revelator Traits table: Hit Point Die, proficiency in one skill of your choice from the Revelator's skill list, and training with Light and Medium armor and Shields. Gain the Revelator's level 1 features, which are listed in the Revelator Features table. For multiclass spell slots, add half your Revelator levels (round up), as you would Ranger levels. Your Revelations and your Planar Strike dice come only from your Revelator levels. If you have levels in another class and fewer than five Revelator levels, you can call a spirit with Visiting Spirit only once, and you can't do so again until you finish a Long Rest."
-   }
+    "text": "You must have a Wisdom score of 13 or higher. Gain the following traits from the Core Revelator Traits table: Hit Point Die, proficiency in one skill of your choice from the Revelator's skill list, and training with Light and Medium armor and Shields. Gain the Revelator's level 1 features, which are listed in the Revelator Features table. For multiclass spell slots, add half your Revelator levels (round up). If you have levels in another class and fewer than five Revelator levels, you can call a spirit with Visiting Spirit only once, and you can't do so again until you finish a Long Rest."
+   },
+   "cosmography": {
+    "lead": "**The Wheel and the Plenum.** The planes below go by their names on the Wheel. For the core books' name of each (for *Plane Shift*, *Gate*, and the monsters that come from them), see the Introduction, The planes, by their core names. A plane's place on the Wheel is its height, from Good to Evil, and its bearing, from Law to Chaos. Planes on opposite sides of the Wheel are opposite in height, in bearing, or in both.\n\nThis is the complete list of Revelations. Each gives a Spirit Aspect (what a spirit of that plane can do, and the power it uses when you command it), an Influence, and the damage your Planar Strike deals while a vista to that plane is open. Class and pathway features name the Revelations they grant; The Near Planes (level 5) and The Circuit (level 13) choose from here.\n\n**Where they are.** Every Revelation is a place you can walk (Soul's Journey) or reach with *Plane Shift*. The echoes lie alongside the world, a step from it; the Border Ethereal and the Deep Ethereal are the Ethereal Plane's near and far reaches; each earth end is a region of the Deep Ethereal where its road begins; the Middle World is the world's own axis, reached at its center.\n\n- **The Hidden.**\n- **The Ghostlands.**\n- **The Maelstrom.**\n- **The Source Mists.**\n- **The Wells.**\n- **The Bridgehead.**\n- **The Foot of the Mountain.**\n- **The Middle World.**\n\n**One bonus to AC.** Bonuses to AC from Revelator Influences and Aspects don't stack with each other; a creature uses the highest.",
+    "summary": {
+     "columns": [
+      "Plane",
+      "Learned",
+      "Influence",
+      "Command",
+      "Strike"
+     ],
+     "rows": [
+      {
+       "Plane": "The Hidden",
+       "Learned": "1 (all)",
+       "Influence": "Shake off charm or fear; Advantage on next save",
+       "Command": "*Misdirect:* a foe has Disadvantage on its next attack",
+       "Strike": "Psychic"
+      },
+      {
+       "Plane": "The Ghostlands",
+       "Learned": "1 (all)",
+       "Influence": "*Gloom:* an ally is hard to hit, or a foe misses",
+       "Command": "*Go Ahead:* it scouts unseen; you see through it",
+       "Strike": "Necrotic"
+      },
+      {
+       "Plane": "The Border Ethereal",
+       "Learned": "2 (all)",
+       "Influence": "*Step Aside:* halve the next damage",
+       "Command": "*Through the Wall:* it carries a note or object",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "The Bridgehead",
+       "Learned": "3 (the Bridge)",
+       "Influence": "*Verdict:* Weigh a creature, or tip its scale twice",
+       "Command": "*Entered in the Record:* Advantage against a foe who hurt you",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "The Maelstrom",
+       "Learned": "3 (the River of Life)",
+       "Influence": "*Renewal:* end a condition and step free",
+       "Command": "*Rising Water:* Temporary Hit Points for an ally",
+       "Strike": "Cold"
+      },
+      {
+       "Plane": "The Foot of the Mountain",
+       "Learned": "3 (the Mountain)",
+       "Influence": "*Aegis:* +2 AC; frighten the first to hit",
+       "Command": "*Heave:* shove a creature or knock it Prone",
+       "Strike": "Bludgeoning"
+      },
+      {
+       "Plane": "The Source Mists",
+       "Learned": "3 (the River of Death)",
+       "Influence": "*Forgetting:* break Concentration; no Reactions",
+       "Command": "*Hush:* a foe can't take Reactions",
+       "Strike": "Psychic"
+      },
+      {
+       "Plane": "The Wells",
+       "Learned": "3 (the Tree)",
+       "Influence": "*Urd's Thread:* add or subtract 1d6 on a D20 Test",
+       "Command": "*Roots:* a creature's Speed drops to 0",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "Positive Energy",
+       "Learned": "5 or 13 (choice)",
+       "Influence": "*Surge of Life:* heal 1d8 + Wisdom",
+       "Command": "*Warm Light:* heal an ally your Wisdom",
+       "Strike": "Radiant"
+      },
+      {
+       "Plane": "Negative Energy",
+       "Learned": "5 or 13 (choice)",
+       "Influence": "*Drain:* 2d6 Necrotic; no healing; weakened",
+       "Command": "*Wither:* a foe can't regain Hit Points",
+       "Strike": "Necrotic"
+      },
+      {
+       "Plane": "The Deep Ethereal",
+       "Learned": "5 or 13 (choice)",
+       "Influence": "*Through the Curtain:* teleport 30 feet, or vanish",
+       "Command": "*Ferry:* it teleports 15 feet with a passenger",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "The Elemental Planes",
+       "Learned": "5 or 13 (choice)",
+       "Influence": "*Elemental Edge:* +1d6 of the element on hits",
+       "Command": "*Element's Way:* push, rough ground, scorch, or douse",
+       "Strike": "The element's"
+      },
+      {
+       "Plane": "The Astral",
+       "Learned": "6 (all)",
+       "Influence": "*Speed of Thought:* double Speed, and fly",
+       "Command": "*Dream Message:* speak into a distant mind",
+       "Strike": "Psychic"
+      },
+      {
+       "Plane": "Elysium",
+       "Learned": "7 (the River of Life); 13 (choice)",
+       "Influence": "*Peace:* Temporary Hit Points; end a condition",
+       "Command": "*Rest Easy:* end charm, fear, or poison",
+       "Strike": "Radiant"
+      },
+      {
+       "Plane": "Valhalla",
+       "Learned": "7 (the Tree); 13 (choice)",
+       "Influence": "*One More Blow:* an ally attacks at once",
+       "Command": "*War Cry:* Advantage and Temporary Hit Points",
+       "Strike": "Slashing"
+      },
+      {
+       "Plane": "Asphodel",
+       "Learned": "7 (the River of Death); 13 (choice)",
+       "Influence": "*Apathy:* action or Bonus Action, not both",
+       "Command": "*Gray:* a foe can't have Advantage",
+       "Strike": "Necrotic"
+      },
+      {
+       "Plane": "The Celestial Bureaucracy",
+       "Learned": "7 (the Bridge); 13 (choice)",
+       "Influence": "*Certainty:* d20 rolls below 10 count as 10",
+       "Command": "*Filed:* +2 AC for an ally",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "The Middle World",
+       "Learned": "7 (the Mountain); 13 (choice)",
+       "Influence": "*Balance:* no Advantage or Disadvantage; can't be moved",
+       "Command": "*Concordance:* a creature can't be moved",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "Pandemonium",
+       "Learned": "13 (choice)",
+       "Influence": "*Howling:* hurl a foe Prone, or carry a friend",
+       "Command": "*Howl:* deafen creatures near it",
+       "Strike": "Thunder"
+      },
+      {
+       "Plane": "Gehenna",
+       "Learned": "13 (choice)",
+       "Influence": "*Cold Bargain:* Advantage and 4d6 Fire, at a price",
+       "Command": "*Heat:* a foe has Disadvantage on its next attack",
+       "Strike": "Fire"
+      },
+      {
+       "Plane": "Arcadia",
+       "Learned": "13 (choice)",
+       "Influence": "*Harmony:* two allies add 1d4 to attacks and saves",
+       "Command": "*Keep Time:* an ally adds 1d4 to its next save",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "The House of Song",
+       "Learned": "13 (choice)",
+       "Influence": "*Shared Labor:* two allies have Advantage",
+       "Command": "*Lend a Hand:* Advantage on an ally's check",
+       "Strike": "Bludgeoning"
+      },
+      {
+       "Plane": "The Sphere of the Moon",
+       "Learned": "13 (choice)",
+       "Influence": "*Moon's Mercy:* heal 2d8; lift a curse or condition",
+       "Command": "*Moonlight:* cure blindness, deafness, or a curse",
+       "Strike": "Radiant"
+      },
+      {
+       "Plane": "Cocytus",
+       "Learned": "13 (choice)",
+       "Influence": "*The Hush:* silence and deafen a foe",
+       "Command": "*Chill:* halve a foe's Speed",
+       "Strike": "Cold"
+      },
+      {
+       "Plane": "The Seven Gates",
+       "Learned": "13 (choice)",
+       "Influence": "*Relocate:* teleport a friend, or a foe",
+       "Command": "*Step Through:* teleport, or swap places",
+       "Strike": "Force"
+      },
+      {
+       "Plane": "Eden",
+       "Learned": "15 (the River of Life)",
+       "Influence": "*The Garden's Plenty:* faster; Advantage beside allies",
+       "Command": "*Flank:* Advantage against a foe beside it",
+       "Strike": "Slashing"
+      },
+      {
+       "Plane": "Svarga",
+       "Learned": "15 (the Mountain)",
+       "Influence": "*Passion:* +1d8 Radiant on a hit",
+       "Command": "*Revel:* a foe has Disadvantage on Wisdom saves",
+       "Strike": "Radiant"
+      },
+      {
+       "Plane": "Limbo",
+       "Learned": "15 (the Tree)",
+       "Influence": "*Reshape:* Resistance to a type for 1 minute",
+       "Command": "*Unmake:* strip a Resistance",
+       "Strike": "Your choice"
+      },
+      {
+       "Plane": "Tartarus",
+       "Learned": "15 (the River of Death)",
+       "Influence": "*Bound:* Restrain a foe",
+       "Command": "*Hold:* grapple; no teleporting away",
+       "Strike": "Bludgeoning"
+      },
+      {
+       "Plane": "Acheron",
+       "Learned": "15 (the Bridge)",
+       "Influence": "*Shield Wall:* +2 AC; +1 for neighbors",
+       "Command": "*Close Ranks:* an ally can't be moved",
+       "Strike": "Piercing"
+      }
+     ]
+    },
+    "groups": [
+     {
+      "name": "The Echoes",
+      "note": "Level 1",
+      "lead": "",
+      "revelations": [
+       {
+        "name": "The Hidden",
+        "note": "",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Fae Trickster",
+          "text": "*Fey.* It has Advantage on Dexterity (Stealth) checks, and as its Utilize action it can cast *Minor Illusion* without components. **Command:** *Misdirect.* One creature within 5 feet of the spirit must succeed on a Wisdom saving throw or have Disadvantage on its next attack roll before the start of your next turn."
+         },
+         {
+          "label": "Influence: Merriment",
+          "text": "The creature can end one Charmed or Frightened condition on itself, and has Advantage on its next saving throw."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Psychic damage."
+         }
+        ]
+       },
+       {
+        "name": "The Ghostlands",
+        "note": "",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Shade",
+          "text": "*Undead.* It has Advantage on Dexterity (Stealth) checks, it can take the Hide action in addition to its other action, and it can move through a space as narrow as 1 inch. **Command:** *Go Ahead.* It moves up to twice its Speed without provoking Opportunity Attacks and takes the Hide action, and you see through its eyes until the start of your next turn."
+         },
+         {
+          "label": "Influence: Gloom",
+          "text": "Choose an ally or an enemy; shadow falls on either. On an ally, the next attack roll against it has Disadvantage. On an enemy, it must succeed on a Wisdom saving throw or have Disadvantage on its next attack roll."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Necrotic damage."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Border Ethereal",
+      "note": "Level 2",
+      "lead": "",
+      "revelations": [
+       {
+        "name": "The Border Ethereal",
+        "note": "",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Ghost",
+          "text": "*Undead.* It can move through creatures and objects as if they were Difficult Terrain, taking 1d10 Force damage if it's inside an object at the end of your turn. **Command:** *Through the Wall.* It carries an object of up to 10 pounds, or a spoken message of up to twenty-five words, through walls and doors to a place or creature it can reach this turn."
+         },
+         {
+          "label": "Influence: Step Aside",
+          "text": "The next time the creature takes damage, the damage is halved."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Earth Ends",
+      "note": "Level 3, by Pathway",
+      "lead": "",
+      "revelations": [
+       {
+        "name": "The Bridgehead",
+        "note": "the Bridge",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Assessor",
+          "text": "*Construct.* Three times each time it's called, when a creature within 10 feet of it speaks a deliberate lie, it knows, and it can tell you. **Command:** *Entered in the Record.* Choose one creature within 30 feet of the spirit that has damaged you or one of your allies since the end of your last turn. The next attack roll one of your allies makes against it before the start of your next turn has Advantage."
+         },
+         {
+          "label": "Influence: Verdict",
+          "text": "If the creature is Weighed, its scale tips twice. If it isn't, it becomes Weighed (as The Scale, in the Bridge, describes, even if you don't have that feature) and its scale tips once. Either way, you take 1d6 Force damage. If Wider Vistas lets the Influence affect two creatures, choose one of them to be Weighed; the other takes 1d6 Force damage instead."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       },
+       {
+        "name": "The Maelstrom",
+        "note": "the River of Life",
+        "parts": [
+         {
+          "label": "Spirit Aspect: River Spirit",
+          "text": "*Elemental.* It has a Swim Speed of 30 feet, and it can breathe water and air. **Command:** *Rising Water.* One ally within 5 feet of the spirit gains Temporary Hit Points equal to your Proficiency Bonus."
+         },
+         {
+          "label": "Influence: Renewal",
+          "text": "The creature ends one of these conditions on itself: Blinded, Deafened, Poisoned, or Prone. It can then move up to half its Speed without provoking Opportunity Attacks."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Cold damage."
+         }
+        ]
+       },
+       {
+        "name": "The Foot of the Mountain",
+        "note": "the Mountain",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Hundred-Handed",
+          "text": "*Giant.* Its carrying capacity is that of a Huge creature with a Strength of 20, and it can carry a willing Medium or smaller creature at its full Speed. **Command:** *Heave.* It shoves one creature within 5 feet of it, which must succeed on a Strength saving throw or be pushed 5 feet away or have the Prone condition (your choice)."
+         },
+         {
+          "label": "Influence: Aegis",
+          "text": "The creature gains a +2 bonus to AC. The first creature to hit it while the Influence lasts must succeed on a Wisdom saving throw or have the Frightened condition until the end of its next turn."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Bludgeoning damage."
+         }
+        ]
+       },
+       {
+        "name": "The Source Mists",
+        "note": "the River of Death",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Passenger",
+          "text": "*Undead, or the passenger's own type with the DM's agreement.* It remembers the way back along any road it has traveled. **Command:** *Hush.* One creature within 5 feet of the spirit must succeed on a Wisdom saving throw or be unable to take Reactions until the start of its next turn."
+         },
+         {
+          "label": "Influence: Forgetting",
+          "text": "The creature makes a Wisdom saving throw. On a failed save, it loses Concentration and can't take Reactions."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Psychic damage."
+         }
+        ]
+       },
+       {
+        "name": "The Wells",
+        "note": "the Tree",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Root-Warden",
+          "text": "*Fey.* It can speak with plants. **Command:** *Roots.* One Large or smaller creature within 5 feet of the spirit must succeed on a Strength saving throw or have a Speed of 0 until the start of your next turn."
+         },
+         {
+          "label": "Influence: Urd's Thread",
+          "text": "Roll a d6. The creature adds the number rolled to, or subtracts it from, its next D20 Test; you choose which after seeing the d20 roll."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Near Planes",
+      "note": "Level 5",
+      "lead": "",
+      "revelations": [
+       {
+        "name": "Positive Energy",
+        "note": "",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Radiant Mote",
+          "text": "*Celestial.* It sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. **Command:** *Warm Light.* One creature within 5 feet of the spirit that has at least 1 Hit Point regains Hit Points equal to your Wisdom modifier. Warm Light doesn't heal outside combat."
+         },
+         {
+          "label": "Influence: Surge of Life",
+          "text": "The creature regains Hit Points equal to 1d8 plus your Wisdom modifier."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Radiant damage."
+         }
+        ]
+       },
+       {
+        "name": "Negative Energy",
+        "note": "",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Hollow",
+          "text": "*Undead.* Light dies near it: Bright Light within 10 feet of the spirit is Dim Light, and Dim Light there is Darkness. **Command:** *Wither.* One creature within 5 feet of the spirit must succeed on a Constitution saving throw or be unable to regain Hit Points until the start of your next turn."
+         },
+         {
+          "label": "Influence: Drain",
+          "text": "The creature makes a Constitution saving throw. On a failed save, it takes 2d6 Necrotic damage, and while the Influence lasts it can't regain Hit Points, its Regeneration doesn't function, and it has Disadvantage on the next Strength or Constitution check or saving throw it makes. On a successful save, it takes half as much damage."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Necrotic damage."
+         }
+        ]
+       },
+       {
+        "name": "The Deep Ethereal",
+        "note": "",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Mist-Walker",
+          "text": "*Elemental.* It has a Fly Speed of 30 feet (it can hover). **Command:** *Ferry.* It teleports up to 15 feet, and it can take one willing Medium or smaller creature within 5 feet of it along, to an unoccupied space within 5 feet of where it arrives."
+         },
+         {
+          "label": "Influence: Through the Curtain",
+          "text": "A willing creature teleports up to 30 feet to an unoccupied space you can see. Or it steps behind the curtain instead: until the start of its next turn, it has the Invisible condition and Resistance to all damage, but the curtain falls after the first attack roll made against it: once that attack is resolved, both end."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       },
+       {
+        "name": "The Elemental Planes",
+        "note": "",
+        "parts": [
+         {
+          "label": "The Elements",
+          "text": "When you open this vista, choose an element: Air (Lightning), Earth (Acid), Fire (Fire), or Water (Cold). The vista's Influence, its spirit, and your Planar Strike all carry that element while the vista is open."
+         },
+         {
+          "label": "Spirit Aspect: Elemental",
+          "text": "*Elemental.* It has Resistance to its element's damage and gains a trait. *Air:* it has a Fly Speed of 30 feet (it can hover) and can carry a Small creature. *Earth:* it has a Burrow Speed of 20 feet and can't be moved against its will. *Fire:* it sheds Bright Light in a 20-foot radius and sets unattended flammable objects alight at a touch. *Water:* it has a Swim Speed of 30 feet and puts out fires within 10 feet of itself. **Command:** *Element's Way.* *Air:* one creature within 5 feet of it must succeed on a Strength saving throw or be pushed 10 feet away. *Earth:* the ground in a 10-foot square it can see becomes Difficult Terrain until the start of your next turn. *Fire:* one creature within 5 feet of it must succeed on a Constitution saving throw or have Disadvantage on its next attack roll. *Water:* it douses the flames on one ally within 5 feet of it, or that ally ends the Prone condition on itself."
+         },
+         {
+          "label": "Influence: Elemental Edge",
+          "text": "The creature's weapon hits and Planar Strikes deal an extra 1d6 damage of the element's type."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "The element's damage type."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Crossings",
+      "note": "Level 6",
+      "lead": "",
+      "revelations": [
+       {
+        "name": "The Astral",
+        "note": "",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Astral Dreamer",
+          "text": "*Celestial.* It has a Fly Speed of 30 feet (it can hover). **Command:** *Dream Message.* It speaks a message of up to twenty-five words into the mind of a creature you have met that is on the same plane; the creature can answer the same way."
+         },
+         {
+          "label": "Influence: Speed of Thought",
+          "text": "The creature's Speed doubles, and it gains a Fly Speed equal to its Speed."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Psychic damage."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Circuit at Level 7",
+      "note": "by Pathway",
+      "lead": "Each pathway grants one of these planes at level 7: the Bridge, the Celestial Bureaucracy; the River of Life, Elysium; the Mountain, the Middle World; the River of Death, Asphodel; the Tree, Valhalla. Any of them can also be learned with The Circuit at level 13.",
+      "revelations": [
+       {
+        "name": "Elysium",
+        "note": "Good",
+        "parts": [
+         {
+          "label": "Spirit Aspect: The Blessed Dead",
+          "text": "*Celestial.* Allies within 10 feet of it can't have the Charmed or Frightened condition. **Command:** *Rest Easy.* One ally within 5 feet of it ends the Charmed, Frightened, or Poisoned condition on itself."
+         },
+         {
+          "label": "Influence: Peace",
+          "text": "The creature gains Temporary Hit Points equal to twice your Wisdom modifier, and it can end one of these conditions on itself: Charmed, Frightened, Poisoned, or Stunned."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Radiant damage."
+         }
+        ]
+       },
+       {
+        "name": "Valhalla",
+        "note": "Chaos, toward Good",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Einherjar",
+          "text": "*Celestial.* It can take the Help action to help an ally attack a creature within 30 feet of the spirit. **Command:** *War Cry.* One ally within 30 feet that can hear it has Advantage on its next attack roll before the end of its next turn, and gains Temporary Hit Points equal to your Wisdom modifier."
+         },
+         {
+          "label": "Influence: One More Blow",
+          "text": "The creature, an ally, can immediately take a Reaction to make one attack with a weapon or an Unarmed Strike. If it has 0 Hit Points, it first regains Hit Points equal to your Wisdom modifier."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Slashing damage."
+         }
+        ]
+       },
+       {
+        "name": "Asphodel",
+        "note": "Evil",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Gray Shade",
+          "text": "*Undead.* It has Advantage on Dexterity (Stealth) checks in Dim Light or Darkness. **Command:** *Gray.* One creature within 5 feet of it must succeed on a Wisdom saving throw or be unable to have Advantage on D20 Tests until the start of your next turn."
+         },
+         {
+          "label": "Influence: Apathy",
+          "text": "The creature makes a Wisdom saving throw. On a failed save, it can take an action or a Bonus Action on its turn, not both, and it can't take Reactions."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Necrotic damage."
+         }
+        ]
+       },
+       {
+        "name": "The Celestial Bureaucracy",
+        "note": "Law",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Clerk",
+          "text": "*Construct.* It recalls perfectly anything it has seen or heard since you called it, and it can copy a page of writing in a minute. **Command:** *Filed.* One ally within 5 feet of it gains a +2 bonus to AC until the start of your next turn."
+         },
+         {
+          "label": "Influence: Certainty",
+          "text": "When the creature rolls a 9 or lower on a d20 for anything but a Death Saving Throw, it can treat the roll as a 10."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       },
+       {
+        "name": "The Middle World",
+        "note": "Neutral",
+        "parts": [
+         {
+          "label": "Spirit Aspect: The Pilgrim",
+          "text": "*Every type at once.* It counts as every creature type, for better and worse. It understands and speaks every language, and it has Advantage on saving throws against spells and other magical effects. **Command:** *Concordance.* One creature within 5 feet of it can't be moved against its will until the start of your next turn."
+         },
+         {
+          "label": "Influence: Balance",
+          "text": "The creature's D20 Tests can't have Advantage or Disadvantage, and it can't be moved against its will."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Borderlands",
+      "note": "Level 13",
+      "lead": "Before level 20, only The Circuit teaches these four.",
+      "revelations": [
+       {
+        "name": "Pandemonium",
+        "note": "Chaos, toward Evil",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Howler",
+          "text": "*Aberration.* Hostile creatures within 10 feet of it have Disadvantage on saving throws to maintain Concentration. **Command:** *Howl.* Each creature of your choice within 10 feet of it must succeed on a Constitution saving throw or have the Deafened condition until the start of your next turn."
+         },
+         {
+          "label": "Influence: Howling",
+          "text": "The wind takes the creature. If it's hostile, it makes a Strength saving throw; on a failed save, it is pushed up to 15 feet in a direction you choose and has the Prone condition. If it's willing, it is carried up to 30 feet in a direction you choose without provoking Opportunity Attacks."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Thunder damage."
+         }
+        ]
+       },
+       {
+        "name": "Gehenna",
+        "note": "Evil, toward Law",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Furnace",
+          "text": "*Fiend.* It has Resistance to Fire damage, and it sheds Bright Light in a 10-foot radius. **Command:** *Heat.* One creature within 5 feet of it must succeed on a Constitution saving throw or have Disadvantage on its next attack roll before the start of your next turn."
+         },
+         {
+          "label": "Influence: Cold Bargain",
+          "text": "The creature's next attack roll has Advantage, and if it hits, it deals an extra 4d6 Fire damage. The creature takes 1d6 Fire damage when the Influence takes effect."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Fire damage."
+         }
+        ]
+       },
+       {
+        "name": "Arcadia",
+        "note": "Law, toward Good",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Harmonious Guard",
+          "text": "*Celestial or Construct (your choice when you call it).* Once per round, when an ally within 5 feet of it fails a saving throw, it can take a Reaction to let the ally reroll the save; the ally must use the new roll. **Command:** *Keep Time.* One ally within 5 feet of it adds 1d4 to its next saving throw before the start of your next turn."
+         },
+         {
+          "label": "Influence: Harmony",
+          "text": "The creature and one other ally within 10 feet of it each add 1d4 to their attack rolls and saving throws."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       },
+       {
+        "name": "The House of Song",
+        "note": "Good, toward Law",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Twin Worker",
+          "text": "*Celestial or Construct (your choice when you call it).* It is proficient with every kind of Artisan's Tools. When it takes the Help action, two creatures gain the benefit instead of one. **Command:** *Lend a Hand.* One ally within 5 feet of it has Advantage on its next ability check before the end of its next turn."
+         },
+         {
+          "label": "Influence: Shared Labor",
+          "text": "The creature and one ally within 5 feet of it each have Advantage on their next attack roll or ability check."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Bludgeoning damage."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Dominions",
+      "note": "Level 13",
+      "lead": "These Revelations reach the quiet corners, never the seats of power; calling on the Jade Emperor's palace, Nessus, or a demon lord's layer takes Reach Beyond, and Attention always follows.\n\nA Dominion's spirit is a local, not a servant. A Revelator who calls a devil from Cocytus has signed no contract and owes no one, and the devil reports to no lord. It comes because the Revelator knows where it lives, the way a naturalist knows where a hawk nests.",
+      "revelations": [
+       {
+        "name": "The Seven Heavens: The Sphere of the Moon",
+        "note": "Law and Good",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Lantern of the Moon",
+          "text": "*Celestial.* It sheds Bright Light in a 20-foot radius. Creatures in that light gain no benefit from the Invisible condition, and a Shapechanger there shows its true form to you. **Command:** *Moonlight.* One ally in its light ends the Blinded or Deafened condition on itself, or ends one curse on itself; a creature can be freed of a curse this way only once per Long Rest."
+         },
+         {
+          "label": "Influence: Moon's Mercy",
+          "text": "The creature regains 2d8 Hit Points and ends one curse or one of these conditions on itself: Blinded, Charmed, Deafened, Frightened, Paralyzed, Poisoned, or Stunned. While the Influence lasts, it has Resistance to Necrotic damage."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Radiant damage."
+         }
+        ]
+       },
+       {
+        "name": "The Nine Circles: Cocytus",
+        "note": "Law and Evil",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Stygian Devil",
+          "text": "*Fiend (Devil).* It has Resistance to Cold damage and is unharmed by Extreme Cold. **Command:** *Chill.* One creature within 5 feet of it must succeed on a Constitution saving throw or have its Speed halved and Disadvantage on Dexterity saving throws until the start of your next turn."
+         },
+         {
+          "label": "Influence: The Hush",
+          "text": "The creature makes a Constitution saving throw. On a failed save, it can't speak, so it can't cast spells with Verbal components, and it has the Deafened condition."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Cold damage."
+         }
+        ]
+       },
+       {
+        "name": "The Abyss: The Seven Gates",
+        "note": "Chaos and Evil",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Wanderer of the Gates",
+          "text": "*Fiend (Demon).* It knows where any portal it can see leads. **Command:** *Step Through.* It teleports up to 30 feet, or it swaps places with a willing creature within 30 feet of it."
+         },
+         {
+          "label": "Influence: Relocate",
+          "text": "If the creature is willing, it teleports up to 30 feet to an unoccupied space you can see. If it's hostile, it makes a Charisma saving throw; on a failed save, you teleport it up to 30 feet to an unoccupied space you can see."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Force damage."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "The Circuit at Level 15",
+      "note": "by Pathway",
+      "lead": "Each pathway grants one of these planes at level 15: the Bridge, Acheron; the River of Life, Eden; the Mountain, Svarga; the River of Death, Tartarus; the Tree, Limbo. No other pathway reaches them before level 20.",
+      "revelations": [
+       {
+        "name": "Eden",
+        "note": "Good, toward Chaos",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Beast Spirit",
+          "text": "*Beast.* It has Advantage on Wisdom (Perception) and Wisdom (Survival) checks, and it can follow a creature's trail by scent for up to a day after the creature passed. **Command:** *Flank.* The next attack roll an ally makes before the start of your next turn against a creature within 5 feet of the spirit has Advantage."
+         },
+         {
+          "label": "Influence: The Garden's Plenty",
+          "text": "The creature's Speed increases by 10 feet, and it has Advantage on attack rolls against any creature that one of its allies is within 5 feet of."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Slashing damage."
+         }
+        ]
+       },
+       {
+        "name": "Svarga",
+        "note": "Chaos and Good",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Reveler",
+          "text": "*Celestial.* Music follows it; it can play any instrument. **Command:** *Revel.* One creature within 5 feet of it must succeed on a Wisdom saving throw or have Disadvantage on Wisdom saving throws until the start of your next turn."
+         },
+         {
+          "label": "Influence: Passion",
+          "text": "One of the creature's weapon or spell hits deals an extra 1d8 Radiant damage."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Radiant damage."
+         }
+        ]
+       },
+       {
+        "name": "Limbo",
+        "note": "Chaos",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Flux",
+          "text": "*Aberration.* It can take the shape of any Tiny object, and as a Utilize action it can reshape unworked earth or stone in a 5-foot Cube. **Command:** *Unmake.* One creature within 5 feet of it loses Resistance to one damage type of your choice until the start of your next turn."
+         },
+         {
+          "label": "Influence: Reshape",
+          "text": "The creature gains Resistance to one damage type of your choice for 1 minute. A creature can benefit from only one Reshape at a time."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Acid, Cold, Fire, Lightning, or Thunder damage, your choice each time you hit."
+         }
+        ]
+       },
+       {
+        "name": "Tartarus",
+        "note": "Evil, toward Chaos",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Jailer",
+          "text": "*Fiend.* It knows if a creature within 30 feet of it is under a magical compulsion or imprisonment. **Command:** *Hold.* One Large or smaller creature within 5 feet of it must succeed on a Strength saving throw or have the Grappled condition (escape DC equals your spell save DC); while Grappled this way, it can't teleport or leave the plane it's on. The Jailer can have only one creature Grappled at a time."
+         },
+         {
+          "label": "Influence: Bound",
+          "text": "The creature makes a Strength saving throw. On a failed save, it has the Restrained condition."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Bludgeoning damage."
+         }
+        ]
+       },
+       {
+        "name": "Acheron",
+        "note": "Law, toward Evil",
+        "parts": [
+         {
+          "label": "Spirit Aspect: Iron Soldier",
+          "text": "*Construct.* It holds the line: it can't be moved against its will or knocked Prone, and each ally within 5 feet of it has a +1 bonus to AC. **Command:** *Close Ranks.* One ally within 5 feet of it can't be moved against its will or knocked Prone until the start of your next turn."
+         },
+         {
+          "label": "Influence: Shield Wall",
+          "text": "The creature gains a +2 bonus to AC, and each ally within 5 feet of it gains a +1 bonus to AC."
+         },
+         {
+          "label": "Planar Strike",
+          "text": "Piercing damage."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "optional_rules": [],
+   "new_spells": []
   },
   {
    "name": "Danae",
@@ -6272,7 +7270,7 @@
     {
      "level": 1,
      "name": "Warps",
-     "text": "Once you see the true shape of reality, you can bend its space.\n\nAs a Bonus Action, you warp a 5-foot Cube you can see within 60 feet of yourself into one of the shapes below. The warp lasts for 1 minute, until you dismiss it (no action required), or until you unravel it. You can make a number of warps equal to the number in the Warps column of the Danae Features table, and you regain all expended warps when you finish a Short or Long Rest. A warp you keep in place through a rest stays expended until it ends.\n\nWarps don't require Concentration, and they don't choose sides: a warp affects every creature alike, unless its season says otherwise. Warps can't overlap: no part of a warp's space can be part of another warp's space. A warp is a visible thing: a creature that can see its space can tell that the space is wrong, though not what the warp does until it's inside. When a warp calls for a saving throw, the DC equals your spell save DC.\n\n- **Stretch.** Every foot of movement inside the warp costs 2 extra feet. This doesn't stack with Difficult Terrain: inside a Stretch, each foot costs 3 feet either way.\n- **Gate.** Your Gates are linked in a chain, in the order you made them; the last leads back to the first. A Gate must rest on a surface. A creature that moves into a Gate of its own will steps out of the next one in the chain, in its space or the nearest unoccupied space to it. A Gate doesn't send on a creature put into it any other way (moved against its will, or caught in a Gate made on it). This costs no movement and doesn't trigger the Gate it arrives in. When you make a Gate and have no other Gate in place, you make two, linked, for one warp: put the second on another surface you can see within 60 feet of yourself. Later Gates join the chain. If a Gate ends, the chain closes around the gap: the Gate before it leads to the Gate after it. A Gate left alone leads nowhere.\n\n**On a Creature.** You can make a warp where creatures are standing. Each creature in the Cube makes a Dexterity saving throw. On a success, it moves to the nearest unoccupied space outside the warp (this doesn't provoke Opportunity Attacks) and isn't affected. On a failure, it's inside the warp, and it enters the warp at the start of its next turn: the warp and its season (see The Half) take it then, as if it had just walked in. You can make a warp on a creature only once on each of your turns.\n\n**Unraveling.** Some features let you unravel a warp. To unravel a warp, you either end one of your warps that is in place or expend one you haven't used yet; either way, the feature takes effect. A feature that tells you to expend a warp uses one you haven't used yet.\n\n**Magic and Travel.** Warps are magical effects: *Detect Magic* reveals them, and *Dispel Magic* ends one as if it were a level 1 spell. Passing through a Gate, or any warp that takes a creature from one space to another without crossing the space between, is teleportation; a push or a fall is not. A creature can travel through your warps this way (Gates, and a Crossing Danae's Doors and Seams) only once per turn.\n\n**Arriving by Teleport.** A creature teleported into a warp's space enters the warp, just as if it had walked in, but a Gate it arrives in doesn't send it on. A creature can't arrive inside a stone's solid space (a Shaping Danae's warp; see Shaping); it arrives in the nearest unoccupied space instead. If nothing in that space would hold a creature standing (the warp hangs in the air or over a drop), the creature instead arrives in the nearest unoccupied space where it can stand, and it doesn't enter the warp. A creature passing through a pair of Doors (a Crossing Danae's warp; see Crossing) follows the Doors' own rules instead."
+     "text": "Once you see the true shape of reality, you can bend its space.\n\nAs a Bonus Action, you warp a 5-foot Cube you can see within 60 feet of yourself into one of the shapes below. The warp lasts for 1 minute, until you dismiss it (no action required), or until you unravel it. You can make a number of warps equal to the number in the Warps column of the Danae Features table, and you regain all expended warps when you finish a Short or Long Rest. A warp you keep in place through a rest stays expended until it ends.\n\nWarps don't require Concentration, and they don't choose sides: a warp affects every creature alike, unless its season says otherwise. Warps can't overlap: no part of a warp's space can be part of another warp's space. A warp is a visible thing: a creature that can see its space can tell that the space is wrong, though not what the warp does until it's inside. When a warp calls for a saving throw, the DC equals your spell save DC.\n\n- **Stretch.** Every foot of movement inside the warp costs 2 extra feet. This doesn't stack with Difficult Terrain: inside a Stretch, each foot costs 3 feet either way.\n- **Gate.** Your Gates are linked in a chain, in the order you made them; the last leads back to the first. A Gate must rest on a surface. A creature that moves into a Gate of its own will steps out of the next one in the chain, in its space or the nearest unoccupied space to it. A Gate doesn't send on a creature put into it any other way (moved against its will, or caught in a Gate made on it). This costs no movement and doesn't trigger the Gate it arrives in. When you make a Gate and have no other Gate in place, you make two, linked, for one warp: put the second on another surface you can see within 60 feet of yourself. Later Gates join the chain. If a Gate ends, the chain closes around the gap: the Gate before it leads to the Gate after it. A Gate left alone leads nowhere.\n\n**On a Creature.** You can make a warp where creatures are standing. Each creature in the Cube makes a Dexterity saving throw. On a success, it moves to the nearest unoccupied space outside the warp (this doesn't provoke Opportunity Attacks) and isn't affected. On a failure, it's inside the warp, and it enters the warp at the start of its next turn: the warp and its season (see The Half) take it then, as if it had just walked in. You can make a warp on a creature only once on each of your turns.\n\n**Unraveling.** Some features let you unravel a warp. To unravel a warp, you either end one of your warps that is in place or expend one you haven't used yet; either way, the feature takes effect. A feature that tells you to expend a warp uses one you haven't used yet.\n\n**Magic and Travel.** Warps are magical effects: *Detect Magic* reveals them, and *Dispel Magic* ends one as if it were a level 1 spell. Passing through a Gate, or any warp that takes a creature from one space to another without crossing the space between, is teleportation; a push or a fall is not. A creature can travel through your warps this way (Gates, and a Crossing Danae's Doors and Seams) only once per turn.\n\n**Arriving by Teleport.** A creature teleported into a warp's space enters the warp, just as if it had walked in, but a Gate it arrives in doesn't send it on. If the creature couldn't stand in that space (it's solid stone, or the warp hangs over a drop), it arrives in the nearest unoccupied space where it can stand instead, outside the warp. A creature going through a Crossing Danae's Doors follows the Doors' own rules."
     },
     {
      "level": 1,
@@ -6287,7 +7285,7 @@
     {
      "level": 2,
      "name": "Flee",
-     "text": "When you take damage and are Bloodied afterward but not at 0 Hit Points (whether or not you were Bloodied before), you can take a Reaction to step half out of the world. Unravel one or more of your warps, in place (lots and knots included) or not yet used. You're **Away** for 1 minute, and you gain Temporary Hit Points equal to your Danae level plus 5 for each warp you unraveled. These Temporary Hit Points replace any you already have.\n\nBeing Away ends early when you have none of its Temporary Hit Points left, when you have the Incapacitated condition, or when you end it (no action required). While you're Away, you keep your mind and your magic: you cast spells and keep Concentration as normal, and in addition:\n\n- **Half Here.** Attack rolls against you have Disadvantage.\n- **Flicker.** Once on each of your turns, you can teleport up to 15 feet to an unoccupied space you can see (no action required).\n\n**Readjust.** When you stop being Away, you come back not quite when you left: at the end of the current turn, you can teleport up to 15 feet to an unoccupied space you can see, and you can't take Reactions until the end of your next turn.\n\nOnce you use this feature, you can't use it again until you finish a Long Rest."
+     "text": "When you take damage and are Bloodied afterward but not at 0 Hit Points (whether or not you were Bloodied before), you can take a Reaction to step half out of the world. Unravel one or more of your warps, in place (lots and knots included) or not yet used. You're **Away** for 1 minute, and you gain Temporary Hit Points equal to your Danae level plus 5 for each warp you unraveled. These Temporary Hit Points replace any you already have.\n\nBeing Away ends early when you have none of its Temporary Hit Points left, when you have the Incapacitated condition, or when you end it (no action required). While you're Away, you keep your mind and your magic: you cast spells and keep Concentration as normal, and in addition:\n\n- **Half Here.** Attack rolls against you have Disadvantage.\n- **Flicker.** Once on each of your turns, you can teleport up to 15 feet to an unoccupied space you can see (no action required).\n\n**Readjust.** When you stop being Away, you come back not quite when you left: at the end of the current turn, you can teleport up to 15 feet to an unoccupied space you can see.\n\nOnce you use this feature, you can't use it again until you finish a Long Rest."
     },
     {
      "level": 3,
@@ -6312,7 +7310,7 @@
     {
      "level": 7,
      "name": "Reading the Season",
-     "text": "The Hidden settles in you, and you begin to read people as it reads them, by their weather. As a Bonus Action, choose a number of creatures you can see within 30 feet of yourself, up to your Charisma modifier (minimum of one). The DM tells you each one's temper and what lies under it (see Tempers, below). Each of them is **read** by you for 1 hour. You have Advantage on Wisdom (Insight) checks against a creature you've read, and on Charisma (Deception, Intimidation, or Persuasion) checks against it that play to its temper. Other features of yours refer to creatures you've read.\n\n**Tempers.** Every creature has a temper, which is always one of the four seasons. The DM assigns it, and says how long it holds, by the Tempers rule in \"The Hidden, in the rules\" in this book's introduction."
+     "text": "The Hidden settles in you, and you begin to read people as it reads them, by their weather. As a Bonus Action, choose a number of creatures you can see within 30 feet of yourself, up to your Charisma modifier (minimum of one). The DM tells you each one's temper and what lies under it (Tempers, in \"The Hidden, in the rules\"). Each of them is **read** by you for 1 hour. You have Advantage on Wisdom (Insight) checks against a creature you've read, and on Charisma (Deception, Intimidation, or Persuasion) checks against it that play to its temper. Other features of yours refer to creatures you've read."
     },
     {
      "level": 7,
@@ -6591,17 +7589,17 @@
       {
        "level": 3,
        "name": "Doors",
-       "text": "Your warps can be Doors. As a Bonus Action, you open a pair of linked Doors on solid surfaces you can see within 60 feet of yourself: a wall, a floor, a ceiling, the side of a cart. The pair counts as one warp. Each Door is a 5-foot square, or a 10-foot square from Danae level 5, and a creature fits through it only if the creature's space is no wider than the Door. A creature that moves into one Door of its own will steps out of the other, facing away from its surface; a Door doesn't send on a creature put into it any other way. When a feature refers to a warp's space, a Door's space is the space in front of it, as wide as the Door and 5 feet deep. A Door can open in the floor under a willing creature, which drops through.\n\n*A Door of Your Own.* Your Doors are openings no one has warded. Iron and salt on a house's doors, windows, and chimney don't stop you, or anyone who comes through with you, from passing through a Door you open in its wall, floor, or roof (see \"Iron and salt\" in the Introduction): the ward stops only crossing an opening, not teleportation past it.\n\n*Inertia.* A creature that falls into a Door comes out of the other still moving. It travels up to the distance it had already fallen, in the direction the far Door faces, before it falls normally or strikes something. When it lands or strikes something, it takes damage as for one fall of the whole distance it fell and traveled, and has the Prone condition if it takes any.\n\n*Keyhole.* One of your Doors can open on a surface you can't see, if it's within 30 feet of yourself and on the far side of a wall, door, floor, or ceiling no more than 5 feet thick (10 feet from Danae level 10). You know whether the space beyond is open before you commit to it.\n\n*Latch.* Once on each of your turns, when you pass through a pair of your Doors that are no more than 30 feet apart, you can latch them behind you: they close, and you regain the warp they used. Doors you leave open for your friends still cost their warp.\n\n*Fellow Travellers.* When you go through one of your Doors, up to a number of willing creatures equal to your Proficiency Bonus within 5 feet of you can go through with you, arriving in unoccupied spaces within 5 feet of the far Door. For each of them, this counts as its one trip through your warps that turn."
+       "text": "Your warps can be Doors. As a Bonus Action, you open a pair of linked Doors on solid surfaces you can see within 60 feet of yourself: a wall, a floor, a ceiling, the side of a cart. The pair counts as one warp. Each Door is a 5-foot square, or a 10-foot square from Danae level 5, and a creature fits through it only if the creature's space is no wider than the Door. A creature that moves into one Door of its own will steps out of the other, facing away from its surface; a Door doesn't send on a creature put into it any other way. When a feature refers to a warp's space, a Door's space is the space in front of it, as wide as the Door and 5 feet deep. A Door can open in the floor under a willing creature, which drops through.\n\n*A Door of Your Own.* Your Doors are openings no one has warded. Iron and salt on a house's doors, windows, and chimney don't stop you, or anyone who comes through with you, from passing through a Door you open in its wall, floor, or roof (see \"Iron and salt\" in the Introduction): the ward stops only crossing an opening, not teleportation past it.\n\n*Inertia.* A creature that falls into a Door comes out of the other still moving. It travels up to the distance it had already fallen, in the direction the far Door faces, before it falls normally or strikes something. When it lands or strikes something, it takes damage as for one fall of the whole distance it fell and traveled, and has the Prone condition if it takes any.\n\n*Keyhole.* One of your Doors can open on a surface you can't see, if it's within 30 feet of yourself and on the far side of a wall, door, floor, or ceiling no more than 5 feet thick. You know whether the space beyond is open before you commit to it.\n\n*Latch.* Once on each of your turns, when you pass through a pair of your Doors that are no more than 30 feet apart, you can latch them behind you: they close, and you regain the warp they used. Doors you leave open for your friends still cost their warp.\n\n*Fellow Travellers.* When you go through one of your Doors, up to a number of willing creatures equal to your Proficiency Bonus within 5 feet of you can go through with you, arriving in unoccupied spaces within 5 feet of the far Door. For each of them, this counts as its one trip through your warps that turn."
       },
       {
        "level": 3,
        "name": "Back Ways",
-       "text": "You gain proficiency in the Stealth skill (if you already have it, choose another skill instead). After you spend a day in a settlement, you know its back ways: you can find a route between any two places in it that avoids its main streets, watch posts, and toll gates, if such a route exists. After you spend an hour in a building, you know every way into and out of it that a person could use (doors, windows, chimneys, drains, the servants' stair), even the ones its owner has forgotten, and where its walls are thin enough for a Door."
+       "text": "You gain proficiency in the Stealth skill (if you already have it, choose another skill instead). You have a Climb Speed equal to your Speed, and your long jumps carry you 10 feet farther. After you spend a day in a settlement, you know its back ways: you can find a route between any two places in it that avoids its main streets, watch posts, and toll gates, if such a route exists. After you spend an hour in a building, you know every way into and out of it that a person could use (doors, windows, chimneys, drains, the servants' stair), even the ones its owner has forgotten, and where its walls are thin enough for a Door."
       },
       {
        "level": 6,
        "name": "Seams",
-       "text": "Every warp that fills a space is a Gate for you, whatever its shape: when you enter one of your warps, you can step out of any other (once per turn, as for all travel through your warps). While you're in one of your warps, you can take the Hide action as a Bonus Action on a turn you haven't made an attack roll, and you can hide there without cover and even while an enemy can see you. Hiding this way ends when you leave the space of your warps, unless you leave by travelling through one of them."
+       "text": "Every warp that fills a space is a Gate for you, whatever its shape: when you enter one of your warps, you can step out of any other (once per turn, as for all travel through your warps). While you're in one of your warps, you can take the Hide action as a Bonus Action on a turn you haven't made an attack roll, and you can hide there without cover and even while an enemy can see you. Hiding this way ends when you leave the space of your warps, unless you leave by traveling through one of them."
       },
       {
        "level": 6,
@@ -6616,7 +7614,7 @@
       {
        "level": 10,
        "name": "Liminality",
-       "text": "Iron and salt never stopped your Doors or Gates (see A Door of Your Own). From this level, other wards don't stop them either: your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (Cold Iron, Name It, the Iron Bell, a Hidden Killer's ward, a Faebreaker's grip) still stops that creature. Creatures that pass through your Gates and Doors don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic, and need no invitation: an effect that keeps out uninvited creatures doesn't stop them. On foot, you're bound by such effects like anyone else (iron and salt at a door among them): the wall is your way in."
+       "text": "Your Keyhole reaches through up to 10 feet of wall, door, floor, or ceiling. Iron and salt never stopped your Doors or Gates (A Door of Your Own), and from this level other wards don't stop them either: your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (Cold Iron, Name It, the Iron Bell, a Hidden Killer's ward, a Faebreaker's grip) still stops that creature. Creatures that pass through your Gates and Doors don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic, and need no invitation: an effect that keeps out uninvited creatures doesn't stop them. On foot, you're bound by such effects like anyone else (iron and salt at a door among them): the wall is your way in."
       },
       {
        "level": 14,
@@ -6680,6 +7678,11 @@
        "level": 6,
        "name": "Quick Cut",
        "text": "When you cut a Name, you can also make a warp as part of the same Bonus Action, expending a warp for it as usual."
+      },
+      {
+       "level": 6,
+       "name": "Wrong Name",
+       "text": "You know when a creature tells you a false name, for itself or for a person, place, or thing you can see."
       },
       {
        "level": 10,
@@ -7224,7 +8227,10 @@
      "fraction": 1
     },
     "text": "You must have a Charisma score of 13 or higher. Gain the following traits from the Core Danae Traits table: Hit Point Die and training with Light armor. Gain the Danae's level 1 features, which are listed in the Danae Features table, except The Sight's skill proficiencies. For multiclass spell slots, add all your Danae levels, as you would Wizard levels. If you have levels in another class, you regain expended warps only when you finish a Long Rest."
-   }
+   },
+   "cosmography": null,
+   "optional_rules": [],
+   "new_spells": []
   }
  ]
 }

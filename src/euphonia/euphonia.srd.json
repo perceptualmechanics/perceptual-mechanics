@@ -17,6 +17,10 @@
    {
     "path": "/classes/3/spells/6/0/name",
     "to": "Conjure Fae"
+   },
+   {
+    "path": "/spells/57/name",
+    "to": "Conjure Fae"
    }
   ]
  },
@@ -10344,6 +10348,4150 @@
    }
   }
  ],
+ "spells": [
+  {
+   "name": "Acid Arrow",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Acid"
+   ]
+  },
+  {
+   "name": "Aid",
+   "level": 2,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Alarm",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Ranger",
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Alter Self",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Animal Friendship",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Animal Messenger",
+   "level": 2,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Animal Shapes",
+   "level": 8,
+   "school": "Transmutation",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Animate Dead",
+   "level": 3,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Animate Objects",
+   "level": 5,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Antilife Shell",
+   "level": 5,
+   "school": "Abjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Antimagic Field",
+   "level": 8,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Antipathy/Sympathy",
+   "level": 8,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Arcane Eye",
+   "level": 4,
+   "school": "Divination",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Arcane Hand",
+   "level": 5,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Bludgeoning",
+    "Force"
+   ]
+  },
+  {
+   "name": "Arcane Lock",
+   "level": 2,
+   "school": "Abjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Arcane Sword",
+   "level": 7,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Arcanist’s Magic Aura",
+   "level": 2,
+   "school": "Illusion",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Astral Projection",
+   "level": 9,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Augury",
+   "level": 2,
+   "school": "Divination",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Aura of Life",
+   "level": 4,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Awaken",
+   "level": 5,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid"
+   ],
+   "casting": "8 hours",
+   "damage": []
+  },
+  {
+   "name": "Bane",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Warlock"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Banishment",
+   "level": 4,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Barkskin",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Beacon of Hope",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Befuddlement",
+   "level": 8,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Bestow Curse",
+   "level": 3,
+   "school": "Necromancy",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Black Tentacles",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Bludgeoning"
+   ]
+  },
+  {
+   "name": "Blade Barrier",
+   "level": 6,
+   "school": "Evocation",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Bless",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Blight",
+   "level": 4,
+   "school": "Necromancy",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Blindness/Deafness",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Blink",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Blur",
+   "level": 2,
+   "school": "Illusion",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Burning Hands",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Call Lightning",
+   "level": 3,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Lightning"
+   ]
+  },
+  {
+   "name": "Calm Emotions",
+   "level": 2,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Chain Lightning",
+   "level": 6,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Lightning"
+   ]
+  },
+  {
+   "name": "Charm Monster",
+   "level": 4,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Charm Person",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Chill Touch",
+   "level": 0,
+   "school": "Necromancy",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Chromatic Orb",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Circle of Death",
+   "level": 6,
+   "school": "Necromancy",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Clairvoyance",
+   "level": 3,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Clone",
+   "level": 8,
+   "school": "Necromancy",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Cloudkill",
+   "level": 5,
+   "school": "Conjuration",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Poison"
+   ]
+  },
+  {
+   "name": "Color Spray",
+   "level": 1,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Command",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Commune",
+   "level": 5,
+   "school": "Divination",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Commune with Nature",
+   "level": 5,
+   "school": "Divination",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Comprehend Languages",
+   "level": 1,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Compulsion",
+   "level": 4,
+   "school": "Enchantment",
+   "classes": [
+    "Bard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Cone of Cold",
+   "level": 5,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Cold"
+   ]
+  },
+  {
+   "name": "Confusion",
+   "level": 4,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Conjure Animals",
+   "level": 3,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Slashing"
+   ]
+  },
+  {
+   "name": "Conjure Celestial",
+   "level": 7,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Conjure Elemental",
+   "level": 5,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Conjure Fae",
+   "level": 6,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Conjure Minor Elementals",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Conjure Woodland Beings",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Contact Other Plane",
+   "level": 5,
+   "school": "Divination",
+   "classes": [
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Contagion",
+   "level": 5,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Contingency",
+   "level": 6,
+   "school": "Abjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Continual Flame",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Control Water",
+   "level": 4,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Bludgeoning"
+   ]
+  },
+  {
+   "name": "Control Weather",
+   "level": 8,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Counterspell",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Reaction, which you take when you see a creature within 60 feet of yourself casting a spell with Verbal, Somatic, or Material components",
+   "damage": []
+  },
+  {
+   "name": "Create Food and Water",
+   "level": 3,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Create or Destroy Water",
+   "level": 1,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Create Undead",
+   "level": 6,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Creation",
+   "level": 5,
+   "school": "Illusion",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Cure Wounds",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Dancing Lights",
+   "level": 0,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Darkness",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Darkvision",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Daylight",
+   "level": 3,
+   "school": "Evocation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger",
+    "Sorcerer"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Death Ward",
+   "level": 4,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Delayed Blast Fireball",
+   "level": 7,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Demiplane",
+   "level": 8,
+   "school": "Conjuration",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Detect Evil and Good",
+   "level": 1,
+   "school": "Divination",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Detect Magic",
+   "level": 1,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Detect Poison and Disease",
+   "level": 1,
+   "school": "Divination",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Detect Thoughts",
+   "level": 2,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Dimension Door",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Disguise Self",
+   "level": 1,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Disintegrate",
+   "level": 6,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Dispel Evil and Good",
+   "level": 5,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Dispel Magic",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Dissonant Whispers",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Divination",
+   "level": 4,
+   "school": "Divination",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Divine Favor",
+   "level": 1,
+   "school": "Transmutation",
+   "classes": [
+    "Paladin"
+   ],
+   "casting": "Bonus Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Divine Smite",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Paladin"
+   ],
+   "casting": "Bonus Action, which you take immediately after hitting a target with a Melee weapon or an Unarmed Strike",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Divine Word",
+   "level": 7,
+   "school": "Evocation",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Dominate Beast",
+   "level": 4,
+   "school": "Enchantment",
+   "classes": [
+    "Druid",
+    "Ranger",
+    "Sorcerer"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Dominate Monster",
+   "level": 8,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Dominate Person",
+   "level": 5,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Dragon’s Breath",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Dream",
+   "level": 5,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Druidcraft",
+   "level": 0,
+   "school": "Transmutation",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Earthquake",
+   "level": 8,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Sorcerer"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Bludgeoning"
+   ]
+  },
+  {
+   "name": "Eldritch Blast",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Warlock"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Elementalism",
+   "level": 0,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Enhance Ability",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Enlarge/Reduce",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Ensnaring Strike",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Ranger"
+   ],
+   "casting": "Bonus Action, which you take immediately after hitting a creature with a weapon",
+   "damage": [
+    "Piercing"
+   ]
+  },
+  {
+   "name": "Entangle",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Enthrall",
+   "level": 2,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Warlock"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Etherealness",
+   "level": 7,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Expeditious Retreat",
+   "level": 1,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Eyebite",
+   "level": 6,
+   "school": "Necromancy",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Fabricate",
+   "level": 4,
+   "school": "Transmutation",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Faerie Fire",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Faithful Hound",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "False Life",
+   "level": 1,
+   "school": "Necromancy",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Fear",
+   "level": 3,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Feather Fall",
+   "level": 1,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Reaction, which you take when you or a creature you can see within 60 feet of you falls",
+   "damage": []
+  },
+  {
+   "name": "Find Familiar",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "1 hour or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Find Steed",
+   "level": 2,
+   "school": "Conjuration",
+   "classes": [
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Find the Path",
+   "level": 6,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Find Traps",
+   "level": 2,
+   "school": "Divination",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Finger of Death",
+   "level": 7,
+   "school": "Necromancy",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Fireball",
+   "level": 3,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Fire Bolt",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Fire Shield",
+   "level": 4,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Cold",
+    "Fire"
+   ]
+  },
+  {
+   "name": "Fire Storm",
+   "level": 7,
+   "school": "Evocation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Sorcerer"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Flame Blade",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Sorcerer"
+   ],
+   "casting": "Bonus Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Flame Strike",
+   "level": 5,
+   "school": "Evocation",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire",
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Flaming Sphere",
+   "level": 2,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Flesh to Stone",
+   "level": 6,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Floating Disk",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Fly",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Fog Cloud",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Forbiddance",
+   "level": 6,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "10 minutes or Ritual",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Forcecage",
+   "level": 7,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Foresight",
+   "level": 9,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Freedom of Movement",
+   "level": 4,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Freezing Sphere",
+   "level": 6,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Cold"
+   ]
+  },
+  {
+   "name": "Gaseous Form",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Gate",
+   "level": 9,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Geas",
+   "level": 5,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Gentle Repose",
+   "level": 2,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Paladin",
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Giant Insect",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Glibness",
+   "level": 8,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Warlock"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Globe of Invulnerability",
+   "level": 6,
+   "school": "Abjuration",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Glyph of Warding",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Wizard"
+   ],
+   "casting": "1 hour",
+   "damage": [
+    "Thunder"
+   ]
+  },
+  {
+   "name": "Goodberry",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Grease",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Greater Invisibility",
+   "level": 4,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Greater Restoration",
+   "level": 5,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Guardian of Faith",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Guards and Wards",
+   "level": 6,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Guidance",
+   "level": 0,
+   "school": "Divination",
+   "classes": [
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Guiding Bolt",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Gust of Wind",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Hallow",
+   "level": 5,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "24 hours",
+   "damage": []
+  },
+  {
+   "name": "Hallucinatory Terrain",
+   "level": 4,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Harm",
+   "level": 6,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Haste",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Heal",
+   "level": 6,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Healing Word",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Heat Metal",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Hellish Rebuke",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Warlock"
+   ],
+   "casting": "Reaction, which you take in response to taking damage from a creature that you can see within 60 feet of yourself",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Heroes’ Feast",
+   "level": 6,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Heroism",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Hex",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Warlock"
+   ],
+   "casting": "Bonus Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Hideous Laughter",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Hold Monster",
+   "level": 5,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Hold Person",
+   "level": 2,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Holy Aura",
+   "level": 8,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Hunter’s Mark",
+   "level": 1,
+   "school": "Divination",
+   "classes": [
+    "Ranger"
+   ],
+   "casting": "Bonus Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Hypnotic Pattern",
+   "level": 3,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Ice Knife",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Cold",
+    "Piercing"
+   ]
+  },
+  {
+   "name": "Ice Storm",
+   "level": 4,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Bludgeoning",
+    "Cold"
+   ]
+  },
+  {
+   "name": "Identify",
+   "level": 1,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Illusory Script",
+   "level": 1,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Imprisonment",
+   "level": 9,
+   "school": "Abjuration",
+   "classes": [
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Incendiary Cloud",
+   "level": 8,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Inflict Wounds",
+   "level": 1,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Insect Plague",
+   "level": 5,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Sorcerer"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Piercing"
+   ]
+  },
+  {
+   "name": "Instant Summons",
+   "level": 6,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Irresistible Dance",
+   "level": 6,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Invisibility",
+   "level": 2,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Jump",
+   "level": 1,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Knock",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Legend Lore",
+   "level": 5,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Lesser Restoration",
+   "level": 2,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Levitate",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Light",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Lightning Bolt",
+   "level": 3,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Lightning"
+   ]
+  },
+  {
+   "name": "Locate Animals or Plants",
+   "level": 2,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Locate Creature",
+   "level": 4,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Locate Object",
+   "level": 2,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Longstrider",
+   "level": 1,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Ranger",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mage Armor",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mage Hand",
+   "level": 0,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Magic Circle",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Magic Jar",
+   "level": 6,
+   "school": "Necromancy",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Magic Missile",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Magic Mouth",
+   "level": 2,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Magic Weapon",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Paladin",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Magnificent Mansion",
+   "level": 7,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Major Image",
+   "level": 3,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mass Cure Wounds",
+   "level": 5,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mass Heal",
+   "level": 9,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mass Healing Word",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Mass Suggestion",
+   "level": 6,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Maze",
+   "level": 8,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Meld into Stone",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action or Ritual",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Mending",
+   "level": 0,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Message",
+   "level": 0,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Meteor Swarm",
+   "level": 9,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Bludgeoning",
+    "Fire"
+   ]
+  },
+  {
+   "name": "Mind Blank",
+   "level": 8,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mind Spike",
+   "level": 2,
+   "school": "Divination",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Minor Illusion",
+   "level": 0,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mirage Arcane",
+   "level": 7,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Mirror Image",
+   "level": 2,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Mislead",
+   "level": 5,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Misty Step",
+   "level": 2,
+   "school": "Conjuration",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Modify Memory",
+   "level": 5,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Moonbeam",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Move Earth",
+   "level": 6,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Nondetection",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Ranger",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Passwall",
+   "level": 5,
+   "school": "Transmutation",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Pass without Trace",
+   "level": 2,
+   "school": "Abjuration",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Phantasmal Force",
+   "level": 2,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Phantasmal Killer",
+   "level": 4,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Phantom Steed",
+   "level": 3,
+   "school": "Illusion",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Planar Ally",
+   "level": 6,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Planar Binding",
+   "level": 5,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Plane Shift",
+   "level": 7,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Plant Growth",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action (Overgrowth) or 8 hours (Enrichment)",
+   "damage": []
+  },
+  {
+   "name": "Poison Spray",
+   "level": 0,
+   "school": "Necromancy",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Poison"
+   ]
+  },
+  {
+   "name": "Polymorph",
+   "level": 4,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Power Word Heal",
+   "level": 9,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Power Word Kill",
+   "level": 9,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Power Word Stun",
+   "level": 8,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Prayer of Healing",
+   "level": 2,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Prestidigitation",
+   "level": 0,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Prismatic Spray",
+   "level": 7,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Acid",
+    "Cold",
+    "Fire",
+    "Lightning",
+    "Poison"
+   ]
+  },
+  {
+   "name": "Prismatic Wall",
+   "level": 9,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Acid",
+    "Cold",
+    "Fire",
+    "Force",
+    "Lightning",
+    "Poison"
+   ]
+  },
+  {
+   "name": "Private Sanctum",
+   "level": 4,
+   "school": "Abjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Produce Flame",
+   "level": 0,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Bonus Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Programmed Illusion",
+   "level": 6,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Project Image",
+   "level": 7,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Protection from Energy",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Protection from Evil and Good",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Protection from Poison",
+   "level": 2,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Purify Food and Drink",
+   "level": 1,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Paladin"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Raise Dead",
+   "level": 5,
+   "school": "Necromancy",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Ray of Enfeeblement",
+   "level": 2,
+   "school": "Necromancy",
+   "classes": [
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Ray of Frost",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Cold"
+   ]
+  },
+  {
+   "name": "Regenerate",
+   "level": 7,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Ray of Sickness",
+   "level": 1,
+   "school": "Necromancy",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Poison"
+   ]
+  },
+  {
+   "name": "Reincarnate",
+   "level": 5,
+   "school": "Necromancy",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Remove Curse",
+   "level": 3,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Resilient Sphere",
+   "level": 4,
+   "school": "Abjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Resistance",
+   "level": 0,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Resurrection",
+   "level": 7,
+   "school": "Necromancy",
+   "classes": [
+    "Bard",
+    "Cleric"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "Reverse Gravity",
+   "level": 7,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Revivify",
+   "level": 3,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Rope Trick",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Sacred Flame",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Sanctuary",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Scorching Ray",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Scrying",
+   "level": 5,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "10 minutes",
+   "damage": []
+  },
+  {
+   "name": "Searing Smite",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Paladin"
+   ],
+   "casting": "Bonus Action, which you take immediately after hitting a target with a Melee weapon or an Unarmed Strike",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Secret Chest",
+   "level": 4,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "See Invisibility",
+   "level": 2,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Seeming",
+   "level": 5,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Sending",
+   "level": 3,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Sequester",
+   "level": 7,
+   "school": "Transmutation",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Shapechange",
+   "level": 9,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Shatter",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Thunder"
+   ]
+  },
+  {
+   "name": "Shield",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Reaction, which you take when you are hit by an attack roll or targeted by the Magic Missile spell",
+   "damage": []
+  },
+  {
+   "name": "Shield of Faith",
+   "level": 1,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Bonus Action",
+   "damage": []
+  },
+  {
+   "name": "Shillelagh",
+   "level": 0,
+   "school": "Transmutation",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Bonus Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Shining Smite",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Paladin"
+   ],
+   "casting": "Bonus Action, which you take immediately after hitting a creature with a Melee weapon or an Unarmed Strike",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Shocking Grasp",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Lightning"
+   ]
+  },
+  {
+   "name": "Silence",
+   "level": 2,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Ranger"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Silent Image",
+   "level": 1,
+   "school": "Illusion",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Simulacrum",
+   "level": 7,
+   "school": "Illusion",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "12 hours",
+   "damage": []
+  },
+  {
+   "name": "Sleep",
+   "level": 1,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Sleet Storm",
+   "level": 3,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Slow",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Sorcerous Burst",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Spare the Dying",
+   "level": 0,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Speak with Animals",
+   "level": 1,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Ranger",
+    "Warlock"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Speak with Dead",
+   "level": 3,
+   "school": "Necromancy",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Speak with Plants",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Spider Climb",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Spike Growth",
+   "level": 2,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Piercing"
+   ]
+  },
+  {
+   "name": "Spirit Guardians",
+   "level": 3,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic",
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Spiritual Weapon",
+   "level": 2,
+   "school": "Evocation",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Bonus Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Starry Wisp",
+   "level": 0,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Stinking Cloud",
+   "level": 3,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Stone Shape",
+   "level": 4,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Stoneskin",
+   "level": 4,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Storm of Vengeance",
+   "level": 9,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Acid",
+    "Bludgeoning",
+    "Cold",
+    "Lightning",
+    "Thunder"
+   ]
+  },
+  {
+   "name": "Suggestion",
+   "level": 2,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Summon Dragon",
+   "level": 5,
+   "school": "Conjuration",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Sunbeam",
+   "level": 6,
+   "school": "Evocation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Sunburst",
+   "level": 8,
+   "school": "Evocation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Symbol",
+   "level": 7,
+   "school": "Abjuration",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Telekinesis",
+   "level": 5,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Telepathic Bond",
+   "level": 5,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Teleport",
+   "level": 7,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Force"
+   ]
+  },
+  {
+   "name": "Teleportation Circle",
+   "level": 5,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Thaumaturgy",
+   "level": 0,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Thunderwave",
+   "level": 1,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Thunder"
+   ]
+  },
+  {
+   "name": "Time Stop",
+   "level": 9,
+   "school": "Transmutation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Tiny Hut",
+   "level": 3,
+   "school": "Evocation",
+   "classes": [
+    "Bard",
+    "Wizard"
+   ],
+   "casting": "1 minute or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Tongues",
+   "level": 3,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Transport via Plants",
+   "level": 6,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Tree Stride",
+   "level": 5,
+   "school": "Conjuration",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "True Polymorph",
+   "level": 9,
+   "school": "Transmutation",
+   "classes": [
+    "Bard",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "True Resurrection",
+   "level": 9,
+   "school": "Necromancy",
+   "classes": [
+    "Cleric",
+    "Druid"
+   ],
+   "casting": "1 hour",
+   "damage": []
+  },
+  {
+   "name": "True Seeing",
+   "level": 6,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "True Strike",
+   "level": 0,
+   "school": "Divination",
+   "classes": [
+    "Bard",
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Radiant"
+   ]
+  },
+  {
+   "name": "Tsunami",
+   "level": 8,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "1 minute",
+   "damage": [
+    "Bludgeoning"
+   ]
+  },
+  {
+   "name": "Unseen Servant",
+   "level": 1,
+   "school": "Conjuration",
+   "classes": [
+    "Bard",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Vampiric Touch",
+   "level": 3,
+   "school": "Necromancy",
+   "classes": [
+    "Sorcerer",
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Vicious Mockery",
+   "level": 0,
+   "school": "Enchantment",
+   "classes": [
+    "Bard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Vitriolic Sphere",
+   "level": 4,
+   "school": "Evocation",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Acid"
+   ]
+  },
+  {
+   "name": "Wall of Fire",
+   "level": 4,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Wall of Force",
+   "level": 5,
+   "school": "Evocation",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Wall of Ice",
+   "level": 6,
+   "school": "Evocation",
+   "classes": [
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Cold"
+   ]
+  },
+  {
+   "name": "Wall of Stone",
+   "level": 5,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Wall of Thorns",
+   "level": 6,
+   "school": "Conjuration",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Piercing",
+    "Slashing"
+   ]
+  },
+  {
+   "name": "Warding Bond",
+   "level": 2,
+   "school": "Abjuration",
+   "classes": [
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Water Breathing",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Druid",
+    "Ranger",
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Water Walk",
+   "level": 3,
+   "school": "Transmutation",
+   "classes": [
+    "Cleric",
+    "Druid",
+    "Ranger",
+    "Sorcerer"
+   ],
+   "casting": "Action or Ritual",
+   "damage": []
+  },
+  {
+   "name": "Web",
+   "level": 2,
+   "school": "Conjuration",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Fire"
+   ]
+  },
+  {
+   "name": "Weird",
+   "level": 9,
+   "school": "Illusion",
+   "classes": [
+    "Warlock",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Psychic"
+   ]
+  },
+  {
+   "name": "Wind Walk",
+   "level": 6,
+   "school": "Transmutation",
+   "classes": [
+    "Druid"
+   ],
+   "casting": "1 minute",
+   "damage": []
+  },
+  {
+   "name": "Wind Wall",
+   "level": 3,
+   "school": "Evocation",
+   "classes": [
+    "Druid",
+    "Ranger"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Bludgeoning"
+   ]
+  },
+  {
+   "name": "Wish",
+   "level": 9,
+   "school": "Conjuration",
+   "classes": [
+    "Sorcerer",
+    "Wizard"
+   ],
+   "casting": "Action",
+   "damage": [
+    "Necrotic"
+   ]
+  },
+  {
+   "name": "Word of Recall",
+   "level": 6,
+   "school": "Conjuration",
+   "classes": [
+    "Cleric"
+   ],
+   "casting": "Action",
+   "damage": []
+  },
+  {
+   "name": "Zone of Truth",
+   "level": 2,
+   "school": "Enchantment",
+   "classes": [
+    "Bard",
+    "Cleric",
+    "Paladin"
+   ],
+   "casting": "Action",
+   "damage": []
+  }
+ ],
  "ability_scores": {
   "standard_array": [
    15,
@@ -10898,6 +15046,968 @@
     "Loading"
    ],
    "mastery": "Vex"
+  }
+ ],
+ "tools": [
+  {
+   "name": "Alchemist’s Supplies",
+   "category": "Artisan’s Tools",
+   "ability": "Intelligence",
+   "utilize": "Identify a substance (DC 15), or start a fire (DC 15)",
+   "craft": "Acid, Alchemist’s Fire, Component Pouch, Oil, Paper, Perfume"
+  },
+  {
+   "name": "Brewer’s Supplies",
+   "category": "Artisan’s Tools",
+   "ability": "Intelligence",
+   "utilize": "Detect poisoned drink (DC 15), or identify alcohol (DC 10)",
+   "craft": "Antitoxin"
+  },
+  {
+   "name": "Calligrapher’s Supplies",
+   "category": "Artisan’s Tools",
+   "ability": "Dexterity",
+   "utilize": "Write text with impressive flourishes that guard against forgery (DC 15)",
+   "craft": "Ink, Spell Scroll"
+  },
+  {
+   "name": "Carpenter’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Strength",
+   "utilize": "Seal or pry open a door or container (DC 20)",
+   "craft": "Club, Greatclub, Quarterstaff, Barrel, Chest, Ladder, Pole, Portable Ram, Torch"
+  },
+  {
+   "name": "Cartographer’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Wisdom",
+   "utilize": "Draft a map of a small area (DC 15)",
+   "craft": "Map"
+  },
+  {
+   "name": "Cobbler’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Dexterity",
+   "utilize": "Modify footwear to give Advantage on the wearer’s next Dexterity (Acrobatics) check (DC 10)",
+   "craft": "Climber’s Kit"
+  },
+  {
+   "name": "Cook’s Utensils",
+   "category": "Artisan’s Tools",
+   "ability": "Wisdom",
+   "utilize": "Improve food’s flavor (DC 10), or detect spoiled or poisoned food (DC 15)",
+   "craft": "Rations"
+  },
+  {
+   "name": "Glassblower’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Intelligence",
+   "utilize": "Discern what a glass object held in the past 24 hours (DC 15)",
+   "craft": "Glass Bottle, Magnifying Glass, Spyglass, Vial"
+  },
+  {
+   "name": "Jeweler’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Intelligence",
+   "utilize": "Discern a gem’s value (DC 15)",
+   "craft": "Arcane Focus, Holy Symbol"
+  },
+  {
+   "name": "Leatherworker’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Dexterity",
+   "utilize": "Add a design to a leather item (DC 10)",
+   "craft": "Sling, Whip, Hide Armor, Leather Armor, Studded Leather Armor, Backpack, Crossbow Bolt Case, Map or Scroll Case, Parchment, Pouch, Quiver, Waterskin"
+  },
+  {
+   "name": "Mason’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Strength",
+   "utilize": "Chisel a symbol or hole in stone (DC 10)",
+   "craft": "Block and Tackle"
+  },
+  {
+   "name": "Painter’s Supplies",
+   "category": "Artisan’s Tools",
+   "ability": "Wisdom",
+   "utilize": "Paint a recognizable image of something you’ve seen (DC 10)",
+   "craft": "Druidic Focus, Holy Symbol"
+  },
+  {
+   "name": "Potter’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Intelligence",
+   "utilize": "Discern what a ceramic object held in the past 24 hours (DC 15)",
+   "craft": "Jug, Lamp"
+  },
+  {
+   "name": "Smith’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Strength",
+   "utilize": "Pry open a door or container (DC 20)",
+   "craft": "Any Melee weapon (except Club, Greatclub, Quarterstaff, and Whip), Medium armor (except Hide), Heavy armor, Ball Bearings, Bucket, Caltrops, Chain, Crowbar, Firearm Bullets, Grappling Hook, Iron Pot, Iron Spikes, Sling Bullets"
+  },
+  {
+   "name": "Tinker’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Dexterity",
+   "utilize": "Assemble a Tiny item composed of scrap, which falls apart in 1 minute (DC 20)",
+   "craft": "Musket, Pistol, Bell, Bullseye Lantern, Flask, Hooded Lantern, Hunting Trap, Lock, Manacles, Mirror, Shovel, Signal Whistle, Tinderbox"
+  },
+  {
+   "name": "Weaver’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Dexterity",
+   "utilize": "Mend a tear in clothing (DC 10), or sew a Tiny design (DC 10)",
+   "craft": "Padded Armor, Basket, Bedroll, Blanket, Fine Clothes, Net, Robe, Rope, Sack, String, Tent, Traveler’s Clothes"
+  },
+  {
+   "name": "Woodcarver’s Tools",
+   "category": "Artisan’s Tools",
+   "ability": "Dexterity",
+   "utilize": "Carve a pattern in wood (DC 10)",
+   "craft": "Club, Greatclub, Quarterstaff, Ranged weapons (except Pistol, Musket, and Sling), Arcane Focus, Arrows, Bolts, Druidic Focus, Ink Pen, Needles"
+  },
+  {
+   "name": "Disguise Kit",
+   "category": "Other",
+   "ability": "Charisma",
+   "utilize": "Apply makeup (DC 10)",
+   "craft": "Costume"
+  },
+  {
+   "name": "Forgery Kit",
+   "category": "Other",
+   "ability": "Dexterity",
+   "utilize": "Mimic 10 or fewer words of someone else’s handwriting (DC 15), or duplicate a wax seal (DC 20)",
+   "craft": null
+  },
+  {
+   "name": "Gaming Set",
+   "category": "Other",
+   "ability": "Wisdom",
+   "utilize": "Discern whether someone is cheating (DC 10), or win the game (DC 20)",
+   "craft": null,
+   "variants": [
+    "Dice",
+    "Dragonchess",
+    "Playing cards",
+    "Three-dragon ante"
+   ]
+  },
+  {
+   "name": "Herbalism Kit",
+   "category": "Other",
+   "ability": "Intelligence",
+   "utilize": "Identify a plant (DC 10)",
+   "craft": "Antitoxin, Candle, Healer’s Kit, Potion of Healing"
+  },
+  {
+   "name": "Musical Instrument",
+   "category": "Other",
+   "ability": "Charisma",
+   "utilize": "Play a known tune (DC 10), or improvise a song (DC 15)",
+   "craft": null,
+   "variants": [
+    "Bagpipes",
+    "Drum",
+    "Dulcimer",
+    "Flute",
+    "Horn",
+    "Lute",
+    "Lyre",
+    "Pan flute",
+    "Shawm",
+    "Viol"
+   ]
+  },
+  {
+   "name": "Navigator’s Tools",
+   "category": "Other",
+   "ability": "Wisdom",
+   "utilize": "Plot a course (DC 10), or determine position by stargazing (DC 15)",
+   "craft": null
+  },
+  {
+   "name": "Poisoner’s Kit",
+   "category": "Other",
+   "ability": "Intelligence",
+   "utilize": "Detect a poisoned object (DC 10)",
+   "craft": "Basic Poison"
+  },
+  {
+   "name": "Thieves’ Tools",
+   "category": "Other",
+   "ability": "Dexterity",
+   "utilize": "Pick a lock (DC 15), or disarm a trap (DC 15)",
+   "craft": null
+  }
+ ],
+ "beasts": [
+  {
+   "name": "Giant Fly",
+   "size": "Large",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "30 ft., Fly 60 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Allosaurus",
+   "size": "Large",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "60 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Ankylosaurus",
+   "size": "Huge",
+   "cr": "3",
+   "challenge": 3,
+   "speed": "30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Ape",
+   "size": "Medium",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "30 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Archelon",
+   "size": "Huge",
+   "cr": "4",
+   "challenge": 4,
+   "speed": "20 ft., Swim 80 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Baboon",
+   "size": "Small",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "30 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Badger",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "20 ft., Burrow 5 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Bat",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "5 ft., Fly 30 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Black Bear",
+   "size": "Medium",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "30 ft., Climb 30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Blood Hawk",
+   "size": "Small",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "10 ft., Fly 60 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Boar",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Brown Bear",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "40 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Camel",
+   "size": "Large",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Cat",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "40 ft., Climb 40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Constrictor Snake",
+   "size": "Large",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Crab",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "20 ft., Swim 20 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Crocodile",
+   "size": "Large",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "20 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Deer",
+   "size": "Medium",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Dire Wolf",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Draft Horse",
+   "size": "Large",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Eagle",
+   "size": "Small",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "10 ft., Fly 60 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Elephant",
+   "size": "Huge",
+   "cr": "4",
+   "challenge": 4,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Elk",
+   "size": "Large",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Frog",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "20 ft., Swim 20 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Ape",
+   "size": "Huge",
+   "cr": "7",
+   "challenge": 7,
+   "speed": "40 ft., Climb 40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Badger",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "30 ft., Burrow 10 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Bat",
+   "size": "Large",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "10 ft., Fly 60 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Giant Boar",
+   "size": "Large",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Centipede",
+   "size": "Small",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "30 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Constrictor Snake",
+   "size": "Huge",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Crab",
+   "size": "Medium",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Crocodile",
+   "size": "Huge",
+   "cr": "5",
+   "challenge": 5,
+   "speed": "30 ft., Swim 50 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Fire Beetle",
+   "size": "Small",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "30 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Frog",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Goat",
+   "size": "Large",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "40 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Hyena",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Lizard",
+   "size": "Large",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "40 ft., Climb 40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Octopus",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "10 ft., Swim 60 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Rat",
+   "size": "Small",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "30 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Scorpion",
+   "size": "Large",
+   "cr": "3",
+   "challenge": 3,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Seahorse",
+   "size": "Large",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "5 ft., Swim 40 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Shark",
+   "size": "Huge",
+   "cr": "5",
+   "challenge": 5,
+   "speed": "5 ft., Swim 60 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Spider",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "30 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Toad",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Venomous Snake",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "40 ft., Swim 40 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Giant Wasp",
+   "size": "Medium",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "10 ft., Fly 50 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Giant Weasel",
+   "size": "Medium",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "40 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Giant Wolf Spider",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "40 ft., Climb 40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Goat",
+   "size": "Medium",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "40 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Hawk",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "10 ft., Fly 60 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Hippopotamus",
+   "size": "Large",
+   "cr": "4",
+   "challenge": 4,
+   "speed": "30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Hunter Shark",
+   "size": "Large",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "5 ft., Swim 40 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Hyena",
+   "size": "Medium",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Jackal",
+   "size": "Small",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Killer Whale",
+   "size": "Huge",
+   "cr": "3",
+   "challenge": 3,
+   "speed": "5 ft., Swim 60 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Lion",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Lizard",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "20 ft., Climb 20 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Mammoth",
+   "size": "Huge",
+   "cr": "6",
+   "challenge": 6,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Mastiff",
+   "size": "Medium",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Mule",
+   "size": "Medium",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Octopus",
+   "size": "Small",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "5 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Owl",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "5 ft., Fly 60 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Panther",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "50 ft., Climb 40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Piranha",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "5 ft., Swim 40 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Plesiosaurus",
+   "size": "Large",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "20 ft., Swim 40 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Polar Bear",
+   "size": "Large",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "40 ft., Swim 40 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Pony",
+   "size": "Medium",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Pteranodon",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "10 ft., Fly 60 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Rat",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "20 ft., Climb 20 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Raven",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "10 ft., Fly 50 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Reef Shark",
+   "size": "Medium",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "5 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Rhinoceros",
+   "size": "Large",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Riding Horse",
+   "size": "Large",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "60 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Saber-Toothed Tiger",
+   "size": "Large",
+   "cr": "2",
+   "challenge": 2,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Scorpion",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "10 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Seahorse",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "5 ft., Swim 20 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Spider",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "20 ft., Climb 20 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Tiger",
+   "size": "Large",
+   "cr": "1",
+   "challenge": 1,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Triceratops",
+   "size": "Huge",
+   "cr": "5",
+   "challenge": 5,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Tyrannosaurus Rex",
+   "size": "Huge",
+   "cr": "8",
+   "challenge": 8,
+   "speed": "50 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Venomous Snake",
+   "size": "Tiny",
+   "cr": "1/8",
+   "challenge": 0.125,
+   "speed": "30 ft., Swim 30 ft.",
+   "fly": false,
+   "swim": true
+  },
+  {
+   "name": "Vulture",
+   "size": "Medium",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "10 ft., Fly 50 ft.",
+   "fly": true,
+   "swim": false
+  },
+  {
+   "name": "Warhorse",
+   "size": "Large",
+   "cr": "1/2",
+   "challenge": 0.5,
+   "speed": "60 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Weasel",
+   "size": "Tiny",
+   "cr": "0",
+   "challenge": 0,
+   "speed": "30 ft., Climb 30 ft.",
+   "fly": false,
+   "swim": false
+  },
+  {
+   "name": "Wolf",
+   "size": "Medium",
+   "cr": "1/4",
+   "challenge": 0.25,
+   "speed": "40 ft.",
+   "fly": false,
+   "swim": false
   }
  ],
  "languages": {
