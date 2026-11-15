@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "4c638a35f929c823113d837ae0b3142f4b7dca45d7da8bae63235b090d006fc1",
-  "modified": "2026-11-14T19:10:07-05:00",
+  "sha256": "29304a668b680cd019f8d8ecab920a2b6e6ec5d22ee3d440236bfbee0e35f083",
+  "modified": "2026-11-15T06:35:19-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 19,
   "rules": {
@@ -52,6 +52,13 @@
   {
    "where": "Courtier · Grace · Level 3: A Maxim a Day",
    "reasons": [
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Physician · level 17 feature",
+   "reasons": [
+    "bracket",
     "names a placeholder"
    ]
   }
@@ -3018,7 +3025,7 @@
     {
      "level": 15,
      "name": "Explosion",
-     "text": "You bring the reaction with you. As a Utilize action, you set off an explosion centered on a point you can see within 60 feet of yourself; it needs no feature you're studying. Each creature of your choice in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw against your Mechanism's save DC. On a failed save, a creature takes Fire damage of twice the Mechanism column's dice in the Natural Philosopher Features table (12d8 at level 15) and is pushed 10 feet straight away from the center. On a successful save, it takes half as much damage only. Flammable objects in the area that aren't being worn or carried catch fire. Once you use this feature, you can't use it again until you finish a Long Rest."
+     "text": "You bring the reaction with you. As a Utilize action, you set off an explosion centered on a point you can see within 60 feet of yourself; it needs no feature you're studying. Each creature of your choice in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw against your Mechanism's save DC. On a failed save, a creature takes Fire damage equal to the Mechanism column's dice in the Natural Philosopher Features table (6d8 at level 15, 7d8 at level 17) and is pushed 10 feet straight away from the center. On a successful save, it takes half as much damage only. Flammable objects in the area that aren't being worn or carried catch fire. Once you use this feature, you can't use it again until you finish a Long Rest."
     },
     {
      "level": 17,
@@ -3641,7 +3648,7 @@
      {
       "Level": "17",
       "Proficiency Bonus": "+6",
-      "Class Features": "—",
+      "Class Features": "",
       "Prowess Dice": "4",
       "Prowess Die": "d12",
       "Cantrips": "5",
@@ -3786,7 +3793,7 @@
     {
      "level": 20,
      "name": "Attending Physician",
-     "text": "When you roll Initiative, you regain one expended Prowess Die.\n\nIn addition, when a creature you can see within 30 feet of yourself would die (by failing its third Death Saving Throw, by taking damage that reduces it to 0 Hit Points with remaining damage equal to or exceeding its Hit Point maximum, or by an effect that kills it outright), you can take a Reaction to prevent its death. The creature instead drops to 0 Hit Points and is Stable, and it then regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). Once you use this Reaction, you can't use it again until you finish a Long Rest.\n\n> **Running a Physician**\n>\n> **Timing.** Every affliction a Physician's class features lay on a creature ends at the end of a turn (usually the creature's next one) or on a saving throw it makes at the end of each of its turns, or when its duration or your Concentration ends. None ends at the start of a turn.\n>\n> **The drop.** A party with a Physician gets back up. Every specialty has a way to put a fallen ally straight back on their feet, several can stop the drop outright once a day from 14th level, and at 20th the Physician can stop a death. That is the class doing its job, not a hole in your encounter: hit as hard as the fight deserves, and let the rescue be the moment the table remembers."
+     "text": "When you roll Initiative, you regain one expended Prowess Die.\n\nIn addition, when a creature you can see within 30 feet of yourself would die (by failing its third Death Saving Throw, by taking damage that reduces it to 0 Hit Points with remaining damage equal to or exceeding its Hit Point maximum, or by an effect that kills it outright), you can take a Reaction to prevent its death. The creature instead drops to 0 Hit Points and is Stable, and it then regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). Once you use this Reaction, you can't use it again until you finish a Long Rest.\n\n> **Running a Physician**\n>\n> **Timing.** Every affliction a Physician's class features lay on a creature ends at the end of a turn (usually the creature's next one) or on a saving throw it makes at the end of each of its turns, or when its duration or your Concentration ends. None ends at the start of a turn.\n>\n> **The drop.** A party with a Physician gets back up. Every specialty has a way to put a fallen ally straight back on their feet, several can stop the drop outright once a day from 14th level, from 17th the Physician can bring a whole fallen party back at once with *Mass Heal*, and at 20th it can stop a death. That is the class doing its job, not a hole in your encounter: hit as hard as the fight deserves, and let the rescue be the moment the table remembers."
     }
    ],
    "subclasses": [

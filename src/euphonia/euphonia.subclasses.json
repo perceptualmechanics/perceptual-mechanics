@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "4c638a35f929c823113d837ae0b3142f4b7dca45d7da8bae63235b090d006fc1",
-  "modified": "2026-11-14T19:10:07-05:00",
+  "sha256": "29304a668b680cd019f8d8ecab920a2b6e6ec5d22ee3d440236bfbee0e35f083",
+  "modified": "2026-11-15T06:35:19-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 19,
   "rules": {
@@ -307,7 +307,7 @@
     {
      "level": 3,
      "name": "Rime",
-     "text": "This is your stance (The Plane Coming Through): you skin yourself in rime. When you take it, you gain Temporary Hit Points equal to your Sorcerer level, which last until the stance ends. While rimed, a creature that hits you with a melee attack roll has its Speed reduced by 10 feet until the start of its next turn: the cold gets into its joints."
+     "text": "This is your stance (The Plane Coming Through): you skin yourself in rime. When you take it, you gain Temporary Hit Points equal to half your Sorcerer level (round down), which last until the stance ends. While rimed, a creature that hits you with a melee attack roll has its Speed reduced by 10 feet until the start of its next turn: the cold gets into its joints."
     },
     {
      "level": 6,
@@ -380,7 +380,7 @@
     {
      "level": 3,
      "name": "Equal and Opposite",
-     "text": "This is your stance (The Plane Coming Through): you brace yourself inside your own push. While braced, when an attack roll hits you, the damage is reduced by your Charisma modifier (minimum of 1), and if the attacker is within 5 feet of you, you can push it up to 5 feet straight away from you (no action required)."
+     "text": "This is your stance (The Plane Coming Through): you brace yourself inside your own push. While braced, when an attack roll hits you, the damage is reduced by half your Charisma modifier (round up, minimum of 1), and if the attacker is within 5 feet of you, you can push it up to 5 feet straight away from you (no action required)."
     },
     {
      "level": 6,
@@ -783,7 +783,7 @@
     {
      "level": 3,
      "name": "Remembering",
-     "text": "You can **remember** any of the following. Each time you do, it goes on your **tally**, and you owe the Hidden a **Due**, which you settle at once (see \"The Hidden's Due,\" below). You can't remember while the Hidden has your voice.\n\n- **A Skill.** When you make an ability check with a skill or tool, before you roll, you remember it: you have proficiency and Expertise in it for that check. You can't remember Performance.\n- **A Tongue.** As a Bonus Action, you remember a language you have heard spoken or seen written. For 1 hour, you can speak, read, and write it.\n- **A Lore.** As a Magic action, you name a creature, place, or object you can see or are holding, and ask one question about it. The DM answers truthfully, in a sentence, with what the Hidden remembers of it: old things, the dead, the fae, oaths, curses, and the ways in and out of places, not the plans of the living.\n- **A Song.** When you Sing the Season, you can remember the song instead of expending Bardic Inspiration.\n\n> **The Hidden's Due**\n>\n> When you remember, first add it to your **tally**: a skill, a tongue, a lore, or a song into a person counts as one; a song into a place counts as two; a spell counts as one plus its level. Your tally goes back to 0 when you finish a Long Rest.\n>\n> What you remember happens first (the skill applies to that check, the song or spell takes effect). Then you settle: sing your case to the Hidden by making a Charisma (Performance) check. The DC is 6 plus your Proficiency Bonus plus twice your tally, whether you paid for the earlier ones or not. On a success, the Hidden is satisfied, and you owe nothing.\n>\n> On a failure, the Hidden takes its due. Choose one:\n>\n> - **The Hidden Keeps Your Voice.** You can't speak or sing: you can't cast spells that have a Verbal component, sing a season, or remember. In combat, this lasts until the end of your next turn. Out of combat, the Hidden keeps your voice until you finish a Short or Long Rest. A spell you're already concentrating on continues.\n> - **Seven Years in a Night.** You gain one level of Exhaustion.\n> - **A Tongue That Cannot Lie.** Until you finish a Long Rest, you can't knowingly speak a falsehood. Once you choose this price, you can't choose it again until you finish a Long Rest.\n>\n> The DM can let the Hidden name a different price of the same weight, one that fits the story: a promise, a gift left at a hawthorn, a dance at the next full moon."
+     "text": "You can **remember** any of the following. Each time you do, it goes on your **tally**, and you owe the Hidden a **Due**, which you settle at once (see \"The Hidden's Due,\" below). You can't remember while the Hidden has your voice.\n\n- **A Skill.** When you make an ability check with a skill or tool, before you roll, you remember it: you have proficiency and Expertise in it for that check. You can't remember Performance.\n- **A Tongue.** As a Bonus Action, you remember a language you have heard spoken or seen written. For 1 hour, you can speak, read, and write it.\n- **A Lore.** As a Magic action, you name a creature, place, or object you can see or are holding, and ask one question about it. The DM answers truthfully, in a sentence, with what the Hidden remembers of it: old things, the dead, the fae, oaths, curses, and the ways in and out of places, not the plans of the living.\n- **A Song.** When you Sing the Season, you can remember the song instead of expending Bardic Inspiration.\n\n> **The Hidden's Due**\n>\n> When you remember, first add it to your **tally**: a skill, a tongue, a lore, or a song counts as one; a spell counts as one plus its level. Your tally goes back to 0 when you finish a Long Rest.\n>\n> What you remember happens first (the skill applies to that check, the song or spell takes effect). Then you settle: sing your case to the Hidden by making a Charisma (Performance) check. The DC is 6 plus your Proficiency Bonus plus twice your tally, whether you paid for the earlier ones or not. On a success, the Hidden is satisfied, and you owe nothing.\n>\n> On a failure, the Hidden takes its due. Choose one:\n>\n> - **The Hidden Keeps Your Voice.** You can't speak or sing: you can't cast spells that have a Verbal component, sing a season, or remember. In combat, this lasts until the end of your next turn. Out of combat, the Hidden keeps your voice until you finish a Short or Long Rest. A spell you're already concentrating on continues.\n> - **Seven Years in a Night.** You gain one level of Exhaustion.\n> - **A Tongue That Cannot Lie.** Until you finish a Long Rest, you can't knowingly speak a falsehood. Once you choose this price, you can't choose it again until you finish a Long Rest.\n>\n> The DM can let the Hidden name a different price of the same weight, one that fits the story: a promise, a gift left at a hawthorn, a dance at the next full moon."
     },
     {
      "level": 3,
@@ -798,7 +798,7 @@
     {
      "level": 6,
      "name": "Into a Place",
-     "text": "When you Sing the Season, you can sing it into a place instead of a person. Expend two uses of Bardic Inspiration, or remember the song (it counts as two in your tally). Choose a point you can see within 60 feet of yourself. Every creature in a 10-foot-radius Sphere centered there that can hear you is subject to the season, whether you want it to be or not."
+     "text": "When you Sing the Season, you can sing it into a place instead of a person. Expend one use of Bardic Inspiration, or remember the song. Choose a point you can see within 60 feet of yourself. Every creature in a 10-foot-radius Sphere centered there that can hear you is subject to the season, whether you want it to be or not."
     },
     {
      "level": 14,
