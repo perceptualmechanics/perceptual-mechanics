@@ -24,6 +24,12 @@ function polygon(ring) {
   return geoArea(p) > 2 * Math.PI ? { type: 'Polygon', coordinates: [[...ring].reverse()] } : p;
 }
 const multi = rings => ({ type: 'MultiPolygon', coordinates: rings.map(r => polygon(r).coordinates) });
+// A polity's polygons, holes and all: turned round whole where d3 would read
+// one as covering the rest of the sphere.
+const shapeOf = polys => ({
+  type: 'MultiPolygon',
+  coordinates: polys.map(p => (geoArea({ type: 'Polygon', coordinates: p }) > 2 * Math.PI ? p.map(r => [...r].reverse()) : p)),
+});
 
 // Natural Earth cuts land at ±180° and closes each piece along the cut, and
 // Antarctica along the pole, so the rings are polygons on the plane. On the
@@ -60,8 +66,11 @@ const lines = list => ({ type: 'MultiLineString', coordinates: list });
 
 // The world's layers, once: land, lakes and the dated older shores as fills;
 // the coast (the land's rings without their seams), rivers and the
-// graticule as lines; the roses' rhumb lines and their centres.
-export function globeWorld(world, roses) {
+// graticule as lines; the roses' rhumb lines and their centres; the
+// polities of 1668, their borders and reaches as lines and each one's shape,
+// and all of them as one shape for the reaches' wash to keep inside.
+export function globeWorld(world, roses, borders) {
+  const polities = borders.polities.map(q => ({ ...q, shape: shapeOf(q.polys) }));
   const roseLines = roses.flatMap(r => Array.from({ length: ROSE_POINTS }, (_, k) =>
     ({ main: k % (ROSE_POINTS / 8) === 0, line: rhumb(r.lat, r.lon, k * 360 / ROSE_POINTS, ROSE_REACH, ROSE_STEP) })));
   return {
@@ -74,6 +83,14 @@ export function globeWorld(world, roses) {
     roseMain: lines(roseLines.filter(l => l.main).map(l => l.line)),
     roseRest: lines(roseLines.filter(l => !l.main).map(l => l.line)),
     roseCentres: roses.map(r => ({ lon: r.lon, lat: r.lat })),
+    borders: lines(borders.lines),
+    reaches: lines(borders.reaches),
+    dashed: lines(borders.dashed),
+    fronts: lines(borders.fronts.map(f => f.ring)),
+    polities,
+    polityShapes: { type: 'MultiPolygon', coordinates: polities.flatMap(q => q.shape.coordinates) },
+    // The peoples and places the book names beside or within its ✦ shapes.
+    names: borders.names,
   };
 }
 

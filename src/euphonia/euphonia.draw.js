@@ -93,12 +93,29 @@ export function drawFills(ctx, view, world, colors, dpr) {
   ctx.beginPath(); path(world.historic); ctx.fill();
   ctx.restore();
 }
+// The polities of 1668 (euphonia.borders.json), in the coast's ink, as the
+// period's maps drew them. A border is a fine line, BORDER CSS pixels wide.
+// A reach is a band of wash along the inside of a polity's edge, laid as
+// Dutch colourists laid outline colour, with no line under it, fading to
+// nothing `width` CSS pixels in: wide enough to read as a band on the whole
+// globe, about 700 CSS pixels across. It carries a border's ink, no more: a
+// linear fade from `alpha` holds width·alpha/2 of it, so alpha is
+// 2·BORDER/width.
+const BORDER = 0.5, REACH_WIDTH = 6;
+export const REACH = { width: REACH_WIDTH, alpha: 2 * BORDER / REACH_WIDTH };
 // The globe's lines, in the order they're drawn: each a layer of the world,
 // its colour and its width in CSS pixels, the historic lakes dashed (3 on, 2
-// off); then the roses; then the equator, tropics and polar circles. Both the
-// GPU's drawing (euphonia.gl.js) and this one read them.
+// off), the reaches washed (REACH); then the roses; then the equator,
+// tropics and polar circles. Both the GPU's drawing (euphonia.gl.js) and
+// this one read them.
 export const GLOBE_LINES = [
   { layer: 'graticule', color: 'graticule', width: 0.5 },
+  { layer: 'reaches', color: 'coast', width: REACH.width, alpha: REACH.alpha, wash: true },
+  { layer: 'borders', color: 'coast', width: BORDER },
+  // The book's departures (✦): a firm side dashed, as the historic lakes are
+  // (not the record's line); a front's contested ring dotted.
+  { layer: 'dashed', color: 'coast', width: BORDER, dash: [3, 2] },
+  { layer: 'fronts', color: 'coast', width: BORDER, dash: [1, 2] },
   { layer: 'coast', color: 'coast', width: 0.7 },
   { layer: 'rivers', color: 'river', width: 0.7 },
   { layer: 'lakes', color: 'circles', width: 0.5 },
@@ -114,15 +131,30 @@ export const circlesOf = obliquity => ({ type: 'MultiLineString', coordinates: [
 // the pointer, the picked place's open cross (from its gap to its end), the
 // limb; and a rose's star, its points long, half-long (of the long) and short.
 export const MARKS = { dot: 2.5, ring: 7, ringWidth: 1.5, cross: [3, 9], crossWidth: 1.5, limbWidth: 1.5, rose: 11, roseHalf: 0.6, roseShort: 0.3 };
+// A wash along the inside of each line: strokes in WASH_STEPS widths, out
+// to twice the band's width, each over the narrower, which sum to a fade
+// from the edge inward. The polities clip them to their inside, so a reach
+// facing land no polity holds washes only its own side. The GPU fades each
+// segment's band exactly instead.
+const WASH_STEPS = 4;
+function washLines(ctx, path, world, layer, width, alpha) {
+  ctx.save();
+  ctx.beginPath(); path(world.polityShapes); ctx.clip();
+  ctx.beginPath(); path(world[layer]);
+  ctx.globalAlpha = 1 - (1 - alpha) ** (1 / WASH_STEPS);
+  for (let s = WASH_STEPS; s >= 1; s--) { ctx.lineWidth = 2 * width * s / WASH_STEPS; ctx.stroke(); }
+  ctx.restore();
+}
 export function drawLines(ctx, view, world, colors, dpr) {
   const path = geoPath(projectionFor(view), ctx);
   ctx.clearRect(0, 0, view.width, view.height);
   ctx.save();
   clipToGlobe(ctx, view);
   ctx.lineJoin = 'round';
-  for (const { layer, color, width, dash } of GLOBE_LINES) {
+  for (const { layer, color, width, dash, alpha = 1, wash } of GLOBE_LINES) {
     ctx.strokeStyle = colors[color]; ctx.lineWidth = width * dpr; ctx.setLineDash((dash ?? []).map(d => d * dpr));
-    if (layer === 'coast') ctx.stroke(coastPath(view, world));
+    if (wash) washLines(ctx, path, world, layer, width * dpr, alpha);
+    else if (layer === 'coast') ctx.stroke(coastPath(view, world));
     else { ctx.beginPath(); path(world[layer]); ctx.stroke(); }
   }
   ctx.setLineDash([]);
@@ -309,11 +341,13 @@ export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, 
 // Over the lines: the tropics and polar circles, the book's regions and
 // their places, the picked place, and the limb over all. obliquity places
 // the tropics and polar circles for the moment shown.
-export function drawMarks(ctx, view, { obliquity, regions, hoverPlace, pick }, colors, dpr) {
+export function drawMarks(ctx, view, { obliquity, regions, hoverPlace, pick, polity }, colors, dpr) {
   const project = projectionFor(view), path = geoPath(project, ctx);
   const at = p => (faces(view, p) ? project([p.lon, p.lat]) : null);
   ctx.save();
   clipToGlobe(ctx, view);
+  // The polity under the pointer, washed in the glow's colour.
+  if (polity) { ctx.fillStyle = colors.glow; ctx.beginPath(); path(polity.shape); ctx.fill(); }
   ctx.beginPath();
   path(circlesOf(obliquity));
   ctx.strokeStyle = colors[CIRCLES_LINE.color]; ctx.lineWidth = CIRCLES_LINE.width * dpr; ctx.stroke();

@@ -20,7 +20,7 @@ const RIVER_RANK = 5;
 // Douglas–Peucker tolerance in degrees. At 1440px wide each disc is about
 // 750 device pixels across and its rim, where stereographic scale doubles,
 // spends about 13 device pixels per degree, so 0.03° is under half a pixel.
-const TOLERANCE = 0.03;
+export const TOLERANCE = 0.03;
 const PLACES = 2;
 
 export function readDbf(buf) {
@@ -60,7 +60,7 @@ function readShp(buf) {
   return shapes;
 }
 
-function simplify(pts) {
+export function simplify(pts) {
   const keep = new Uint8Array(pts.length);
   keep[0] = keep[pts.length - 1] = 1;
   const stack = [[0, pts.length - 1]];

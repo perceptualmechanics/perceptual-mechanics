@@ -255,6 +255,11 @@ body { background: var(--ground); font-family: var(--type); }
   color: var(--map-lettering); font-style: italic; font-size: 0.7rem; text-shadow: 0 0 3px var(--ground), 0 0 3px var(--ground);
 }
 .map-circle-name[hidden] { display: none; }
+/* The names the book sets by its ✦ shapes: small capitals, the peoples
+   beside or within a shape upright, a place fought over in italic. */
+.map-book-name { position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: none; font-size: 0.7rem; letter-spacing: 0.06em; font-variant-caps: small-caps; color: var(--map-lettering); text-shadow: 0 0 3px var(--ground), 0 0 3px var(--ground); }
+.map-book-name.is-contested { font-style: italic; }
+.map-book-name[hidden] { display: none; }
 /* A place's name beside its ring while the pointer or focus is on it. */
 .map-place {
   position: absolute; top: 0; left: 0; pointer-events: none; white-space: nowrap;

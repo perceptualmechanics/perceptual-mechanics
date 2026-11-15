@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "911898ce1e3bec1b7e14f3bed6ee9ce957ad57fdf0f35463607b003f7d9567e7",
-  "modified": "2026-11-15T13:47:42-05:00",
+  "sha256": "3d716d007bb4a98efce77edf29d49630ccbc15aed98af8313ec92d3cf747370c",
+  "modified": "2026-11-15T14:13:55-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 24,
+  "exporter_version": 25,
   "rules": {
    "banned": [
     "eladrin",
@@ -188,6 +188,234 @@
      "country": "Germany"
     }
    ],
+   "borders": [
+    {
+     "label": "England",
+     "source": "Kingdom of England",
+     "qid": "Q179876",
+     "cls": "firm"
+    },
+    {
+     "label": "France",
+     "source": "Kingdom of France",
+     "qid": "Q207162",
+     "cls": "firm"
+    },
+    {
+     "label": "Spain",
+     "source": "Kingdom of Spain",
+     "qid": "Q29",
+     "cls": "firm"
+    },
+    {
+     "label": "Portugal",
+     "source": "Kingdom of Portugal",
+     "qid": "Q45670",
+     "cls": "firm"
+    },
+    {
+     "label": "the Dutch Republic",
+     "source": "Dutch Republic",
+     "qid": "Q170072",
+     "cls": "firm"
+    },
+    {
+     "label": "the Empire",
+     "source": "Holy Roman Empire Minor States",
+     "qid": "Q12548",
+     "cls": "firm"
+    },
+    {
+     "label": "the Habsburg lands",
+     "source": "Habsburg Monarchy",
+     "qid": "Q66504140",
+     "cls": "firm"
+    },
+    {
+     "label": "Bavaria",
+     "source": "Duchy of Bavaria",
+     "qid": "Q47261",
+     "cls": "firm"
+    },
+    {
+     "label": "Saxony",
+     "source": "Electorate of Saxony",
+     "qid": "Q156199",
+     "cls": "firm"
+    },
+    {
+     "label": "Brandenburg-Prussia",
+     "source": "Brandenburg-Prussia",
+     "qid": "Q157367",
+     "cls": "firm"
+    },
+    {
+     "label": "Lorraine",
+     "source": "Duchy of Lorraine",
+     "qid": "Q155019",
+     "cls": "firm"
+    },
+    {
+     "label": "Savoy",
+     "source": "House of Savoy",
+     "qid": "Q200229",
+     "cls": "firm"
+    },
+    {
+     "label": "Monaco",
+     "source": "Principality of Monaco",
+     "qid": "Q235",
+     "cls": "firm"
+    },
+    {
+     "label": "the Swiss Confederation",
+     "source": "Swiss Confederation",
+     "qid": "Q39",
+     "cls": "firm"
+    },
+    {
+     "label": "Genoa",
+     "source": "Republic of Genoa",
+     "qid": "Q174306",
+     "cls": "firm"
+    },
+    {
+     "label": "Tuscany",
+     "source": "Republic of Florence",
+     "qid": "Q148540",
+     "cls": "firm"
+    },
+    {
+     "label": "the Papal States",
+     "source": "Papal States",
+     "qid": "Q170174",
+     "cls": "firm"
+    },
+    {
+     "label": "Venice",
+     "source": "Republic of Venice",
+     "qid": "Q4948",
+     "cls": "firm"
+    },
+    {
+     "label": "Ragusa",
+     "source": "Republic of Ragusa",
+     "qid": "Q208169",
+     "cls": "firm"
+    },
+    {
+     "label": "Urgell",
+     "source": "County of Urgell",
+     "qid": "Q1514510",
+     "cls": "firm"
+    },
+    {
+     "label": "the Comtat",
+     "source": "Comtat Venaissin",
+     "qid": "Q1122980",
+     "cls": "firm"
+    },
+    {
+     "label": "Denmark–Norway",
+     "source": "Denmark-Norway",
+     "qid": "Q62651",
+     "cls": "firm"
+    },
+    {
+     "label": "Sweden",
+     "source": "Swedish Empire",
+     "qid": "Q215443",
+     "cls": "firm"
+    },
+    {
+     "label": "Poland–Lithuania",
+     "source": "Polish-Lithuanian Commonwealth",
+     "qid": "Q172107",
+     "cls": "firm"
+    },
+    {
+     "label": "Russia",
+     "source": "Tsardom of Russia",
+     "qid": "Q186096",
+     "cls": "firm"
+    },
+    {
+     "label": "Transylvania",
+     "source": "Principality of Transylvania",
+     "qid": "Q655621",
+     "cls": "firm"
+    },
+    {
+     "label": "Wallachia",
+     "source": "Principality of Wallachia",
+     "qid": "Q171393",
+     "cls": "firm"
+    },
+    {
+     "label": "Moldavia",
+     "source": "Principality of Moldavia",
+     "qid": "Q10957559",
+     "cls": "firm"
+    },
+    {
+     "label": "the Cossack Hetmanate",
+     "source": "Zaporozhian Cossacks",
+     "qid": "Q1076173",
+     "cls": "zone"
+    },
+    {
+     "label": "the Crimean Tatars",
+     "source": "Crimean Khanate",
+     "qid": "Q160440",
+     "cls": "zone"
+    },
+    {
+     "label": "the Ottomans",
+     "source": "Ottoman Empire",
+     "qid": "Q12560",
+     "cls": "firm"
+    }
+   ],
+   "edges": [
+    {
+     "name": "Sápmi",
+     "rows": [
+      {
+       "source": "Swedish Empire",
+       "qid": "Q215443"
+      },
+      {
+       "source": "Denmark-Norway",
+       "qid": "Q62651"
+      },
+      {
+       "source": "Tsardom of Russia",
+       "qid": "Q186096"
+      }
+     ],
+     "cls": "zone",
+     "where": "every edge the three share north of 66.5N, the latitude of Rovaniemi, from Hammerfest to Murmansk",
+     "north": 66.5,
+     "places": [
+      {
+       "name": "Rovaniemi",
+       "modern": "Rovaniemi",
+       "country": "Finland"
+      },
+      {
+       "name": "Hammerfest",
+       "modern": "Hammerfest",
+       "country": "Norway"
+      },
+      {
+       "name": "Murmansk",
+       "modern": "Murmansk",
+       "country": "Russia"
+      }
+     ]
+    }
+   ],
+   "departs": [],
    "sections": [
     {
      "heading": "At a Glance",
@@ -386,6 +614,485 @@
      "country": "Indonesia"
     }
    ],
+   "borders": [
+    {
+     "label": "the VOC's unbuilt Cape station",
+     "source": "Dutch Cape Colony",
+     "qid": "Q4807130",
+     "cls": "replaced"
+    },
+    {
+     "label": "the Portuguese at sea",
+     "source": "Portuguese Empire",
+     "qid": "Q200464",
+     "cls": "firm"
+    },
+    {
+     "label": "Portugal",
+     "source": "Kingdom of Portugal",
+     "qid": "Q45670",
+     "cls": "firm"
+    },
+    {
+     "label": "Oman",
+     "source": "Yarubid dynasty",
+     "qid": "Q1752110",
+     "cls": "zone"
+    },
+    {
+     "label": "the French at Fort-Dauphin",
+     "source": "New France",
+     "qid": "Q170604",
+     "cls": "firm"
+    },
+    {
+     "label": "Kandy",
+     "source": "Portuguese Ceylon",
+     "qid": "Q1709007",
+     "cls": "zone"
+    },
+    {
+     "label": "the VOC",
+     "source": "Dutch Republic",
+     "qid": "Q170072",
+     "cls": "firm"
+    }
+   ],
+   "edges": [],
+   "departs": [
+    {
+     "name": "Mutapa",
+     "cls": "zone",
+     "edges": [
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Kariba",
+         "modern": "Kariba",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Tete",
+         "modern": "Tete",
+         "country": "Mozambique"
+        }
+       ],
+       "words": "down the Zambezi"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Tete",
+         "modern": "Tete",
+         "country": "Mozambique"
+        },
+        {
+         "name": "Shamva",
+         "modern": "Shamva",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Chiredzi",
+         "modern": "Chiredzi",
+         "country": "Zimbabwe"
+        }
+       ],
+       "words": "the foot of the eastern highlands, where Barwe, Manyika and Uteve begin"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Chiredzi",
+         "modern": "Chiredzi",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Beitbridge",
+         "modern": "Beitbridge",
+         "country": "Zimbabwe"
+        }
+       ],
+       "words": "south-west to the Limpopo"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Beitbridge",
+         "modern": "Beitbridge",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Zvishavane",
+         "modern": "Zvishavane",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Gweru",
+         "modern": "Gweru",
+         "country": "Zimbabwe"
+        }
+       ],
+       "words": "against the Torwa's Butua"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Gweru",
+         "modern": "Gweru",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Karoi",
+         "modern": "Karoi",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Kariba",
+         "modern": "Kariba",
+         "country": "Zimbabwe"
+        }
+       ],
+       "words": "the plateau's western edge above the middle Zambezi"
+      }
+     ],
+     "ring": [
+      {
+       "name": "Kariba",
+       "modern": "Kariba",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Tete",
+       "modern": "Tete",
+       "country": "Mozambique"
+      },
+      {
+       "name": "Shamva",
+       "modern": "Shamva",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Chiredzi",
+       "modern": "Chiredzi",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Beitbridge",
+       "modern": "Beitbridge",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Zvishavane",
+       "modern": "Zvishavane",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Gweru",
+       "modern": "Gweru",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Karoi",
+       "modern": "Karoi",
+       "country": "Zimbabwe"
+      }
+     ],
+     "holds": [
+      {
+       "name": "the court",
+       "modern": "Mazowe",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Great Zimbabwe",
+       "modern": "Masvingo",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Dambarare",
+       "modern": "Harare",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Sofala",
+       "modern": "Beira",
+       "country": "Mozambique"
+      }
+     ],
+     "beyond": [
+      {
+       "name": "Butua",
+       "modern": "Bulawayo",
+       "country": "Zimbabwe"
+      }
+     ],
+     "keeps": [
+      {
+       "name": "Mozambique Island",
+       "modern": "Mocambique",
+       "country": "Mozambique"
+      },
+      {
+       "name": "Fort Jesus",
+       "modern": "Mombasa",
+       "country": "Kenya"
+      }
+     ],
+     "replaces": {
+      "source": "Portuguese Empire",
+      "qid": "Q200464",
+      "part": "at",
+      "at": {
+       "name": "Sofala",
+       "modern": "Beira",
+       "country": "Mozambique"
+      }
+     },
+     "star": "The map's Mutapa"
+    },
+    {
+     "name": "Mutapa's tributaries",
+     "cls": "zone",
+     "edges": [
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Tete",
+         "modern": "Tete",
+         "country": "Mozambique"
+        },
+        {
+         "name": "Chiramba",
+         "modern": "Chiramba",
+         "country": "Mozambique"
+        }
+       ],
+       "words": "down the Zambezi toward Sena"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Chiramba",
+         "modern": "Chiramba",
+         "country": "Mozambique"
+        },
+        {
+         "name": "Dondo",
+         "modern": "Dondo",
+         "country": "Mozambique"
+        }
+       ],
+       "words": "the lowlands behind Sofala"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Dondo",
+         "modern": "Dondo",
+         "country": "Mozambique"
+        },
+        {
+         "name": "Espungabera",
+         "modern": "Espungabera",
+         "country": "Mozambique"
+        },
+        {
+         "name": "Chiredzi",
+         "modern": "Chiredzi",
+         "country": "Zimbabwe"
+        }
+       ],
+       "words": "the Save country, Uteve's south"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Chiredzi",
+         "modern": "Chiredzi",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Shamva",
+         "modern": "Shamva",
+         "country": "Zimbabwe"
+        },
+        {
+         "name": "Tete",
+         "modern": "Tete",
+         "country": "Mozambique"
+        }
+       ],
+       "words": "the king's own country"
+      }
+     ],
+     "ring": [
+      {
+       "name": "Tete",
+       "modern": "Tete",
+       "country": "Mozambique"
+      },
+      {
+       "name": "Chiramba",
+       "modern": "Chiramba",
+       "country": "Mozambique"
+      },
+      {
+       "name": "Dondo",
+       "modern": "Dondo",
+       "country": "Mozambique"
+      },
+      {
+       "name": "Espungabera",
+       "modern": "Espungabera",
+       "country": "Mozambique"
+      },
+      {
+       "name": "Chiredzi",
+       "modern": "Chiredzi",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Shamva",
+       "modern": "Shamva",
+       "country": "Zimbabwe"
+      }
+     ],
+     "labels": [
+      {
+       "name": "Barwe",
+       "modern": "Chiramba",
+       "country": "Mozambique"
+      },
+      {
+       "name": "Manyika",
+       "modern": "Mutare",
+       "country": "Zimbabwe"
+      },
+      {
+       "name": "Uteve",
+       "modern": "Chimoio",
+       "country": "Mozambique"
+      }
+     ],
+     "replaces": null,
+     "star": "The map's Mutapa"
+    },
+    {
+     "name": "The Cape",
+     "cls": "zone",
+     "edges": [
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Hoerikwaggo",
+         "modern": "Cape Town",
+         "country": "South Africa"
+        },
+        {
+         "name": "Paarl",
+         "modern": "Paarl",
+         "country": "South Africa"
+        }
+       ],
+       "words": "across the Cape Flats to the mountains"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Paarl",
+         "modern": "Paarl",
+         "country": "South Africa"
+        },
+        {
+         "name": "Hermanus",
+         "modern": "Hermanus",
+         "country": "South Africa"
+        }
+       ],
+       "words": "the Hottentots-Holland mountains"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Hermanus",
+         "modern": "Hermanus",
+         "country": "South Africa"
+        },
+        {
+         "name": "Hoerikwaggo",
+         "modern": "Cape Town",
+         "country": "South Africa"
+        }
+       ],
+       "words": "False Bay and the Peninsula"
+      }
+     ],
+     "ring": [
+      {
+       "name": "Hoerikwaggo",
+       "modern": "Cape Town",
+       "country": "South Africa"
+      },
+      {
+       "name": "Paarl",
+       "modern": "Paarl",
+       "country": "South Africa"
+      },
+      {
+       "name": "Hermanus",
+       "modern": "Hermanus",
+       "country": "South Africa"
+      }
+     ],
+     "holds": [
+      {
+       "name": "Hoerikwaggo",
+       "modern": "Cape Town",
+       "country": "South Africa"
+      }
+     ],
+     "beyond": [
+      {
+       "name": "Cochoqua",
+       "modern": "Saldanha",
+       "country": "South Africa"
+      },
+      {
+       "name": "Chainouqua",
+       "modern": "Swellendam",
+       "country": "South Africa"
+      },
+      {
+       "name": "San",
+       "modern": "Vanhynsdorp",
+       "country": "South Africa"
+      }
+     ],
+     "replaces": {
+      "source": "Dutch Cape Colony",
+      "qid": "Q4807130",
+      "part": "at",
+      "at": {
+       "name": "Cape Town",
+       "modern": "Cape Town",
+       "country": "South Africa"
+      }
+     },
+     "star": "The map draws the Cape"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -393,7 +1100,7 @@
     },
     {
      "heading": "The Lay of the Land",
-     "text": "Mutapa is a high plateau between the Zambezi and the Limpopo, mostly over 3,000 feet up: open woodland that goes bare in the dry season, not jungle or savanna. People have farmed, herded and mined it for over a thousand years; none of it is wilderness.\n\n- **Seasons.** Cool and dry (April to early August), hot and dry (to October) and the rains (November to March), which decide the year.\n- **The miombo and the granite.** Msasa woodland over thin grass, with grassy wetlands, *vleis*, along the streams, and *kopjes*, granite domes and boulder hills, whose slabs built Great Zimbabwe without mortar. In the Matobo Hills, near Khami, the boulders go on like a sea.\n- **The Great Dyke.** A ridge of ultramafic rock runs about 340 miles down the country's spine. Only a few specialist plants grow on it, and they are how Mutapa found what is under it.\n- **The lowlands.** Tsetse fly and malaria in the Zambezi and Limpopo valleys kill cattle and strangers, and anyone after Mutapa's metal crosses them to reach the healthy plateau.\n- **The court and the city.** ✦ The king rules from the plateau, from the old court in the north, near the royal graves and their mediums and above the mines and forges of the Dyke; each new king is installed there and lights the new fire. Sofala, taken from the Portuguese in the 1640s, is where the gold, the credit and the ships meet: the empire's great city, its workshops, its bank and its door to the world. Think of the court as Washington and Sofala as New York. Everyone in Sofala knows the court is moving there next year, and has known it every year since the 1650s.\n- **The Cape.** A different country well over a thousand miles away by sea, of winter rain and Khoekhoe grazing.\n- **The monsoon.** Dhows ride the dry northeast monsoon to East Africa in winter and come back to Arabia in late spring. At the southwest monsoon's height, roughly June to August, much of India's west coast is closed to shipping. A ship that misses the wind waits months.\n- **The spices grow in tiny places.** The Dutch restrict cloves to Ambon and nutmeg to the Banda Islands, which they conquered in 1621, killing or enslaving nearly all their people; the Treaty of Breda (1667) has just handed them Run, the last nutmeg island outside their grip. Coffee grows commercially almost only in Yemen and ships from Mocha.\n- **The islands.** Swahili towns from Mombasa to Zanzibar are built of coral stone; the dodo of Mauritius is nearly gone."
+     "text": "Mutapa is a high plateau between the Zambezi and the Limpopo, mostly over 3,000 feet up: open woodland that goes bare in the dry season, not jungle or savanna. People have farmed, herded and mined it for over a thousand years; none of it is wilderness. ✦ The map's Mutapa and its tributaries are the book's: in ours the king gave up the mines in 1607, and no atlas draws the empire that kept them.\n\n- **Seasons.** Cool and dry (April to early August), hot and dry (to October) and the rains (November to March), which decide the year.\n- **The miombo and the granite.** Msasa woodland over thin grass, with grassy wetlands, *vleis*, along the streams, and *kopjes*, granite domes and boulder hills, whose slabs built Great Zimbabwe without mortar. In the Matobo Hills, near Khami, the boulders go on like a sea.\n- **The Great Dyke.** A ridge of ultramafic rock runs about 340 miles down the country's spine. Only a few specialist plants grow on it, and they are how Mutapa found what is under it.\n- **The lowlands.** Tsetse fly and malaria in the Zambezi and Limpopo valleys kill cattle and strangers, and anyone after Mutapa's metal crosses them to reach the healthy plateau.\n- **The court and the city.** ✦ The king rules from the plateau, from the old court in the north, near the royal graves and their mediums and above the mines and forges of the Dyke; each new king is installed there and lights the new fire. Sofala, taken from the Portuguese in the 1640s, is where the gold, the credit and the ships meet: the empire's great city, its workshops, its bank and its door to the world. Think of the court as Washington and Sofala as New York. Everyone in Sofala knows the court is moving there next year, and has known it every year since the 1650s.\n- **The Cape.** A different country well over a thousand miles away by sea, of winter rain and Khoekhoe grazing. ✦ The map draws the Cape as Mutapa's harbor and its tributaries' country; in ours the Dutch built a station there in 1652.\n- **The monsoon.** Dhows ride the dry northeast monsoon to East Africa in winter and come back to Arabia in late spring. At the southwest monsoon's height, roughly June to August, much of India's west coast is closed to shipping. A ship that misses the wind waits months.\n- **The spices grow in tiny places.** The Dutch restrict cloves to Ambon and nutmeg to the Banda Islands, which they conquered in 1621, killing or enslaving nearly all their people; the Treaty of Breda (1667) has just handed them Run, the last nutmeg island outside their grip. Coffee grows commercially almost only in Yemen and ships from Mocha.\n- **The islands.** Swahili towns from Mombasa to Zanzibar are built of coral stone; the dodo of Mauritius is nearly gone."
     },
     {
      "heading": "Who Holds Power",
@@ -624,6 +1331,94 @@
      "country": "Ethiopia"
     }
    ],
+   "borders": [
+    {
+     "label": "the Ottomans",
+     "source": "Ottoman Empire",
+     "qid": "Q12560",
+     "cls": "firm"
+    },
+    {
+     "label": "Persia",
+     "source": "Safavid Dynasty",
+     "qid": "Q161205",
+     "cls": "firm"
+    },
+    {
+     "label": "Ethiopia",
+     "source": "Ethiopian Empire",
+     "qid": "Q207521",
+     "cls": "zone"
+    },
+    {
+     "label": "the Funj",
+     "source": "Funj Sultanate",
+     "qid": "Q1475713",
+     "cls": "zone"
+    },
+    {
+     "label": "Yemen",
+     "source": "Qasimids",
+     "qid": "Q5261548",
+     "cls": "zone"
+    },
+    {
+     "label": "Morocco",
+     "source": "Saadi Sultanate",
+     "qid": "Q1136188",
+     "cls": "zone"
+    },
+    {
+     "label": "Abkhazia",
+     "source": "Principality of Abkhazia",
+     "qid": "Q1760473",
+     "cls": "zone"
+    },
+    {
+     "label": "Guria",
+     "source": "Principality of Guria",
+     "qid": "Q2195101",
+     "cls": "zone"
+    },
+    {
+     "label": "Mingrelia",
+     "source": "Principality of Mingrelia",
+     "qid": "Q2907860",
+     "cls": "zone"
+    },
+    {
+     "label": "Imereti",
+     "source": "Kingdom of Imereti",
+     "qid": "Q1069959",
+     "cls": "zone"
+    },
+    {
+     "label": "Kartli",
+     "source": "Kingdom of Kartli",
+     "qid": "Q195972",
+     "cls": "zone"
+    },
+    {
+     "label": "Spain's presidios and the Canaries",
+     "source": "Spanish Empire",
+     "qid": "Q80702",
+     "cls": "firm"
+    },
+    {
+     "label": "Portuguese Mazagan",
+     "source": "Portuguese Empire",
+     "qid": "Q200464",
+     "cls": "firm"
+    },
+    {
+     "label": "English Tangier",
+     "source": "English Colonial Empire",
+     "qid": "Q617219",
+     "cls": "firm"
+    }
+   ],
+   "edges": [],
+   "departs": [],
    "sections": [
     {
      "heading": "At a Glance",
@@ -827,6 +1622,82 @@
      "country": "Nigeria"
     }
    ],
+   "borders": [
+    {
+     "label": "Oyo",
+     "source": "Oyo Empire",
+     "qid": "Q849623",
+     "cls": "zone"
+    },
+    {
+     "label": "Bornu",
+     "source": "Bornu Empire",
+     "qid": "Q1139762",
+     "cls": "zone"
+    },
+    {
+     "label": "Kongo",
+     "source": "Kingdom of Kongo",
+     "qid": "Q796583",
+     "cls": "zone"
+    },
+    {
+     "label": "the Dutch at Elmina",
+     "source": "Dutch Gold Coast",
+     "qid": "Q770776",
+     "cls": "zone"
+    },
+    {
+     "label": "the Danes at Christiansborg",
+     "source": "Danish Gold Coast",
+     "qid": "Q770833",
+     "cls": "zone"
+    },
+    {
+     "label": "Wadai",
+     "source": "Wadai Empire",
+     "qid": "Q1132786",
+     "cls": "zone"
+    },
+    {
+     "label": "Darfur",
+     "source": "Sultanate of Darfur",
+     "qid": "Q1474791",
+     "cls": "zone"
+    },
+    {
+     "label": "Portuguese Angola and the islands",
+     "source": "Portuguese Empire",
+     "qid": "Q200464",
+     "cls": "firm"
+    },
+    {
+     "label": "the English at Cape Coast",
+     "source": "English Colonial Empire",
+     "qid": "Q617219",
+     "cls": "firm"
+    },
+    {
+     "label": "the French in Senegal",
+     "source": "New France",
+     "qid": "Q170604",
+     "cls": "firm"
+    },
+    {
+     "label": "Sweden",
+     "source": "Swedish Empire",
+     "qid": "Q215443",
+     "cls": "firm"
+    },
+    {
+     "label": "the Dutch at Gorée",
+     "source": "Dutch Cape Colony",
+     "qid": "Q4807130",
+     "cls": "firm"
+    }
+   ],
+   "edges": [],
+   "departs": [],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1032,6 +1903,88 @@
      "country": "Bangladesh"
     }
    ],
+   "borders": [
+    {
+     "label": "the Mughals",
+     "source": "Mughal Empire",
+     "qid": "Q33296",
+     "cls": "firm"
+    },
+    {
+     "label": "Bijapur",
+     "source": "Bijapur Sultanate",
+     "qid": "Q83821",
+     "cls": "firm"
+    },
+    {
+     "label": "Golconda",
+     "source": "Golconda Sultanate",
+     "qid": "Q1148042",
+     "cls": "firm"
+    },
+    {
+     "label": "Mysore",
+     "source": "Kingdom of Mysore",
+     "qid": "Q266923",
+     "cls": "zone"
+    },
+    {
+     "label": "Madurai",
+     "source": "Nayaks of Madurai",
+     "qid": "Q1530838",
+     "cls": "zone"
+    },
+    {
+     "label": "Thanjavur",
+     "source": "Nayaks of Thanjavur",
+     "qid": "Q1588434",
+     "cls": "zone"
+    },
+    {
+     "label": "Gorkha",
+     "source": "Gorkha Kingdom",
+     "qid": "Q3332217",
+     "cls": "zone"
+    },
+    {
+     "label": "Kathmandu",
+     "source": "Kathmandu",
+     "qid": "Q3037",
+     "cls": "zone"
+    },
+    {
+     "label": "Bhutan",
+     "source": "Kingdom of Bhutan",
+     "qid": "Q917",
+     "cls": "zone"
+    },
+    {
+     "label": "Arakan",
+     "source": "Kingdom of Mrauk U",
+     "qid": "Q10791211",
+     "cls": "zone"
+    },
+    {
+     "label": "the Portuguese",
+     "source": "Portuguese Colonies",
+     "qid": "Q200464",
+     "cls": "firm"
+    },
+    {
+     "label": "the English",
+     "source": "English Colonial Empire",
+     "qid": "Q617219",
+     "cls": "firm"
+    },
+    {
+     "label": "the Dutch",
+     "source": "Dutch Republic",
+     "qid": "Q170072",
+     "cls": "firm"
+    }
+   ],
+   "edges": [],
+   "departs": [],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1245,6 +2198,232 @@
      "country": "Japan"
     }
    ],
+   "borders": [
+    {
+     "label": "the Qing",
+     "source": "Qing Dynasty",
+     "qid": "Q8733",
+     "cls": "firm"
+    },
+    {
+     "label": "Tungning",
+     "source": "Southern Ming",
+     "qid": "Q1198163",
+     "cls": "zone"
+    },
+    {
+     "label": "Joseon",
+     "source": "Joseon",
+     "qid": "Q28405",
+     "cls": "firm"
+    },
+    {
+     "label": "Japan",
+     "source": "Tokugawa Shogunate",
+     "qid": "Q205662",
+     "cls": "firm"
+    },
+    {
+     "label": "Ayutthaya",
+     "source": "Ayutthaya Kingdom",
+     "qid": "Q841364",
+     "cls": "zone"
+    },
+    {
+     "label": "Burma",
+     "source": "First Toungoo Empire",
+     "qid": "Q23039102",
+     "cls": "zone"
+    },
+    {
+     "label": "Lan Xang",
+     "source": "Lan Xang",
+     "qid": "Q853477",
+     "cls": "zone"
+    },
+    {
+     "label": "Cambodia",
+     "source": "Khmer Empire",
+     "qid": "Q201705",
+     "cls": "zone"
+    },
+    {
+     "label": "the Trịnh",
+     "source": "Trịnh lords",
+     "qid": "Q2267508",
+     "cls": "firm"
+    },
+    {
+     "label": "the Nguyễn",
+     "source": "Nguyễn lords",
+     "qid": "Q2301908",
+     "cls": "firm"
+    },
+    {
+     "label": "the Mạc of Cao Bằng",
+     "source": "Đại Việt",
+     "qid": "Q1317991",
+     "cls": "zone"
+    },
+    {
+     "label": "Aceh",
+     "source": "Sultanate of Aceh",
+     "qid": "Q1061057",
+     "cls": "zone"
+    },
+    {
+     "label": "Johor",
+     "source": "Sultanate of Johor",
+     "qid": "Q1150344",
+     "cls": "zone"
+    },
+    {
+     "label": "Malacca's hinterland",
+     "source": "Sultanate of Malacca",
+     "qid": "Q46652",
+     "cls": "zone"
+    },
+    {
+     "label": "Kedah",
+     "source": "Sultanate of Kedah",
+     "qid": "Q1317579",
+     "cls": "zone"
+    },
+    {
+     "label": "Perak",
+     "source": "Sultanate of Perak",
+     "qid": "Q2649311",
+     "cls": "zone"
+    },
+    {
+     "label": "Patani",
+     "source": "Patani Kingdom",
+     "qid": "Q584435",
+     "cls": "zone"
+    },
+    {
+     "label": "Palembang",
+     "source": "Sultanate of Palembang",
+     "qid": "Q3503555",
+     "cls": "zone"
+    },
+    {
+     "label": "Banten",
+     "source": "Sultanate of Banten",
+     "qid": "Q734867",
+     "cls": "zone"
+    },
+    {
+     "label": "Cirebon",
+     "source": "Sultanate of Cirebon",
+     "qid": "Q2077648",
+     "cls": "zone"
+    },
+    {
+     "label": "Mataram",
+     "source": "Mataram Sultanate",
+     "qid": "Q402145",
+     "cls": "zone"
+    },
+    {
+     "label": "Blambangan",
+     "source": "Blambangan Kingdom",
+     "qid": "Q287996",
+     "cls": "zone"
+    },
+    {
+     "label": "Bali",
+     "source": "Balinese Kingdom",
+     "qid": "Q12491027",
+     "cls": "zone"
+    },
+    {
+     "label": "Banjar",
+     "source": "Sultanate of Banjar",
+     "qid": "Q1660566",
+     "cls": "zone"
+    },
+    {
+     "label": "Brunei",
+     "source": "Sultanate of Brunei",
+     "qid": "Q887803",
+     "cls": "zone"
+    },
+    {
+     "label": "Kutai",
+     "source": "Kutai Kingdom",
+     "qid": "Q1794655",
+     "cls": "zone"
+    },
+    {
+     "label": "Sambas",
+     "source": "Sultanate of Sambas",
+     "qid": "Q3109927",
+     "cls": "zone"
+    },
+    {
+     "label": "Mempawah",
+     "source": "Sultanate of Mempawah",
+     "qid": "Q19746028",
+     "cls": "zone"
+    },
+    {
+     "label": "Sukadana",
+     "source": "Sultanate of Sukadana",
+     "qid": "Q3446232",
+     "cls": "zone"
+    },
+    {
+     "label": "Gowa",
+     "source": "Sultanate of Gowa",
+     "qid": "Q1408641",
+     "cls": "zone"
+    },
+    {
+     "label": "Bone",
+     "source": "Sultanate of Bone",
+     "qid": "Q43292",
+     "cls": "zone"
+    },
+    {
+     "label": "Bima",
+     "source": "Sultanate of Bima",
+     "qid": "Q2817348",
+     "cls": "zone"
+    },
+    {
+     "label": "Sulu",
+     "source": "Sultanate of Sulu",
+     "qid": "Q422065",
+     "cls": "zone"
+    },
+    {
+     "label": "Maguindanao",
+     "source": "Sultanate of Maguindanao",
+     "qid": "Q248572",
+     "cls": "zone"
+    },
+    {
+     "label": "the Portuguese",
+     "source": "Portuguese Colonies",
+     "qid": "Q200464",
+     "cls": "firm"
+    },
+    {
+     "label": "Spain",
+     "source": "Spanish Empire",
+     "qid": "Q80702",
+     "cls": "firm"
+    },
+    {
+     "label": "the VOC",
+     "source": "Dutch Republic",
+     "qid": "Q170072",
+     "cls": "firm"
+    }
+   ],
+   "edges": [],
+   "departs": [],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1457,6 +2636,319 @@
      "country": "Jamaica"
     }
    ],
+   "borders": [
+    {
+     "label": "the Haudenosaunee",
+     "source": "Haudenosaunee",
+     "qid": "Q68518",
+     "cls": "zone"
+    },
+    {
+     "label": "the Itza",
+     "source": "Itza Mayans",
+     "qid": "Q606377",
+     "cls": "zone"
+    },
+    {
+     "label": "New France",
+     "source": "New France",
+     "qid": "Q170604",
+     "cls": "firm"
+    },
+    {
+     "label": "the English",
+     "source": "English Colonial Empire",
+     "qid": "Q617219",
+     "cls": "firm"
+    },
+    {
+     "label": "the Dutch",
+     "source": "New Netherland",
+     "qid": "Q382593",
+     "cls": "firm"
+    },
+    {
+     "label": "Spain",
+     "source": "Spanish Empire",
+     "qid": "Q80702",
+     "cls": "firm"
+    },
+    {
+     "label": "Portugal's Brazil",
+     "source": "Portuguese Empire",
+     "qid": "Q200464",
+     "cls": "firm"
+    },
+    {
+     "label": "the Guaraní missions",
+     "source": "Jesuit Reducciones",
+     "qid": "Q465960",
+     "cls": "zone"
+    }
+   ],
+   "edges": [],
+   "departs": [
+    {
+     "name": "The Inca",
+     "cls": "firm",
+     "edges": [
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Urubamba",
+         "modern": "Urubamba",
+         "country": "Peru"
+        },
+        {
+         "name": "Apolo",
+         "modern": "Apolo",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Coroico",
+         "modern": "Coroico",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Cochabamba",
+         "modern": "Cochabamba",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Samaipata",
+         "modern": "Samaipata",
+         "country": "Bolivia"
+        }
+       ],
+       "words": "the eastern slopes, down to the forest peoples' country"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Samaipata",
+         "modern": "Samaipata",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Tupiza",
+         "modern": "Tupiza",
+         "country": "Bolivia"
+        }
+       ],
+       "words": "the old frontier facing the Chiriguano"
+      },
+      {
+       "cls": "firm",
+       "through": [
+        {
+         "name": "Tupiza",
+         "modern": "Tupiza",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Uyuni",
+         "modern": "Uyuni",
+         "country": "Bolivia"
+        }
+       ],
+       "words": "the southern puna, facing Spain's Tucumán"
+      },
+      {
+       "cls": "firm",
+       "through": [
+        {
+         "name": "Uyuni",
+         "modern": "Uyuni",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Sabaya",
+         "modern": "Sabaya",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Charaña",
+         "modern": "Charaña",
+         "country": "Bolivia"
+        },
+        {
+         "name": "Santo Tomas",
+         "modern": "Santo Tomas",
+         "country": "Peru"
+        },
+        {
+         "name": "Coracora",
+         "modern": "Coracora",
+         "country": "Peru"
+        },
+        {
+         "name": "Puquio",
+         "modern": "Puquio",
+         "country": "Peru"
+        },
+        {
+         "name": "Huancavelica",
+         "modern": "Huancavelica",
+         "country": "Peru"
+        }
+       ],
+       "words": "the western cordillera, above Spain's coast"
+      },
+      {
+       "cls": "firm",
+       "through": [
+        {
+         "name": "Huancavelica",
+         "modern": "Huancavelica",
+         "country": "Peru"
+        },
+        {
+         "name": "Huanta",
+         "modern": "Huanta",
+         "country": "Peru"
+        }
+       ],
+       "words": "facing Spain's northern sierra"
+      },
+      {
+       "cls": "zone",
+       "through": [
+        {
+         "name": "Huanta",
+         "modern": "Huanta",
+         "country": "Peru"
+        },
+        {
+         "name": "Urubamba",
+         "modern": "Urubamba",
+         "country": "Peru"
+        }
+       ],
+       "words": "the forested ridges of Vilcabamba"
+      }
+     ],
+     "ring": [
+      {
+       "name": "Urubamba",
+       "modern": "Urubamba",
+       "country": "Peru"
+      },
+      {
+       "name": "Apolo",
+       "modern": "Apolo",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Coroico",
+       "modern": "Coroico",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Cochabamba",
+       "modern": "Cochabamba",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Samaipata",
+       "modern": "Samaipata",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Tupiza",
+       "modern": "Tupiza",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Uyuni",
+       "modern": "Uyuni",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Sabaya",
+       "modern": "Sabaya",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Charaña",
+       "modern": "Charaña",
+       "country": "Bolivia"
+      },
+      {
+       "name": "Santo Tomas",
+       "modern": "Santo Tomas",
+       "country": "Peru"
+      },
+      {
+       "name": "Coracora",
+       "modern": "Coracora",
+       "country": "Peru"
+      },
+      {
+       "name": "Puquio",
+       "modern": "Puquio",
+       "country": "Peru"
+      },
+      {
+       "name": "Huancavelica",
+       "modern": "Huancavelica",
+       "country": "Peru"
+      },
+      {
+       "name": "Huanta",
+       "modern": "Huanta",
+       "country": "Peru"
+      }
+     ],
+     "holds": [
+      {
+       "name": "Cusco",
+       "modern": "Cusco",
+       "country": "Peru"
+      },
+      {
+       "name": "Huancavelica",
+       "modern": "Huancavelica",
+       "country": "Peru"
+      }
+     ],
+     "contested": {
+      "name": "Laicacota",
+      "modern": "Ilave",
+      "country": "Peru"
+     },
+     "replaces": {
+      "source": "Spanish Empire",
+      "qid": "Q80702",
+      "part": "inside",
+      "except": "the Potosí front's circle"
+     },
+     "star": "The map's Inca state"
+    },
+    {
+     "name": "The Potosí front",
+     "cls": "front",
+     "edges": [],
+     "around": {
+      "name": "Potosí",
+      "modern": "Potosí",
+      "country": "Bolivia"
+     },
+     "radius_km": 30.0,
+     "inside": {
+      "source": "Spanish Empire",
+      "qid": "Q80702",
+      "words": "the mountain and its town"
+     },
+     "outside": {
+      "departure": "The Inca",
+      "words": "who hold the roads in"
+     },
+     "replaces": null,
+     "star": "On the map Potosí"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1464,7 +2956,7 @@
     },
     {
      "heading": "The Lay of the Land",
-     "text": "- **The eastern woodlands.** Palisaded Iroquoian longhouse towns stand in fields of maize, beans and squash that women own and work. The fur front has moved west past the Great Lakes.\n- **Mexico and the Caribbean.** Mexico City is still digging out from its 1629 flood; the Maya lowlands are a managed forest garden. Spain's treasure fleets gather at Havana.\n- **The vertical Andes.** Each community holds fields at several heights, and freeze-dried potatoes, *chuño*, keep for years, so the high ground can outlast a siege.\n- **Potosí.** Some 120,000 people live about 13,000 feet up under Cerro Rico, where nothing grows. Everything comes in on llama trains, the mercury from Huancavelica, and contraband silver leaks out to Buenos Aires.\n- **The Chocó.** Pacific rainforest with up to 43 feet of rain a year. The rivers are the only roads: the Atrato north to the Caribbean, the San Juan south to the Pacific. The gravel bars hold gold, mixed with grains of a \"little silver\" that won't pan out."
+     "text": "- **The eastern woodlands.** Palisaded Iroquoian longhouse towns stand in fields of maize, beans and squash that women own and work. The fur front has moved west past the Great Lakes.\n- **Mexico and the Caribbean.** Mexico City is still digging out from its 1629 flood; the Maya lowlands are a managed forest garden. Spain's treasure fleets gather at Havana.\n- **The vertical Andes.** Each community holds fields at several heights, and freeze-dried potatoes, *chuño*, keep for years, so the high ground can outlast a siege. ✦ The map's Inca state is the book's: in ours it ended at Vilcabamba in 1572, and no atlas draws the high ground it kept.\n- **Potosí.** Some 120,000 people live about 13,000 feet up under Cerro Rico, where nothing grows. Everything comes in on llama trains, the mercury from Huancavelica, and contraband silver leaks out to Buenos Aires. ✦ On the map Potosí is a Spanish town inside a contested ring, not a border; in ours all the country round it was Spain's.\n- **The Chocó.** Pacific rainforest with up to 43 feet of rain a year. The rivers are the only roads: the Atrato north to the Caribbean, the San Juan south to the Pacific. The gravel bars hold gold, mixed with grains of a \"little silver\" that won't pan out."
     },
     {
      "heading": "Who Holds Power",
@@ -1600,6 +3092,9 @@
      "country": "Samoa"
     }
    ],
+   "borders": [],
+   "edges": [],
+   "departs": [],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1753,6 +3248,111 @@
      "country": "Russia"
     }
    ],
+   "borders": [
+    {
+     "label": "Russia",
+     "source": "Tsardom of Russia",
+     "qid": "Q186096",
+     "cls": "firm"
+    },
+    {
+     "label": "the Qing",
+     "source": "Qing Dynasty",
+     "qid": "Q8733",
+     "cls": "firm"
+    },
+    {
+     "label": "the Kazakhs",
+     "source": "Kazakh Khanate",
+     "qid": "Q1433867",
+     "cls": "zone"
+    },
+    {
+     "label": "the Dzungars",
+     "source": "Oirat Confederation",
+     "qid": "Q4332415",
+     "cls": "zone"
+    },
+    {
+     "label": "Yarkent",
+     "source": "Eastern Moghulistan",
+     "qid": "Q1191125",
+     "cls": "zone"
+    },
+    {
+     "label": "the Khoshut",
+     "source": "Khoshut Khanate",
+     "qid": "Q10921634",
+     "cls": "zone"
+    },
+    {
+     "label": "Tibet",
+     "source": "Tibet",
+     "qid": "Q521263",
+     "cls": "zone"
+    },
+    {
+     "label": "the Tümed",
+     "source": "Tümed",
+     "qid": "Q3402317",
+     "cls": "zone"
+    },
+    {
+     "label": "the Khalkha",
+     "source": "Golden Horde",
+     "qid": "Q79965",
+     "cls": "zone"
+    },
+    {
+     "label": "the Kalmyks",
+     "source": "Kalmyk Khanate",
+     "qid": "Q4210248",
+     "cls": "zone"
+    },
+    {
+     "label": "the Kalmyks' west bank",
+     "source": "Astrakhan Khanate",
+     "qid": "Q210163",
+     "cls": "zone"
+    },
+    {
+     "label": "the Nogais",
+     "source": "Small Horde",
+     "qid": "Q631210",
+     "cls": "zone"
+    },
+    {
+     "label": "Khiva",
+     "source": "Khanate of Khiva",
+     "qid": "Q491106",
+     "cls": "zone"
+    },
+    {
+     "label": "Bukhara",
+     "source": "Khanate of Bukhara",
+     "qid": "Q577668",
+     "cls": "zone"
+    }
+   ],
+   "edges": [
+    {
+     "name": "Russia and the Qing",
+     "rows": [
+      {
+       "source": "Tsardom of Russia",
+       "qid": "Q186096"
+      },
+      {
+       "source": "Qing Dynasty",
+       "qid": "Q8733"
+      }
+     ],
+     "cls": "zone",
+     "where": "every edge the two share",
+     "places": []
+    }
+   ],
+   "departs": [],
    "sections": [
     {
      "heading": "At a Glance",

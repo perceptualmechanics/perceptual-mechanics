@@ -3,6 +3,7 @@
 // arrow keys spin it and set its latitude; the wheel, a pinch or the keys
 // zoom; a region's name spins the globe to it.
 import worldUrl from './euphonia.world.json?url';
+import bordersUrl from './euphonia.borders.json?url';
 import reliefUrl from './euphonia.relief.bin?url';
 import { createGlobe } from './euphonia.gl.js';
 import roseData from './euphonia.roses.json';
@@ -125,9 +126,10 @@ const degrees = (v, pos, neg) => `${Math.abs(v).toFixed(1)}° ${v >= 0 ? pos : n
 
 
 export async function initMap(stage) {
-  // The world's rings, kept for land-or-sea, and as the globe draws them.
-  const data = await (await fetch(worldUrl)).json();
-  const world = globeWorld(data, roseData.roses);
+  // The world's rings, kept for land-or-sea, and as the globe draws them,
+  // with the polities of 1668.
+  const [data, borders] = await Promise.all([worldUrl, bordersUrl].map(async url => (await fetch(url)).json()));
+  const world = globeWorld(data, roseData.roses, borders);
   const tolerance = data.provenance.tolerance_deg;
   const colors = palette(stage);
   const cell = stage.querySelector('.map-disc'), canvas = cell.querySelector('canvas:not(.map-ambient)');
@@ -201,7 +203,7 @@ export async function initMap(stage) {
   // A region lights while its name or its glow is under the pointer or
   // focused, and while its chapter is open; a lit region shows its places,
   // and the place under the pointer or focus is ringed and named.
-  let hovered = null, chosen = null, hoverPlace = null;
+  let hovered = null, chosen = null, hoverPlace = null, held = null;
   function light() {
     for (const r of regions) r.lit = r === hovered || r === chosen;
     g.buttons.forEach((b, k) => b.classList.toggle('is-lit', regions[k].lit));
@@ -222,6 +224,39 @@ export async function initMap(stage) {
     }
     return best;
   }
+  // The polity of 1668 that holds a point of the globe, if any: the book's
+  // ✦ departures first, for they stand where the record has someone else or
+  // no one; then a place a departure holds from outside its ring (Sofala,
+  // the plateau's port), within that place's glow; then the record's rings.
+  // Each is tested as the land is, inside its box first.
+  const departures = world.polities.filter(q => q.kind === 'departs');
+  const ordered = [...departures, ...world.polities.filter(q => q.kind !== 'departs')];
+  const boxes = ordered.map(q => {
+    const pts = q.polys.flat(2);
+    return [Math.min(...pts.map(c => c[0])), Math.min(...pts.map(c => c[1])), Math.max(...pts.map(c => c[0])), Math.max(...pts.map(c => c[1]))];
+  });
+  const inside = (k, at) => {
+    const [x0, y0, x1, y1] = boxes[k];
+    return at.lon >= x0 && at.lon <= x1 && at.lat >= y0 && at.lat <= y1 && onLand(ordered[k].polys.flat(), at.lat, at.lon);
+  };
+  const glows = new Map(regions.flatMap(r => r.glows.map(gl => [gl.name, gl])));
+  const heldFrom = departures.flatMap(q => (q.holds ?? []).map(h => ({ q, glow: glows.get(h.name), at: { lon: h.lonlat[0], lat: h.lonlat[1] } })))
+    .filter(x => x.glow && !onLand(x.q.polys.flat(), x.at.lat, x.at.lon));
+  const polityAt = at => {
+    const k = ordered.findIndex((q, i) => q.kind === 'departs' && inside(i, at));
+    if (k >= 0) return ordered[k];
+    const held = heldFrom.find(x => apart(x.glow, at) <= x.glow.rho);
+    if (held) return held.q;
+    const r = ordered.findIndex((q, i) => q.kind !== 'departs' && inside(i, at));
+    return r >= 0 ? ordered[r] : null;
+  };
+  // The polity under the pointer, where no place is: washed, and named.
+  function hold(at) {
+    const q = at && polityAt(at);
+    if (!q && !held) return;
+    held = q ? { polity: q, at } : null;
+    redraw();
+  }
   // The point of the globe under (x, y), unless the mount is in the way.
   const pointAt = (x, y) => {
     const v = cssView();
@@ -238,6 +273,17 @@ export async function initMap(stage) {
     g.labels.append(span);
     return span;
   });
+  // The names the book sets beside or within its ✦ shapes (Butua beside
+  // Mutapa, the Cape's Khoekhoe, Laicacota fought over): lettered once the
+  // glass frames their region, giving way to every other name. The chapter
+  // carries them for a screen reader.
+  g.bookNames = world.names.map(n => {
+    const span = Object.assign(document.createElement('span'), { className: `map-book-name is-${n.kind}`, textContent: n.name });
+    span.setAttribute('aria-hidden', 'true');
+    g.labels.append(span);
+    return span;
+  });
+  const shapeRegion = new Map(world.polities.filter(q => q.kind === 'departs').map(q => [q.name, regions.find(r => r.name === q.region)]));
   g.tip.setAttribute('aria-hidden', 'true');
 
   // The scenes' panel, beside the map, and everything there is to read: the
@@ -502,7 +548,7 @@ export async function initMap(stage) {
     if (globe) {
       // The mount recedes by its layers' opacity; the globe is drawn whole.
       backCanvas.style.opacity = canvas.style.opacity = String(shown);
-      globe(v, { regions, hoverPlace: hoverPlace ?? marked, pick, scale });
+      globe(v, { regions, hoverPlace: hoverPlace ?? marked, pick, polity: held?.polity, scale });
     } else {
       g.ctx.clearRect(0, 0, v.width, v.height);
       g.ctx.globalAlpha = shown;
@@ -510,7 +556,7 @@ export async function initMap(stage) {
       g.ctx.globalAlpha = 1;
       g.ctx.drawImage(g.fills, 0, 0);
       g.ctx.drawImage(g.lines, 0, 0);
-      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace: hoverPlace ?? marked, pick }, colors, scale);
+      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace: hoverPlace ?? marked, pick, polity: held?.polity }, colors, scale);
       g.ctx.globalAlpha = shown;
       if (shown) g.ctx.drawImage(g.mountFront, 0, 0);
       g.ctx.globalAlpha = 1;
@@ -541,11 +587,11 @@ export async function initMap(stage) {
     // A point of the canvas on the globe's face: inside its limb, and on
     // the canvas.
     const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height;
-    const ringed = hoverPlace ?? marked;
+    const ringed = hoverPlace ?? marked ?? held?.at;
     const tip = ringed && faces(v, ringed) && project([ringed.lon, ringed.lat]);
     g.tip.hidden = !tip;
     if (tip) {
-      g.tip.textContent = hoverPlace ? placeName(hoverPlace) : marked.label;
+      g.tip.textContent = hoverPlace ? placeName(hoverPlace) : marked ? marked.label : `${held.polity.label}${held.polity.kind === 'departs' ? ' ✦' : ''}`;
       g.tip.style.transform = `translate(${tip[0] + 10}px, ${tip[1]}px) translate(0, -50%)`;
     }
     const boxes = [];
@@ -563,9 +609,16 @@ export async function initMap(stage) {
       const [x, y] = project([p.lon, p.lat]), { w, h } = g.circleSizes[k];
       boxes.push({ circle: k, x: x + w / 2, y: y - h / 2, anchorY: y - h / 2, spread: -1, w, h });
     });
+    // The book's names, last of all.
+    world.names.forEach((n, k) => {
+      const p = { lon: n.lonlat[0], lat: n.lonlat[1] }, r = shapeRegion.get(n.of);
+      if (!r || g.zoom < regionZoom(r) || !faces(v, p)) { g.bookNames[k].hidden = true; return; }
+      const [x, y] = project([p.lon, p.lat]), { w, h } = g.bookNameSizes[k];
+      boxes.push({ bookName: k, x, y, anchorY: y, spread: -2, w, h });
+    });
     place(boxes, open);
-    for (const { k, circle, x, y, shown } of boxes) {
-      const b = circle === undefined ? g.buttons[k] : g.circleNames[circle];
+    for (const { k, circle, bookName, x, y, shown } of boxes) {
+      const b = bookName !== undefined ? g.bookNames[bookName] : circle === undefined ? g.buttons[k] : g.circleNames[circle];
       b.hidden = !shown;
       if (shown) b.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     }
@@ -628,8 +681,10 @@ export async function initMap(stage) {
       if (!nearest || deg < nearest.deg) nearest = { region: r, place: g, deg };
     }
     const half = hiddenAt(instant, null, at).half;
+    const polity = polityAt(at);
     return [
       ['Where', `${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}, ${onLand(data.land, at.lat, at.lon) ? 'on land' : 'at sea'} (Natural Earth's modern coasts)`],
+      ['In 1668', polity ? (polity.kind === 'departs' ? `${polity.label}, the book's: ${polity.star}` : `${polity.label}, by Cliopatria's record`) : "no state, by Cliopatria's record"],
       ['Nearest named place', `${placeName(nearest.place)}, in ${nearest.region.name}: ${Math.round(nearest.deg * RAD * EARTH_KM).toLocaleString('en-GB')} km`],
       ['By the sun', `${sunClock(instant, at.lon)}; the sun ${sunDay}`],
       ['The Hidden (Euphonia)', `at the ${tideAt(instant)}; ${half === 'dark' ? 'the dark half, by the sun between the tropics' : half === 'other' ? 'the other half, by the sun between the tropics' : 'the half of the year as the DM says: the book gives this place no calendar'}`],
@@ -687,6 +742,7 @@ export async function initMap(stage) {
     const measure = b => { b.hidden = false; return { w: b.offsetWidth, h: b.offsetHeight }; };
     g.labelSizes = g.buttons.map(measure);
     g.circleSizes = g.circleNames.map(measure);
+    g.bookNameSizes = g.bookNames.map(measure);
     g.baseKey = '';
     clampZoom();
     redraw();
@@ -917,6 +973,7 @@ export async function initMap(stage) {
     if (!last) {
       const at = pointAt(e.offsetX, e.offsetY), hit = at && placeAt(at);
       hover(hit?.region ?? null, hit?.place ?? null);
+      hold(hit ? null : at);
       return;
     }
     travel += Math.hypot(e.offsetX - last[0], e.offsetY - last[1]);
@@ -942,7 +999,7 @@ export async function initMap(stage) {
     const at = tap && pointAt(e.offsetX, e.offsetY);
     if (at) pickPoint(at);
   };
-  g.canvas.addEventListener('pointerleave', () => { if (!pointers.size) hover(null); });
+  g.canvas.addEventListener('pointerleave', () => { if (!pointers.size) { hover(null); hold(null); } });
   g.canvas.addEventListener('pointerup', lift);
   g.canvas.addEventListener('pointercancel', lift);
   // The wheel zooms wherever it is over the globe, a region's name included.

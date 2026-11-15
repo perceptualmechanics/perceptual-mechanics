@@ -121,6 +121,7 @@ uniform vec3 gridOrigin;        // lat0, lon0, step (degrees)
 uniform float extreme, scale, exaggeration, metresPerDegree;
 uniform float depths[${DEPTHS.length}];
 uniform vec3 shelf, abyss, land, lit, shade, sea, flatLand, waterline;
+uniform vec4 held;              // the held polity's wash, straight alpha
 uniform vec3 light;
 uniform float ringGap, ringWidth;
 uniform int rings;
@@ -169,6 +170,9 @@ void main() {
   }
   vec4 m = texelFetch(mask, ivec2(gl_FragCoord.xy), 0);
   vec3 c = mix(water, ground, m.r);
+  // The polity held under the pointer, washed over its land (the mask's
+  // blue), and lit with the rest of the paint.
+  c = mix(c, held.rgb, held.a * m.b * m.r);
   // The sphere in the lamp, in the eye's frame, the water-lining with it,
   // since it's inked on the globe: whole where it faces the lamp, the
   // room's share where it turns away, darkened in linear light as paint in
@@ -207,6 +211,7 @@ precision highp float;
 uniform float width, k, cx, cy;
 uniform vec2 dash;              // on and off, in pixels; off 0 for a solid line
 uniform vec4 channel;
+uniform bool wash;              // a band on the inside, fading over its width
 in vec2 frag;
 flat in vec2 a, b;
 flat in float za, zb, from;
@@ -217,18 +222,23 @@ void main() {
   float t = clamp(dot(frag - a, ab) / max(dot(ab, ab), 1e-12), 0.0, 1.0);
   if (mix(za, zb, t) < 0.0) discard;
   if (dash.y > 0.0 && mod(from + t * length(ab), dash.x + dash.y) >= dash.x) discard;
-  coverage = channel * clamp(width / 2.0 + 0.5 - distance(frag, a + ab * t), 0.0, 1.0);
+  float d = distance(frag, a + ab * t);
+  // A wash lies on the segment's left on the globe, the polity's inside,
+  // which on the canvas, its y down, is where the cross product is negative.
+  if (wash) { if (ab.x * (frag.y - a.y) - ab.y * (frag.x - a.x) > 0.0) discard; coverage = channel * clamp(1.0 - d / width, 0.0, 1.0); }
+  else coverage = channel * clamp(width / 2.0 + 0.5 - d, 0.0, 1.0);
 }`;
 // The layers' colours over the canvas, each in order over those before it.
 const COLOUR = `#version 300 es
 precision highp float;
-uniform sampler2D first, second;
-uniform vec4 colours[8];        // premultiplied
+uniform sampler2D first, second, third;
+uniform vec4 colours[12];       // premultiplied
 uniform int from, to;
 out vec4 colour;
 void main() {
-  vec4 c0 = texelFetch(first, ivec2(gl_FragCoord.xy), 0), c1 = texelFetch(second, ivec2(gl_FragCoord.xy), 0);
-  float cover[8] = float[8](c0.r, c0.g, c0.b, c0.a, c1.r, c1.g, c1.b, c1.a);
+  ivec2 at = ivec2(gl_FragCoord.xy);
+  vec4 c0 = texelFetch(first, at, 0), c1 = texelFetch(second, at, 0), c2 = texelFetch(third, at, 0);
+  float cover[12] = float[12](c0.r, c0.g, c0.b, c0.a, c1.r, c1.g, c1.b, c1.a, c2.r, c2.g, c2.b, c2.a);
   colour = vec4(0.0);
   for (int i = from; i <= to; i++) colour = colours[i] * cover[i] + colour * (1.0 - colours[i].a * cover[i]);
 }`;
@@ -447,7 +457,7 @@ export function createGlobe(canvas, world, colors, obliquity) {
     gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0); gl.vertexAttribDivisor(2, 1);
     return { ...l, channel, count: seg.count, runs: seg.runs, vao: v.vao, starts, startBuffer: s };
   });
-  if (lineLayers.length > 8) throw new Error('more line layers than the two coverage textures hold');
+  if (lineLayers.length > 12) throw new Error('more line layers than the three coverage textures hold');
   const roses = instanced(quadCorners, new Float32Array(world.roseCentres.flatMap(c => [c.lon, c.lat])), [[1, 2, 2, 0]]);
   const marks = instanced(quadCorners, new Float32Array(2), [[1, 2, 2, 0]], gl.DYNAMIC_DRAW);
   const glows = instanced(quadCorners, new Float32Array(12), [[1, 4, 12, 0], [2, 4, 12, 4], [3, 4, 12, 8]], gl.DYNAMIC_DRAW);
@@ -466,12 +476,12 @@ export function createGlobe(canvas, world, colors, obliquity) {
     for (const [key, value] of [[gl.TEXTURE_MIN_FILTER, filter], [gl.TEXTURE_MAG_FILTER, filter], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, key, value);
     return t;
   };
-  // Units: 0 the grid, 1 the mask, 2 the flood's read, 3 and 4 the lines'
-  // coverages, 5 for making.
+  // Units: 0 the grid, 1 the mask, 2 the flood's read, 3, 4 and 6 the
+  // lines' coverages, 5 for making.
   const gridTexture = texture(0, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  const sized = [{ t: texture(5) }, { t: texture(5) }, { t: texture(5) }, { t: texture(5) }, { t: texture(5) }].map(x => ({ ...x, fb: gl.createFramebuffer() }));
-  const [maskTarget, floodA, floodB, coverA, coverB] = sized;
+  const sized = Array.from({ length: 6 }, () => ({ t: texture(5), fb: gl.createFramebuffer() }));
+  const [maskTarget, floodA, floodB, ...covers] = sized;
   const msFramebuffer = gl.createFramebuffer(), msColour = gl.createRenderbuffer(), msStencil = gl.createRenderbuffer();
   let sizeKey = '';
   const resize = (w, h) => {
@@ -505,13 +515,14 @@ export function createGlobe(canvas, world, colors, obliquity) {
   let lineColours = null, glowPlain = null, glowLit = null, tints = null;
   const glowPoints = scratch(), markPoints = scratch();
   const recolor = colors => {
-    lineColours = new Float32Array(32);
-    lineLayers.forEach((l, i) => lineColours.set(premultiplied(colors[l.color]), 4 * i));
+    lineColours = new Float32Array(48);
+    lineLayers.forEach((l, i) => lineColours.set(premultiplied(colors[l.color]).map(c => c * (l.alpha ?? 1)), 4 * i));
     gl.useProgram(relief.p);
     for (const name of ['shelf', 'abyss', 'land', 'lit', 'shade']) gl.uniform3fv(relief.u(name), rgba(colors[`relief-${name}`]).slice(0, 3));
     gl.uniform3fv(relief.u('sea'), rgba(colors.sea).slice(0, 3));
     gl.uniform3fv(relief.u('flatLand'), rgba(colors.land).slice(0, 3));
     gl.uniform3fv(relief.u('waterline'), rgba(colors.waterline).slice(0, 3));
+    gl.uniform4fv(relief.u('held'), rgba(colors.glow));
     glowPlain = premultiplied(colors.glow); glowLit = premultiplied(colors['glow-lit']);
     tints = { rose: premultiplied(colors.rose), sun: premultiplied(colors.sun), rim: premultiplied(colors.rim) };
   };
@@ -575,7 +586,7 @@ export function createGlobe(canvas, world, colors, obliquity) {
     square();
   };
 
-  return Object.assign(function render(v, { regions, hoverPlace, pick, scale }) {
+  return Object.assign(function render(v, { regions, hoverPlace, pick, polity, scale }) {
     const { width: w, height: h } = v;
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
     resize(w, h);
@@ -590,6 +601,7 @@ export function createGlobe(canvas, world, colors, obliquity) {
     gl.enable(gl.STENCIL_TEST);
     fill(v, world.land, [true, false, false, false]);
     fill(v, { type: 'GeometryCollection', geometries: [world.lakes, world.historic] }, [false, true, false, false]);
+    if (polity) fill(v, polity.shape, [false, false, true, false]);
     gl.disable(gl.STENCIL_TEST);
     gl.colorMask(true, true, true, true);
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, msFramebuffer);
@@ -630,16 +642,18 @@ export function createGlobe(canvas, world, colors, obliquity) {
     // The lines' coverage, each layer to its channel at its greatest.
     gl.enable(gl.BLEND);
     gl.blendEquation(gl.MAX);
-    for (const target of [coverA, coverB]) { gl.bindFramebuffer(gl.FRAMEBUFFER, target.fb); gl.clear(gl.COLOR_BUFFER_BIT); }
+    for (const target of covers) { gl.bindFramebuffer(gl.FRAMEBUFFER, target.fb); gl.clear(gl.COLOR_BUFFER_BIT); }
     const line = programs.line;
     gl.useProgram(line.p);
     viewUniforms(line, v);
     const project = projectionFor(v);
     for (const l of lineLayers) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, (l.channel < 4 ? coverA : coverB).fb);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, covers[Math.floor(l.channel / 4)].fb);
       gl.uniform4f(line.u('channel'), ...[0, 1, 2, 3].map(c => (c === l.channel % 4 ? 1 : 0)));
       gl.uniform1f(line.u('width'), l.width * scale);
-      gl.uniform1f(line.u('reach'), l.width * scale / 2 + 1);
+      gl.uniform1i(line.u('wash'), l.wash ? 1 : 0);
+      // A wash reaches its whole width to one side; a stroke half to each.
+      gl.uniform1f(line.u('reach'), (l.wash ? l.width : l.width / 2) * scale + 1);
       gl.uniform2f(line.u('dash'), ...(l.dash ? l.dash.map(d => d * scale) : [0, 0]));
       if (l.dash) {
         // Each segment's distance along its line on the page, as a stroke's
@@ -659,9 +673,8 @@ export function createGlobe(canvas, world, colors, obliquity) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const colour = programs.colour;
     gl.useProgram(colour.p);
-    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, coverA.t);
-    gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, coverB.t);
-    gl.uniform1i(colour.u('first'), 3); gl.uniform1i(colour.u('second'), 4);
+    [3, 4, 6].forEach((unit, i) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, covers[i].t); });
+    gl.uniform1i(colour.u('first'), 3); gl.uniform1i(colour.u('second'), 4); gl.uniform1i(colour.u('third'), 6);
     gl.uniform4fv(colour.u('colours'), lineColours);
     const circles = lineLayers.length - 1;
     gl.uniform1i(colour.u('from'), 0); gl.uniform1i(colour.u('to'), circles - 1);

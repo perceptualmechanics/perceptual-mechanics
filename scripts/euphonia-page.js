@@ -1,7 +1,7 @@
 import { euphoniaFiles } from './verify-euphonia.mjs';
 import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
-import { worldData, fixturesData, calendarsData, reliefData, rosesData } from './verify-euphonia-map.mjs';
+import { worldData, fixturesData, calendarsData, reliefData, rosesData, bordersData } from './verify-euphonia-map.mjs';
 import { ribbonOrder, tonguesData } from './verify-euphonia-tongues.mjs';
 import { THEMES, THEME_KEY, THEME_PARAM } from '../src/euphonia/euphonia.themes.js';
 
@@ -269,6 +269,14 @@ function builder() {
 // map shows (its readouts, filled as time runs); how the map is made; the
 // classes; the games; and each region's chapter, as a template the panel
 // copies when the region opens.
+// The states of 1668: whose they are, under what licence, how they're drawn,
+// and every change from the record, from the vendored provenance.
+function bordersNote({ provenance: b, polities, fronts }) {
+  const changes = b.corrections.map(c => `${esc(c.row)} ${c.at ? `at ${esc(c.at.name)}` : `in ${esc(c.within.country)}${c.within.southOf ? ` south of ${esc(c.within.southOf.name)}` : ''}`} ${c.to ? `to ${esc(c.to)}` : 'dropped'} (${c.region ? `the book: “${esc(c.because[0])}”` : `<a href="${esc(c.source.url)}">${esc(c.source.title)}</a>`})`).join('; ');
+  const departs = [...polities.filter(q => q.kind === 'departs'), ...fronts].map(d => esc(d.star.replace(/^✦\s*/, ''))).join(' ');
+  return `<p class="note">The states of ${b.year} are Seshat's Cliopatria (<a href="https://github.com/Seshat-Global-History-Databank/cliopatria">release ${esc(b.release)}</a>, <a href="${esc(b.licence)}">CC BY 4.0</a>; ${esc(b.cite)}), cut back from the shore this map draws and simplified as its coasts are. Each region's chapter says which of its states had firm edges and which were zones. A fine line is a firm edge, drawn and argued over. Elsewhere a band of wash runs along the inside of a state's edge, as Dutch colourists coloured boundaries, with no line under it: a people's country, not a surveyor's mark. Changed from the record: ${changes}.</p>
+<p class="note">✦ marks where the book departs from the record, drawn from its chapters: dashed where the book names a firm side, washed where it names a zone, and a dotted ring for a front. ${departs}</p>`;
+}
 function panelSections({ classes, regions, adventures, hidden, people, sheets }, world, fixtures, calendars, relief = reliefData()) {
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
@@ -302,6 +310,7 @@ ${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}
 </blockquote>
 <p class="note">Coasts, lakes and rivers are Natural Earth's (public domain, versions ${esc(versions)}), and modern. Natural Earth has no outlines from 1668; where it has older ones, the map draws them dashed, each with its own date: ${lakes}. The regions glow round the places each chapter names, looked up in Natural Earth's populated places.</p>
 <p class="note">Relief and ocean depths are ${esc(relief.provenance.source)}, averaged to a quarter degree; its detail is ${esc(relief.provenance.note.split(';')[0].replace(/^Five-minute resolution/, 'five-minute'))}, and coarser elsewhere. The land is lit from the northwest, its slopes steepened ${relief.shading.exaggeration.toFixed(0)} times, so the steepest hundredth of them shade as 45°; the sea is banded at Natural Earth's bathymetric depths. The wind roses stand at the ${rosesData().roses.length} points of open sea farthest from the coasts this map draws.</p>
+${bordersNote(bordersData())}
 <p class="note">The sun's place is NOAA's, checked against JPL Horizons; the moon's phases are checked against Espenak's catalogue. ${esc(fixtures.moon.acknowledgment)} The moon is drawn as it looked from north of the tropics; south of them it is mirrored.</p>
 <p class="note">Each date is the one its seat's sundials gave at that moment, and the Hijri day begins at the seat's sunset. The Hijri dates are tabular (the 30-year cycle, from the civil epoch); months begun by sighting the new moon could differ by a day. Which calendar each polity kept: ${cited} (Wikipedia). The Safavids' and the Mughals' are not shown yet: no source in hand says which calendar their governments kept in 1668.</p>
 </section>
