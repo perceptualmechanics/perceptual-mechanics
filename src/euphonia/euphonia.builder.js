@@ -725,20 +725,24 @@ export async function initBuilder(panel) {
     ]).flat();
     // A spellbook: the spells written in by choice, a level at a time, what
     // features wrote in, and any a feature adds free of a school.
-    const byLevel = (key, offered, picked, read) => [...new Set(offered.map(sp => sp.level))].sort((a, b) => a - b).map(level => {
+    // A list's spells, a fold to each level: closed, the levels sit in a row;
+    // an open one takes the width. A spellbook's are written, a list's chosen.
+    const byLevel = (key, offered, picked, read, { prefix, verb }) => h('div', { class: 'b-levels' }, [...new Set(offered.map(sp => sp.level))].sort((a, b) => a - b).map(level => {
       const k = `${key}-${level}`, here = offered.filter(sp => sp.level === level), n = here.filter(sp => picked.has(sp.name)).length;
-      return h('details', { 'data-key': k, open: openLevels.has(k) || null }, h('summary', {}, `Level ${level}${n ? `: ${n} written` : ''}`),
-        h('div', { class: 'b-checks' }, here.map(sp => h('label', {}, h('input', { type: 'checkbox', value: sp.name, 'data-key': `book-${key}-${sp.name}`, checked: picked.has(sp.name), onchange: read }), ` ${sp.name}`))));
-    });
+      return h('details', { 'data-key': k, open: openLevels.has(k) || null }, h('summary', {}, `${level ? `Level ${level}` : 'Cantrips'}${n ? `: ${n} ${verb}` : ''}`),
+        h('div', { class: 'b-checks' }, here.map(sp => h('label', {}, h('input', { type: 'checkbox', value: sp.name, 'data-key': `${prefix}-${key}-${sp.name}`, checked: picked.has(sp.name), onchange: read }),
+          h('span', {}, sp.name, sp.special && !/^[—–]$/.test(sp.special) ? h('span', { class: 'b-mark' }, ` ${sp.special}`) : null)))));
+    }));
+    const BOOK = { prefix: 'book', verb: 'written' };
     const books = result.spellbooks.flatMap(b => {
       const write = (key, box) => () => set(s => { s.spellbooks = { ...s.spellbooks, [key]: [...box.querySelectorAll('input:checked')].map(x => x.value) }; });
       const main = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${b.key}`) },
         h('legend', {}, `${b.class}'s spellbook: ${b.chosen.length} of ${b.free} spells of your choice, the first ${b.start} of level 1`),
         b.granted.length ? h('p', { class: 'b-note' }, `Written in by features: ${listed([...new Set(b.granted.map(sp => `${sp.name} (${sp.from})`))])}.`) : null);
-      main.append(...byLevel(b.key, b.offered, new Set(b.chosen.map(sp => sp.name)), write(b.class, main)), problemSlot(`spells:${b.key}`));
+      main.append(byLevel(b.key, b.offered, new Set(b.chosen.map(sp => sp.name)), write(b.class, main), BOOK), problemSlot(`spells:${b.key}`));
       const extra = b.extra.map(x => {
         const box = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${x.key}`) }, h('legend', {}, `${x.label}: ${x.chosen.length} of ${x.count} free`));
-        box.append(...byLevel(x.key, x.from, new Set(x.chosen.map(sp => sp.name)), write(x.key, box)), problemSlot(`spells:${x.key}`));
+        box.append(byLevel(x.key, x.from, new Set(x.chosen.map(sp => sp.name)), write(x.key, box), BOOK), problemSlot(`spells:${x.key}`));
         return box;
       });
       return [main, ...extra];
@@ -746,21 +750,12 @@ export async function initBuilder(panel) {
     const groups = result.spellChoices.map(c => {
       const picked = new Set(c.chosen.map(sp => sp.name));
       const read = () => set(s => { s.spells = { ...s.spells, [c.key]: [...box.querySelectorAll('input:checked')].map(x => x.value) }; });
-      const levels = [...new Set(c.list.map(sp => sp.level))].sort((a, b) => a - b);
       const count = level => c.chosen.filter(sp => (level ? sp.level > 0 : sp.level === 0)).length;
       const box = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${c.key}`) },
         h('legend', {}, c.mixed ? `${c.label}: ${c.chosen.length} of ${c.prepared}, cantrips or spells up to level ${c.highest}, ${c.verb}` : `${c.label}: ${c.cantrips ? `${count(0)} of ${c.cantrips} ${c.cantrips === 1 ? 'cantrip' : 'cantrips'}, ` : ''}${count(1)} of ${c.prepared} ${c.verb} ${c.prepared === 1 ? 'spell' : 'spells'}, up to level ${c.highest}`),
         c.given.length ? h('p', { class: 'b-note' }, `Always known: ${listed(c.given.map(sp => sp.name))}.`) : null,
         c.always.length ? h('p', { class: 'b-note' }, `Always prepared, besides these: ${[...new Set(c.always.map(sp => sp.from))].map(from => `${listed(c.always.filter(sp => sp.from === from).map(sp => sp.name))} (${from})`).join('; ')}.`) : null,
-        levels.map(level => {
-          const key = `${c.key}-${level}`;
-          const here = c.list.filter(sp => sp.level === level);
-          const chosenHere = here.filter(sp => picked.has(sp.name)).length;
-          return h('details', { 'data-key': key, open: openLevels.has(key) || null },
-            h('summary', {}, `${level ? `Level ${level}` : 'Cantrips'}${chosenHere ? `: ${chosenHere} chosen` : ''}`),
-            h('div', { class: 'b-checks' }, here.map(sp => h('label', {}, h('input', { type: 'checkbox', value: sp.name, 'data-key': `spell-${c.key}-${sp.name}`, checked: picked.has(sp.name), onchange: read }),
-              ` ${sp.name}`, sp.special && !/^[—–]$/.test(sp.special) ? h('span', { class: 'b-mark' }, ` ${sp.special}`) : null))));
-        }),
+        byLevel(c.key, c.list, picked, read, { prefix: 'spell', verb: 'chosen' }),
         problemSlot(`spells:${c.key}`));
       return box;
     });
