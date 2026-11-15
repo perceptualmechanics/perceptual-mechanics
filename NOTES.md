@@ -2880,3 +2880,64 @@ and all 68 subclasses at level 20 walked through the UI, each showing what the
 engine says; axe clean with a book subclass chosen. Then the export of 07:00:
 the Kinetic Origin's Shove is renamed Impressed Force ("It isn't a Shove");
 the builder 22/22 and all 68 subclasses walked again.
+
+### 7.5.4 — every choice in the builder, and gear for the level
+
+**Every lasting choice, offered.** The builder now asks every choice the rules
+leave the player, across all 19 classes and 68 subclasses:
+- the Revelator's Revelations, from the Cosmography class-kit v18 exports;
+- The Monster Within, with the Monster Form card and its swapped scores;
+- subclass and feature spells kept always prepared, and spellbooks;
+- tools, with one already had disabled where offered;
+- Wild Shape's forms, from the SRD's 85 Beasts;
+- every Fighting Style wording, the warrior options, and named choices such as
+  a patron's court.
+
+verify-euphonia-builder fails the build on any feature that asks a lasting
+choice the engine doesn't read. Choices made in play ("When you cast…") don't
+count. The SRD export adds its 25 tools, 85 Beasts and 338 spells, each with
+its casting time and the damage it deals.
+
+**Gear for the level, not an armour menu.** The builder sets the character up
+as the rules do:
+- it takes the class's and the background's kits (package A, which carries
+  the weapons and tools);
+- past level 1 it adds the higher-level table's fixed money (500, 5,000 or
+  20,000 GP), and the sheet says what to roll for the rest;
+- it picks the best armour among none, the kit's, and any it can buy that the
+  character is trained in and strong enough for. Ties go to armour without
+  Disadvantage on Stealth, then to the cheapest.
+
+A level 1 Fighter wears the kit's Chain Mail (AC 16, 18 GP left). At level 5 it
+buys Splint (AC 17, 318 GP left). At Strength 13 it takes the Breastplate over
+Chain Mail, the same AC without the Disadvantage. The armour select, the Shield
+checkbox and the warnings they fed are gone.
+
+**Euphonia's items.** class-kit's exporter (v19) writes the books' 51 items and
+7 period weapons to `euphonia.items.json`. An item is any heading whose first
+line is its type, so a new one anywhere in the master comes through; Orna's
+Sister waits on a placeholder. Magic items fill the table's slots, rarest
+first, from items the character can use, in this order:
+- what's made for its subclass (a Factor Counsellor gets the House Ledger);
+- then its classes' items;
+- then the setting's own.
+
+The DM's four Physician items are never handed out, and a rarity nothing fits
+is left to the DM. A Gunner's Master's Piece is the Rare Spare Barrel, and a
+level 17 Mhizha gets the Tuned Arc Gun at +3. The books' gear is listed to buy:
+the setting's, the character's own class's, and the period weapons that count
+as one it's proficient with.
+
+**Gates.** Eight engine mutations each trip verify-euphonia-builder: Strength,
+Stealth, the Dexterity cap, the Shield, rarest first, members first, the DM's
+items and class-only gear. The exporter's tests plant every forbidden kind in
+an item, and every plant leaks with the checks switched off. verify-euphonia
+holds each item to a book and each period weapon to an SRD weapon.
+verify-euphonia-themes read `${gear.gold}` as the colour gold; it now reads
+only a string's literal text, and still catches a planted colour.
+
+**Also.** The ✦ that marks where Euphonia departs from history now has a face:
+Noto Sans Symbols 2 (OFL 1.1), cut to the one character, 2.5 kB, last in every
+theme's stack. The Wheel's road names stand where each pathway rises, so two
+sit on the right instead of four. QA in a GPU Chrome: the builder 22/22, the
+globe 53/53, layout 53/53, and axe clean with the Equipment block open.
