@@ -68,6 +68,9 @@ FACES = {
     'noto-serif-ethiopic-400.woff2': ('NotoSerifEthiopic[wdth,wght].ttf', '49d5daa6c3477a427f5d4f8a5ae9ea7f0a04ea7f865fc21f7e08fc4aed70d92a', 400),
     'noto-serif-tibetan-400.woff2': ('NotoSerifTibetan[wght].ttf', '060ec022b04c306de3f58d051fb0e1cf81a5b610c5910fbfc43bba154c057cda', 400),
     'noto-serif-thai-400.woff2': ('NotoSerifThai[wdth,wght].ttf', '34a7ad11647c845303aabdde639059806c56b84719e5d2ceb28eb038711bdf53', 400),
+    # The marks no text face has, last in every stack: the ✦ that marks where
+    # Euphonia departs from our history.
+    'noto-sans-symbols-400.woff2': ('NotoSansSymbols2-Regular.ttf', '7d5fb73b7ca67a6798101741f5d280a3d016a56a197afcd4199dbb57b4b82a21', 400),
 }
 
 # The faces whose small capitals the page sets: the Wheel's planes, in each

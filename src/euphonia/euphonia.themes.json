@@ -75,7 +75,7 @@
         "map-air": "#141d26",
         "map-wheel-low": "#b4472c"
       },
-      "type": "'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "type": "'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', 'Euphonia Symbols', serif",
       "provenance": [
         {
           "what": "type: EB Garamond, roman and italic",
@@ -197,7 +197,7 @@
         "map-air": "#131c2a",
         "map-wheel-low": "#b0582c"
       },
-      "type": "'Alegreya', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "type": "'Alegreya', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', 'Euphonia Symbols', serif",
       "ornament": {
         "kind": "coursing",
         "course": 0.45,
@@ -377,7 +377,7 @@
         "map-air": "#131c2b",
         "map-wheel-low": "#c42a3c"
       },
-      "type": "'Gentium Book Plus', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "type": "'Gentium Book Plus', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', 'Euphonia Symbols', serif",
       "smallCaps": true,
       "ornament": {
         "kind": "tocapu",
@@ -523,7 +523,7 @@
         "map-air": "#12202e",
         "map-wheel-low": "#c8352b"
       },
-      "type": "'Amiri', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "type": "'Amiri', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', 'Euphonia Symbols', serif",
       "smallCaps": false,
       "ornament": {
         "kind": "star",
@@ -664,7 +664,7 @@
         "map-air": "#141d2c",
         "map-wheel-low": "#b5553a"
       },
-      "type": "'Noto Serif', 'EB Garamond', 'Euphonia Nastaliq', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "type": "'Noto Serif', 'EB Garamond', 'Euphonia Nastaliq', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', 'Euphonia Symbols', serif",
       "smallCaps": true,
       "ornament": {
         "kind": "jali",
@@ -811,7 +811,7 @@
         "map-air": "#121c2c",
         "map-wheel-low": "#c8322a"
       },
-      "type": "'Source Serif 4', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "type": "'Source Serif 4', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', 'Euphonia Symbols', serif",
       "smallCaps": true,
       "ornament": {
         "kind": "fret",

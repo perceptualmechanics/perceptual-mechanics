@@ -42,6 +42,7 @@
 @font-face { font-family: 'Euphonia Ethiopic'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-serif-ethiopic-400.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Tibetan'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-serif-tibetan-400.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Thai'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-serif-thai-400.woff2') format('woff2'); }
+@font-face { font-family: 'Euphonia Symbols'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-sans-symbols-400.woff2') format('woff2'); }
 
 /* What the parent site's page.css gave this page, now its own and in its
    theme's tokens: the ground and text, the skip link, links, the masthead
@@ -455,6 +456,10 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-pick-option { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 0.5rem; align-items: start; margin: 0 0 0.5rem; }
 .b-pick-option input { margin-top: 0.3em; }
 .b-pick-text { display: block; color: var(--text-soft); font-size: 0.88rem; }
+/* A Revelation's full rules, folded under its line, in from the radio. */
+.b-pick-row .b-pick-option { margin-bottom: 0.15rem; }
+.b-pick-rules { margin: 0 0 0.6rem 1.6rem; }
+.b-pick-rules summary { cursor: pointer; color: var(--text-muted); font-size: 0.85rem; }
 /* The class's option lists and its weapons, each a group of its own. */
 .b-option-class { border: 1px solid var(--frame-edge); margin: 0 0 0.8rem; padding: 0.5rem 0.8rem 0.2rem; min-width: 0; }
 .b-group { margin: 0.3rem 0 0.2rem; color: var(--text-quiet); font-size: 0.82rem; }
