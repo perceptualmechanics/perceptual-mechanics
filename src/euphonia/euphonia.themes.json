@@ -200,7 +200,7 @@
       "type": "'Alegreya', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', 'Euphonia Symbols', serif",
       "ornament": {
         "kind": "coursing",
-        "course": 0.45,
+        "course": 0.6,
         "rule": [
           "chevron"
         ],
@@ -209,7 +209,9 @@
           "herringbone",
           "check",
           "chevron"
-        ]
+        ],
+        "stone": "signal",
+        "joint": "surface"
       },
       "provenance": [
         {
@@ -227,6 +229,11 @@
             "title": "Great Zimbabwe — Transcripts, CyArk",
             "url": "https://tapestry.cyark.org/content/great-zimbabwe/transcripts"
           }
+        },
+        {
+          "what": "ornament: platinum on dark, under the controls",
+          "from": "the Great Enclosure's chevron run as one course under the page's controls, in Mutapa's platinum (signal) on the theme's dark surface, the way Tawantinsuyu's woven band runs; the soapstone bird Chat offered as a mark stays out, as the theme avoids it (below)",
+          "authored": "Chat for Scott Cohen, 15 November 2026; drawn by Claude Code"
         },
         {
           "what": "frame and frame-edge: granite",

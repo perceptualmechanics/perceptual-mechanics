@@ -89,6 +89,8 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES, khipu
     // opens in the globe's middle, the eye at its latitude.
     const place = t.home?.place && placesData().regions.flatMap(r => r.places).find(p => p.name === t.home.place);
     if (!t.home?.why || !(place || Number.isFinite(t.home?.lon0))) errors.push(`${t.id}: its home must name a place the book places, or give lon0, and say why`);
+    // An ornament drawn in tokens of its own names ones the theme has.
+    for (const part of ['stone', 'joint']) if (t.ornament?.[part] && !(t.ornament[part] in t.tokens)) errors.push(`${t.id}: its ornament's ${part} is "${t.ornament[part]}", not one of its tokens`);
     if (!t.provenance?.length) errors.push(`${t.id}: no provenance; name the objects its colours and motifs come from`);
     // Each entry names what it gives and where it comes from: a real object or
     // text with a source to check it by, or, honestly, who authored it.

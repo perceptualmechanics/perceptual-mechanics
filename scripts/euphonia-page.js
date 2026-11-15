@@ -29,9 +29,10 @@ ${legal.orc_notice_status === 'draft' ? `    <p class="draft">A draft${slots ? `
 </footer>`;
 }
 
-// The State of the World is Claude's draft of Scott's setting, shown as one
-// (Scott, 2026-10-28), wherever a chapter is shown.
-const DRAFT_NOTE = 'A draft: these chapters were written by Claude, for Scott to rewrite, keep or cut.';
+// The State of the World, shown wherever a chapter is: Scott's world, written
+// with Claude, and still growing (Scott, 15 November 2026; the books' front
+// page, "Before You Read", says the same at more length).
+const LIVING_NOTE = 'A living setting: Scott Cohen\'s world, written with Claude, an AI collaborator. These chapters keep growing.';
 
 function catalog(items) {
   return `<ul class="catalog">\n${items.join('\n')}\n</ul>`;
@@ -65,7 +66,7 @@ ${panelSections({ classes, regions, adventures, hidden, people, sheets }, world,
 <p class="map-panel-nearby" hidden><button type="button" class="map-panel-read"></button></p>
 </section>
 <div class="map-panel-region" hidden>
-${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` : ''}<p><button type="button" class="map-panel-zoom">Zoom to it</button></p>
+${regions.status === 'draft' ? `<p class="map-panel-note">${LIVING_NOTE}</p>\n` : ''}<p><button type="button" class="map-panel-zoom">Zoom to it</button></p>
 <p class="map-panel-theme" hidden><button type="button"></button></p>
 <h3 id="map-panel-places-title">Its places on the map</h3>
 <ul class="map-panel-places" aria-labelledby="map-panel-places-title"></ul>
@@ -185,7 +186,7 @@ ${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="
 <label>Name <input type="search" class="people-name" autocomplete="off" spellcheck="false"></label>
 </div>
 <p class="people-said note" aria-live="polite" hidden></p>
-${status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` : ''}${regional.join('\n')}
+${status === 'draft' ? `<p class="map-panel-note">${LIVING_NOTE}</p>\n` : ''}${regional.join('\n')}
 <section class="people-group" data-group="notable-people" id="notable-people" aria-labelledby="people-notable-people">
 <h3 id="people-notable-people">${esc(people.notable.title)}</h3>
 ${notable}
@@ -217,7 +218,7 @@ function panelSections({ classes, regions, adventures, hidden, people, sheets },
   const pages = [['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['people', 'People'], ['games', 'Adventures and Hooks'], ['ribbons', 'The ribbons']];
   return `<nav class="map-panel-page map-panel-contents" aria-label="Contents" data-title="Contents" hidden>
 <h3>The State of the World</h3>
-${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` : ''}<ul>
+${regions.status === 'draft' ? `<p class="map-panel-note">${LIVING_NOTE}</p>\n` : ''}<ul>
 ${regions.data.map(r => `<li><button type="button" data-region="${slug(r.name)}">${esc(r.name)}</button></li>`).join('\n')}
 </ul>
 <h3>The book</h3>

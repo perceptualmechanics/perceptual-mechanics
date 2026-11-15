@@ -24,7 +24,9 @@ function paint() {
   if (!o) { delete root.dataset.ornament; return; }
   const css = getComputedStyle(root), course = parseFloat(css.fontSize) * o.course;
   const v = name => css.getPropertyValue(`--${name}`).trim();
-  const colors = { stone: v('frame'), joint: v('frame-edge'), ring: v('accent'), dyes: [v('signal'), v('accent'), v('paper'), v('case')] };
+  // Stone and joint are the theme's granite unless its ornament names other
+  // tokens (Mutapa's chevron is platinum on its dark surface).
+  const colors = { stone: v(o.stone ?? 'frame'), joint: v(o.joint ?? 'frame-edge'), ring: v('accent'), dyes: [v('signal'), v('accent'), v('paper'), v('case')] };
   for (const part of ['rule', 'band']) {
     const { svg, height } = ORNAMENTS[o.kind](o[part], course, colors, o);
     root.style.setProperty(`--ornament-${part}`, `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
