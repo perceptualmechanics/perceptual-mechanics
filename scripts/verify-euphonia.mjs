@@ -170,9 +170,10 @@ export function verifyEuphonia(d = euphoniaData()) {
   for (const r of d.regions.data) for (const sec of r.sections) if (/<li>\s*<ul>/.test(blocks(sec.text))) fail(`${r.name}, ${sec.heading}: a list item with nothing in it but a sub-list`);
 
   // Each title, ruler or power a chapter places (its @names line) stands in
-  // that chapter's text, so its link has somewhere to be.
-  for (const r of d.regions.data) for (const n of r.names ?? []) {
-    if (!new RegExp(`(?<![\\p{L}])${n.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'iu').test(r.sections.map(s => s.text).join('\n'))) fail(`${r.name}: its @names line places "${n.name}", which its chapter never names`);
+  // that chapter's text, so its link has somewhere to be; and each people it
+  // letters on the globe (its @peoples line), so the label is the book's.
+  for (const r of d.regions.data) for (const line of ['names', 'peoples']) for (const n of r[line] ?? []) {
+    if (!new RegExp(`(?<![\\p{L}])${n.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'iu').test(r.sections.map(s => s.text).join('\n'))) fail(`${r.name}: its @${line} line places "${n.name}", which its chapter never names`);
   }
 
   // The people a table meets: each region's, in the regions' order, each

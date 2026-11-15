@@ -8,10 +8,10 @@ import { globeWorld, projectionFor, ellipseOf } from '../src/euphonia/euphonia.g
 import * as lunar from '../src/euphonia/euphonia.moon.js';
 import * as calendar from '../src/euphonia/euphonia.calendars.js';
 import * as hidden from '../src/euphonia/euphonia.tide.js';
-import { resolvePlaces, regionShape, apart } from '../src/euphonia/euphonia.places.js';
+import { resolvePlaces, regionShape, apart, lookup } from '../src/euphonia/euphonia.places.js';
 import { solarEvents } from '../src/bench/bench.sky.js';
 import * as mounting from '../src/euphonia/euphonia.mount.js';
-import { nearestVertex } from './euphonia-borders.mjs';
+import { nearestVertex, parallelStep } from './euphonia-borders.mjs';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
@@ -484,7 +484,8 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   // release and its hash name what was vendored, and the book it was drawn
   // from is the export's; every part of a row is drawn as the region it's
   // drawn under classes it (firm a line, zone a reach, replaced gone: a row
-  // two regions list is classed part by part, by the nearer region); every
+  // two regions list is classed part by part, by the nearer region, and a
+  // part an @ground line cuts off is that line's zone); every
   // correction quotes its chapter or
   // cites a source; and each ✦ departure is drawn from its @departs line,
   // its sentence its chapter's, holding what it holds and not what it
@@ -498,10 +499,43 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   const record = (borders.polities ?? []).filter(q => q.kind !== 'departs');
   for (const q of record) {
     if (!/^Q\d+$/.test(q.wikidata ?? '') || !q.label || !q.polys?.length) fail(`euphonia.borders.json: ${q.name} needs a Wikidata id, a name and its polygons`);
+    if (q.ground) {
+      if (!regions.find(r => r.name === q.region)?.ground?.some(g => g.name === q.ground && g.qid === q.wikidata)) fail(`euphonia.borders.json: ${q.name}'s ${q.ground} is drawn under ${q.region}, which has no @ground line for it`);
+      else if (q.kind !== 'reach') fail(`euphonia.borders.json: ${q.name}'s ${q.ground} is an @ground zone, drawn as a ${q.kind}`);
+      continue;
+    }
     const c = regions.find(r => r.name === q.region)?.borders?.find(b => b.qid === q.wikidata);
     if (!c) fail(`euphonia.borders.json: ${q.name} is drawn under ${q.region}, whose @borders line doesn't class it`);
     else if (c.cls === 'replaced') fail(`euphonia.borders.json: ${q.name} is drawn under ${q.region}, whose @borders line replaces it`);
     else if (q.kind !== { firm: 'line', zone: 'reach' }[c.cls]) fail(`euphonia.borders.json: ${q.name} is drawn as a ${q.kind}, but ${q.region} classes it ${c.cls}`);
+  }
+  // Each @ground line: its place stands on its line; its row's part beyond is
+  // drawn, as that zone, and none of the row's firm ground is left beyond; a
+  // cut along a parallel is stepped so the globe draws it as one.
+  const grounds = regions.flatMap(r => (r.ground ?? []).map(g => ({ ...g, region: r.name })));
+  // How far a point lies past a line, in degrees: across a meridian, round
+  // the shorter way.
+  const past = ({ side, deg }) => ([x, y]) => ({ north: y - deg, south: deg - y, east: (((x - deg + 180) % 360) + 360) % 360 - 180, west: 180 - (((x - deg + 180) % 360) + 360) % 360 })[side];
+  if (JSON.stringify((bp.ground ?? []).map(g => [g.name, g.side, g.deg])) !== JSON.stringify(grounds.map(g => [g.name, g.side, g.deg]))) fail("euphonia.borders.json: its cuts aren't the book's @ground lines; run scripts/euphonia-borders.mjs again");
+  for (const g of grounds) {
+    const at = lookup(gazetteer, g.place.modern, g.place.country, g.place.province), by = past(g);
+    if (at.error) fail(`${g.region}'s @ground ${g.name}: ${at.error}`);
+    else if (Math.abs(by([at.lon, at.lat])) > 0.1) fail(`${g.region}'s @ground ${g.name}: ${g.place.name} lies ${Math.abs(by([at.lon, at.lat])).toFixed(2)}° off its line, not within a tenth of a degree`);
+    const zone = record.filter(q => q.ground === g.name && q.wikidata === g.qid);
+    if (!zone.length) fail(`euphonia.borders.json: ${g.region}'s @ground ${g.name} isn't drawn`);
+    for (const q of zone) if (q.polys.flat(2).some(p => by(p) < -1e-9)) fail(`euphonia.borders.json: ${q.name}'s ${g.name} reaches back across its line`);
+    for (const q of record.filter(x => x.wikidata === g.qid && x.kind === 'line')) if (q.polys.flat(2).some(p => by(p) > 1e-9)) fail(`euphonia.borders.json: ${q.label} is firm ${g.side} of ${g.deg}°, where ${g.name} ends its firm ground`);
+  }
+  for (const lat of new Set(grounds.filter(g => g.side === 'north' || g.side === 'south').map(g => g.deg))) {
+    const step = parallelStep(lat), all = [...record.flatMap(q => q.polys.flat()), ...(borders.reaches ?? []), ...(borders.lines ?? [])];
+    if (all.some(line => line.some((p, i) => line[i + 1] && p[1] === lat && line[i + 1][1] === lat && Math.abs(line[i + 1][0] - p[0]) > step + 1e-9))) fail(`euphonia.borders.json: a cut along ${lat}° has a chord longer than ${step.toFixed(2)}°, and the globe would bow it off the parallel`);
+  }
+  // Each people the book letters stands on no firm ground: there the map
+  // already says who holds it.
+  const firmGround = (borders.polities ?? []).filter(q => q.kind === 'line' || q.cls === 'firm');
+  for (const r of resolved.regions) for (const n of r.peoples) {
+    const q = Number.isFinite(n.lon) && firmGround.find(x => geo.onLand(x.polys.flat(), n.lat, n.lon));
+    if (q) fail(`${r.name}'s @peoples letters ${n.name} at ${n.modern}, inside ${q.label}'s firm ground`);
   }
   for (const c of bp.corrections ?? []) {
     if (!(c.parts >= 1)) fail(`euphonia.borders.json: the correction of ${c.row} moved nothing`);
@@ -552,7 +586,7 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, its extent the same from all; ${record.length} polities of ${bp.year} from Cliopatria ${bp.release}, each as its region classes it, ${departed.length} ✦ departures and ${(borders.fronts ?? []).length} front from the book, ${(bp.corrections ?? []).length} corrections sourced, ${segs.length} border segments with ${wet} over the sea`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, its extent the same from all; ${record.length} polities of ${bp.year} from Cliopatria ${bp.release}, each as its region classes it, ${departed.length} ✦ departures and ${(borders.fronts ?? []).length} front from the book, cut at its ${grounds.length} @ground lines, its ${resolved.regions.reduce((n, r) => n + r.peoples.length, 0)} peoples on no firm ground, ${(bp.corrections ?? []).length} corrections sourced, ${segs.length} border segments with ${wet} over the sea`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

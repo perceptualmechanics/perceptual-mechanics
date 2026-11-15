@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "010ac3296c1d8ba9eafcda2638bc534865940fab21aa81b977072a58bf866048",
-  "modified": "2026-11-15T15:14:15-05:00",
+  "sha256": "48667d6c969f460c2f2cfad461f1860f4ec87fa2e104f2d9782a42d2bd83a409",
+  "modified": "2026-11-15T15:47:59-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 25,
+  "exporter_version": 26,
   "rules": {
    "banned": [
     "eladrin",
@@ -376,6 +376,50 @@
      "cls": "firm"
     }
    ],
+   "ground": [
+    {
+     "name": "Sápmi",
+     "source": "Swedish Empire",
+     "qid": "Q215443",
+     "cls": "zone",
+     "side": "north",
+     "deg": 66.5,
+     "where": "the latitude of Rovaniemi",
+     "place": {
+      "name": "Rovaniemi",
+      "modern": "Rovaniemi",
+      "country": "Finland"
+     }
+    },
+    {
+     "name": "Sápmi",
+     "source": "Denmark-Norway",
+     "qid": "Q62651",
+     "cls": "zone",
+     "side": "north",
+     "deg": 66.6,
+     "where": "the latitude of Kemijärvi",
+     "place": {
+      "name": "Kemijärvi",
+      "modern": "Kemijärvi",
+      "country": "Finland"
+     }
+    },
+    {
+     "name": "the Russian north",
+     "source": "Tsardom of Russia",
+     "qid": "Q186096",
+     "cls": "zone",
+     "side": "north",
+     "deg": 66.5,
+     "where": "the latitude of Rovaniemi",
+     "place": {
+      "name": "Rovaniemi",
+      "modern": "Rovaniemi",
+      "country": "Finland"
+     }
+    }
+   ],
    "edges": [
     {
      "name": "Sápmi",
@@ -416,6 +460,13 @@
     }
    ],
    "departs": [],
+   "peoples": [
+    {
+     "name": "the Sámi",
+     "modern": "Kiruna",
+     "country": "Sweden"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -658,6 +709,7 @@
      "cls": "firm"
     }
    ],
+   "ground": [],
    "edges": [],
    "departs": [
     {
@@ -1093,6 +1145,18 @@
      "star": "The map draws the Cape"
     }
    ],
+   "peoples": [
+    {
+     "name": "the Orang Laut",
+     "modern": "Tanjungpinang",
+     "country": "Indonesia"
+    },
+    {
+     "name": "the Swahili city-states",
+     "modern": "Malindi",
+     "country": "Kenya"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1417,8 +1481,21 @@
      "cls": "firm"
     }
    ],
+   "ground": [],
    "edges": [],
    "departs": [],
+   "peoples": [
+    {
+     "name": "Oromo",
+     "modern": "Nazret",
+     "country": "Ethiopia"
+    },
+    {
+     "name": "Somali",
+     "modern": "Gaalkacyo",
+     "country": "Somalia"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1696,8 +1773,51 @@
      "cls": "firm"
     }
    ],
+   "ground": [],
    "edges": [],
    "departs": [],
+   "peoples": [
+    {
+     "name": "Yoruba",
+     "modern": "Oshogbo",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Akan",
+     "modern": "Obuasi",
+     "country": "Ghana"
+    },
+    {
+     "name": "Nupe",
+     "modern": "Bida",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Kwararafa",
+     "modern": "Makurdi",
+     "country": "Nigeria"
+    },
+    {
+     "name": "Tio",
+     "modern": "Djambala",
+     "country": "Congo (Brazzaville)"
+    },
+    {
+     "name": "Vili",
+     "modern": "Pointe-Noire",
+     "country": "Congo (Brazzaville)"
+    },
+    {
+     "name": "Mbundu",
+     "modern": "Ndalatando",
+     "country": "Angola"
+    },
+    {
+     "name": "Imbangala",
+     "modern": "Capenda-Camulemba",
+     "country": "Angola"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -1983,8 +2103,16 @@
      "cls": "firm"
     }
    ],
+   "ground": [],
    "edges": [],
    "departs": [],
+   "peoples": [
+    {
+     "name": "the Tharu",
+     "modern": "Bhairawa",
+     "country": "Nepal"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -2422,8 +2550,26 @@
      "cls": "firm"
     }
    ],
+   "ground": [],
    "edges": [],
    "departs": [],
+   "peoples": [
+    {
+     "name": "the Ainu",
+     "modern": "Asahikawa",
+     "country": "Japan"
+    },
+    {
+     "name": "Bugis",
+     "modern": "Parepare",
+     "country": "Indonesia"
+    },
+    {
+     "name": "the Formosan nations",
+     "modern": "Hualien",
+     "country": "Taiwan"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -2435,7 +2581,7 @@
     },
     {
      "heading": "Who Holds Power",
-     "text": "- **The Kangxi Emperor** has yet to break the regent Oboi. He is skeptical of elixirs and prefers to test claims. The Manchus, whose old capital is Mukden, rule a Han majority.\n- **The Three Feudatories,** former Ming generals, hold the south as near-autonomous fiefs, Wu Sangui from Kunming and Shang Kexi from Canton among them.\n- **Koxinga's heirs** rule Taiwan as the Kingdom of Tungning from Chengtian, modern Tainan.\n- **Joseon Korea**, ruled from Seoul, pays tribute to a dynasty its scholars consider barbarian.\n- **The Tokugawa shoguns** rule Japan from Edo. Christianity is banned. Trade runs through four gates only: Nagasaki (the Dutch on Dejima, and the Chinese), Tsushima (Korea), Satsuma (Ryukyu) and Matsumae (the Ainu).\n- **The mainland kings.** Narai of Ayutthaya keeps Persian ministers and French bishops at court. Pye Min rules Burma from Ava. In Đại Việt the **Trịnh** lord rules from Thang Long (Hanoi) and the **Nguyễn** lord the south.\n- **The VOC** rules from Batavia, where about half the people are enslaved (see Powers and Factions, The Chartered Companies). Its factors are the likeliest buyers of a Mutapan device east of the Cape.\n- **The port sultans.** Hasanuddin of Gowa holds Makassar against the VOC and the Bugis prince Arung Palakka. Aceh's queen has kept Aceh free. Spain holds Manila, and its galleon carries American silver to the junks."
+     "text": "- **The Kangxi Emperor** has yet to break the regent Oboi. He is skeptical of elixirs and prefers to test claims. The Manchus, whose old capital is Mukden, rule a Han majority.\n- **The Three Feudatories,** former Ming generals, hold the south as near-autonomous fiefs, Wu Sangui from Kunming and Shang Kexi from Canton among them.\n- **Koxinga's heirs** rule Taiwan as the Kingdom of Tungning from Chengtian, modern Tainan, on the western plain. The mountains and the east coast are still the Formosan nations' own: the Atayal, the Amis, the Paiwan and their neighbors, who trade with Chengtian when it suits them and fight it when it doesn't.\n- **Joseon Korea**, ruled from Seoul, pays tribute to a dynasty its scholars consider barbarian.\n- **The Tokugawa shoguns** rule Japan from Edo. Christianity is banned. Trade runs through four gates only: Nagasaki (the Dutch on Dejima, and the Chinese), Tsushima (Korea), Satsuma (Ryukyu) and Matsumae (the Ainu).\n- **The mainland kings.** Narai of Ayutthaya keeps Persian ministers and French bishops at court. Pye Min rules Burma from Ava. In Đại Việt the **Trịnh** lord rules from Thang Long (Hanoi) and the **Nguyễn** lord the south.\n- **The VOC** rules from Batavia, where about half the people are enslaved (see Powers and Factions, The Chartered Companies). Its factors are the likeliest buyers of a Mutapan device east of the Cape.\n- **The port sultans.** Hasanuddin of Gowa holds Makassar against the VOC and the Bugis prince Arung Palakka. Aceh's queen has kept Aceh free. Spain holds Manila, and its galleon carries American silver to the junks."
     },
     {
      "heading": "Magic Here",
@@ -2671,6 +2817,7 @@
      "cls": "zone"
     }
    ],
+   "ground": [],
    "edges": [],
    "departs": [
     {
@@ -2934,6 +3081,33 @@
      "star": "On the map Potosí"
     }
    ],
+   "peoples": [
+    {
+     "name": "the Onondaga",
+     "modern": "Syracuse",
+     "country": "United States of America"
+    },
+    {
+     "name": "Dakota",
+     "modern": "Brainerd",
+     "country": "United States of America"
+    },
+    {
+     "name": "Ojibwe",
+     "modern": "Sault Ste. Marie",
+     "country": "United States of America"
+    },
+    {
+     "name": "Cree",
+     "modern": "Moosonee",
+     "country": "Canada"
+    },
+    {
+     "name": "the Mapuche",
+     "modern": "Temuco",
+     "country": "Chile"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -3078,8 +3252,61 @@
     }
    ],
    "borders": [],
+   "ground": [],
    "edges": [],
    "departs": [],
+   "peoples": [
+    {
+     "name": "the Chamorro",
+     "modern": "Agana",
+     "country": "Guam"
+    },
+    {
+     "name": "Pohnpei",
+     "modern": "Palikir",
+     "country": "Federated States of Micronesia"
+    },
+    {
+     "name": "Māori",
+     "modern": "Taupo",
+     "country": "New Zealand"
+    },
+    {
+     "name": "Hawaiʻi",
+     "modern": "Hilo",
+     "country": "United States of America"
+    },
+    {
+     "name": "Tonga",
+     "modern": "Neiafu",
+     "country": "Tonga"
+    },
+    {
+     "name": "Samoa",
+     "modern": "Apia",
+     "country": "Samoa"
+    },
+    {
+     "name": "Fiji",
+     "modern": "Labasa",
+     "country": "Fiji"
+    },
+    {
+     "name": "Tahiti",
+     "modern": "Papeete",
+     "country": "French Polynesia"
+    },
+    {
+     "name": "New Guinea",
+     "modern": "Goroka",
+     "country": "Papua New Guinea"
+    },
+    {
+     "name": "Aboriginal Australia",
+     "modern": "Alice Springs",
+     "country": "Australia"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -3194,11 +3421,6 @@
     },
     {
      "name": "Sengge",
-     "modern": "Yining",
-     "country": "China"
-    },
-    {
-     "name": "the Ili valley",
      "modern": "Yining",
      "country": "China"
     },
@@ -3319,6 +3541,22 @@
      "cls": "zone"
     }
    ],
+   "ground": [
+    {
+     "name": "Siberia",
+     "source": "Tsardom of Russia",
+     "qid": "Q186096",
+     "cls": "zone",
+     "side": "east",
+     "deg": 60.0,
+     "where": "the longitude of Nizhny Tagil",
+     "place": {
+      "name": "Nizhny Tagil",
+      "modern": "Nizhny Tagil",
+      "country": "Russia"
+     }
+    }
+   ],
    "edges": [
     {
      "name": "Russia and the Qing",
@@ -3338,6 +3576,33 @@
     }
    ],
    "departs": [],
+   "peoples": [
+    {
+     "name": "Evenki",
+     "modern": "Tura",
+     "country": "Russia"
+    },
+    {
+     "name": "the Chukchi",
+     "modern": "Pevek",
+     "country": "Russia"
+    },
+    {
+     "name": "the Khanty",
+     "modern": "Khanty-Mansiysk",
+     "country": "Russia"
+    },
+    {
+     "name": "the Nenets",
+     "modern": "Salekhard",
+     "country": "Russia"
+    },
+    {
+     "name": "the Sakha",
+     "modern": "Vilyuysk",
+     "country": "Russia"
+    }
+   ],
    "sections": [
     {
      "heading": "At a Glance",
@@ -3349,7 +3614,7 @@
     },
     {
      "heading": "Who Holds Power",
-     "text": "- **The Uzbek khanates.** Chinggisid khans. In Bukhara a *quriltai* elects the Janid khan and Naqshbandi Sufi shaykhs confirm him.\n- **The Kazakhs.** Three *zhuz* under Chinggisid khans, with *biys*, judges of oral customary law. Their capital is Turkestan, at the shrine of Ahmed Yasawi.\n- **The Dzungars.** The Oirat khanate, ruled in 1668 by Sengge from the Ili valley. It is Buddhist, mines metals, makes its own guns and farms as well as herds. Sengge's younger brother has been a monk in Tibet since childhood.\n- **The Kalmyks.** Oirats who took the lower Volga in the 1630s: a Buddhist khanate around Russian Astrakhan, allied with Russia.\n- **Russia.** River forts from Tobolsk to Yakutsk and Okhotsk, on the Pacific, collect *yasak*, fur tribute, from every Indigenous man aged 18 to 50, often by holding hostages.\n- **The Qing** to the east, the border with Russia undrawn."
+     "text": "- **The Uzbek khanates.** Chinggisid khans. In Bukhara a *quriltai* elects the Janid khan and Naqshbandi Sufi shaykhs confirm him.\n- **The Kazakhs.** Three *zhuz* under Chinggisid khans, with *biys*, judges of oral customary law. Their capital is Turkestan, at the shrine of Ahmed Yasawi.\n- **The Dzungars.** The Oirat khanate, ruled in 1668 by Sengge from the Ili valley. It is Buddhist, mines metals, makes its own guns and farms as well as herds. Sengge's younger brother has been a monk in Tibet since childhood.\n- **The Kalmyks.** Oirats who took the lower Volga in the 1630s: a Buddhist khanate around Russian Astrakhan, allied with Russia.\n- **Russia.** River forts from Tobolsk to Yakutsk and Okhotsk, on the Pacific, collect *yasak*, fur tribute, from every Indigenous man aged 18 to 50, often by holding hostages. The country between the forts belongs to the peoples who pay it, or refuse: the Khanty and Mansi on the Ob, the Nenets on the tundra, the Sakha on the Lena.\n- **The Qing** to the east, the border with Russia undrawn."
     },
     {
      "heading": "Magic Here",

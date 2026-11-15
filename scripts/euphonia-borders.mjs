@@ -10,7 +10,9 @@
 // meet, unless an @edges line makes it a reach. Every other edge is a reach,
 // drawn as Dutch colourists coloured boundaries, a band of wash along the
 // inside, but with no engraved line under it: a country thinning out, not a
-// surveyor's mark. Each @departs line is a shape the book draws where it
+// surveyor's mark. An @ground line ends a firm row's firm ground at a
+// meridian or a parallel: the part beyond is a zone of the name it gives,
+// and the cut is a reach. Each @departs line is a shape the book draws where it
 // departs from the record. Its sides are reaches or dashed lines, and a front
 // is a contested ring, not a border. The record's own errors, which the book
 // or history corrects, are in CORRECTIONS, each with its source. Only the
@@ -86,6 +88,90 @@ function columns(rings) {
   };
 }
 const closed = ring => (ring[0][0] === ring.at(-1)[0] && ring[0][1] === ring.at(-1)[1] ? ring : [...ring, ring[0]]);
+
+// A polygon cut at a meridian or a parallel, into its parts beyond the line
+// and within it. Each side is turned to face "up" (v ≥ c) by a rotation, so
+// windings hold and an outer ring, inside on its left, runs along the cut in
+// the +u direction. Every ring's stretch above the line is a chain from where
+// it rises across to where it falls back; a chain's end joins the next
+// crossing along the line, which must be a chain's start, in steps of the
+// tolerance so each stretch of the cut is classed as land, sea or shore on
+// its own (simplifying merges them again where they agree). Rings wholly above
+// are kept, wholly below dropped, and holes go back in the outer that holds
+// them.
+const FRAMES = {
+  north: { to: ([x, y]) => [x, y], from: ([u, v]) => [u, v] },
+  south: { to: ([x, y]) => [-x, -y], from: ([u, v]) => [-u, -v] },
+  east: { to: ([x, y]) => [-y, x], from: ([u, v]) => [v, -u] },
+  west: { to: ([x, y]) => [y, -x], from: ([u, v]) => [-v, u] },
+};
+const OPPOSITE = { north: 'south', south: 'north', east: 'west', west: 'east' };
+function above(poly, c) {
+  const whole = [], chains = [];
+  for (const ring of poly) {
+    const pts = ring.slice(0, -1), up = pts.map(p => p[1] >= c), n = pts.length;
+    if (up.every(Boolean)) { whole.push(ring); continue; }
+    const s = up.indexOf(false);
+    let chain = null;
+    for (let i = 0; i < n; i++) {
+      const j = (s + i) % n, k = (j + 1) % n, a = pts[j], b = pts[k];
+      if (up[j] !== up[k]) {
+        const x = [a[0] + (c - a[1]) / (b[1] - a[1]) * (b[0] - a[0]), c];
+        if (up[k]) chain = [x];
+        else { chain.push(x); chains.push(chain); chain = null; }
+      }
+      if (up[k]) chain.push(b);
+    }
+  }
+  const crossings = chains.flatMap(ch => [{ u: ch[0][0], ch, start: true }, { u: ch.at(-1)[0], ch, start: false }]).sort((a, b) => a.u - b.u);
+  const rings = [...whole], used = new Set();
+  for (const first of chains) {
+    if (used.has(first)) continue;
+    const ring = [];
+    let ch = first;
+    while (!used.has(ch)) {
+      used.add(ch); ring.push(...ch);
+      const end = ch.at(-1)[0], next = crossings.find(x => x.u > end || (x.u === end && x.ch !== ch && x.start));
+      if (!next?.start) throw new Error(`a cut at ${c} leaves a crossing unpaired at ${end}`);
+      const n = Math.ceil((next.u - end) / TOLERANCE);
+      for (let k = 1; k < n; k++) ring.push([end + (next.u - end) * k / n, c]);
+      ch = next.ch;
+    }
+    if (ch !== first) throw new Error(`a cut at ${c} closes a ring on another`);
+    rings.push(closed(ring));
+  }
+  const outers = rings.filter(r => signedArea(r) > 0).map(r => [r]);
+  for (const hole of rings.filter(r => signedArea(r) < 0)) outers.find(([o]) => columns([o])(hole[0]))?.push(hole);
+  return outers;
+}
+// A meridian's side runs half the globe east or west of it: a part across
+// the antimeridian (Chukotka, east of 60E) is moved a turn for the cut, and
+// back after. A part spanning the opposite meridian can't be cut whole.
+function cutAt(poly, side, deg) {
+  const meridian = side === 'east' || side === 'west', xs = poly.flat().map(p => p[0]);
+  let turn = 0;
+  if (meridian) {
+    if (Math.max(...xs) < deg - 180) turn = 360;
+    else if (Math.min(...xs) >= deg + 180) turn = -360;
+    else if (Math.min(...xs) < deg - 180 || Math.max(...xs) >= deg + 180) throw new Error(`a part spans the meridian opposite ${deg}°`);
+  }
+  const half = s => {
+    const f = FRAMES[s], c = s === 'north' || s === 'east' ? deg : -deg;
+    return above(poly.map(r => r.map(([x, y]) => f.to([x + turn, y]))), c)
+      .map(p => p.map(r => r.map(q => { const [x, y] = f.from(q); return [x - turn, y]; })));
+  };
+  return { beyond: half(side), within: half(OPPOSITE[side]) };
+}
+// A parallel is no great circle, and the globe draws a side as one: a cut
+// along one is stepped so that no chord strays more than the tolerance from
+// it. A chord of Δλ on the parallel φ bows from it by Δλ²·sinφ·cosφ/8.
+export const parallelStep = lat => Math.sqrt(8 * TOLERANCE * RAD / Math.abs(Math.sin(lat * RAD) * Math.cos(lat * RAD))) / RAD;
+const alongParallels = lats => line => line.flatMap((p, i) => {
+  const q = line[i + 1];
+  if (!q || p[1] !== q[1] || !lats.includes(p[1])) return [p];
+  const n = Math.ceil(Math.abs(q[0] - p[0]) / parallelStep(p[1]));
+  return Array.from({ length: n }, (_, k) => [p[0] + (q[0] - p[0]) * k / n, p[1]]);
+});
 
 // An outline that follows the shore but stops short of Natural Earth's
 // leaves a strip of land no polity holds, and its edge would read as a
@@ -178,7 +264,13 @@ export function buildBorders(zipPath, geojsonPath) {
     for (const g of gazetteer.places) { const d = Math.hypot((g[5] - x) * east(y), g[4] - y); if (!best || d < best.d) best = { d, country: g[3] }; }
     return best.country;
   };
-  const km2 = part => Math.round(Math.abs(signedArea(part[0])) * (RAD * EARTH_KM) ** 2 * east(part[0][0][1]));
+  // A part's area on the sphere, holes taken out: −R²∮ sinφ dλ round each
+  // ring (Green's theorem, outer rings anticlockwise and holes not), by the
+  // trapezoid rule on its sides.
+  const km2 = part => Math.round(-(EARTH_KM ** 2) * part.reduce((sum, ring) => sum + ring.slice(1).reduce((a, [x2, y2], i) => {
+    const [x1, y1] = ring[i];
+    return a + (x2 - x1) * RAD * (Math.sin(y1 * RAD) + Math.sin(y2 * RAD)) / 2;
+  }, 0), 0));
   // The record's errors, corrected.
   const corrected = CORRECTIONS.map(c => {
     const k = byName(c.row), where = `the correction of ${c.row}`;
@@ -234,22 +326,48 @@ export function buildBorders(zipPath, geojsonPath) {
     }
   }
 
+  // The book's @ground lines, in its order: each cuts its row's firm parts,
+  // and what lies beyond the line is that zone's. A cut keeps the area it
+  // cuts, to the rounding of the crossings.
+  const grounds = regions.flatMap(r => r.ground.map(g => ({ ...g, region: r.name })));
+  const groundOf = new Map();
+  const grounded = grounds.map(gr => {
+    const k = key(gr.source, gr.qid);
+    if (!parts.has(k)) throw new Error(`${gr.region}'s @ground ${gr.name} cuts ${k}, which isn't drawn`);
+    const next = [];
+    let beyondKm2 = 0, cut = 0;
+    for (const poly of parts.get(k)) {
+      if (groundOf.has(poly)) { next.push(poly); continue; }
+      const { beyond, within } = cutAt(poly, gr.side, gr.deg);
+      const area = p => p.reduce((a, r) => a + signedArea(r), 0), sum = list => list.reduce((a, p) => a + area(p), 0);
+      if (Math.abs(sum(beyond) + sum(within) - area(poly)) > 1e-6 * Math.abs(area(poly)) + 1e-9) throw new Error(`${gr.name}: the cut of ${k} at ${gr.deg}° loses area`);
+      for (const p of beyond) { groundOf.set(p, gr); cut++; beyondKm2 += km2(p); }
+      next.push(...beyond, ...within);
+    }
+    if (!cut) throw new Error(`${gr.region}'s @ground ${gr.name} leaves nothing of ${k} ${gr.side} of ${gr.deg}°`);
+    if (next.every(p => groundOf.has(p))) throw new Error(`${gr.region}'s @ground ${gr.name} leaves ${k} no firm ground`);
+    parts.set(k, next);
+    return { name: gr.name, row: k, region: gr.region, side: gr.side, deg: gr.deg, parts: cut, km2: beyondKm2 };
+  });
+
   // Each row's parts, labelled by the region that lists them: where a row is
   // drawn in several regions, a part is the region's whose own places lie
   // nearest it. A part a region marks replaced is dropped.
   const regionPoints = new Map(regions.map(r => [r.name, [...r.places, ...r.names].map(p => at(p, `${r.name}'s places`))]));
   const polities = [];
   for (const [k, polys] of parts) {
-    const lists = listed.get(k), kind = classOf(k) === 'firm' ? 'line' : 'reach';
+    const lists = listed.get(k);
     for (const poly of polys) {
-      const home = lists.length === 1 ? lists[0] : lists.reduce((a, b) => {
+      // A cut-off part is its @ground's, in that line's region.
+      const gr = groundOf.get(poly), kind = !gr && classOf(k) === 'firm' ? 'line' : 'reach';
+      const home = gr ? lists.find(l => l.region === gr.region) : lists.length === 1 ? lists[0] : lists.reduce((a, b) => {
         const d = l => Math.min(...regionPoints.get(l.region).map(xy => nearestVertex(poly, xy)));
         return d(b) < d(a) ? b : a;
       });
       if (home.cls === 'replaced') continue;
       const name = k.replace(/ \(Q\d+\)$/, ''), qid = /\((Q\d+)\)$/.exec(k)[1];
-      let q = polities.find(x => x.name === name && x.label === home.label);
-      if (!q) polities.push(q = { name, wikidata: qid, label: home.label, region: home.region, kind, polys: [] });
+      let q = polities.find(x => x.name === name && x.label === home.label && x.ground === gr?.name);
+      if (!q) polities.push(q = { name, wikidata: qid, label: home.label, region: home.region, kind, ...(gr && { ground: gr.name }), polys: [] });
       q.polys.push(poly);
     }
   }
@@ -258,12 +376,13 @@ export function buildBorders(zipPath, geojsonPath) {
 
   // The edges. A record row's edge is shore (dropped), a line between two firm
   // rows (kept once), or a reach on its own side; an @edges line makes a pair
-  // of firm rows' edges reaches where it says. A shape's sides are as the book
-  // gives them.
+  // of firm rows' edges reaches where it says. Two zones of one row (Siberia
+  // and the Russian north) meet with no edge: neither side is firm ground to
+  // end. A shape's sides are as the book gives them.
   insiders = polities.map(q => columns(q.polys.flat().map(closed)));
   const overrides = regions.flatMap(r => r.edges);
   const softened = (a, b, lat) => overrides.some(o => [a, b].every(q => o.rows.some(x => x.source === q.name && x.qid === q.wikidata)) && (o.north === undefined || lat > o.north));
-  const lines = [], reaches = [], dashed = [], tally = { edges: 0, shore: 0, line: 0, reach: 0, frontier: 0, softened: 0 };
+  const lines = [], reaches = [], dashed = [], tally = { edges: 0, shore: 0, line: 0, reach: 0, frontier: 0, softened: 0, within: 0 };
   const runner = () => {
     let run = null, runKind = null;
     const out = { line: lines, reach: reaches, dashed };
@@ -285,6 +404,7 @@ export function buildBorders(zipPath, geojsonPath) {
         const bi = insiders.findIndex((inside, k) => k !== ai && inside(out)), b = polities[bi];
         let kind = null;
         if (!onLand(mid) || (bi < 0 && (!onLand(out) || toSea(ring[i], ring[i + 1]) <= shore))) tally.shore++;
+        else if (b && b.wikidata === q.wikidata && b.name === q.name && q.kind === 'reach' && b.kind === 'reach') tally.within++;
         else if (b && q.kind === 'line' && b.kind === 'line' && !softened(q, b, mid[1])) { if (ai < bi) kind = 'line'; }
         else { kind = 'reach'; if (!b) tally.frontier++; if (b?.kind === 'line' && q.kind === 'line') tally.softened++; }
         if (kind) tally[kind]++;
@@ -308,7 +428,9 @@ export function buildBorders(zipPath, geojsonPath) {
     r.flush();
   }
 
-  const ringsOut = polys => polys.map(poly => poly.map(simplify).filter(r => r.length > 3)).filter(p => p.length);
+  const stepped = alongParallels(grounds.filter(g => g.side === 'north' || g.side === 'south').map(g => g.deg));
+  const ringsOut = polys => polys.map(poly => poly.map(simplify).filter(r => r.length > 3).map(stepped)).filter(p => p.length);
+  const linesOut = list => list.map(simplify).filter(l => l.length > 1).map(stepped);
   const label = (p, where) => ({ name: p.name, lonlat: at(p, where) });
   return {
     provenance: {
@@ -321,18 +443,19 @@ export function buildBorders(zipPath, geojsonPath) {
       year: YEAR,
       rows: rows.length,
       book: read('regions').provenance.sha256,
-      changed: "the rows covering 1668, less the unions Cliopatria composes from them; classed, labelled and replaced as the book's @borders and @departs lines say; the corrections below; edges along the shore dropped; simplified as the coasts are",
+      changed: "the rows covering 1668, less the unions Cliopatria composes from them; classed, labelled, cut and replaced as the book's @borders, @ground and @departs lines say; the corrections below; edges along the shore dropped; simplified as the coasts are",
       simplified: `Douglas–Peucker at ${TOLERANCE}°, as euphonia.world.json`,
       tolerance_deg: TOLERANCE,
       shore_deg: Number(shore.toFixed(4)),
       shore_histogram: hist,
       edges: tally,
       corrections: corrected,
+      ground: grounded,
     },
     polities: polities.map(({ polys, ...q }) => ({ ...q, polys: ringsOut(polys) })),
-    lines: lines.map(simplify).filter(l => l.length > 1),
-    reaches: reaches.map(simplify).filter(l => l.length > 1),
-    dashed: dashed.map(simplify).filter(l => l.length > 1),
+    lines: linesOut(lines),
+    reaches: linesOut(reaches),
+    dashed: linesOut(dashed),
     fronts: fronts.map(f => ({ name: f.name, region: f.region, star: f.star, radius_km: f.radius_km, around: label(f.around, f.name), ring: f.ring })),
     // Names without lines: a shape's own (its tributaries), the peoples the
     // book names beside it, and the places fought over inside it.
@@ -359,5 +482,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const b = buildBorders(zip, geojson);
   writeFileSync(OUT, JSON.stringify(b));
   const pts = list => list.reduce((n, l) => n + l.length, 0);
-  console.log(`euphonia.borders.json: ${readFileSync(OUT).length} bytes; ${b.polities.length} polities (${pts(b.polities.flatMap(q => q.polys.flat()))} points), lines ${b.lines.length} (${pts(b.lines)}), reaches ${b.reaches.length} (${pts(b.reaches)}), dashed ${b.dashed.length} (${pts(b.dashed)}), fronts ${b.fronts.length}, names ${b.names.length}; shore ${b.provenance.shore_deg}°; edges ${JSON.stringify(b.provenance.edges)}; corrections ${b.provenance.corrections.map(c => `${c.row} ${c.at ? `at ${c.at.name}` : `in ${c.within.country}${c.within.southOf ? ` south of ${c.within.southOf.name}` : ''}`}: ${c.parts} part(s), ${c.km2} km²`).join('; ')}`);
+  console.log(`euphonia.borders.json: ${readFileSync(OUT).length} bytes; ${b.polities.length} polities (${pts(b.polities.flatMap(q => q.polys.flat()))} points), lines ${b.lines.length} (${pts(b.lines)}), reaches ${b.reaches.length} (${pts(b.reaches)}), dashed ${b.dashed.length} (${pts(b.dashed)}), fronts ${b.fronts.length}, names ${b.names.length}; shore ${b.provenance.shore_deg}°; edges ${JSON.stringify(b.provenance.edges)}; corrections ${b.provenance.corrections.map(c => `${c.row} ${c.at ? `at ${c.at.name}` : `in ${c.within.country}${c.within.southOf ? ` south of ${c.within.southOf.name}` : ''}`}: ${c.parts} part(s), ${c.km2} km²`).join('; ')}; ground ${b.provenance.ground.map(g => `${g.name} (${g.row}) ${g.side} of ${g.deg}°: ${g.parts} part(s), ${g.km2.toLocaleString('en-GB')} km²`).join('; ')}`);
 }

@@ -278,17 +278,22 @@ export async function initMap(stage) {
     g.labels.append(span);
     return span;
   });
-  // The names the book sets beside or within its ✦ shapes (Butua beside
-  // Mutapa, the Cape's Khoekhoe, Laicacota fought over): lettered once the
-  // glass frames their region, giving way to every other name. The chapter
-  // carries them for a screen reader.
-  g.bookNames = world.names.map(n => {
+  // The names the book letters on the land: those it sets beside or within
+  // its ✦ shapes (Butua beside Mutapa, the Cape's Khoekhoe, Laicacota fought
+  // over) and the peoples each chapter sets on their country (its @peoples
+  // line). Lettered once the glass frames their region, giving way to every
+  // other name. The chapter carries them for a screen reader.
+  const shapeRegion = new Map(world.polities.filter(q => q.kind === 'departs').map(q => [q.name, regions.find(r => r.name === q.region)]));
+  const lettered = [
+    ...world.names.map(n => ({ name: n.name, kind: n.kind, at: { lon: n.lonlat[0], lat: n.lonlat[1] }, region: shapeRegion.get(n.of) })),
+    ...regions.flatMap(r => r.peoples.map(n => ({ name: n.name, kind: 'people', at: { lon: n.lon, lat: n.lat }, region: r }))),
+  ];
+  g.bookNames = lettered.map(n => {
     const span = Object.assign(document.createElement('span'), { className: `map-book-name is-${n.kind}`, textContent: n.name });
     span.setAttribute('aria-hidden', 'true');
     g.labels.append(span);
     return span;
   });
-  const shapeRegion = new Map(world.polities.filter(q => q.kind === 'departs').map(q => [q.name, regions.find(r => r.name === q.region)]));
   g.tip.setAttribute('aria-hidden', 'true');
 
   // The scenes' panel, beside the map, and everything there is to read: the
@@ -615,8 +620,7 @@ export async function initMap(stage) {
       boxes.push({ circle: k, x: x + w / 2, y: y - h / 2, anchorY: y - h / 2, spread: -1, w, h });
     });
     // The book's names, last of all.
-    world.names.forEach((n, k) => {
-      const p = { lon: n.lonlat[0], lat: n.lonlat[1] }, r = shapeRegion.get(n.of);
+    lettered.forEach(({ at: p, region: r }, k) => {
       if (!r || g.zoom < regionZoom(r) || !faces(v, p)) { g.bookNames[k].hidden = true; return; }
       const [x, y] = project([p.lon, p.lat]), { w, h } = g.bookNameSizes[k];
       boxes.push({ bookName: k, x, y, anchorY: y, spread: -2, w, h });
@@ -689,7 +693,7 @@ export async function initMap(stage) {
     const polity = polityAt(at);
     return [
       ['Where', `${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}, ${onLand(data.land, at.lat, at.lon) ? 'on land' : 'at sea'} (Natural Earth's modern coasts)`],
-      ['In 1668', polity ? (polity.kind === 'departs' ? `${polity.label}, the book's: ${polity.star}` : `${polity.label}, by Cliopatria's record`) : "no state, by Cliopatria's record"],
+      ['In 1668', polity ? (polity.kind === 'departs' ? `${polity.label}, the book's: ${polity.star}` : polity.ground ? `${polity.label}'s reach, ${polity.ground}, by Cliopatria's record and the book's` : `${polity.label}, by Cliopatria's record`) : "no state, by Cliopatria's record"],
       ['Nearest named place', `${placeName(nearest.place)}, in ${nearest.region.name}: ${Math.round(nearest.deg * RAD * EARTH_KM).toLocaleString('en-GB')} km`],
       ['By the sun', `${sunClock(instant, at.lon)}; the sun ${sunDay}`],
       ['The Hidden (Euphonia)', `at the ${tideAt(instant)}; ${half === 'dark' ? 'the dark half, by the sun between the tropics' : half === 'other' ? 'the other half, by the sun between the tropics' : 'the half of the year as the DM says: the book gives this place no calendar'}`],

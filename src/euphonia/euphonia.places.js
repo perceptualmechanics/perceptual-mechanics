@@ -62,6 +62,8 @@ export function resolvePlaces({ gazetteer, regions, calendars, people = { region
     places: r.places.map(p => ({ name: p.name, modern: p.modern, country: p.country, ...at(r.name, p.modern, p.country, p.province) })),
     // The titles, rulers and powers its chapter names, each where it stands.
     names: (r.names ?? []).map(n => ({ name: n.name, modern: n.modern, country: n.country, ...at(`${r.name}'s ${n.name}`, n.modern, n.country, n.province) })),
+    // The peoples it names, each lettered on its country.
+    peoples: (r.peoples ?? []).map(n => ({ name: n.name, modern: n.modern, country: n.country, ...at(`${r.name}'s ${n.name}`, n.modern, n.country, n.province) })),
   }));
   const placedPeople = [
     ...people.regions.flatMap(r => r.people.filter(p => p.at).map(p => ({ name: p.name, region: slug(r.region), at: p.at }))),
