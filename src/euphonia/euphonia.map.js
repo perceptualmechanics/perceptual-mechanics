@@ -250,11 +250,16 @@ export async function initMap(stage) {
     const r = ordered.findIndex((q, i) => q.kind !== 'departs' && inside(i, at));
     return r >= 0 ? ordered[r] : null;
   };
-  // The polity under the pointer, where no place is: washed, and named.
+  // Firm ground, the record's or the book's. A zone's polity is named under
+  // the pointer but not washed: its outline is how far it reaches, and a
+  // wash would claim the peoples within for it.
+  const firm = q => q.kind === 'line' || q.cls === 'firm';
+  // The polity under the pointer, where no place is: named, and washed if
+  // it is firm.
   function hold(at) {
     const q = at && polityAt(at);
     if (!q && !held) return;
-    held = q ? { polity: q, at } : null;
+    held = q ? { polity: q, at, wash: firm(q) ? q : null } : null;
     redraw();
   }
   // The point of the globe under (x, y), unless the mount is in the way.
@@ -548,7 +553,7 @@ export async function initMap(stage) {
     if (globe) {
       // The mount recedes by its layers' opacity; the globe is drawn whole.
       backCanvas.style.opacity = canvas.style.opacity = String(shown);
-      globe(v, { regions, hoverPlace: hoverPlace ?? marked, pick, polity: held?.polity, scale });
+      globe(v, { regions, hoverPlace: hoverPlace ?? marked, pick, polity: held?.wash, scale });
     } else {
       g.ctx.clearRect(0, 0, v.width, v.height);
       g.ctx.globalAlpha = shown;
@@ -556,7 +561,7 @@ export async function initMap(stage) {
       g.ctx.globalAlpha = 1;
       g.ctx.drawImage(g.fills, 0, 0);
       g.ctx.drawImage(g.lines, 0, 0);
-      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace: hoverPlace ?? marked, pick, polity: held?.polity }, colors, scale);
+      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace: hoverPlace ?? marked, pick, polity: held?.wash }, colors, scale);
       g.ctx.globalAlpha = shown;
       if (shown) g.ctx.drawImage(g.mountFront, 0, 0);
       g.ctx.globalAlpha = 1;

@@ -253,7 +253,7 @@ export function buildBorders(zipPath, geojsonPath) {
       q.polys.push(poly);
     }
   }
-  for (const s of shapes) polities.push({ name: s.name, label: s.name, region: s.region, kind: 'departs', star: s.star, polys: s.polys,
+  for (const s of shapes) polities.push({ name: s.name, label: s.name, region: s.region, kind: 'departs', cls: s.cls, star: s.star, polys: s.polys,
     holds: (s.holds ?? []).map(p => ({ name: p.name, lonlat: at(p, `${s.name}'s holds`) })) });
 
   // The edges. A record row's edge is shore (dropped), a line between two firm

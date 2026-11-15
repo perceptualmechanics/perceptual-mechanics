@@ -519,6 +519,7 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   for (const r of regions) for (const d of (r.departs ?? []).filter(x => x.cls !== 'front')) {
     const q = departed.find(x => x.name === d.name);
     if (!q) { fail(`euphonia.borders.json: ${r.name}'s departure ${d.name} isn't drawn`); continue; }
+    if (q.cls !== d.cls) fail(`euphonia.borders.json: ${d.name} is drawn ${q.cls}, but ${r.name} calls it ${d.cls}`);
     if (!q.star?.startsWith('✦') || !text(r.name).includes(q.star)) fail(`euphonia.borders.json: ${d.name}'s ✦ sentence isn't ${r.name}'s`);
     for (const h of q.holds ?? []) if (!holds(q, h.lonlat) && !coastal(h.lonlat)) fail(`euphonia.borders.json: ${d.name} holds ${h.name}, which lies outside it and inland`);
   }
