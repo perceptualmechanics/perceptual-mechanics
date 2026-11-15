@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "6f64b5863de869c6763ff17b93e67ac7011022814c8edd4ff955a30662d6b9da",
-  "modified": "2026-11-15T10:44:15-05:00",
+  "sha256": "af5f3b03029c9b8a878e27c63288d6358e02c8224b7e3f89fb5b53dda559661d",
+  "modified": "2026-11-15T11:29:04-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 21,
   "rules": {
@@ -20,590 +20,575 @@
     "D&D"
    ],
    "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b",
-   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer and Summon Fey (Chat, 15 November)."
   }
  },
- "withheld": [
+ "withheld": [],
+ "data": [
   {
-   "where": "Ser Marin Zorzi · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Ser Marin Zorzi",
+   "title": "Ser Marin Zorzi (Revelator 15, Bridge)",
+   "line": "Revelator 15, Bridge",
+   "file": "cover_adjudicator.html"
   },
   {
-   "where": "Étaín of the Ford · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Étaín of the Ford",
+   "title": "Étaín of the Ford (Bordermarch, 10th)",
+   "line": "Bordermarch, 10th",
+   "file": "cover_bordermarch.html"
   },
   {
-   "where": "Tsitsi · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Tsitsi",
+   "title": "Tsitsi (Counsellor 6, Spymaster)",
+   "line": "Counsellor 6, Spymaster",
+   "file": "cover_cape_gobetween.html"
   },
   {
-   "where": "Yusuf Rais · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Yusuf Rais",
+   "title": "Yusuf Rais (Counsellor 10, Factor)",
+   "line": "Counsellor 10, Factor",
+   "file": "cover_corsair.html"
   },
   {
-   "where": "Wäldä Mika'el · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Wäldä Mika'el",
+   "title": "Wäldä Mika'el (Gondar, 7th)",
+   "line": "Gondar, 7th",
+   "file": "cover_dabtara.html"
   },
   {
-   "where": "Zanetta Bon · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Zanetta Bon",
+   "title": "Zanetta Bon (Danae 7, Crossing)",
+   "line": "Danae 7, Crossing",
+   "file": "cover_danae_crossing.html"
   },
   {
-   "where": "Anselme Lafrenaye · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Anselme Lafrenaye",
+   "title": "Anselme Lafrenaye (Counsellor 12, Gamester)",
+   "line": "Counsellor 12, Gamester",
+   "file": "cover_gamester.html"
   },
   {
-   "where": "Tadhg Ó Laoi · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Tadhg Ó Laoi",
+   "title": "Tadhg Ó Laoi (Hidden Bard, 9th)",
+   "line": "Hidden Bard, 9th",
+   "file": "cover_hidden_bard.html"
   },
   {
-   "where": "Morfudd Prys · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Morfudd Prys",
+   "title": "Morfudd Prys (Hidden Killer, 7th)",
+   "line": "Hidden Killer, 7th",
+   "file": "cover_hidden_killer.html"
   },
   {
-   "where": "Matthias Kessler · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Matthias Kessler",
+   "title": "Matthias Kessler (Counsellor 14, Hollowed)",
+   "line": "Counsellor 14, Hollowed",
+   "file": "cover_hollowed.html"
   },
   {
-   "where": "Simon Horowitz · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Simon Horowitz",
+   "title": "Simon Horowitz (Warlock 7, Envoy)",
+   "line": "Warlock 7, Envoy",
+   "file": "cover_horowitz.html"
   },
   {
-   "where": "Ilyanor Sael · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Ilyanor Sael",
+   "title": "Ilyanor Sael (Physician 19, Immortalist / Artificer 1)",
+   "line": "Physician 19, Immortalist / Artificer 1",
+   "file": "cover_ilyanor.html"
   },
   {
-   "where": "Waman Illa · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Waman Illa",
+   "title": "Waman Illa (Inca, 10th)",
+   "line": "Inca, 10th",
+   "file": "cover_inca_stormpriest.html"
   },
   {
-   "where": "Kesavan Vaidyan · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Kesavan Vaidyan",
+   "title": "Kesavan Vaidyan (Physician 10, Surgeon)",
+   "line": "Physician 10, Surgeon",
+   "file": "cover_kerala_surgeon.html"
   },
   {
-   "where": "Kit Harrow · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Kit Harrow",
+   "title": "Kit Harrow (Counsellor 8, Gamester)",
+   "line": "Counsellor 8, Gamester",
+   "file": "cover_kit.html"
   },
   {
-   "where": "Čhaŋté Wašté Wiŋ · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Čhaŋté Wašté Wiŋ",
+   "title": "Čhaŋté Wašté Wiŋ (Dakota druid, 8th)",
+   "line": "Dakota druid, 8th",
+   "file": "cover_lakota_druid.html"
   },
   {
-   "where": "Tonderai Shumba · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Tonderai Shumba",
+   "title": "Tonderai Shumba (Lionskin, Guardian, 10th)",
+   "line": "Lionskin, Guardian, 10th",
+   "file": "cover_lion_armorer.html"
   },
   {
-   "where": "Gennaro Esposito · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Gennaro Esposito",
+   "title": "Gennaro Esposito (Counsellor 10, Majordomo)",
+   "line": "Counsellor 10, Majordomo",
+   "file": "cover_majordomo.html"
   },
   {
-   "where": "Fra Bertrand de Montclar · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Fra Bertrand de Montclar",
+   "title": "Fra Bertrand de Montclar (Knight of Malta, 10th)",
+   "line": "Knight of Malta, 10th",
+   "file": "cover_malta_knight.html"
   },
   {
-   "where": "Daeng Calla · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Daeng Calla",
+   "title": "Daeng Calla (Monsoon Road, 7th)",
+   "line": "Monsoon Road, 7th",
+   "file": "cover_monsoon_smuggler.html"
   },
   {
-   "where": "Simbarashe Moyo · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Simbarashe Moyo",
+   "title": "Simbarashe Moyo (Mutapa's great artificer, 20th)",
+   "line": "Mutapa's great artificer, 20th",
+   "file": "cover_mutapa_artificer.html"
   },
   {
-   "where": "Amritnath · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Amritnath",
+   "title": "Amritnath (Physician 13, Immortalist)",
+   "line": "Physician 13, Immortalist",
+   "file": "cover_nath.html"
   },
   {
-   "where": "Ned Ashcombe · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ned Ashcombe",
+   "title": "Ned Ashcombe (Courtier 8, Verse)",
+   "line": "Courtier 8, Verse",
+   "file": "cover_ned.html"
   },
   {
-   "where": "Mustafa Remzi Efendi · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Mustafa Remzi Efendi",
+   "title": "Mustafa Remzi Efendi (Natural Philosopher 13, Navigator)",
+   "line": "Natural Philosopher 13, Navigator",
+   "file": "cover_ottoman_astrologer.html"
   },
   {
-   "where": "Akinwale · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Akinwale",
+   "title": "Akinwale (Oyo cavalry, 7th)",
+   "line": "Oyo cavalry, 7th",
+   "file": "cover_oyo_rider.html"
   },
   {
-   "where": "Farrokh of Isfahan · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Farrokh of Isfahan",
+   "title": "Farrokh of Isfahan (Warlock 6, Dreamlord)",
+   "line": "Warlock 6, Dreamlord",
+   "file": "cover_persian_elf.html"
   },
   {
-   "where": "Sehpin · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Sehpin",
+   "title": "Sehpin (Life cleric, 11th)",
+   "line": "Life cleric, 11th",
+   "file": "cover_pohnpei.html"
   },
   {
-   "where": "Lu Qingxu · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Lu Qingxu",
+   "title": "Lu Qingxu (Qiu Xian Zhe, 9th)",
+   "line": "Qiu Xian Zhe, 9th",
+   "file": "cover_qiuxianzhe.html"
   },
   {
-   "where": "Shi Yuanjing · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Shi Yuanjing",
+   "title": "Shi Yuanjing (Shaolin, 10th)",
+   "line": "Shaolin, 10th",
+   "file": "cover_shaolin.html"
   },
   {
-   "where": "Tachibana Chiyo · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Tachibana Chiyo",
+   "title": "Tachibana Chiyo (aasimar priestess, 10th)",
+   "line": "aasimar priestess, 10th",
+   "file": "cover_shinto_priestess.html"
   },
   {
-   "where": "Dom Garcia Nsaku · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Dom Garcia Nsaku",
+   "title": "Dom Garcia Nsaku (Soyo adargueiro, 9th)",
+   "line": "Soyo adargueiro, 9th",
+   "file": "cover_soyo_fighter.html"
   },
   {
-   "where": "Nurbibi · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Nurbibi",
+   "title": "Nurbibi (Natural Philosopher 6, Naturalist)",
+   "line": "Natural Philosopher 6, Naturalist",
+   "file": "cover_steppe_naturalist.html"
   },
   {
-   "where": "Rashid bin Khamis al-Ghafiri · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Rashid bin Khamis al-Ghafiri",
+   "title": "Rashid bin Khamis al-Ghafiri (Storm sorcerer, 7th)",
+   "line": "Storm sorcerer, 7th",
+   "file": "cover_storm_captain.html"
   },
   {
-   "where": "Doña Isabel Cuauhtzin · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Doña Isabel Cuauhtzin",
+   "title": "Doña Isabel Cuauhtzin (Courtier 8, Art)",
+   "line": "Courtier 8, Art",
+   "file": "show_art.html"
   },
   {
-   "where": "Brother Joris Vanhove · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Brother Joris Vanhove",
+   "title": "Brother Joris Vanhove (Natural Philosopher 7, Ballistician)",
+   "line": "Natural Philosopher 7, Ballistician",
+   "file": "show_ballistician.html"
   },
   {
-   "where": "Nyarai Soko · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Nyarai Soko",
+   "title": "Nyarai Soko (Mhizha 17, Chemist)",
+   "line": "Mhizha 17, Chemist",
+   "file": "show_chemist.html"
   },
   {
-   "where": "Kilimoar · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Kilimoar",
+   "title": "Kilimoar (Circle of Shapers, 13th)",
+   "line": "Circle of Shapers, 13th",
+   "file": "show_circle_of_shapers.html"
   },
   {
-   "where": "Golnar · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Golnar",
+   "title": "Golnar (Danae 9, Binding)",
+   "line": "Danae 9, Binding",
+   "file": "show_danae_binding.html"
   },
   {
-   "where": "Hu Lanxin · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Hu Lanxin",
+   "title": "Hu Lanxin (Danae 9, Changing)",
+   "line": "Danae 9, Changing",
+   "file": "show_danae_changing.html"
   },
   {
-   "where": "Willka Mamani · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Willka Mamani",
+   "title": "Willka Mamani (Physician 7, Hedge Witch)",
+   "line": "Physician 7, Hedge Witch",
+   "file": "show_hedge_witch.html"
   },
   {
-   "where": "Rakhmabai Deshmukh · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Rakhmabai Deshmukh",
+   "title": "Rakhmabai Deshmukh (Counsellor 10, Marshal)",
+   "line": "Counsellor 10, Marshal",
+   "file": "show_marshal.html"
   },
   {
-   "where": "Kaiawa · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Kaiawa",
+   "title": "Kaiawa (Revelator 9, the River of Life)",
+   "line": "Revelator 9, the River of Life",
+   "file": "show_oceanus.html"
   },
   {
-   "where": "Buatu Makaya · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Buatu Makaya",
+   "title": "Buatu Makaya (Revelator 7, the Mountain)",
+   "line": "Revelator 7, the Mountain",
+   "file": "show_olympus.html"
   },
   {
-   "where": "Nafisa al-Qalyubiyya · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Nafisa al-Qalyubiyya",
+   "title": "Nafisa al-Qalyubiyya (Physician 10, Plague Doctor)",
+   "line": "Physician 10, Plague Doctor",
+   "file": "show_plague_doctor.html"
   },
   {
-   "where": "Fadzai Shoko · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Fadzai Shoko",
+   "title": "Fadzai Shoko (Physician 7, Vitalist)",
+   "line": "Physician 7, Vitalist",
+   "file": "show_vitalist.html"
   },
   {
-   "where": "Aisulu · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Aisulu",
+   "title": "Aisulu (Barbarian 7, Path of the Wild Heart)",
+   "line": "Barbarian 7, Path of the Wild Heart",
+   "file": "people_aisulu.html"
   },
   {
-   "where": "Aj K'in Kuch · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Aj K'in Kuch",
+   "title": "Aj K'in Kuch (Revelator 14, the Bridge)",
+   "line": "Revelator 14, the Bridge",
+   "file": "people_aj_kin_kuch.html"
   },
   {
-   "where": "Akosua Nyarko · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Akosua Nyarko",
+   "title": "Akosua Nyarko (Ranger 7, Hidden Killer)",
+   "line": "Ranger 7, Hidden Killer",
+   "file": "people_akosua_nyarko.html"
   },
   {
-   "where": "Alfa Mahmud Gurdu · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Alfa Mahmud Gurdu",
+   "title": "Alfa Mahmud Gurdu (Wizard 15, Abjurer)",
+   "line": "Wizard 15, Abjurer",
+   "file": "people_alfa_mahmud_gurdu.html"
   },
   {
-   "where": "Ambuya Rudo Gumbo · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ambuya Rudo Gumbo",
+   "title": "Ambuya Rudo Gumbo (Cleric 14, Life)",
+   "line": "Cleric 14, Life",
+   "file": "people_ambuya_rudo_gumbo.html"
   },
   {
-   "where": "Ammakka · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ammakka",
+   "title": "Ammakka (Natural Philosopher 9, Experimentalist)",
+   "line": "Natural Philosopher 9, Experimentalist",
+   "file": "people_ammakka.html"
   },
   {
-   "where": "Ana Kitumba · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ana Kitumba",
+   "title": "Ana Kitumba (Paladin 9, Oath of Devotion)",
+   "line": "Paladin 9, Oath of Devotion",
+   "file": "people_ana_kitumba.html"
   },
   {
-   "where": "Asiga · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Asiga",
+   "title": "Asiga (Druid 7, Circle of the Land)",
+   "line": "Druid 7, Circle of the Land",
+   "file": "people_asiga.html"
   },
   {
-   "where": "Avdotya Shchukina · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Avdotya Shchukina",
+   "title": "Avdotya Shchukina (Counsellor 9, Majordomo)",
+   "line": "Counsellor 9, Majordomo",
+   "file": "people_avdotya_shchukina.html"
   },
   {
-   "where": "Avetik of Julfa · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Avetik of Julfa",
+   "title": "Avetik of Julfa (Counsellor 5, Gamester)",
+   "line": "Counsellor 5, Gamester",
+   "file": "people_avetik_of_julfa.html"
   },
   {
-   "where": "Ayoka · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ayoka",
+   "title": "Ayoka (Bard 6, College of Lore)",
+   "line": "Bard 6, College of Lore",
+   "file": "people_ayoka.html"
   },
   {
-   "where": "Mwalimu Bakari Shee · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Mwalimu Bakari Shee",
+   "title": "Mwalimu Bakari Shee (Warlock 6, Dreamlord)",
+   "line": "Warlock 6, Dreamlord",
+   "file": "people_bakari_shee.html"
   },
   {
-   "where": "Bibi Oysha · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Bibi Oysha",
+   "title": "Bibi Oysha (Wizard 8, Abjurer)",
+   "line": "Wizard 8, Abjurer",
+   "file": "people_bibi_oysha.html"
   },
   {
-   "where": "Brás Furtado · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Brás Furtado",
+   "title": "Brás Furtado (Counsellor 9, Hollowed)",
+   "line": "Counsellor 9, Hollowed",
+   "file": "people_bras_furtado.html"
   },
   {
-   "where": "Dona Catarina de Sá · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Dona Catarina de Sá",
+   "title": "Dona Catarina de Sá (Counsellor 11, Majordomo)",
+   "line": "Counsellor 11, Majordomo",
+   "file": "people_catarina_de_sa.html"
   },
   {
-   "where": "Chea Sok · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Chea Sok",
+   "title": "Chea Sok (Revelator 9, the Mountain)",
+   "line": "Revelator 9, the Mountain",
+   "file": "people_chea_sok.html"
   },
   {
-   "where": "Licenciado Diego Ruiz de Lezcano · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Licenciado Diego Ruiz de Lezcano",
+   "title": "Licenciado Diego Ruiz de Lezcano (Cleric 9, War)",
+   "line": "Cleric 9, War",
+   "file": "people_diego_ruiz_de_lezcano.html"
   },
   {
-   "where": "Fusipala · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Fusipala",
+   "title": "Fusipala (Counsellor 9, Majordomo)",
+   "line": "Counsellor 9, Majordomo",
+   "file": "people_fusipala.html"
   },
   {
-   "where": "Gelong Tsereng · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Gelong Tsereng",
+   "title": "Gelong Tsereng (Cleric 8, Life)",
+   "line": "Cleric 8, Life",
+   "file": "people_gelong_tsereng.html"
   },
   {
-   "where": "Gottlieb von Schleich · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Gottlieb von Schleich",
+   "title": "Gottlieb von Schleich (Counsellor 10, Spymaster / Wizard 2)",
+   "line": "Counsellor 10, Spymaster / Wizard 2",
+   "file": "people_gottlieb_von_schleich.html"
   },
   {
-   "where": "Gu Wenyuan · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Gu Wenyuan",
+   "title": "Gu Wenyuan (Natural Philosopher 5, Navigator)",
+   "line": "Natural Philosopher 5, Navigator",
+   "file": "people_gu_wenyuan.html"
   },
   {
-   "where": "Hafız Ömer · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Hafız Ömer",
+   "title": "Hafız Ömer (Cleric 5, Light)",
+   "line": "Cleric 5, Light",
+   "file": "people_hafiz_omer.html"
   },
   {
-   "where": "Hoʻolulu · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Hoʻolulu",
+   "title": "Hoʻolulu (Physician 8, Hedge Witch)",
+   "line": "Physician 8, Hedge Witch",
+   "file": "people_hoolulu.html"
   },
   {
-   "where": "Iliqa · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Iliqa",
+   "title": "Iliqa (Revelator 10, the Tree)",
+   "line": "Revelator 10, the Tree",
+   "file": "people_iliqa.html"
   },
   {
-   "where": "Dona Isabel Mvemba · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Dona Isabel Mvemba",
+   "title": "Dona Isabel Mvemba (Paladin 8, Oath of Devotion)",
+   "line": "Paladin 8, Oath of Devotion",
+   "file": "people_isabel_mvemba.html"
   },
   {
-   "where": "Kenzhe · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Kenzhe",
+   "title": "Kenzhe (Ranger 9, Mortal Hunter)",
+   "line": "Ranger 9, Mortal Hunter",
+   "file": "people_kenzhe.html"
   },
   {
-   "where": "Khadijeh Khatun · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Khadijeh Khatun",
+   "title": "Khadijeh Khatun (Counsellor 11, Spymaster)",
+   "line": "Counsellor 11, Spymaster",
+   "file": "people_khadijeh_khatun.html"
   },
   {
-   "where": "Kima Ismare · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Kima Ismare",
+   "title": "Kima Ismare (Cleric 9, Hidden Domain)",
+   "line": "Cleric 9, Hidden Domain",
+   "file": "people_kima_ismare.html"
   },
   {
-   "where": "Kunhi Ayesha · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Kunhi Ayesha",
+   "title": "Kunhi Ayesha (Counsellor 6, Spymaster)",
+   "line": "Counsellor 6, Spymaster",
+   "file": "people_kunhi_ayesha.html"
   },
   {
-   "where": "Kunwar Ratan Singh · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Kunwar Ratan Singh",
+   "title": "Kunwar Ratan Singh (Courtier 10, Arms)",
+   "line": "Courtier 10, Arms",
+   "file": "people_kunwar_ratan_singh.html"
   },
   {
-   "where": "Kusi Wallpa · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Kusi Wallpa",
+   "title": "Kusi Wallpa (Counsellor 13, Marshal)",
+   "line": "Counsellor 13, Marshal",
+   "file": "people_kusi_wallpa.html"
   },
   {
-   "where": "Manekbai Parekh · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Manekbai Parekh",
+   "title": "Manekbai Parekh (Counsellor 11, Factor)",
+   "line": "Counsellor 11, Factor",
+   "file": "people_manekbai_parekh.html"
   },
   {
-   "where": "Munyaradzi Shava · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Munyaradzi Shava",
+   "title": "Munyaradzi Shava (Counsellor 13, Hollowed)",
+   "line": "Counsellor 13, Hollowed",
+   "file": "people_munyaradzi_shava.html"
   },
   {
-   "where": "Nane Gulbahar · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Nane Gulbahar",
+   "title": "Nane Gulbahar (Ranger 7, Hidden Killer)",
+   "line": "Ranger 7, Hidden Killer",
+   "file": "people_nane_gulbahar.html"
   },
   {
-   "where": "Ndona Nsimba · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ndona Nsimba",
+   "title": "Ndona Nsimba (Druid 9, Circle of the Land)",
+   "line": "Druid 9, Circle of the Land",
+   "file": "people_ndona_nsimba.html"
   },
   {
-   "where": "Ok Rye-hwa · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ok Rye-hwa",
+   "title": "Ok Rye-hwa (Cleric 8, Hidden Domain)",
+   "line": "Cleric 8, Hidden Domain",
+   "file": "people_ok_rye_hwa.html"
   },
   {
-   "where": "Olaniyi · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Olaniyi",
+   "title": "Olaniyi (Counsellor 10, Marshal)",
+   "line": "Counsellor 10, Marshal",
+   "file": "people_olaniyi.html"
   },
   {
-   "where": "Osaretin · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Osaretin",
+   "title": "Osaretin (Courtier 6, Art)",
+   "line": "Courtier 6, Art",
+   "file": "people_osaretin.html"
   },
   {
-   "where": "Ponni · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Ponni",
+   "title": "Ponni (Ranger 3, Hidden Killer)",
+   "line": "Ranger 3, Hidden Killer",
+   "file": "people_ponni.html"
   },
   {
-   "where": "Saadat Ali · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Saadat Ali",
+   "title": "Saadat Ali (Warlock 4, Dreamlord)",
+   "line": "Warlock 4, Dreamlord",
+   "file": "people_saadat_ali.html"
   },
   {
-   "where": "Sarongelug · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Sarongelug",
+   "title": "Sarongelug (Natural Philosopher 10, Navigator)",
+   "line": "Natural Philosopher 10, Navigator",
+   "file": "people_sarongelug.html"
   },
   {
-   "where": "Shen Xuanji · character sheet",
-   "reasons": [
-    "bracket",
-    "the creature type used as prose (the book says fae)"
-   ]
+   "name": "Shen Xuanji",
+   "title": "Shen Xuanji (Wizard 14, Illusionist)",
+   "line": "Wizard 14, Illusionist",
+   "file": "people_shen_xuanji.html"
   },
   {
-   "where": "Shiri · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Shiri",
+   "title": "Shiri (Counsellor 16, Spymaster)",
+   "line": "Counsellor 16, Spymaster",
+   "file": "people_shiri.html"
   },
   {
-   "where": "Shushan Ghukasian · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Shushan Ghukasian",
+   "title": "Shushan Ghukasian (Counsellor 12, Factor)",
+   "line": "Counsellor 12, Factor",
+   "file": "people_shushan_ghukasian.html"
   },
   {
-   "where": "Tetua · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Tetua",
+   "title": "Tetua (Courtier 4, Verse)",
+   "line": "Courtier 4, Verse",
+   "file": "people_tetua.html"
   },
   {
-   "where": "Teungku Fatimah · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Teungku Fatimah",
+   "title": "Teungku Fatimah (Wizard 10, Evoker)",
+   "line": "Wizard 10, Evoker",
+   "file": "people_teungku_fatimah.html"
   },
   {
-   "where": "Tinashe Gumbo · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Tinashe Gumbo",
+   "title": "Tinashe Gumbo (Mhizha 7, Constructor)",
+   "line": "Mhizha 7, Constructor",
+   "file": "people_tinashe_gumbo.html"
   },
   {
-   "where": "Tseren Dorji · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Tseren Dorji",
+   "title": "Tseren Dorji (Fighter 9, Battle Master)",
+   "line": "Fighter 9, Battle Master",
+   "file": "people_tseren_dorji.html"
   },
   {
-   "where": "Zhamal-apa · character sheet",
-   "reasons": [
-    "bracket"
-   ]
+   "name": "Zhamal-apa",
+   "title": "Zhamal-apa (Physician 7, Hedge Witch)",
+   "line": "Physician 7, Hedge Witch",
+   "file": "people_zhamal_apa.html"
   }
- ],
- "data": []
+ ]
 }

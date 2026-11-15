@@ -11,10 +11,6 @@
   "rule": "euphonia.rules.json fey_type",
   "changes": [
    {
-    "path": "/species/2/traits/2/name",
-    "to": "Fae Ancestry"
-   },
-   {
     "path": "/classes/3/spells/6/0/name",
     "to": "Conjure Fae"
    },
@@ -198,7 +194,7 @@
      "text": "You are part of a lineage that grants you supernatural abilities. Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage.\n\nWhen you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table. You always have that spell prepared. You can cast it once without a spell slot, and you regain the ability to cast it in that way when you finish a Long Rest. You can also cast the spell using any spell slots you have of the appropriate level.\n\nIntelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)."
     },
     {
-     "name": "Fae Ancestry",
+     "name": "Fey Ancestry",
      "text": "You have Advantage on saving throws you make to avoid or end the Charmed condition."
     },
     {

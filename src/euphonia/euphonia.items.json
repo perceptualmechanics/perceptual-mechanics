@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "6f64b5863de869c6763ff17b93e67ac7011022814c8edd4ff955a30662d6b9da",
-  "modified": "2026-11-15T10:44:15-05:00",
+  "sha256": "af5f3b03029c9b8a878e27c63288d6358e02c8224b7e3f89fb5b53dda559661d",
+  "modified": "2026-11-15T11:29:04-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 21,
   "rules": {
@@ -20,8 +20,8 @@
     "D&D"
    ],
    "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b",
-   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer and Summon Fey (Chat, 15 November)."
   }
  },
  "withheld": [
