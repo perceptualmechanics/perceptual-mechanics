@@ -9,16 +9,7 @@
  },
  "adapted": {
   "rule": "euphonia.rules.json fey_type",
-  "changes": [
-   {
-    "path": "/classes/3/spells/6/0/name",
-    "to": "Conjure Fae"
-   },
-   {
-    "path": "/spells/57/name",
-    "to": "Conjure Fae"
-   }
-  ]
+  "changes": []
  },
  "backgrounds": [
   {
@@ -4279,7 +4270,7 @@
     ],
     "6": [
      {
-      "name": "Conjure Fae",
+      "name": "Conjure Fey",
       "school": "Conjuration",
       "special": "C"
      },
@@ -11031,7 +11022,7 @@
    "damage": []
   },
   {
-   "name": "Conjure Fae",
+   "name": "Conjure Fey",
    "level": 6,
    "school": "Conjuration",
    "classes": [

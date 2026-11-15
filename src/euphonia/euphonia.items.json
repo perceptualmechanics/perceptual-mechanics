@@ -20,8 +20,8 @@
     "D&D"
    ],
    "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b",
-   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer and Summon Fey (Chat, 15 November)."
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b|(?<=\\bConjure )Fey\\b",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November)."
   }
  },
  "withheld": [
