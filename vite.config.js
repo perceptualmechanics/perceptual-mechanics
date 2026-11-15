@@ -21,7 +21,7 @@ import { verifyEuphoniaMap, placesData } from './scripts/verify-euphonia-map.mjs
 import { verifyEuphoniaSrd } from './scripts/verify-euphonia-srd.mjs';
 import { verifyEuphoniaBuilder } from './scripts/verify-euphonia-builder.mjs';
 import { verifyEuphoniaTongues, verifyTongueRibbons } from './scripts/verify-euphonia-tongues.mjs';
-import { injectEuphonia } from './scripts/euphonia-page.js';
+import { injectEuphonia, euphoniaFooter } from './scripts/euphonia-page.js';
 
 const HERE = import.meta.dirname;
 
@@ -161,6 +161,31 @@ function euphoniaMarkupPlugin() {
     transformIndexHtml: {
       order: 'pre',
       handler: (html, { filename }) => filename === resolve(HERE, 'euphonia/index.html') ? injectEuphonia(html) : html,
+    },
+  };
+}
+
+// The People page's character sheets are the book's pages, copied in as the
+// sheet generator wrote them (public/euphonia/sheets). Each carries SRD rules,
+// so each owes the footer every Euphonia page carries: the built copy gets the
+// same one, from the same export, before verify-euphonia reads the pages.
+function euphoniaSheetsPlugin() {
+  let outDir = resolve(HERE, 'dist');
+  return {
+    name: 'pm-euphonia-sheets',
+    apply: 'build',
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    writeBundle() {
+      const dir = resolve(outDir, 'euphonia', 'sheets');
+      if (!fs.existsSync(dir)) return;
+      const footer = euphoniaFooter(euphoniaFiles().legal.data);
+      for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.html'))) {
+        const html = fs.readFileSync(resolve(dir, f), 'utf8');
+        if (!html.includes('</body>')) this.error(`euphonia/sheets/${f}: no </body> to set the footer before`);
+        fs.writeFileSync(resolve(dir, f), html.replace('</body>', `${footer}\n</body>`));
+      }
     },
   };
 }
@@ -421,7 +446,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaWheelPlugin(), euphoniaThemesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), verifyEuphoniaThemesPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaWheelPlugin(), euphoniaThemesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), euphoniaSheetsPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), verifyEuphoniaThemesPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

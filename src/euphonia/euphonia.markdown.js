@@ -37,12 +37,18 @@ function table([head, , ...rows]) {
 }
 
 function list(lines) {
-  // Each item with its depth; a line that isn't an item continues the last.
-  const items = [];
+  // Each item with its depth, by its indent against the items above it, as
+  // CommonMark nests: deeper than the last opens one level (the master
+  // indents a sub-item four spaces), and shallower returns to the open list
+  // it lines up with. A line that isn't an item continues the last.
+  const items = [], indents = [];
   for (const line of lines) {
     const m = line.match(/^(\s*)- (.*)$/);
-    if (m) items.push({ depth: m[1].length / 2, text: m[2] });
-    else items.at(-1).text += ` ${line.trim()}`;
+    if (!m) { items.at(-1).text += ` ${line.trim()}`; continue; }
+    const indent = m[1].length;
+    while (indents.length && indent < indents.at(-1)) indents.pop();
+    if (!indents.length || indent > indents.at(-1)) indents.push(indent);
+    items.push({ depth: indents.length - 1, text: m[2] });
   }
   let html = '', depth = -1;
   for (const { depth: d, text } of items) {

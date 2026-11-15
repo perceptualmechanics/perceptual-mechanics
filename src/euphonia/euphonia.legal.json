@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "af5f3b03029c9b8a878e27c63288d6358e02c8224b7e3f89fb5b53dda559661d",
-  "modified": "2026-11-15T11:29:04-05:00",
+  "sha256": "f02f0307e26ff0d0a7417da1c6dfe38c00013c7998998087b07dde2cb0af0596",
+  "modified": "2026-11-15T12:15:23-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 21,
+  "exporter_version": 22,
   "rules": {
    "banned": [
     "eladrin",
@@ -27,6 +27,7 @@
  "withheld": [],
  "data": {
   "srd_attribution": "This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+  "independence": "Euphonia is an independent work. It is not affiliated with, endorsed by, or sponsored by Wizards of the Coast.",
   "orc_notice": [
    "This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and available online at various locations including paizo.com/orclicense and others. All warranties are disclaimed as set forth therein.",
    "**Attribution.** This product is based on the following Licensed Material: *Euphonia*, © 2026 Scott Cohen. It also includes material from the *System Reference Document 5.2.1* by Wizards of the Coast LLC, licensed under CC-BY-4.0 (attribution below). If you use our Licensed Material in your own published works, please credit us as follows: *Euphonia*, © 2026 Scott Cohen, https://perceptualmechanics.com/euphonia/.",

@@ -489,11 +489,11 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 }
 .sheet[hidden] { display: none; }
 .sheet:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.sheet-head h2 { font-size: 1.7rem; margin: 0 0 0.2rem; color: var(--case); font-weight: 600; font-variant-caps: small-caps; letter-spacing: 0.03em; }
+.sheet-head h2, .sheet-person header h2 { font-size: 1.7rem; margin: 0 0 0.2rem; color: var(--case); font-weight: 600; font-variant-caps: small-caps; letter-spacing: 0.03em; }
 .sheet-head p { margin: 0 0 0.2rem; }
 .sheet-level { color: var(--sheet-muted); font-size: 0.9rem; }
 .sheet-block { margin: 1.4rem 0 0; }
-.sheet-block h3 { font-size: 1.05rem; font-weight: 600; letter-spacing: 0.06em; font-variant-caps: small-caps; color: var(--case); margin: 0 0 0.5rem; border-bottom: 1px solid var(--frame-edge); padding-bottom: 0.15rem; }
+.sheet-block h3, .sheet-person section > h3 { font-size: 1.05rem; font-weight: 600; letter-spacing: 0.06em; font-variant-caps: small-caps; color: var(--case); margin: 0 0 0.5rem; border-bottom: 1px solid var(--frame-edge); padding-bottom: 0.15rem; }
 .sheet-block h4 { font-size: 1rem; margin: 0.9rem 0 0.3rem; }
 .sheet-source { color: var(--sheet-muted); font-weight: 400; font-size: 0.85rem; }
 .sheet table, .sheet details table { border-collapse: collapse; font-size: 0.92rem; margin: 0 0 0.6rem; }
@@ -522,6 +522,39 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .sheet-gear li { break-inside: avoid; }
 .sheet-credit { margin-top: 1.8rem; border-top: 1px solid var(--frame-edge); padding-top: 0.6rem; color: var(--sheet-muted); font-size: 0.8rem; }
 .sheet-credit p { margin: 0 0 0.3rem; overflow-wrap: anywhere; }
+
+/* A person's character sheet (euphonia.sheet.js), over the page in the
+   builder's sheet: the book's sheet generator writes its structure (a header
+   of tags, a vignette, score cards, sections of tables and features) with
+   these class names, and the site dresses them from its own themes. */
+.sheet-dialog { width: min(64rem, calc(100% - 2rem)); max-width: none; max-height: calc(100svh - 2rem); padding: 0; border: 0; background: transparent; overflow: visible; }
+.sheet-dialog::backdrop { background: var(--veil); }
+.sheet-person { max-height: calc(100svh - 2rem); overflow-y: auto; scrollbar-width: thin; }
+.sheet-dialog-bar { position: sticky; top: -1.2rem; display: flex; justify-content: flex-end; margin: -0.4rem 0 0; padding: 0.4rem 0; background: var(--paper); z-index: 1; }
+.sheet-person h2:focus { outline: none; }
+.sheet-person header .sub { color: var(--sheet-muted); font-style: italic; margin: 0 0 0.5rem; }
+.sheet-person .tag { display: inline-block; font-size: 0.78rem; color: var(--case); border: 1px solid var(--frame-edge); padding: 0 0.5rem; margin: 0 0.3rem 0.3rem 0; }
+.sheet-person .vig { border-left: 3px solid var(--case); padding: 0.2rem 0.9rem; margin: 0.9rem 0; color: var(--sheet-muted); font-style: italic; }
+.sheet-person .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); gap: 0.5rem; margin: 0.8rem 0; }
+.sheet-person .abil { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem; }
+.sheet-person .stat { border: 1px solid var(--sheet-rule); padding: 0.4rem 0.5rem; text-align: center; }
+.sheet-person .stat > b { display: block; font-size: 1.3rem; line-height: 1.2; color: var(--ink); }
+.sheet-person .stat > span { display: block; font-size: 0.72rem; color: var(--sheet-muted); letter-spacing: 0.04em; }
+.sheet-person .cols { display: grid; grid-template-columns: 1fr 1.6fr; gap: 0 1.4rem; }
+.sheet-person section { margin: 1.2rem 0 0; }
+.sheet-person table { width: 100%; }
+.sheet-person td.n { text-align: right; font-weight: 600; white-space: nowrap; padding-right: 0; }
+.sheet-person td.k { font-weight: 600; }
+.sheet-person .feat { margin: 0 0 0.6rem; }
+.sheet-person .feat .lv { font-size: 0.78rem; color: var(--sheet-muted); margin-right: 0.4rem; }
+.sheet-person .cls { font-variant-caps: small-caps; letter-spacing: 0.06em; color: var(--case); margin: 0.8rem 0 0.3rem; }
+.sheet-person ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+.sheet-person li { margin: 0 0 0.3rem; }
+.sheet-person .prof { color: var(--sheet-mark); font-weight: 700; }
+.sheet-person .small, .sheet-person .note { font-size: 0.85rem; color: var(--sheet-muted); }
+.sheet-person p { margin: 0 0 0.4rem; }
+@media (max-width: 760px) { .sheet-person .cols { grid-template-columns: 1fr; } }
+@media (max-width: 620px) { .sheet-person .abil { grid-template-columns: repeat(3, 1fr); } }
 
 /* Printed, it's a document: dark ink on the page, nothing to navigate. */
 @media print {

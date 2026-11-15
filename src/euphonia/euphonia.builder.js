@@ -6,6 +6,7 @@ import srdUrl from './euphonia.srd.json?url';
 import classesUrl from './euphonia.classes.json?url';
 import subclassesUrl from './euphonia.subclasses.json?url';
 import itemsUrl from './euphonia.items.json?url';
+import legalUrl from './euphonia.legal.json?url';
 import charactersUrl from './euphonia.characters.json?url';
 import languagesUrl from './euphonia.languages.json?url';
 import tonguesUrl from './euphonia.tongues.json?url';
@@ -65,10 +66,10 @@ export async function initBuilder(panel) {
   const form = panel.querySelector('.builder-form');
   const sheet = panel.querySelector('.sheet');
   const status = form.querySelector('.builder-status');
-  let book, srd, languages, tongueNames;
+  let book, srd, languages, tongueNames, legal;
   try {
-    const [s, e, c, l, t, a, g] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl, subclassesUrl, itemsUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
-    srd = s; book = rulebook(s, e, c, a, g.data); languages = l.data;
+    const [s, e, c, l, t, a, g, f] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl, subclassesUrl, itemsUrl, legalUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
+    srd = s; book = rulebook(s, e, c, a, g.data); languages = l.data; legal = f.data;
     // What a language field suggests: the real tongues of the cultures the
     // book names (the ribbons' list), then the rules' own languages.
     tongueNames = [...new Set([...t.tongues.map(x => x.language), ...book.languages.standard, ...book.languages.rare])];
@@ -911,6 +912,8 @@ export async function initBuilder(panel) {
             .map(f => det(`feature-${c.class}-${f.level}-${f.name}`, `Level ${f.level}: ${f.name}${f.subclass ? ` (${f.subclass})` : ''}`, h('div', { html: blocks(f.text) })))))) : null,
       h('footer', { class: 'sheet-credit' },
         h('p', { html: inline(`Rules: ${srd.provenance.source}. ${adaptedNote}`) }),
+        // The book sets this beside every SRD attribution (Appendix E).
+        h('p', {}, legal.independence),
         h('p', {}, 'Euphonia’s classes are Scott Cohen’s.')),
     );
   }

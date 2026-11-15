@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { plain } from '../src/euphonia/euphonia.markdown.js';
+import { plain, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { ABILITIES } from '../src/euphonia/euphonia.character.js';
 import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
@@ -164,6 +164,11 @@ export function verifyEuphonia(d = euphoniaData()) {
   const srdWeapons = JSON.parse(read('src/euphonia/euphonia.srd.json')).weapons.map(w => w.name);
   for (const w of d.items.data.weapons) for (const n of w.counts_as) if (!srdWeapons.includes(n)) fail(`period weapon ${w.name}: counts as "${n}", which the SRD hasn't`);
 
+  // Every chapter's lists nest as the master writes them: no item opens on a
+  // sub-list with nothing of its own (the empty bullet a list indented four
+  // spaces once left).
+  for (const r of d.regions.data) for (const sec of r.sections) if (/<li>\s*<ul>/.test(blocks(sec.text))) fail(`${r.name}, ${sec.heading}: a list item with nothing in it but a sub-list`);
+
   // The people a table meets: each region's, in the regions' order, each
   // named once and standing in its chapter's People section as the chapter
   // shows it; and Notable People, whole, its headings the book's.
@@ -224,6 +229,7 @@ export function verifyEuphonia(d = euphoniaData()) {
   // The footer's text: the SRD attribution, the ORC Notice, the copyright line.
   const legal = d.legal.data;
   if (!/System Reference Document 5\.2\.1/.test(legal.srd_attribution ?? '') || !/Creative Commons Attribution 4\.0/.test(legal.srd_attribution ?? '')) fail('euphonia.legal.json: the SRD attribution is missing or not the SRD 5.2.1 CC-BY 4.0 one');
+  if (!/not affiliated with, endorsed by, or sponsored by Wizards of the Coast/.test(legal.independence ?? '')) fail('euphonia.legal.json: no line beside the SRD attribution saying Euphonia is unaffiliated');
   if (!legal.orc_notice?.length) fail('euphonia.legal.json: no ORC Notice');
   if (!/^Euphonia © \d{4} \S/.test(legal.copyright ?? '')) fail(`euphonia.legal.json: the copyright line reads "${legal.copyright}"`);
 
@@ -262,6 +268,7 @@ export function verifyEuphoniaPages(outDir, legal = euphoniaFiles().legal.data) 
     ['the copyright line', legal.copyright],
     ...legal.orc_notice.map((p, i) => [`ORC Notice paragraph ${i + 1}`, plain(p)]),
     ['the SRD 5.2.1 attribution', legal.srd_attribution],
+    ['the line beside it, that Euphonia is unaffiliated', legal.independence],
   ].map(([what, text]) => [what, text.replace(/\s+/g, ' ')]);
   for (const page of pages) {
     const text = footerText(readFileSync(join(dir, page), 'utf8'));

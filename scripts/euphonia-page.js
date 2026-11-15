@@ -24,6 +24,7 @@ ${legal.orc_notice_status === 'draft' ? `    <p class="draft">A draft${slots ? `
   <section aria-labelledby="srd-attribution">
     <h2 id="srd-attribution">SRD 5.2.1</h2>
     <p>${inline(legal.srd_attribution)}</p>
+    <p>${inline(legal.independence)}</p>
   </section>
 </footer>`;
 }
@@ -140,14 +141,23 @@ ${catalog(tongues.unfound.map(u => `<li><span class="t">${esc(u.language)}</span
 // book's Notable People in its own order, subsections and hooks included
 // (euphonia.people.json). A reader can narrow it to one region or search it
 // by name (euphonia.people.js); without script it's all there, in order.
-// Someone with a character sheet the site can show links to it, with the
-// class its title gives (euphonia.sheets.json).
 const PLAIN = s => s.replace(/\*+/g, '');
+// Someone with a character sheet the site can show links to it, with the
+// class its title gives (euphonia.sheets.json), wherever the book names them
+// for a table: the People page and their region's chapter. The link opens
+// the sheet in a dialog (euphonia.sheet.js), or as its own page without
+// script.
+function sheetLink(sheets, name) {
+  const sh = sheets.find(x => x.name === name);
+  return sh ? `<a class="sheet-link" href="/euphonia/sheets/${esc(sh.file)}">Character sheet</a> (${esc(sh.line)})` : '';
+}
+// A region chapter's People: its intro, and each person as the chapter has
+// them (verify-euphonia holds the two to one text), with their sheet.
+function chapterPeople(r, sheets) {
+  return `${r.intro ? `<p>${inline(r.intro)}</p>\n` : ''}${r.people.map(p => `<p><strong>${esc(p.name)}.</strong> ${inline(p.text)}${sheetLink(sheets, p.name) ? ` <span class="sheet-ref">${sheetLink(sheets, p.name)}</span>` : ''}</p>`).join('\n')}`;
+}
 function peoplePage(people, status, sheets) {
-  const sheet = name => {
-    const sh = sheets.find(x => x.name === name);
-    return sh ? `<a href="/euphonia/sheets/${esc(sh.file)}">Character sheet</a> (${esc(sh.line)})` : '';
-  };
+  const sheet = name => sheetLink(sheets, name);
   const groupOf = (id, title, body) => `<section class="people-group" data-group="${id}" aria-labelledby="people-${id}">
 <h3 id="people-${id}">${esc(title)}</h3>
 ${body}
@@ -245,7 +255,7 @@ ${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><s
 ${peoplePage(people.data, regions.status, sheets.data)}
 ${ribbonsPage(tonguesData())}
 ${regions.data.map(r => `<template class="map-chapter" data-region="${slug(r.name)}">
-${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).join('\n')}
+${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${sec.heading === 'People' ? chapterPeople(people.data.regions.find(x => x.region === r.name), sheets.data) : blocks(sec.text)}`).join('\n')}
 </template>`).join('\n')}`;
 }
 
