@@ -410,8 +410,38 @@ function prerenderTextPages() {
       const n = prerender(outDir);
       console.log(`\n  ✓ prerendered ${n} text pages + sitemap.xml`);
       verifyStyleHash.call(this, outDir, root);
+      verifyInlined.call(this, outDir);
     },
   };
+}
+
+// The site's Content-Security-Policy as public/.htaccess sends it: the one
+// source for what the build may inline as a data: URL and for the gate that
+// holds what ships to it. A data: URL is loaded under the directive of
+// whatever loads it: an image's img-src, a font's font-src, and anything
+// fetched (a JSON's ?url) connect-src, where 'self' alone blocks it.
+const contentPolicy = () => Object.fromEntries(
+  /Content-Security-Policy "([^"]+)"/.exec(fs.readFileSync(resolve(HERE, 'public/.htaccess'), 'utf8'))[1]
+    .split(';').map(d => d.trim().split(/\s+/)).filter(([k]) => k).map(([k, ...v]) => [k, v]));
+const directiveFor = mime => (mime.startsWith('image/') ? 'img-src' : mime.startsWith('font/') ? 'font-src' : 'connect-src');
+const allowsData = (policy, mime) => (policy[directiveFor(mime)] ?? policy['default-src'] ?? []).includes('data:');
+// The type an asset would be inlined as, by its name, as Vite types it.
+const MIME_BY_EXT = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml', webp: 'image/webp', avif: 'image/avif', ico: 'image/x-icon', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', otf: 'font/otf' };
+function inlineUnderPolicy(file) {
+  const mime = MIME_BY_EXT[/\.([a-z0-9]+)(?:\?.*)?$/i.exec(file)?.[1]?.toLowerCase()] ?? 'application/octet-stream';
+  // undefined keeps Vite's own size limit; false keeps the file a file.
+  return allowsData(contentPolicy(), mime) ? undefined : false;
+}
+
+// Every data: URL the build ships, held to the policy that will load it.
+function verifyInlined(outDir) {
+  const policy = contentPolicy(), dir = resolve(outDir, 'assets'), found = [];
+  for (const name of fs.readdirSync(dir).filter(n => /\.(js|css)$/.test(n))) {
+    for (const [, mime] of fs.readFileSync(resolve(dir, name), 'utf8').matchAll(/data:([a-z]+\/[a-z0-9.+-]+)[;,]/gi)) found.push({ name, mime: mime.toLowerCase() });
+  }
+  const blocked = found.filter(f => !allowsData(policy, f.mime));
+  if (blocked.length) this.error(`csp-inline: ${blocked.map(b => `${b.name} inlines ${b.mime} as a data: URL, which ${directiveFor(b.mime)} in public/.htaccess blocks`).join('; ')}`);
+  console.log(`  ✓ csp-inline: ${found.length} data: URLs shipped, each a type the policy loads from data: (${[...new Set(found.map(f => f.mime))].join(', ')})`);
 }
 
 function verifyStyleHash(outDir, root) {
@@ -449,6 +479,7 @@ function verifyStyleHash(outDir, root) {
 export default defineConfig({
   plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaWheelPlugin(), euphoniaThemesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), euphoniaSheetsPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), verifyEuphoniaThemesPlugin(), prerenderTextPages()],
   build: {
+    assetsInlineLimit: inlineUnderPolicy,
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
     chunkSizeWarningLimit: 600,
