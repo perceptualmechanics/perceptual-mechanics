@@ -43,7 +43,7 @@ function catalog(items) {
 // there for a screen reader. Everything to read is in
 // its panel: the contents, each region's chapter, the moment shown, how the
 // map is made, the classes and the games.
-function mapStage({ classes, regions, adventures, hidden, people }, world, fixtures, calendars) {
+function mapStage({ classes, regions, adventures, hidden, people, sheets }, world, fixtures, calendars) {
   const globe = `<div class="map-cell"><div class="map-disc" tabindex="0" role="group" aria-label="The globe" aria-describedby="map-help">
 <canvas class="map-ambient" aria-hidden="true"></canvas>
 <canvas aria-hidden="true"></canvas>
@@ -56,7 +56,7 @@ ${globe}
 <button type="button" class="map-panel-close" aria-label="Close panel">&#215;</button>
 <p class="map-panel-back" hidden><button type="button">Contents</button></p>
 <h2 id="map-panel-title" class="map-panel-title" tabindex="-1"></h2>
-${panelSections({ classes, regions, adventures, hidden, people }, world, fixtures, calendars)}
+${panelSections({ classes, regions, adventures, hidden, people, sheets }, world, fixtures, calendars)}
 <section class="map-panel-pick" aria-labelledby="map-panel-pick-title" hidden>
 <h3 id="map-panel-pick-title">The place you picked</h3>
 <dl class="map-panel-facts"></dl>
@@ -140,14 +140,20 @@ ${catalog(tongues.unfound.map(u => `<li><span class="t">${esc(u.language)}</span
 // book's Notable People in its own order, subsections and hooks included
 // (euphonia.people.json). A reader can narrow it to one region or search it
 // by name (euphonia.people.js); without script it's all there, in order.
+// Someone with a character sheet the site can show links to it, with the
+// class its title gives (euphonia.sheets.json).
 const PLAIN = s => s.replace(/\*+/g, '');
-function peoplePage(people, status) {
+function peoplePage(people, status, sheets) {
+  const sheet = name => {
+    const sh = sheets.find(x => x.name === name);
+    return sh ? `<a href="/euphonia/sheets/${esc(sh.file)}">Character sheet</a> (${esc(sh.line)})` : '';
+  };
   const groupOf = (id, title, body) => `<section class="people-group" data-group="${id}" aria-labelledby="people-${id}">
 <h3 id="people-${id}">${esc(title)}</h3>
 ${body}
 </section>`;
   const regional = people.regions.map(r => groupOf(slug(r.region), r.region, `${r.intro ? `<p class="note">${inline(r.intro)}</p>\n` : ''}<ul class="catalog people-list">
-${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="t">${esc(p.name)}</span><span class="e"><a href="#${slug(r.region)}">${esc(r.region)}</a></span><p>${inline(p.text)}</p></li>`).join('\n')}
+${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="t">${esc(p.name)}</span><span class="e"><a href="#${slug(r.region)}">${esc(r.region)}</a>${sheet(p.name) ? ` · ${sheet(p.name)}` : ''}</span><p>${inline(p.text)}</p></li>`).join('\n')}
 </ul>`));
   // Notable People's blocks, as the book has them: its sections (###) are
   // each a person or a pair, found by name; the paragraphs before them say
@@ -155,7 +161,7 @@ ${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="
   let open = false;
   const notable = people.notable.blocks.map(b => {
     if (b.kind === 'heading' && b.level === 3) {
-      const html = `${open ? '</div>\n' : ''}<div class="person" data-name="${esc(b.text)}"><h4>${esc(b.text)}</h4>`;
+      const html = `${open ? '</div>\n' : ''}<div class="person" data-name="${esc(b.text)}"><h4>${esc(b.text)}</h4>${sheet(b.text) ? `<p class="note">${sheet(b.text)}</p>` : ''}`;
       open = true;
       return html;
     }
@@ -194,7 +200,7 @@ function builder() {
 // map shows (its readouts, filled as time runs); how the map is made; the
 // classes; the games; and each region's chapter, as a template the panel
 // copies when the region opens.
-function panelSections({ classes, regions, adventures, hidden, people }, world, fixtures, calendars, relief = reliefData()) {
+function panelSections({ classes, regions, adventures, hidden, people, sheets }, world, fixtures, calendars, relief = reliefData()) {
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
   const versions = [...new Set(world.provenance.files.map(f => f.version))].join(' and ');
@@ -236,7 +242,7 @@ ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span 
 <section class="map-panel-page" data-page="games" data-title="Adventures and Hooks" hidden>
 ${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
 </section>
-${peoplePage(people.data, regions.status)}
+${peoplePage(people.data, regions.status, sheets.data)}
 ${ribbonsPage(tonguesData())}
 ${regions.data.map(r => `<template class="map-chapter" data-region="${slug(r.name)}">
 ${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).join('\n')}

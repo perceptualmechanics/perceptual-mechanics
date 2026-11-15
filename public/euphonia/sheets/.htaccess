@@ -1,0 +1,11 @@
+# The People page's character sheets (euphonia.sheets.json): pages to read,
+# each written by the book's sheet generator with its styles inline, in
+# style attributes the site's policy (public/.htaccess) refuses. Here, and
+# only here, inline styles are allowed, and nothing else runs: no script at
+# all, nothing loaded from elsewhere, no forms, no frames. verify-euphonia
+# holds every sheet in this folder script-free and self-contained (Scott,
+# 15 November 2026). This replaces the site's policy for this folder; the
+# other security headers still come from public/.htaccess.
+<IfModule mod_headers.c>
+  Header set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+</IfModule>

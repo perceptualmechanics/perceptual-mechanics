@@ -9,7 +9,7 @@ import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'subclasses', 'items', 'people', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
+const FILES = ['classes', 'subclasses', 'items', 'people', 'sheets', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -177,6 +177,33 @@ export function verifyEuphonia(d = euphoniaData()) {
   }
   if (people.notable.title !== 'Notable People' || !people.notable.blocks.length || people.notable.blocks.some(b => b.kind === 'heading' && ![3, 4].includes(b.level))) fail('euphonia.people.json: Notable People is missing or not the book\'s shape');
 
+  // The character sheets the People page links (euphonia.sheets.json, copied
+  // into public/euphonia/sheets): each one a person the page shows, its file
+  // there and titled with their name and the class it lists, its text clean,
+  // with no script and nothing from elsewhere, its one link back to the
+  // People page; no other page in the folder; and the folder's own policy,
+  // which lets the sheets' inline styles through and runs no script.
+  const SHEETS = 'public/euphonia/sheets/';
+  const unescape = t => t.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+    .replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => ({ lt: '<', gt: '>', quot: '"', apos: "'", amp: '&' })[e]);
+  const shown = new Set([...people.regions.flatMap(r => r.people.map(p => p.name)), ...people.notable.blocks.filter(b => b.kind === 'heading' && b.level === 3).map(b => b.text)]);
+  const files = d.sheetFiles ?? (existsSync(new URL(SHEETS, ROOT)) ? readdirSync(new URL(SHEETS, ROOT)).filter(f => f.endsWith('.html')) : []);
+  const sheetText = d.sheetText ?? (f => read(SHEETS + f));
+  for (const sh of d.sheets.data) {
+    const at = `character sheet ${sh.file}`;
+    if (!shown.has(sh.name)) { fail(`${at}: ${sh.name} isn't on the People page`); continue; }
+    if (!files.includes(sh.file)) { fail(`${at}: not in ${SHEETS}`); continue; }
+    const src = sheetText(sh.file), title = unescape(src.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '').trim();
+    if (title !== `${sh.name} (${sh.line})`) fail(`${at}: titled "${title}", not ${sh.name} (${sh.line})`);
+    if (/<script|<iframe|<object|<embed|\son\w+\s*=/i.test(src)) fail(`${at}: it carries a script`);
+    const links = [...src.matchAll(/(?:src|href)\s*=\s*["']([^"']*)/g)].map(m => m[1]);
+    if (links.some(l => l !== '/euphonia/#people') || /url\((?!["']?(?:data:|#))/.test(src)) fail(`${at}: it links or loads ${links.filter(l => l !== '/euphonia/#people').join(', ') || 'something from elsewhere'}`);
+    const why = problems(unescape(src.replace(/<style[\s\S]*?<\/style>|<[^>]+>/g, ' ')), d.rules);
+    if (why.length) fail(`${at}: its text has ${why.join(', ')}`);
+  }
+  for (const f of files) if (!d.sheets.data.some(sh => sh.file === f)) fail(`${SHEETS}${f}: a page no person links`);
+  if (!/script-src 'none'/.test(d.sheetPolicy ?? (existsSync(new URL(`${SHEETS}.htaccess`, ROOT)) ? read(`${SHEETS}.htaccess`) : ''))) fail(`${SHEETS}.htaccess: no policy that runs no script`);
+
   // The Wheel behind the globe: every plane the table files by height and
   // bearing reads as a place on it, no two share a place, and each of the
   // Revelator's five roads runs through two or more of them.
@@ -205,7 +232,7 @@ export function verifyEuphonia(d = euphoniaData()) {
     for (const p of problemsFound) log.push(`  ${p}`);
   } else {
     const n = k => d[k].data.length;
-    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${d.items.data.items.length} items and ${d.items.data.weapons.length} period weapons, ${people.regions.reduce((n, r) => n + r.people.length, 0)} people in the regions besides Notable People, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
+    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${d.items.data.items.length} items and ${d.items.data.weapons.length} period weapons, ${people.regions.reduce((n, r) => n + r.people.length, 0)} people in the regions besides Notable People, ${d.sheets.data.length} character sheets shown (${d.sheets.withheld.length} waiting), ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
 }

@@ -1,0 +1,609 @@
+{
+ "provenance": {
+  "source": "Euphonia.md",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "6f64b5863de869c6763ff17b93e67ac7011022814c8edd4ff955a30662d6b9da",
+  "modified": "2026-11-15T10:44:15-05:00",
+  "exporter": "class-kit/site_export.py",
+  "exporter_version": 21,
+  "rules": {
+   "banned": [
+    "eladrin",
+    "Feywild",
+    "Shadowfell",
+    "changeling",
+    "genasi",
+    "Seelie",
+    "Unseelie",
+    "Imbas",
+    "Dungeons & Dragons",
+    "D&D"
+   ],
+   "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
+  }
+ },
+ "withheld": [
+  {
+   "where": "Ser Marin Zorzi · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Étaín of the Ford · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Tsitsi · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Yusuf Rais · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Wäldä Mika'el · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Zanetta Bon · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Anselme Lafrenaye · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Tadhg Ó Laoi · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Morfudd Prys · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Matthias Kessler · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Simon Horowitz · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ilyanor Sael · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Waman Illa · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kesavan Vaidyan · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kit Harrow · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Čhaŋté Wašté Wiŋ · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Tonderai Shumba · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Gennaro Esposito · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Fra Bertrand de Montclar · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Daeng Calla · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Simbarashe Moyo · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Amritnath · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ned Ashcombe · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Mustafa Remzi Efendi · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Akinwale · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Farrokh of Isfahan · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Sehpin · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Lu Qingxu · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Shi Yuanjing · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Tachibana Chiyo · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Dom Garcia Nsaku · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Nurbibi · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Rashid bin Khamis al-Ghafiri · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Doña Isabel Cuauhtzin · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Brother Joris Vanhove · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Nyarai Soko · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kilimoar · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Golnar · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Hu Lanxin · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Willka Mamani · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Rakhmabai Deshmukh · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kaiawa · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Buatu Makaya · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Nafisa al-Qalyubiyya · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Fadzai Shoko · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Aisulu · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Aj K'in Kuch · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Akosua Nyarko · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Alfa Mahmud Gurdu · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ambuya Rudo Gumbo · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ammakka · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ana Kitumba · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Asiga · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Avdotya Shchukina · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Avetik of Julfa · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ayoka · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Mwalimu Bakari Shee · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Bibi Oysha · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Brás Furtado · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Dona Catarina de Sá · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Chea Sok · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Licenciado Diego Ruiz de Lezcano · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Fusipala · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Gelong Tsereng · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Gottlieb von Schleich · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Gu Wenyuan · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Hafız Ömer · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Hoʻolulu · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Iliqa · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Dona Isabel Mvemba · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kenzhe · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Khadijeh Khatun · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kima Ismare · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kunhi Ayesha · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kunwar Ratan Singh · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Kusi Wallpa · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Manekbai Parekh · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Munyaradzi Shava · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Nane Gulbahar · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ndona Nsimba · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ok Rye-hwa · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Olaniyi · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Osaretin · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Ponni · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Saadat Ali · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Sarongelug · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Shen Xuanji · character sheet",
+   "reasons": [
+    "bracket",
+    "the creature type used as prose (the book says fae)"
+   ]
+  },
+  {
+   "where": "Shiri · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Shushan Ghukasian · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Tetua · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Teungku Fatimah · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Tinashe Gumbo · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Tseren Dorji · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  },
+  {
+   "where": "Zhamal-apa · character sheet",
+   "reasons": [
+    "bracket"
+   ]
+  }
+ ],
+ "data": []
+}
