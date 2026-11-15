@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "29304a668b680cd019f8d8ecab920a2b6e6ec5d22ee3d440236bfbee0e35f083",
-  "modified": "2026-11-15T06:35:19-05:00",
+  "sha256": "c69ef55dd2d50bc0320883226f14201c53457c30085b5389cbe19ece18c20388",
+  "modified": "2026-11-15T08:27:02-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 19,
   "rules": {
@@ -237,7 +237,7 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "A strip of yellow paper written in cinnabar by a Daoist master, in a script meant for spirits rather than people. You paste it on the bed, the sleeper or the cursed thing.\n\nA *fu* holds one spell, written into it. Anyone can use it, whatever their class: paste it on yourself, a willing creature or an object within reach as a Magic action (an unwilling creature can't be papered: put an area spell on an object instead), and the spell takes effect as if cast at its lowest level (an area spell is centered on the paper), with a save DC of 13 and no Concentration (it lasts its full duration or until the paper is torn off). Any creature within reach of the paper can tear it off as a Utilize action, which is how a friend breaks a *Calm Emotions* and how a spirit's servant gets at a sleeper. Common papers hold *Sanctuary* or *Protection from Evil and Good*; uncommon ones hold *Calm Emotions* or *Remove Curse*.\n\nThe ones pasted over doors on the fifteenth day of the seventh month are the strongest, or so the masters say.\n\n*A living tradition.* *Fu* are a real part of Daoist practice, written and used today."
+    "text": "A strip of yellow paper written in cinnabar by a Daoist master, in a script meant for spirits rather than people. You paste it on the bed, the sleeper or the cursed thing.\n\nA *fu* holds one spell, written into it. Anyone can use it, whatever their class: paste it on yourself, a willing creature or an object within reach as a Magic action (an unwilling creature can't be papered: put an area spell on an object instead), and the spell takes effect as if cast at its lowest level (an area spell is centered on the paper), with a save DC of 13 and no Concentration (it lasts its full duration or until the paper is torn off). Any creature within reach of the paper can tear it off as a Utilize action, which is how a friend breaks a *Calm Emotions* and how a spirit's servant gets at a sleeper. Common papers hold *Sanctuary*; uncommon ones hold *Protection from Evil and Good*, *Calm Emotions* or *Remove Curse*.\n\nThe ones pasted over doors on the fifteenth day of the seventh month are the strongest, or so the masters say.\n\n*A living tradition.* *Fu* are a real part of Daoist practice, written and used today."
    },
    {
     "name": "Talismanic Shirt",
