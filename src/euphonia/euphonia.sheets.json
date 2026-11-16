@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "a62a20720b2393a42de757d3fd1f46ffb2a4dd5cc086a9bac67b037c2226b17d",
-  "modified": "2026-11-16T08:36:25-05:00",
+  "sha256": "6363181cfa448c318f0e073421ea33656468ab12e8ac43eeeccf0712aa0f887b",
+  "modified": "2026-11-16T10:27:36-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 28,
   "rules": {
@@ -297,6 +297,12 @@
    "file": "show_vitalist.html"
   },
   {
+   "name": "Abbas-qoli the Teller",
+   "title": "Abbas-qoli the Teller (Courtier 7, Verse)",
+   "line": "Courtier 7, Verse",
+   "file": "people_abbas_qoli.html"
+  },
+  {
    "name": "Aisulu",
    "title": "Aisulu (Barbarian 7, Path of the Wild Heart)",
    "line": "Barbarian 7, Path of the Wild Heart",
@@ -319,6 +325,12 @@
    "title": "Alfa Mahmud Gurdu (Wizard 15, Abjurer)",
    "line": "Wizard 15, Abjurer",
    "file": "people_alfa_mahmud_gurdu.html"
+  },
+  {
+   "name": "Amai Rutendo Chigumba",
+   "title": "Amai Rutendo Chigumba (Counsellor 8, Majordomo)",
+   "line": "Counsellor 8, Majordomo",
+   "file": "people_amai_rutendo_chigumba.html"
   },
   {
    "name": "Ambuya Rudo Gumbo",
@@ -381,6 +393,12 @@
    "file": "people_bras_furtado.html"
   },
   {
+   "name": "Brites Fagundes",
+   "title": "Brites Fagundes (Courtier 4, Art)",
+   "line": "Courtier 4, Art",
+   "file": "people_brites_fagundes.html"
+  },
+  {
    "name": "Dona Catarina de Sá",
    "title": "Dona Catarina de Sá (Counsellor 11, Majordomo)",
    "line": "Counsellor 11, Majordomo",
@@ -393,16 +411,46 @@
    "file": "people_chea_sok.html"
   },
   {
+   "name": "Chuqui Ocllo",
+   "title": "Chuqui Ocllo (Counsellor 6, Factor)",
+   "line": "Counsellor 6, Factor",
+   "file": "people_chuqui_ocllo.html"
+  },
+  {
+   "name": "Đào Thị Lựu",
+   "title": "Đào Thị Lựu (Courtier 5, Art)",
+   "line": "Courtier 5, Art",
+   "file": "people_dao_thi_luu.html"
+  },
+  {
    "name": "Licenciado Diego Ruiz de Lezcano",
    "title": "Licenciado Diego Ruiz de Lezcano (Cleric 9, War)",
    "line": "Cleric 9, War",
    "file": "people_diego_ruiz_de_lezcano.html"
   },
   {
+   "name": "Domingas da Costa",
+   "title": "Domingas da Costa (Cleric 5, Life)",
+   "line": "Cleric 5, Life",
+   "file": "people_domingas_da_costa.html"
+  },
+  {
+   "name": "Ferhad Usta",
+   "title": "Ferhad Usta (Courtier 6, Art)",
+   "line": "Courtier 6, Art",
+   "file": "people_ferhad_usta.html"
+  },
+  {
    "name": "Fusipala",
    "title": "Fusipala (Counsellor 9, Majordomo)",
    "line": "Counsellor 9, Majordomo",
    "file": "people_fusipala.html"
+  },
+  {
+   "name": "Gaukhar",
+   "title": "Gaukhar (Courtier 6, Verse)",
+   "line": "Courtier 6, Verse",
+   "file": "people_gaukhar.html"
   },
   {
    "name": "Gelong Tsereng",
@@ -429,6 +477,12 @@
    "file": "people_hafiz_omer.html"
   },
   {
+   "name": "Hinewai",
+   "title": "Hinewai (Bard 7, College of Lore)",
+   "line": "Bard 7, College of Lore",
+   "file": "people_hinewai.html"
+  },
+  {
    "name": "Hoʻolulu",
    "title": "Hoʻolulu (Physician 8, Hedge Witch)",
    "line": "Physician 8, Hedge Witch",
@@ -447,6 +501,24 @@
    "file": "people_isabel_mvemba.html"
   },
   {
+   "name": "Iya Adunni",
+   "title": "Iya Adunni (Counsellor 9, Spymaster)",
+   "line": "Counsellor 9, Spymaster",
+   "file": "people_iya_adunni.html"
+  },
+  {
+   "name": "Kalehua",
+   "title": "Kalehua (Barbarian 5, Path of the Wild Heart)",
+   "line": "Barbarian 5, Path of the Wild Heart",
+   "file": "people_kalehua.html"
+  },
+  {
+   "name": "Kawennanoron",
+   "title": "Kawennanoron (Counsellor 8, Majordomo)",
+   "line": "Counsellor 8, Majordomo",
+   "file": "people_kawennanoron.html"
+  },
+  {
    "name": "Kenzhe",
    "title": "Kenzhe (Ranger 9, Mortal Hunter)",
    "line": "Ranger 9, Mortal Hunter",
@@ -457,6 +529,12 @@
    "title": "Khadijeh Khatun (Counsellor 11, Spymaster)",
    "line": "Counsellor 11, Spymaster",
    "file": "people_khadijeh_khatun.html"
+  },
+  {
+   "name": "Kichibei",
+   "title": "Kichibei (Natural Philosopher 5, Experimentalist)",
+   "line": "Natural Philosopher 5, Experimentalist",
+   "file": "people_kichibei.html"
   },
   {
    "name": "Kima Ismare",
@@ -483,6 +561,12 @@
    "file": "people_kusi_wallpa.html"
   },
   {
+   "name": "Mai Raji",
+   "title": "Mai Raji (Paladin 5, Oath of Devotion)",
+   "line": "Paladin 5, Oath of Devotion",
+   "file": "people_mai_raji.html"
+  },
+  {
    "name": "Manekbai Parekh",
    "title": "Manekbai Parekh (Counsellor 11, Factor)",
    "line": "Counsellor 11, Factor",
@@ -501,10 +585,22 @@
    "file": "people_nane_gulbahar.html"
   },
   {
+   "name": "Ndona Mvita",
+   "title": "Ndona Mvita (Courtier 5, Verse)",
+   "line": "Courtier 5, Verse",
+   "file": "people_ndona_mvita.html"
+  },
+  {
    "name": "Ndona Nsimba",
    "title": "Ndona Nsimba (Druid 9, Circle of the Land)",
    "line": "Druid 9, Circle of the Land",
    "file": "people_ndona_nsimba.html"
+  },
+  {
+   "name": "Neeltje Claesdochter",
+   "title": "Neeltje Claesdochter (Druid 4, Circle of the Land)",
+   "line": "Druid 4, Circle of the Land",
+   "file": "people_neeltje_claesdochter.html"
   },
   {
    "name": "Ok Rye-hwa",
@@ -525,6 +621,24 @@
    "file": "people_osaretin.html"
   },
   {
+   "name": "Panay",
+   "title": "Panay (Druid 6, Circle of the Land)",
+   "line": "Druid 6, Circle of the Land",
+   "file": "people_panay.html"
+  },
+  {
+   "name": "Perundevi",
+   "title": "Perundevi (Counsellor 6, Majordomo)",
+   "line": "Counsellor 6, Majordomo",
+   "file": "people_perundevi.html"
+  },
+  {
+   "name": "Piero Neri",
+   "title": "Piero Neri (Cleric 5, Life)",
+   "line": "Cleric 5, Life",
+   "file": "people_piero_neri.html"
+  },
+  {
    "name": "Ponni",
    "title": "Ponni (Ranger 3, Hidden Killer)",
    "line": "Ranger 3, Hidden Killer",
@@ -535,6 +649,18 @@
    "title": "Saadat Ali (Warlock 4, Dreamlord)",
    "line": "Warlock 4, Dreamlord",
    "file": "people_saadat_ali.html"
+  },
+  {
+   "name": "Saliha Hatun",
+   "title": "Saliha Hatun (Counsellor 7, Factor)",
+   "line": "Counsellor 7, Factor",
+   "file": "people_saliha_hatun.html"
+  },
+  {
+   "name": "Sardaana",
+   "title": "Sardaana (Druid 6, Circle of the Land)",
+   "line": "Druid 6, Circle of the Land",
+   "file": "people_sardaana.html"
   },
   {
    "name": "Sarongelug",
@@ -561,6 +687,12 @@
    "file": "people_shushan_ghukasian.html"
   },
   {
+   "name": "Tapiwa Marufu",
+   "title": "Tapiwa Marufu (Bard 5, College of Lore)",
+   "line": "Bard 5, College of Lore",
+   "file": "people_tapiwa_marufu.html"
+  },
+  {
    "name": "Tetua",
    "title": "Tetua (Courtier 4, Verse)",
    "line": "Courtier 4, Verse",
@@ -583,6 +715,18 @@
    "title": "Tseren Dorji (Fighter 9, Battle Master)",
    "line": "Fighter 9, Battle Master",
    "file": "people_tseren_dorji.html"
+  },
+  {
+   "name": "Wälättä Śellase",
+   "title": "Wälättä Śellase (Cleric 4, Light)",
+   "line": "Cleric 4, Light",
+   "file": "people_walatta_sellase.html"
+  },
+  {
+   "name": "Wang Yuezhen",
+   "title": "Wang Yuezhen (Bard 6, College of Lore)",
+   "line": "Bard 6, College of Lore",
+   "file": "people_wang_yuezhen.html"
   },
   {
    "name": "Zhamal-apa",

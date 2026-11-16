@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "a62a20720b2393a42de757d3fd1f46ffb2a4dd5cc086a9bac67b037c2226b17d",
-  "modified": "2026-11-16T08:36:25-05:00",
+  "sha256": "6363181cfa448c318f0e073421ea33656468ab12e8ac43eeeccf0712aa0f887b",
+  "modified": "2026-11-16T10:27:36-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 28,
   "rules": {
@@ -28,7 +28,7 @@
  "data": {
   "opening": [
    "Euphonia is a fantasy roleplaying setting for the 2024 fifth-edition rules: our own world in the year 1668, where magic is real, history keeps its shape, and the African empire of Mutapa never fell.",
-   "In the year 1668, the world has never been more open. The Ottomans, the crowned heads of Europe, Qing China and the upstart empire of Mutapa vie with each other for dominance and victory in the great game of politics. A bloody war of resources in Sudamerica is about to explode across the continent, as the peoples of North America keep a wary eye on the European colonists that have established themselves on the East Coast.",
+   "In the year 1668, the world has never been more open. The Ottomans, the crowned heads of Europe, Qing China and the upstart empire of Mutapa vie with each other for dominance and victory in the great game of politics. A bloody war of resources in South America is about to explode across the continent, as the nations of North America keep a wary eye on the European colonies along their Atlantic shore.",
    "The winds of change are blowing full-force. The old hierarchies of magic and faith have been challenged by natural philosophers and thinkers who don't bother with spells. The Wild Hunt of all peoples beats at the frontiers, raiding and stealing people for unknown purposes. Buried underneath the new neighborhoods of booming cities are old tombs, catacombs filled with threats and the promise of the lost treasures of a thousand ancient empires. Wealth beyond imagining could be yours, as could the ruin of nations."
   ],
   "world": [
