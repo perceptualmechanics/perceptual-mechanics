@@ -91,10 +91,12 @@ const regions = places.regions.map(regionShape);
 // across the meridian ring, thin brass under its halo. Zooming in makes room, and every region's
 // chapter is in the panel's contents. Boxes are centred on (x, y), with
 // each name measured once per type size: reading the layout back each frame
-// would lay out the whole page each time.
+// would lay out the whole page each time. Lettered names, bare type with no
+// button round them, keep an em clear of each other side by side: closer
+// than a word space (a quarter em), two names read as one.
 function place(boxes, open) {
   const placed = [];
-  const blockerOf = b => placed.find(o => Math.abs(b.x - o.x) < (b.w + o.w) / 2 && Math.abs(b.y - o.y) < (b.h + o.h) / 2);
+  const blockerOf = b => placed.find(o => Math.abs(b.x - o.x) < (b.w + o.w) / 2 + Math.max(b.clear ?? 0, o.clear ?? 0) && Math.abs(b.y - o.y) < (b.h + o.h) / 2);
   const inside = b => [[-1, -1], [1, -1], [-1, 1], [1, 1]].every(([sx, sy]) => open(b.x + sx * b.w / 2, b.y + sy * b.h / 2));
   for (const b of [...boxes].sort((a, c) => c.spread - a.spread)) {
     const blocker = blockerOf(b);
@@ -284,9 +286,25 @@ export async function initMap(stage) {
   // line). Lettered once the glass frames their region, giving way to every
   // other name. The chapter carries them for a screen reader.
   const shapeRegion = new Map(world.polities.filter(q => q.kind === 'departs').map(q => [q.name, regions.find(r => r.name === q.region)]));
+  // A people whose town is on the shore was the coast: its name is lettered
+  // out over the sea from the town. The shore is the borders' band, and the
+  // sea lies where a step of it in any of eight directions leaves the land;
+  // seaward is the mean of those steps. A town with the sea all round (a
+  // small island) has no one seaward side, and its name stays centred on it.
+  const shore = borders.provenance.shore_deg;
+  const seaward = at => {
+    const wet = Array.from({ length: 8 }, (_, i) => i * Math.PI / 4)
+      .map(a => ({ lon: at.lon + shore * Math.cos(a) / Math.cos(at.lat * RAD), lat: at.lat + shore * Math.sin(a) }))
+      .filter(p => !onLand(data.land, p.lat, p.lon));
+    if (!wet.length || wet.length === 8) return null;
+    return { lon: wet.reduce((t, p) => t + p.lon, 0) / wet.length, lat: wet.reduce((t, p) => t + p.lat, 0) / wet.length };
+  };
   const lettered = [
     ...world.names.map(n => ({ name: n.name, kind: n.kind, at: { lon: n.lonlat[0], lat: n.lonlat[1] }, region: shapeRegion.get(n.of) })),
-    ...regions.flatMap(r => r.peoples.map(n => ({ name: n.name, kind: 'people', at: { lon: n.lon, lat: n.lat }, region: r }))),
+    ...regions.flatMap(r => r.peoples.map(n => {
+      const at = { lon: n.lon, lat: n.lat };
+      return { name: n.name, kind: 'people', at, region: r, sea: seaward(at) };
+    })),
   ];
   g.bookNames = lettered.map(n => {
     const span = Object.assign(document.createElement('span'), { className: `map-book-name is-${n.kind}`, textContent: n.name });
@@ -616,14 +634,16 @@ export async function initMap(stage) {
     [0, eps, -eps, 90 - eps, eps - 90].forEach((lat, k) => {
       const p = { lon: g.lon0 - CIRCLE_NAME_WEST, lat };
       if (g.zoom !== 1 || !faces(v, p)) { g.circleNames[k].hidden = true; return; }
-      const [x, y] = project([p.lon, p.lat]), { w, h } = g.circleSizes[k];
-      boxes.push({ circle: k, x: x + w / 2, y: y - h / 2, anchorY: y - h / 2, spread: -1, w, h });
+      const [x, y] = project([p.lon, p.lat]), { w, h, em } = g.circleSizes[k];
+      boxes.push({ circle: k, x: x + w / 2, y: y - h / 2, anchorY: y - h / 2, spread: -1, w, h, clear: em });
     });
     // The book's names, last of all.
-    lettered.forEach(({ at: p, region: r }, k) => {
+    lettered.forEach(({ at: p, region: r, sea }, k) => {
       if (!r || g.zoom < regionZoom(r) || !faces(v, p)) { g.bookNames[k].hidden = true; return; }
-      const [x, y] = project([p.lon, p.lat]), { w, h } = g.bookNameSizes[k];
-      boxes.push({ bookName: k, x, y, anchorY: y, spread: -2, w, h });
+      const [x, y] = project([p.lon, p.lat]), { w, h, em } = g.bookNameSizes[k];
+      // Seaward as the globe now turns: the side of the town the sea lies on.
+      const side = sea ? Math.sign(project([sea.lon, sea.lat])[0] - x) : 0;
+      boxes.push({ bookName: k, x: x + side * w / 2, y, anchorY: y, spread: -2, w, h, clear: em });
     });
     place(boxes, open);
     for (const { k, circle, bookName, x, y, shown } of boxes) {
@@ -748,7 +768,7 @@ export async function initMap(stage) {
     g.margin = REALM_REACH_REM * rem;
     const [ax, ay] = anchor(), f = fit(), margin = g.margin;
     g.rim = { x: (Math.min(ax, g.cssWidth - ax) - margin) / f, y: (Math.min(ay, g.cssHeight - ay) - margin) / f, margin: margin / f };
-    const measure = b => { b.hidden = false; return { w: b.offsetWidth, h: b.offsetHeight }; };
+    const measure = b => { b.hidden = false; return { w: b.offsetWidth, h: b.offsetHeight, em: parseFloat(getComputedStyle(b).fontSize) }; };
     g.labelSizes = g.buttons.map(measure);
     g.circleSizes = g.circleNames.map(measure);
     g.bookNameSizes = g.bookNames.map(measure);
