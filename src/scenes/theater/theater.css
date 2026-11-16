@@ -36,7 +36,10 @@
   color: #d8cdb8;
   font-family: 'Courier New', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 0.9rem 0.4rem 0.4rem;
+  /* On a phone held upright the speech strip (.tab-speech) takes the height
+     between the stage and the controls, so the column runs to the footer's
+     safe zone, clear of #site-title. */
+  padding: 0.9rem 0.4rem var(--footer-safe-zone);
 
 	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
 		padding: 1.6rem 1rem 0.6rem;
@@ -284,9 +287,18 @@
      house sits in the screen's padding-bottom strip — but the old comment
      here claimed a guarantee the stacking rules can't give it. */
   z-index: 4;
+  /* On a phone held upright a bubble set small enough to fit is 8.64px, too
+     small to read the scripts' own words, and a cowsay block can't wrap; the
+     speech goes to the strip under the stage instead (.tab-speech), and a
+     mark over the speaker says who (.tab-mark). Wherever the bubbles show
+     they are at least 12px: forty columns of Courier at 12px are 288px plus
+     padding, inside the 380px cap and the 346px of 72vw at 481px, the
+     narrowest window that shows them. */
+  display: none;
 
 	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
-		font-size: clamp(0.58rem, 1.5vw, 0.82rem);
+		display: block;
+		font-size: clamp(0.75rem, 1.5vw, 0.82rem);
 		max-width: min(72vw, 380px);
 	}
 
@@ -295,6 +307,33 @@
 	}
 }
 .tab-bubble.on { opacity: 1; }
+/* The speech, as wrapping text at reading size, on a phone held upright:
+   between the stage and the controls, taking the height left there and
+   scrolling only for the longest speeches (90% of the reel's 615 run under
+   115 characters, three lines here; the longest is 639), so neither the
+   stage nor the buttons move from line to line. */
+.tab-speech {
+  flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  width: 100%; max-width: 34rem; margin: 0; padding: 0.6rem 0.6rem 0;
+  font-size: 0.9375rem; line-height: 1.4; text-align: center; text-wrap: pretty;
+  color: #d8cdb8;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		display: none;
+	}
+}
+.tab-speech-name { display: block; font-weight: bold; font-size: 0.8em; letter-spacing: 0.06em; }
+/* Who is speaking, where the strip says what: a small ASCII mark over the
+   figure, in its colour. */
+.tab-mark {
+  position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%);
+  white-space: pre; font-size: 0.75rem; line-height: 1; font-weight: bold;
+  pointer-events: none;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		display: none;
+	}
+}
 .tab-bubble .bubble-name { display: block; font-weight: bold; opacity: 0.6; font-size: 0.85em; margin-bottom: 0.1em; }
 
 .tab-caption {

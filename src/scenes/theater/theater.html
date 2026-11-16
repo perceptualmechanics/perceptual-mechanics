@@ -33,6 +33,10 @@
     </section>
   </div>
 
+  <!-- The speech as text on a phone held upright (theater.css); the live
+       region below carries it to a screen reader, so this is hidden from one. -->
+  <p class="tab-speech" aria-hidden="true"></p>
+
   <div class="tab-controls" role="group" aria-label="Theater playback controls">
     <button type="button" class="tab-btn" data-act="prev" aria-label="Previous line">&larr; Previous</button>
     <button type="button" class="tab-btn" data-act="play" data-state="paused" aria-label="Play"><span data-when="playing">|| Pause</span><span data-when="paused">&gt; Play</span></button>

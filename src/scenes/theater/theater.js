@@ -132,8 +132,9 @@ const INTERSTITIALS = [
 ];
 
 class TheaterRenderer {
-  constructor({ stage, captionEl, slugEl, interstitialEl, srLive, characters, clipEl, timers }) {
+  constructor({ stage, captionEl, speechEl, slugEl, interstitialEl, srLive, characters, clipEl, timers }) {
     this.stage = stage;
+    this.speechEl = speechEl;
     this.captionEl = captionEl;
     this.slugEl = slugEl;
     this.interstitialEl = interstitialEl;
@@ -161,7 +162,8 @@ class TheaterRenderer {
   }
 
   clearBubbles() {
-    this.stage.querySelectorAll('.tab-bubble').forEach(b => b.remove());
+    this.stage.querySelectorAll('.tab-bubble, .tab-mark').forEach(b => b.remove());
+    this.speechEl.replaceChildren();
     Object.values(this.actors).forEach(a => a.classList.remove('talking'));
     this.captionEl.classList.remove('on');
     this.currentLine = null;
@@ -217,6 +219,20 @@ class TheaterRenderer {
     (el || this.stage).appendChild(bubble);
     this._placeBubble(bubble);
     this.timers.nextFrame(() => bubble.classList.add('on'));
+    // The same speech for the strip under the stage, and the mark over the
+    // speaker; the CSS shows these or the bubble, by the window.
+    const name = document.createElement('span');
+    name.className = 'tab-speech-name';
+    name.style.color = ch.color;
+    name.textContent = `${ch.name}${voice ? ' (voice)' : ''}`;
+    this.speechEl.replaceChildren(name, text);
+    if (el) {
+      const mark = document.createElement('span');
+      mark.className = 'tab-mark';
+      mark.setAttribute('aria-hidden', 'true');
+      mark.textContent = '( … )';
+      el.appendChild(mark);
+    }
   }
 
   _bubbleHtml(ch, text, voice) {
@@ -227,12 +243,17 @@ class TheaterRenderer {
   _placeBubble(bubble) {
     if (!this.clipEl) return;
     const bounds = this.clipEl.getBoundingClientRect();
+    // Side to side, inside the stage's own screen: held only inside the
+    // theater's clip, a 12px bubble over an end figure hung off the screen's
+    // edge into the frame (on a 768px tablet). Upward it may still rise past
+    // the screen into the room the clip allows.
+    const screen = this.stage.closest('.tab-screen')?.getBoundingClientRect() ?? bounds;
     const r = bubble.getBoundingClientRect();
     if (!r.width || !bounds.width) return;
     const margin = 4;
     let dx = 0;
-    if (r.right > bounds.right - margin) dx = (bounds.right - margin) - r.right;
-    if (r.left + dx < bounds.left + margin) dx = (bounds.left + margin) - r.left;
+    if (r.right > screen.right - margin) dx = (screen.right - margin) - r.right;
+    if (r.left + dx < screen.left + margin) dx = (screen.left + margin) - r.left;
     bubble.style.setProperty('--bubble-shift', `${Math.round(dx)}px`);
 
     let dy = 0;
@@ -328,7 +349,7 @@ export function createTheater(container, { preview = false } = {}) {
     claim = claimContainer(container);
 
     const renderer = new TheaterRenderer({
-      stage, captionEl, slugEl, interstitialEl, srLive,
+      stage, captionEl, speechEl: root.querySelector('.tab-speech'), slugEl, interstitialEl, srLive,
       characters: CHARACTERS, clipEl: root, timers,
     });
     let endCard = null;
