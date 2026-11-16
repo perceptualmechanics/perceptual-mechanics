@@ -306,13 +306,14 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
    panel leaves the tab order and an opening one can take focus at once. */
 .map-panel {
   position: absolute; top: 0; right: 0; width: 88%; height: 100%; box-sizing: border-box; z-index: 10;
-  background: var(--surface-deep); border-left: 1px solid var(--line); padding: 1.4rem 1.3rem 3rem;
+  --panel-top: 1.4rem; --panel-side: 1.3rem;
+  background: var(--surface-deep); border-left: 1px solid var(--line); padding: var(--panel-top) var(--panel-side) 3rem;
   overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) var(--surface-deep);
   transform: translateX(100%); visibility: hidden;
   transition: transform .5s cubic-bezier(.16, 1, .3, 1), visibility 0s linear .5s;
 
 	@media (min-width: 701px) {
-		width: 38%; padding: 1.4rem 2rem 3rem;
+		width: 38%; --panel-side: 2rem;
 	}
 }
 .map-panel.from-left { left: 0; right: auto; border-left: 0; border-right: 1px solid var(--line); transform: translateX(-100%); }
@@ -332,8 +333,17 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
 .map-peek-label { margin: 0; color: var(--text); font-size: 0.95rem; }
 .map-peek-back { font: inherit; font-size: 0.9rem; color: var(--accent); background: var(--surface); border: 1px solid var(--line-accent); padding: 0.3rem 0.8rem; cursor: pointer; white-space: nowrap; }
 .map-peek-back:hover, .map-peek-back:focus-visible { border-color: var(--accent); }
+/* The panel's head: the way back to Contents and the ×, kept in reach as the
+   page scrolls, on the panel's own ground so the text passes under it rather
+   than showing round the ×. It spans the panel's padding, and stuck it rises
+   to keep only the gap at its foot above the ×. */
+.map-panel-bar {
+  position: sticky; top: calc(0.4rem - 2 * var(--panel-top)); z-index: 2; display: flex; align-items: center; gap: 1rem;
+  margin: calc(-1 * var(--panel-top)) calc(-1 * var(--panel-side)) 0.4rem;
+  padding: var(--panel-top) calc(var(--panel-side) - 0.6rem) 0.4rem var(--panel-side); background: var(--surface-deep);
+}
 .map-panel-close {
-  position: sticky; top: 0; z-index: 2; display: block; width: max-content; margin: -0.6rem -0.6rem 0 auto;
+  display: block; margin-left: auto;
   background: none; border: 0; font: inherit; font-size: 1.2rem; line-height: 1; color: var(--text-quiet); cursor: pointer; padding: 0.5rem;
 }
 .map-panel-close:hover, .map-panel-close:focus-visible { color: var(--accent-bright); }
@@ -351,7 +361,7 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
 
 /* The panel's pages: one shown at a time, the contents leading to the rest. */
 .map-panel-page[hidden], .map-panel-back[hidden] { display: none; }
-.map-panel-back { margin: 0 0 0.4rem; }
+.map-panel-back { margin: 0; }
 .map-panel-back button, .map-panel-contents button {
   font: inherit; color: var(--accent); background: none; border: 0; padding: 0.15rem 0; cursor: pointer; text-align: left;
 }

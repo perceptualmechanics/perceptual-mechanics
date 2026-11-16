@@ -55,8 +55,10 @@ function mapStage({ classes, regions, adventures, hidden, people, sheets, welcom
 ${globe}
 </div>
 <div class="map-panel" role="dialog" aria-modal="false" aria-labelledby="map-panel-title">
-<button type="button" class="map-panel-close" aria-label="Close panel">&#215;</button>
+<div class="map-panel-bar">
 <p class="map-panel-back" hidden><button type="button">Contents</button></p>
+<button type="button" class="map-panel-close" aria-label="Close panel">&#215;</button>
+</div>
 <h2 id="map-panel-title" class="map-panel-title" tabindex="-1"></h2>
 ${panelSections({ classes, regions, adventures, hidden, people, sheets, welcome }, world, fixtures, calendars)}
 <section class="map-panel-pick" aria-labelledby="map-panel-pick-title" hidden>
