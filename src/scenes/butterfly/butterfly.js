@@ -366,15 +366,18 @@ export function createButterfly(container, { preview = false } = {}) {
   let paused = false;
 
   const butterflyPos = new THREE.Vector3();
+  let traced = false;
 
   function animate() {
     animId = requestAnimationFrame(animate);
     const dt = clock.tick();
     t += 0.008 * dt * 60;
 
-    stepCarry += PPS * dt;
-    const steps = Math.floor(stepCarry);
-    stepCarry -= steps;
+    // Under reduced motion the attractor is drawn whole in the first frame
+    // and then holds still: the figure without the tracing.
+    let steps;
+    if (reduceMotion) { steps = traced ? 0 : MAX_PTS; traced = true; }
+    else { stepCarry += PPS * dt; steps = Math.floor(stepCarry); stepCarry -= steps; }
 
     if (autoJitter && !reduceMotion) {
       rotVelX=rotVelX*.96+(Math.random()-.5)*.0008;

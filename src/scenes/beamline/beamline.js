@@ -1256,6 +1256,11 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     if (rawT >= 1) {
       vesselArc = ((stepFromArc + stepDelta) % totalLength + totalLength) % totalLength;
       beginLevyStep(vesselArc, tSec);
+    } else if (reduceMotion) {
+      // Under reduced motion the vessel hops from rest to rest at each step's
+      // end rather than gliding: the journey, and the stations it surfaces,
+      // without the continuous travel.
+      vesselArc = ((stepFromArc % totalLength) + totalLength) % totalLength;
     } else {
       const eased = smoothstep01(Math.max(0, rawT));
       const pos = stepFromArc + stepDelta * eased;
