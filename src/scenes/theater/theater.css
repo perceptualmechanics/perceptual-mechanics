@@ -466,13 +466,17 @@
 		gap: 0.5rem; padding: 0.5rem 1rem; flex-wrap: nowrap;
 	}
 }
+/* The buttons and the count take their larger size in landscape only from
+   622px: in a short window they flank #site-title (the short-landscape block
+   below), and back and pause at that size run 175px from a 1rem edge, which
+   clears the centred 239.6px title from W/2 - 119.8 >= 191, so W >= 622. */
 .tab-btn {
   font-family: 'Courier New', monospace;
   background: #1a120b; border: 1px solid #6b5638; border-radius: 3px;
   cursor: pointer; color: #d8cdb8;
   font-size: 0.74rem; padding: 0.26rem 0.5rem;
 
-	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+	@media (min-width: 701px), (min-width: 622px) and (orientation: landscape) {
 		font-size: 0.88rem; padding: 0.3rem 0.7rem;
 	}
 }
@@ -482,8 +486,31 @@
   opacity: 0.55; text-align: center;
   min-width: auto; font-size: 0.7rem;
 
-	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+	@media (min-width: 701px), (min-width: 622px) and (orientation: landscape) {
 		min-width: 5.5em; font-size: inherit;
+	}
+}
+
+/* A short landscape window: a phone held sideways, a small tablet, a laptop
+   with little height. The column is centred under the nav with the stage at
+   62vh, which puts the controls' foot at 84.5px + 0.81H (measured, H from 671
+   to 710px) and #site-title's top at H - 45px; they clear by the column's own
+   0.6rem foot only from H = 732px. Below it the controls share the title's
+   band (back and pause at the left edge, forward and the count at the right,
+   the open middle column leaving the centred title its place, and clicks
+   through it), and the column keeps the footer's safe zone, the screen
+   shrinking into what is left rather than overflowing. One query, so the four
+   can't disagree. */
+@media (orientation: landscape) and (max-height: 731px) {
+	.tab-root { padding: 0.4rem 1rem var(--footer-safe-zone); }
+	.tab-screen-frame { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+	.tab-screen { max-height: min(62vh, 100%); }
+	.tab-controls {
+		position: fixed; left: 0; right: 0; bottom: var(--site-title-bottom);
+		display: grid; grid-template-columns: auto auto 1fr auto auto; align-items: center;
+		padding: 0 1rem; pointer-events: none;
+		& > * { pointer-events: auto; }
+		& [data-act="next"] { grid-column: 4; }
 	}
 }
 

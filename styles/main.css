@@ -95,6 +95,9 @@
   --title-block-clear-mobile: 8rem;
 
   --footer-safe-zone: 4.5rem;
+  /* #site-title's distance from the bottom, which a scene's own controls
+     can share (Theater, in a short landscape window). */
+  --site-title-bottom: 1.2rem;
 
   --focus-ring-color: rgba(255, 255, 255, 0.75);
   --focus-ring: 2px solid var(--focus-ring-color);
@@ -226,7 +229,7 @@ html, body {
 
 #site-title-row {
   position: fixed;
-  bottom: 1.2rem; left: 0; right: 0;
+  bottom: var(--site-title-bottom); left: 0; right: 0;
   display: flex; justify-content: center;
   pointer-events: none;
   z-index: 400;
