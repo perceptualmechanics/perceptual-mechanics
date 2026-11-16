@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "feb1becdacff3a15d58b64cf0330817756f6b7c2bc4a625fbf13c267faf97b05",
-  "modified": "2026-11-15T17:44:15-05:00",
+  "sha256": "fa0edce28363a55fd53f6d8f0257b667409c3116eb0708849ea6b96a707ee206",
+  "modified": "2026-11-16T07:43:33-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 26,
   "rules": {
@@ -29,7 +29,7 @@
   "regions": [
    {
     "region": "Europe",
-    "intro": "The setting's own people here: where a party meets them, what they want and how a table uses them. Each has a pregen sheet except Sister Ondine.",
+    "intro": "The setting's own people here: where a party meets them, what they want and how a table uses them. Each has a pregen sheet except Sister Ondine, Neeltje Claesdochter and Piero Neri.",
     "people": [
      {
       "name": "Ser Marin Zorzi",
@@ -156,6 +156,24 @@
        "modern": "Galway",
        "country": "Ireland"
       }
+     },
+     {
+      "name": "Neeltje Claesdochter",
+      "text": "Leiden's ice-reader, who walks the frozen canals at dawn with a pole, an auger and a hedge charm her mother taught her, and says which ice will bear; the city licenses her through the fishmongers' guild for a few stuivers a year. Find her at her own *koek-en-zopie* stall on the Rhine, frying pancakes and refusing zopie to anyone who skated where she said not to. She can't read, has never been wrong about ice and wants her granddaughter to have the license before the guild gives it to a man with a book. An ally and a contact, and the warmest stall on the ice.",
+      "at": {
+       "name": "Leiden",
+       "modern": "The Hague",
+       "country": "Netherlands"
+      }
+     },
+     {
+      "name": "Piero Neri",
+      "text": "A wool-carder of Santo Spirito and a captain of the Misericordia, who has carried Florence's sick to the hospital under a black hood for nineteen years. Find him at the brotherhood's house on the cathedral square when the bell goes, or at his carding bench across the river with the hood folded on the stool beside him. He buried a foreign student last winter with no name and a lute, and wants the lute taken home to whoever is waiting for it. An ally, and the man to ask who in Florence is sick, poor, dying or newly arrived.",
+      "at": {
+       "name": "Florence",
+       "modern": "Florence",
+       "country": "Italy"
+      }
      }
     ]
    },
@@ -261,6 +279,24 @@
        "modern": "Lamu",
        "country": "Kenya"
       }
+     },
+     {
+      "name": "Tapiwa Marufu",
+      "text": "An mbira player who plays every bira in Sofala's new quarter from dusk to dawn, and by day tunes the guild's singing birds to mbira songs, which the guild says it never taught him and can't make him stop. Find him asleep under a shade tree at noon with the mbira on his chest, or after dark in any courtyard where the beer is out. He wants to play once for Simbarashe Moyo, who wrote the birds' first songs, and hear what the old man thinks. An ally, a welcome in every household in the quarter and the player any bira would hire.",
+      "at": {
+       "name": "Sofala",
+       "modern": "Beira",
+       "country": "Mozambique"
+      }
+     },
+     {
+      "name": "Amai Rutendo Chigumba",
+      "text": "Keeper of the king's granary at Sofala, who decides who eats from it and has never once asked anyone's business. Find her at the granary door at dusk with a ladle, a pot of sadza and the name of every newcomer that month; half the guild's journeymen ate from her pot in their first month in the city, and they still bring her the first of their wages. She wants the new granary's walls up before the rains and the sickness, and puts anyone who offers to help on the end of a hod. An ally, and the best-loved person in Sofala.",
+      "at": {
+       "name": "Sofala",
+       "modern": "Beira",
+       "country": "Mozambique"
+      }
      }
     ]
    },
@@ -288,7 +324,7 @@
      },
      {
       "name": "Wäldä Mika'el",
-      "text": "A *däbtära* of Gondar, an unordained church scholar, cantor and poet who writes God's secret names on healing scrolls for Christian, Muslim and Beta Israel clients alike. Find him in a courtyard where a child is sick, with a scroll he finished at dawn, or over coffee arguing unction with the monks from Gojjam; this year's council has made his client list a complicated document. He wants to go to Enfraz and argue with Zera Yacob, the old scholar there who tests every religion by reason. An ally or teacher, and a good friend to have when a *buda* charge is made.",
+      "text": "A *däbtära* of Gondar, an unordained church scholar, cantor and poet who writes God's secret names on healing scrolls for Christian, Muslim and Beta Israel clients alike. Find him in a courtyard where a child is sick, with a scroll he finished at dawn, or over a horn of *tej* arguing unction with the monks from Gojjam; this year's council has made his client list a complicated document. He wants to go to Enfraz and argue with Zera Yacob, the old scholar there who tests every religion by reason. An ally or teacher, and a good friend to have when a *buda* charge is made.",
       "at": {
        "name": "Gondar",
        "modern": "Gondar",
@@ -365,6 +401,33 @@
        "name": "Tabriz",
        "modern": "Tabriz",
        "country": "Iran"
+      }
+     },
+     {
+      "name": "Abbas-qoli the Teller",
+      "text": "A naqqal of Isfahan, who tells the *Shahnameh* in a coffeehouse off the Maidan with a stick for a sword and can make a room of grown men cry over Sohrab. Find him on his stool after the evening prayer, two tables from Farrokh of Isfahan, collecting coppers in a cloth cap and refusing to say what happens tomorrow. His daughter Parvaneh tells it better than he does, to the women of the quarter on the roofs on summer nights, and what he wants is one hall where they can both tell it. A contact who hears everything a coffeehouse says, and the best way to spend an evening in Isfahan.",
+      "at": {
+       "name": "Isfahan",
+       "modern": "Isfahan",
+       "country": "Iran"
+      }
+     },
+     {
+      "name": "Saliha Hatun",
+      "text": "A widow of Üsküdar who left her husband's fortune to a waqf that dresses poor brides, keeps her street's fountain cold with ice in summer and takes the quarter's orphans to the spring meadows once a year. Find her on the bench by the fountain she paid for, going through a bride's dress with the trustee and pricing the lace aloud. She wants the waqf to outlive her nephew, who is its trustee and has started to borrow from it. A patron for any job that ends in a wedding.",
+      "at": {
+       "name": "Üsküdar",
+       "modern": "Istanbul",
+       "country": "Turkey"
+      }
+     },
+     {
+      "name": "Wälättä Śellase",
+      "text": "A widow of Gondar whose tej is the best in the city and whose turn to host the mahbär of St Mary nobody forgets. Find her in her courtyard on the twenty-first of any month, Mary's day, pouring for priests, masons and a däbtära arguing on one bench, with her son's spear by the door; he's away with the emperor's army. She wants him home for Meskel, and knows what every household in her quarter is short of. An ally, a host and the person to ask before you try to help anyone in Gondar.",
+      "at": {
+       "name": "Gondar",
+       "modern": "Gondar",
+       "country": "Ethiopia"
       }
      }
     ]
@@ -471,6 +534,24 @@
        "modern": "Cotonou",
        "country": "Benin"
       }
+     },
+     {
+      "name": "Iya Adunni",
+      "text": "The mother of the palace market at Oyo Ile, who settles every quarrel in it before sundown and keeps every circle's turns in her head. Find her on a stool where the cloth row crosses the pepper row, eating bean cakes and listening to two women shout, beside a Mutapan lamp on a pole that cost more than she will ever say. She wants a second lamp, for the night market, and will trade a great deal of what she knows for it. An ally, and a judge whose verdicts the palace doesn't overturn.",
+      "at": {
+       "name": "Oyo Ile",
+       "modern": "Ilorin",
+       "country": "Nigeria"
+      }
+     },
+     {
+      "name": "Ndona Mvita",
+      "text": "A palm-wine seller of Mbanza Soyo, whose bench under the great tree in the plaza is the one place in the province where the Capuchin, the nganga, the Dutch factor and the count's shield-bearers drink together. Find her there at sundown, pouring from a gourd and repeating nothing she hears; nobody has started a fight at her bench twice. Her son is a mestre who teaches the faith in the villages, and she wants him ordained a priest, which the bishop in Luanda won't do for a Kongolese. An ally, a peacemaker and the person who knows who is quarreling with whom.",
+      "at": {
+       "name": "Mbanza Soyo",
+       "modern": "Soyo",
+       "country": "Angola"
+      }
      }
     ]
    },
@@ -567,6 +648,24 @@
        "name": "Agra",
        "modern": "Agra",
        "country": "India"
+      }
+     },
+     {
+      "name": "Perundevi",
+      "text": "Keeper of the chatram her mother endowed on the Alagar road outside Madurai, who has cooked for every Chithirai festival since she was nine. Find her at the cooking pits before dawn with forty pots on the fire and a ladle in each hand, asking every pilgrim where they walked from and remembering the answer. The village that owes her chatram its rice hasn't paid since Mysore's war, and she means to feed the festival anyway. The patron of the rice for the road (see Life Here), who pays in meals and in knowing every road into Madurai.",
+      "at": {
+       "name": "Madurai",
+       "modern": "Madurai",
+       "country": "India"
+      }
+     },
+     {
+      "name": "Mai Raji",
+      "text": "The cook of the langar at the Sikh sangat in Dhaka, who has fed Mughal soldiers, Bengali boatmen, Portuguese deserters and an Armenian merchant at one sitting, in one line. Find her at the iron griddle at dusk, slapping out flatbread and setting whoever is nearest to wash the pots. She wants news of the ninth Guru's party on the road to Assam, where her nephew rides as a cook, and whoever brings it eats free for a month. An ally, a host and the safest table in Bengal.",
+      "at": {
+       "name": "Dhaka",
+       "modern": "Dhaka",
+       "country": "Bangladesh"
       }
      }
     ]
@@ -673,6 +772,34 @@
        "modern": "Siem Reap",
        "country": "Cambodia"
       }
+     },
+     {
+      "name": "Wang Yuezhen",
+      "text": "A Suzhou *tanci* singer who plays the pipa in a teahouse by the Chang Gate, and has told the same love story every afternoon for eleven weeks, so that half the city's servants arrange their errands around it. Find her on a little stage with a cup of tea going cold beside her, stopping on the best line of the day and smiling while the room groans. Everyone talks under the music, so she knows everyone's business and keeps most of it; she wants to sing the last song on Tiger Hill, the one the old man sings. A contact for anything in Suzhou, and the voice for the last song (see Life Here).",
+      "at": {
+       "name": "the Chang Gate",
+       "modern": "Suzhou",
+       "province": "Jiangsu",
+       "country": "China"
+      }
+     },
+     {
+      "name": "Panay",
+      "text": "An Amis woman, the eldest sister of her house in a village on the east coast below the mountains, who runs its fields, its rice and its marriages. Find her on the house platform at dusk with betel and a jar of millet wine, feeding whoever came along the coast that day: a Chengtian trader, Atayal visitors, a Japanese castaway learning his first Amis words. She has set two husbands' things outside the door and is on good terms with both, and wants her youngest daughter married to a man who can sing, and Chengtian's soldiers kept on their own side of the mountains. A host and an ally, and the first open door on the east coast.",
+      "at": {
+       "name": "the east coast",
+       "modern": "Hualien",
+       "country": "Taiwan"
+      }
+     },
+     {
+      "name": "Đào Thị Lựu",
+      "text": "The head of a water-puppet guild in a village outside Thang Long, the first woman to keep the guild's book and swear its oath, which forbids teaching the tricks to anyone who might marry out of the village. She taught them to her daughters anyway and dared the elders to say so. Find her waist-deep in the village pond behind a split-bamboo screen, working a dragon on a long pole while the whole village eats on the bank; she wants her troupe to play for the Trịnh lord's court at New Year, and a Mutapan lamp to light the water. A host, a contact and a way into court.",
+      "at": {
+       "name": "Thang Long",
+       "modern": "Hanoi",
+       "country": "Vietnam"
+      }
      }
     ]
    },
@@ -778,6 +905,33 @@
        "modern": "Mexico City",
        "country": "Mexico"
       }
+     },
+     {
+      "name": "Kawennanoron",
+      "text": "A Mohawk matron of the Wolf Clan, of the Keepers of the Eastern Door, whose longhouse stands nearest the trail from Albany, so every traveler, Dutch trader, Mahican runner or French priest, eats her corn soup before anyone else's. Find her at the hearth by the door with the kettle on and a granddaughter beside her learning which guest gets which bowl. She arranges her clan's marriages and has never made a bad one, by her own account; she wants a husband for her granddaughter who is a good hunter, a better listener and not, this time, a Frenchman. A host, a matchmaker and the gate into the Confederacy from the east.",
+      "at": {
+       "name": "the Eastern Door",
+       "modern": "Schenectady",
+       "country": "United States of America"
+      }
+     },
+     {
+      "name": "Chuqui Ocllo",
+      "text": "A brewer of Cusco whose house's *aqha* is poured at Situa and at half the minkas in the valley, and whose courtyard is where the runners' widows sit in the afternoons. Find her stirring a great jar with her sleeves tied back, keeping track out loud of who owes whom a day's work, back three harvests. She has fed the Sapa Inca's officers, a captured Spanish muleteer and a huaca's keeper at the same bench without anyone leaving hungry or angry, and wants her son home from the Apurímac front in time to dig his own field. A host and a contact who knows everyone in Cusco, and what they owe.",
+      "at": {
+       "name": "Cusco",
+       "modern": "Cusco",
+       "country": "Peru"
+      }
+     },
+     {
+      "name": "Domingas da Costa",
+      "text": "A free woman from Angola who sells cooked food from a tray in Salvador's lower city and keeps the key to the Rosary brotherhood's chest. Find her on the steps of the Rosary church after Mass with the brotherhood's book open on her knees, counting coins twice so everyone can follow. She bought her own freedom a coin at a time and has helped buy six others since; she wants the seventh, the sister in the hook, free by October. A patron of the brotherhood's chest (see Life Here), who pays in food, favors and a welcome in every Black brotherhood on the coast.",
+      "at": {
+       "name": "Salvador",
+       "modern": "Salvador",
+       "country": "Brazil"
+      }
      }
     ]
    },
@@ -869,6 +1023,24 @@
      {
       "name": "Hoʻolulu",
       "text": "A *kahuna lāʻau lapaʻau* of Kona on Hawaiʻi Island, a healer by plants and prayer who studied twenty years before he was let near a patient. Find him in the uplands at dawn gathering plants with a prayer for each, or kneeling by a fever with a gourd of pounded leaves, not hurrying for anyone. He has treated the warriors of three rival chiefs and been thanked by all three, and wants an apprentice patient enough to learn a plant's prayer before its use. A mentor or ally; when no plant answers, he goes up the mountain and asks why.",
+      "at": {
+       "name": "Kona",
+       "modern": "Kailua-Kona",
+       "country": "United States of America"
+      }
+     },
+     {
+      "name": "Hinewai",
+      "text": "The *kaikaranga* of a Waikato hapū, the woman whose call brings every visiting party onto the marae, and so the first voice anyone hears when they arrive. Find her at the edge of the marae in a cloak of feathers, calling a party in from the gate and weeping for their dead and hers in the same breath, before the men have said a word. She has called on allies, enemies and a hapū that came to fight and stayed to eat, and wants the great gathering this summer to go so well that it's talked about for a generation. A host and an ally, and Kaiawa's cousin, who thinks Kaiawa should come down off the ridge and eat something.",
+      "at": {
+       "name": "the Waikato",
+       "modern": "Hamilton",
+       "country": "New Zealand"
+      }
+     },
+     {
+      "name": "Kalehua",
+      "text": "A chief's daughter of Kona on Hawaiʻi Island who has won the Makahiki surfing three years running, and composes the chants that tease whoever she beats. Find her on the beach at dawn with her board, reading the swell and refusing to say whether today's the day. She has beaten two chiefs' sons and been forgiven by one, and wants a match against someone worth beating before she marries. An ally, and the chief's daughter in the hook, if the table wants (see Life Here).",
       "at": {
        "name": "Kona",
        "modern": "Kailua-Kona",
@@ -977,6 +1149,24 @@
       "at": {
        "name": "Astrakhan",
        "modern": "Astrakhan",
+       "country": "Russia"
+      }
+     },
+     {
+      "name": "Gaukhar",
+      "text": "A Kazakh *aqyn*, a singer of improvised verse, from Aisulu's camp, whom no man on the autumn pasture has beaten in an aitys in six years. Find her at a feast with a dombra across her knee, answering a challenger's verse before he's finished it and making his own uncle laugh at him. She sings the bride out of her mother's yurt at every wedding in the valley and arranges a fair number of them, and wants one rival worth the name before she's too famous for anyone to try. An ally, a matchmaker and the camp's singer in the hook (see Life Here).",
+      "at": {
+       "name": "the autumn pasture",
+       "modern": "Taldyqorghan",
+       "country": "Kazakhstan"
+      }
+     },
+     {
+      "name": "Sardaana",
+      "text": "A Sakha singer of the Lena meadows who leads the osuokhai at Ysyakh, improvising verse after verse while the circle answers, and has kept a circle dancing from dusk to the next noon. Find her on the meadow near Yakutsk at midsummer with a horsehair whisk in her hand, pulling strangers into the circle by the elbow, a Cossack's Sakha wife and a Russian clerk among them. She pays her family's fur tribute and resents every pelt, and wants this year's circle to be the largest anyone remembers, so the fort can hear it. A host and a contact on the Lena, and the bride's cousin on tribute day (see Life Here).",
+      "at": {
+       "name": "the Lena meadows",
+       "modern": "Yakutsk",
        "country": "Russia"
       }
      }
