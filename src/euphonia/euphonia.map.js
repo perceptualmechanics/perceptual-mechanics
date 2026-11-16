@@ -142,7 +142,7 @@ export async function initMap(stage) {
     mountBack: document.createElement('canvas'), mountFront: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
     tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
-    ...home(), width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
+    ...home(), width: 0, height: 0, cssWidth: 0, cssHeight: 0, cover: 0, dpr: 1, baseKey: '',
   };
 
   // The moment's readouts, on the panel's This moment page, kept up to date
@@ -495,8 +495,11 @@ export async function initMap(stage) {
   // edge (g.margin), so the Wheel shows whole about it. At zoom 1 the
   // globe's centre sits at `anchor`; zoomed, the mount is magnified about the
   // point `focus` (in globe radii from there), as under a glass.
-  const fit = () => Math.min((g.cssWidth - 2 * g.margin) / (2 * EXTENT.halfWidth), (g.cssHeight - 2 * g.margin) / (EXTENT.top + EXTENT.bottom));
-  const anchor = () => [g.cssWidth / 2, g.cssHeight / 2 + fit() * (EXTENT.top - EXTENT.bottom) / 2];
+  // On a phone the open panel is a sheet over the stage's foot (g.cover, its
+  // height there); the globe fits and centres in what is left above it.
+  const freeHeight = () => g.cssHeight - g.cover;
+  const fit = () => Math.min((g.cssWidth - 2 * g.margin) / (2 * EXTENT.halfWidth), (freeHeight() - 2 * g.margin) / (EXTENT.top + EXTENT.bottom));
+  const anchor = () => [g.cssWidth / 2, freeHeight() / 2 + fit() * (EXTENT.top - EXTENT.bottom) / 2];
   // The view at a scale, with the globe turned as `turn` says (its spin and
   // the eye's height), by default as it stands.
   const viewAt = (scale, turn = g) => {
@@ -777,8 +780,8 @@ export async function initMap(stage) {
     // the edge. The mount fits inside it (fit), so it never meets the globe.
     g.rem = rem;
     g.margin = REALM_REACH_REM * rem;
-    const [ax, ay] = anchor(), f = fit(), margin = g.margin;
-    g.rim = { x: (Math.min(ax, g.cssWidth - ax) - margin) / f, y: (Math.min(ay, g.cssHeight - ay) - margin) / f, margin: margin / f };
+    g.cover = sheetCover();
+    placeRim();
     const measure = b => { b.hidden = false; return { w: b.offsetWidth, h: b.offsetHeight, em: parseFloat(getComputedStyle(b).fontSize) }; };
     g.labelSizes = g.buttons.map(measure);
     g.circleSizes = g.circleNames.map(measure);
@@ -802,7 +805,7 @@ export async function initMap(stage) {
   const room = zoom => {
     const k = fit() * zoom, rise = (EXTENT.top - EXTENT.bottom) / 2;
     const slack = (half, size) => Math.max(0, half - size / (2 * k));
-    return [[0, slack(EXTENT.halfWidth, g.cssWidth)], [rise * (1 - 1 / zoom), slack((EXTENT.top + EXTENT.bottom) / 2, g.cssHeight)]];
+    return [[0, slack(EXTENT.halfWidth, g.cssWidth)], [rise * (1 - 1 / zoom), slack((EXTENT.top + EXTENT.bottom) / 2, freeHeight())]];
   };
   function clampZoom() {
     if (!g.cssWidth) return;
@@ -998,6 +1001,37 @@ export async function initMap(stage) {
     return { seconds: parseFloat(list(css.transitionDuration)[k]), ease: cubicBezier(list(css.transitionTimingFunction)[k]) };
   }
 
+  // The Wheel's rim, about the globe's centre, in the room the globe has.
+  function placeRim() {
+    const [ax, ay] = anchor(), f = fit(), margin = g.margin;
+    g.rim = { x: (Math.min(ax, g.cssWidth - ax) - margin) / f, y: (Math.min(ay, freeHeight() - ay) - margin) / f, margin: margin / f };
+  }
+  // How far up the stage the open panel reaches where it spans the stage, as
+  // a phone's sheet does: none while closed, stepped aside or at the side.
+  function sheetCover() {
+    const shown = panel.classList.contains('open') && !panel.classList.contains('peeked');
+    return shown && panel.offsetWidth >= g.cssWidth ? Math.min(panel.offsetHeight, g.cssHeight) : 0;
+  }
+  // The globe rises and settles with the sheet, on the sheet's own timing.
+  let covering = 0;
+  function setCover() {
+    const to = sheetCover(), from = g.cover;
+    if (to === from) return;
+    const step = e => { g.cover = from + (to - from) * e; placeRim(); clampZoom(); redraw(); };
+    cancelAnimationFrame(covering);
+    const { seconds, ease } = slide();
+    if (!seconds) { step(1); return; }
+    let begun = 0;
+    const tick = now => {
+      begun ||= now;
+      const t = Math.min(1, (now - begun) / (seconds * 1000));
+      step(ease(t));
+      if (t < 1) covering = requestAnimationFrame(tick);
+    };
+    covering = requestAnimationFrame(tick);
+  }
+  new MutationObserver(setCover).observe(panel, { attributes: true, attributeFilter: ['class'] });
+
   const pointers = new Map();
   let pinch = 0, travel = 0, grip = null;
   g.canvas.addEventListener('pointerdown', e => {
@@ -1050,7 +1084,7 @@ export async function initMap(stage) {
   }, { passive: false });
   g.cell.addEventListener('keydown', e => {
     if (e.target !== g.cell) return;
-    const step = KEY_TURN * RAD * fit() * g.zoom, mid = [g.cssWidth / 2, g.cssHeight / 2];
+    const step = KEY_TURN * RAD * fit() * g.zoom, mid = [g.cssWidth / 2, freeHeight() / 2];
     const keys = {
       ArrowLeft: () => drag(step, 0), ArrowRight: () => drag(-step, 0),
       ArrowUp: () => drag(0, step), ArrowDown: () => drag(0, -step),

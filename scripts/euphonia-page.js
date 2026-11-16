@@ -140,7 +140,7 @@ function themePick() {
 function tabs() {
   return `<div class="euphonia-tabs" role="tablist" aria-label="Euphonia" hidden>
 <button type="button" role="tab" id="tab-map" aria-controls="map-figure" aria-selected="true">Globe</button>
-<button type="button" role="tab" id="tab-builder" aria-controls="character-builder" aria-selected="false" tabindex="-1">Character builder</button>
+<button type="button" role="tab" id="tab-builder" aria-controls="character-builder" aria-selected="false" tabindex="-1" aria-label="Character builder"><span class="tab-long">Character </span>builder</button>
 </div>`;
 }
 

@@ -53,3 +53,28 @@ function initTabs(list) {
 
 const list = document.querySelector('.euphonia-tabs');
 if (list) initTabs(list);
+
+// On a phone the bar's buttons fold behind one: Menu opens them below the
+// bar and closes again on Escape, on a click elsewhere, or once one of them
+// has done its work. Wider, the button stays hidden by the CSS and the bar
+// shows them all; without script it shows them all at any width.
+function initMenu(bar) {
+  const open = bar.querySelector('.euphonia-menu-open');
+  const aside = bar.querySelector('.euphonia-aside');
+  if (!open || !aside) return;
+  const set = expanded => {
+    open.setAttribute('aria-expanded', String(expanded));
+    bar.classList.toggle('menu-open', expanded);
+  };
+  open.addEventListener('click', () => set(open.getAttribute('aria-expanded') !== 'true'));
+  aside.addEventListener('click', e => { if (e.target.closest('button, a')) set(false); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && bar.classList.contains('menu-open')) { set(false); open.focus(); }
+  });
+  document.addEventListener('click', e => { if (!bar.contains(e.target)) set(false); });
+  bar.classList.add('has-menu');
+  open.hidden = false;
+}
+
+const bar = document.querySelector('.euphonia-bar');
+if (bar) initMenu(bar);
