@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "6363181cfa448c318f0e073421ea33656468ab12e8ac43eeeccf0712aa0f887b",
-  "modified": "2026-11-16T10:27:36-05:00",
+  "sha256": "1c1e54efd84530aa91fa8cd57fac5d3cf73ef5a38edafc0d170d1ebe4383225b",
+  "modified": "2026-11-16T10:39:36-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 28,
   "rules": {
@@ -303,6 +303,12 @@
    "file": "people_abbas_qoli.html"
   },
   {
+   "name": "Abdul Wahid",
+   "title": "Abdul Wahid (Counsellor 5, Spymaster)",
+   "line": "Counsellor 5, Spymaster",
+   "file": "people_abdul_wahid.html"
+  },
+  {
    "name": "Aisulu",
    "title": "Aisulu (Barbarian 7, Path of the Wild Heart)",
    "line": "Barbarian 7, Path of the Wild Heart",
@@ -447,6 +453,12 @@
    "file": "people_fusipala.html"
   },
   {
+   "name": "Ganonhsese",
+   "title": "Ganonhsese (Cleric 9, Hidden Domain)",
+   "line": "Cleric 9, Hidden Domain",
+   "file": "people_ganonhsese.html"
+  },
+  {
    "name": "Gaukhar",
    "title": "Gaukhar (Courtier 6, Verse)",
    "line": "Courtier 6, Verse",
@@ -531,6 +543,12 @@
    "file": "people_khadijeh_khatun.html"
   },
   {
+   "name": "Khodadad the Dyer",
+   "title": "Khodadad the Dyer (Counsellor 3, Gamester)",
+   "line": "Counsellor 3, Gamester",
+   "file": "people_khodadad_the_dyer.html"
+  },
+  {
    "name": "Kichibei",
    "title": "Kichibei (Natural Philosopher 5, Experimentalist)",
    "line": "Natural Philosopher 5, Experimentalist",
@@ -559,6 +577,18 @@
    "title": "Kusi Wallpa (Counsellor 13, Marshal)",
    "line": "Counsellor 13, Marshal",
    "file": "people_kusi_wallpa.html"
+  },
+  {
+   "name": "Lala Sukhdev",
+   "title": "Lala Sukhdev (Counsellor 8, Factor)",
+   "line": "Counsellor 8, Factor",
+   "file": "people_lala_sukhdev.html"
+  },
+  {
+   "name": "Lihpahnu",
+   "title": "Lihpahnu (Druid 6, Circle of the Land)",
+   "line": "Druid 6, Circle of the Land",
+   "file": "people_lihpahnu.html"
   },
   {
    "name": "Mai Raji",
@@ -685,6 +715,18 @@
    "title": "Shushan Ghukasian (Counsellor 12, Factor)",
    "line": "Counsellor 12, Factor",
    "file": "people_shushan_ghukasian.html"
+  },
+  {
+   "name": "Sister Ondine",
+   "title": "Sister Ondine (Counsellor 7, Majordomo)",
+   "line": "Counsellor 7, Majordomo",
+   "file": "people_sister_ondine.html"
+  },
+  {
+   "name": "Sossi",
+   "title": "Sossi (Counsellor 5, Factor)",
+   "line": "Counsellor 5, Factor",
+   "file": "people_sossi.html"
   },
   {
    "name": "Tapiwa Marufu",

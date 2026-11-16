@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "6363181cfa448c318f0e073421ea33656468ab12e8ac43eeeccf0712aa0f887b",
-  "modified": "2026-11-16T10:27:36-05:00",
+  "sha256": "1c1e54efd84530aa91fa8cd57fac5d3cf73ef5a38edafc0d170d1ebe4383225b",
+  "modified": "2026-11-16T10:39:36-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 28,
   "rules": {
@@ -29,7 +29,7 @@
   "regions": [
    {
     "region": "Europe",
-    "intro": "The setting's own people here: where a party meets them, what they want and how a table uses them. Each has a pregen sheet except Sister Ondine.",
+    "intro": "The setting's own people here: where a party meets them, what they want and how a table uses them. Each has a pregen sheet.",
     "people": [
      {
       "name": "Ser Marin Zorzi",
