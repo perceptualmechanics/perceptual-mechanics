@@ -230,6 +230,11 @@ export function verifyEuphonia(d = euphoniaData()) {
 
   // The colophon: what Euphonia is, in the book's own words.
   if (!d.welcome.data?.opening?.length || !d.welcome.data?.world?.length) fail('euphonia.welcome.json: no opening or no "What Will Your World Be?" for the colophon');
+  // The front door: what Euphonia is, opening the Welcome; The Pitch; How to
+  // Use This Book's building paragraph; and the moment from Life in 1668.
+  const w = d.welcome.data ?? {};
+  if (!/^Euphonia is /.test(w.opening?.[0] ?? '') || !w.pitch?.length || !/^\*\*Building on Euphonia\.\*\*/.test(w.building ?? '') || !/^\*\*The lamp in the kitchen\.\*\*/.test(w.moment?.text ?? '') || !w.moment?.where)
+    fail('euphonia.welcome.json: no "Euphonia is" opening the Welcome, no Pitch, no building paragraph or no moment for the front door');
   // The builder names languages by the book's rule: Common is the vernacular.
   if (!d.languages.data?.paragraphs?.some(p => /^- \*\*Common\*\* is the character's own vernacular/.test(p))) fail('euphonia.languages.json: no "Common is the character\'s own vernacular" for the builder');
 

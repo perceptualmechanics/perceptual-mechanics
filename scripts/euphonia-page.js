@@ -45,7 +45,7 @@ function catalog(items) {
 // there for a screen reader. Everything to read is in
 // its panel: the contents, each region's chapter, the moment shown, how the
 // map is made, the classes and the games.
-function mapStage({ classes, regions, adventures, hidden, people, sheets }, world, fixtures, calendars) {
+function mapStage({ classes, regions, adventures, hidden, people, sheets, welcome }, world, fixtures, calendars) {
   const globe = `<div class="map-cell"><div class="map-disc" tabindex="0" role="group" aria-label="The globe" aria-describedby="map-help">
 <canvas class="map-ambient" aria-hidden="true"></canvas>
 <canvas aria-hidden="true"></canvas>
@@ -58,7 +58,7 @@ ${globe}
 <button type="button" class="map-panel-close" aria-label="Close panel">&#215;</button>
 <p class="map-panel-back" hidden><button type="button">Contents</button></p>
 <h2 id="map-panel-title" class="map-panel-title" tabindex="-1"></h2>
-${panelSections({ classes, regions, adventures, hidden, people, sheets }, world, fixtures, calendars)}
+${panelSections({ classes, regions, adventures, hidden, people, sheets, welcome }, world, fixtures, calendars)}
 <section class="map-panel-pick" aria-labelledby="map-panel-pick-title" hidden>
 <h3 id="map-panel-pick-title">The place you picked</h3>
 <dl class="map-panel-facts"></dl>
@@ -77,6 +77,44 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${LIVING_NOTE}</p>\n` 
 <div class="map-peek" hidden><p class="map-peek-label"></p><button type="button" class="map-peek-back">Back to entry</button></div>
 <p class="map-help visually-hidden" id="map-help">Drag the globe across, or focus it and use the left and right arrows, to spin it on its axis; drag up or down, or use the up and down arrows, to slide its brass ring through the horizon and set it for a latitude, the pole raised that far. The wheel, a pinch, or + and − zoom; 0 sets it home again. The wooden horizon's calendar marks today beside the sun's place in the zodiac. A region's name opens its chapter beside the globe, and Contents lists every chapter and the rest of the book's pages. Click or tap a place, or press Enter on the globe for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
 <noscript><p class="map-help">The map and its pages are drawn in the page by script.</p></noscript>`;
+}
+
+// The front door (the front-door brief, 16 November 2026), the panel's first
+// page on a first visit: what Euphonia is, in the first sentences of the
+// book's Welcome and its Pitch; one moment of it, warmth before rules, from
+// Life in 1668; three ways in, by who the reader is, the first the games a
+// table can play tonight; and what the books leave open to build on
+// (euphonia.welcome.json, euphonia.adventures.json). Every word of it is the
+// book's but the doors' names.
+// A sentence ends at its stop, before the space and the capital (or the
+// emphasis) the next begins with.
+const sentences = md => md.split(/(?<=[.?!])\s+(?=[*“A-Z])/);
+// The moment stops before the sentence that sends the reader elsewhere in the
+// book: a cross-reference in parentheses, "(The World in 1668, The Mark)".
+const CROSS_REFERENCE = /\([A-Z][^)]*,[^)]*\)/;
+// A paragraph's bold lead ("**Ready to run.**"), which names it rather than says it.
+const LEAD = /^\*\*[^*]+\*\*\s*/;
+function welcomePage(welcome, games) {
+  const tonight = games.filter(g => g.ready);
+  if (!tonight.length) throw new Error('euphonia: no game in Adventures and Hooks is Ready to run, for the front door\'s first way in');
+  const moment = sentences(welcome.moment.text);
+  const cut = moment.findIndex(t => CROSS_REFERENCE.test(t)), told = cut < 0 ? moment : moment.slice(0, cut);
+  const door = (title, body) => `<h3>${title}</h3>\n${body}`;
+  const ways = items => `<ul class="welcome-ways">${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+  const page = (id, name) => `<button type="button" data-page="${id}">${name}</button>`;
+  return `<section class="map-panel-page map-panel-welcome" data-page="welcome" data-title="Welcome to Euphonia" hidden>
+<p class="welcome-lead">${inline(sentences(welcome.opening[0])[0])}</p>
+<p>${inline(sentences(welcome.pitch[0])[0])}</p>
+<figure class="welcome-moment">
+<blockquote><p>${inline(told.join(' '))}</p></blockquote>
+<figcaption>${esc(welcome.moment.where.replace(/^The Setting, /, ''))}</figcaption>
+</figure>
+${door('Play tonight', `${tonight.map(g => `<p>${inline(g.ready.replace(LEAD, ''))}</p>`).join('\n')}
+${ways([page('games', 'Adventures and Hooks')])}`)}
+${door('Make a character', ways(['<a href="#builder" data-leave>The character builder</a>']))}
+${door('Explore the world', ways(['<button type="button" data-leave>The globe</button>', page('contents', 'The State of the World'), page('people', 'People')]))}
+<p class="welcome-open">${inline(sentences(welcome.building.replace(LEAD, ''))[0])} <a href="#orc-notice">The ORC Notice</a></p>
+</section>`;
 }
 
 // What Euphonia is, at the foot of the page, in the book's own words: the
@@ -277,11 +315,11 @@ function bordersNote({ provenance: b, polities, fronts }) {
   return `<p class="note">The states of ${b.year} are Seshat's Cliopatria (<a href="https://github.com/Seshat-Global-History-Databank/cliopatria">release ${esc(b.release)}</a>, <a href="${esc(b.licence)}">CC BY 4.0</a>; ${esc(b.cite)}), cut back from the shore this map draws and simplified as its coasts are. Each region's chapter says which of its states had firm edges and which were zones. A fine line is a firm edge, drawn and argued over. Elsewhere a band of wash runs along the inside of a state's edge, as Dutch colourists coloured boundaries, with no line under it: a people's country, not a surveyor's mark. Changed from the record: ${changes}.</p>
 <p class="note">✦ marks where the book departs from the record, drawn from its chapters: dashed where the book names a firm side, washed where it names a zone, and a dotted ring for a front. ${departs}</p>`;
 }
-function panelSections({ classes, regions, adventures, hidden, people, sheets }, world, fixtures, calendars, relief = reliefData()) {
+function panelSections({ classes, regions, adventures, hidden, people, sheets, welcome }, world, fixtures, calendars, relief = reliefData()) {
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
   const versions = [...new Set(world.provenance.files.map(f => f.version))].join(' and ');
-  const pages = [['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['people', 'People'], ['games', 'Adventures and Hooks'], ['ribbons', 'The ribbons']];
+  const pages = [['welcome', 'Welcome'], ['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['people', 'People'], ['games', 'Adventures and Hooks'], ['ribbons', 'The ribbons']];
   return `<nav class="map-panel-page map-panel-contents" aria-label="Contents" data-title="Contents" hidden>
 <h3>The State of the World</h3>
 ${regions.status === 'draft' ? `<p class="map-panel-note">${LIVING_NOTE}</p>\n` : ''}<ul>
@@ -292,6 +330,7 @@ ${regions.data.map(r => `<li><button type="button" data-region="${slug(r.name)}"
 ${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}</button></li>`).join('\n')}
 </ul>
 </nav>
+${welcomePage(welcome.data, adventures.data)}
 <section class="map-panel-page map-panel-moment" data-page="moment" data-title="This moment" hidden>
 <p class="map-readout">The world between Samhain 1668 and Samhain 1669, on one globe.</p>
 <table class="map-dates" hidden>
@@ -318,7 +357,7 @@ ${bordersNote(bordersData())}
 ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span class="n">${inline(c.blurb)}</span></li>`))}
 </section>
 <section class="map-panel-page" data-page="games" data-title="Adventures and Hooks" hidden>
-${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
+${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.ready ? `<span class="n">${inline(g.ready)}</span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
 </section>
 ${peoplePage(people.data, regions.status, sheets.data)}
 ${ribbonsPage(tonguesData())}

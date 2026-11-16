@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "fa0edce28363a55fd53f6d8f0257b667409c3116eb0708849ea6b96a707ee206",
-  "modified": "2026-11-16T07:43:33-05:00",
+  "sha256": "a62a20720b2393a42de757d3fd1f46ffb2a4dd5cc086a9bac67b037c2226b17d",
+  "modified": "2026-11-16T08:36:25-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 26,
+  "exporter_version": 28,
   "rules": {
    "banned": [
     "eladrin",
@@ -32,6 +32,7 @@
    "where": "The courts of Europe, and Mutapa's service in them",
    "read_with": "Powers and Factions; in The State of the World, Europe, and Mutapa and the Indian Ocean",
    "summary": "**The pitch.** In 1668 every ministry of magic in Europe has learned two things: it is behind Mutapa, and Spain has Mutapa's metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
+   "ready": "",
    "hooks": [
     "A court painter has finished a miniature of the young King of Spain for the Emperor's court, and three services want it before it reaches Vienna.",
     "A Viennese clerk has been copying the Emperor's register of licensed casters for another court; whoever catches him first will use him rather than hang him.",
@@ -52,6 +53,7 @@
    "where": "Venice, then Toledo",
    "read_with": "Europe",
    "summary": "**The pitch.** A solid intro heist: the prize is going on the market soon for a hefty fee, so why not take it and keep the money? The Republic is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
+   "ready": "**Ready to run.** *The Venice Job: The First Night* is the heist's opening night as a one-shot, with five 3rd-level characters ready to play.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts and bravos; the Spanish one hires a crew.",
     "The scryer who made the report left notes the Ten's clerks didn't understand, and Spain's ambassador is looking for her.",
@@ -70,6 +72,7 @@
    "where": "Any village at the edge of the Hidden",
    "read_with": "Running Euphonia; *Euphonia: Life on the Border*",
    "summary": "The frontier game belongs to no region: every society has villages on its outskirts and a Hidden past them. The Border can be a Highland glen, a Japanese mountain village, a Swedish chapelry in the year the Blåkulla trials begin, or the almost suburban edge of one of Mutapa's fast-growing cities, where modern artifice meets the water spirits of the pools (The State of the World, Mutapa and the Indian Ocean). Pick the border your table knows.",
+   "ready": "**Ready to run.** *The Night the Hunt Came* is a one-shot for the resisters: one dark-half night in the Border village of Bowden, with four 5th-level characters ready to play.",
    "hooks": [
     "A child says she was carried to a feast inside a hill, and the examiner who comes to hear it is looking for witches.",
     "The village's Killer is seventy and her knees are going.",
@@ -86,6 +89,7 @@
    "where": "China under the new Qing",
    "read_with": "East and Southeast Asia",
    "summary": "The classic delve, Chinese style. A party starts in a minor Ming prince's sealed tomb, in a valley the Qing ignore, and years later ends in the First Emperor's, with its rivers of mercury and its crossbows set for intruders. Between lie the tombs the DM builds: the Han and Tang dead with their tomb-quelling beasts, the alchemists' graves full of cinnabar.",
+   "ready": "",
    "hooks": [],
    "regions": [
     "East and Southeast Asia"
@@ -97,6 +101,7 @@
    "where": "The Andes and the Chocó",
    "read_with": "The Americas",
    "summary": "**The pitch.** The conquest never finished. A century after the huacas rose, the Sapa Inca rules from Cusco again, Spain holds the coast and the silver mountain, and the line between them runs across the roof of the world. This is the war the rest of the world is about to join: whoever breaks the Andean siege, or robs Spain while it's pinned, decides who gets the metals that are turning the balance of magic. A three-sided war: the Inca, the Spanish and the people profiting off both. At stake: silver, mercury, guano, cinchona, the platina in the Chocó's rivers and the huacas that rose. It's the book's grittiest setting, for amoral soldier-of-fortune play in the *Wages of Fear* vein, or for Andeans defending their home. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
+   "ready": "",
    "hooks": [
     "The keepers of Pariacaca say the mountain will close the pass to Spain for a season, if someone brings back what the extirpators carried off to Lima.",
     "A mule train of Huancavelica mercury is three days late into Potosí, and the huaca above the road has asked for something it hasn't asked for before.",
@@ -116,6 +121,7 @@
    "where": "The Indian Ocean, from the Cape to Macau and out into the Pacific",
    "read_with": "Mutapa and the Indian Ocean",
    "summary": "The players are traders: a ship, a cargo and a living to make on the monsoon winds. The game is the voyage, the ports, the deals and what's worth more two harbors on.",
+   "ready": "",
    "hooks": [],
    "regions": [
     "Oceania"

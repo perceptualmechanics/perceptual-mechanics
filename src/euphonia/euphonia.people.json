@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "fa0edce28363a55fd53f6d8f0257b667409c3116eb0708849ea6b96a707ee206",
-  "modified": "2026-11-16T07:43:33-05:00",
+  "sha256": "a62a20720b2393a42de757d3fd1f46ffb2a4dd5cc086a9bac67b037c2226b17d",
+  "modified": "2026-11-16T08:36:25-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 26,
+  "exporter_version": 28,
   "rules": {
    "banned": [
     "eladrin",
@@ -173,6 +173,15 @@
        "name": "Florence",
        "modern": "Florence",
        "country": "Italy"
+      }
+     },
+     {
+      "name": "Brites Fagundes",
+      "text": "A halfling baker of the Alfama, Lisbon's old quarter under the castle, whose bread is as good on the third day as the first and whose egg-yolk sweets the convents send novices to buy. Find her at her oven before dawn, with a Mutapan Cold Box in the back room that keeps her butter hard in August; a sailor from Sofala paid a debt with it and she has never asked what it's worth. She can't say why nobody can make her mother's bread come out right, and would like someone to stop the Holy Office's familiar who has started buying a loaf every day and taking it away uneaten. A host, a safe kitchen and a quiet thread to Mutapa.",
+      "at": {
+       "name": "Lisbon",
+       "modern": "Lisbon",
+       "country": "Portugal"
       }
      }
     ]
@@ -428,6 +437,15 @@
        "name": "Gondar",
        "modern": "Gondar",
        "country": "Ethiopia"
+      }
+     },
+     {
+      "name": "Ferhad Usta",
+      "text": "An elf of Istanbul, second master of the confectionery in the Topkapı's kitchens, whose grandmother, the family says, was a pari. He makes the violet sherbet the palace cools with Uludağ snow and a *zülbiye* helva the cooks of three viziers have tried and failed to copy. Find him at the confectionery's back door at the evening prayer, handing a cup of sherbet to whoever held a door for him that day, or at the spice market with a list he keeps in his head. He wants the helva for the next Feast of the Sacrifice to be the best the sultan has ever tasted, and he has started to dream of a sweeter table than this world sets, which frightens him. A patron with the palace's ear, a cook to protect and a Hidden folk family story that may not be only a story.",
+      "at": {
+       "name": "Istanbul",
+       "modern": "Istanbul",
+       "country": "Turkey"
       }
      }
     ]
@@ -799,6 +817,15 @@
        "name": "Thang Long",
        "modern": "Hanoi",
        "country": "Vietnam"
+      }
+     },
+     {
+      "name": "Kichibei",
+      "text": "A tempura seller of Edo, who fries at a stall at the foot of Nihonbashi because the city forbids frying indoors, and claims his batter came from a Portuguese priest's cook at Nagasaki before the ban. Find him at dusk with a pot of oil, a basket of river fish and a crowd of porters and samurai eating off skewers side by side, which they'd never do anywhere else. He wants to be the first in Edo to write the dish down properly, and is losing customers to a stall across the bridge whose fish is never out of season, even in winter, and whose owner nobody has seen in daylight. A source of every rumor on the Tōkaidō and a good reason to be on a bridge at night.",
+      "at": {
+       "name": "Edo",
+       "modern": "Tokyo",
+       "country": "Japan"
       }
      }
     ]

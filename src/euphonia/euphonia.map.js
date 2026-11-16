@@ -332,7 +332,7 @@ export async function initMap(stage) {
   // What a name in the panel turned the glass to (a person, a place, a
   // ruler), ringed where it stands with its label.
   let marked = null;
-  createPanelCloser(panel, { focus: () => opener?.focus() }, {
+  const closer = createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
     // Closed, the glass draws back to the whole mount as the panel slides
     // away, the globe still turned where the reader left it.
@@ -371,6 +371,15 @@ export async function initMap(stage) {
     requestAnimationFrame(() => panelTitle.focus());
   });
   back.querySelector('button').addEventListener('click', () => { showPage('contents'); panelTitle.focus(); });
+  // The front door's ways in: another page of the book, or out of the panel to
+  // the globe, or by its link to the builder, whose tab then has the focus.
+  panel.querySelector('.map-panel-welcome').addEventListener('click', e => {
+    const b = e.target.closest('[data-page], [data-leave]');
+    if (!b) return;
+    if (b.dataset.page) { showPage(b.dataset.page); panelTitle.focus(); return; }
+    opener = b.matches('a') ? document.getElementById('tab-builder') : cell;
+    closer.close();
+  });
   panel.querySelector('.map-panel-contents').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -1082,12 +1091,14 @@ export async function initMap(stage) {
   tideLine.hidden = false;
   stage.classList.add('is-drawn');
 
-  // A link to a region (#europe) opens its chapter; one to the People page
-  // (#people), or to its Notable People (#notable-people), opens that.
+  // A link to a region (#europe) opens its chapter; one to the front door
+  // (#welcome), that; one to the People page (#people), or to its Notable
+  // People (#notable-people), that.
   function openFromAddress() {
     const id = location.hash.slice(1);
     const r = regions.find(x => x.id === id);
     if (r) { openChapter(r, g.cell); return; }
+    if (id === 'welcome') { openWelcome(); requestAnimationFrame(() => panelTitle.focus()); return; }
     const people = panel.querySelector('.map-panel-people');
     if (id !== 'people' && !(id && people.querySelector(`#${CSS.escape(id)}`))) return;
     showPage('people');
@@ -1100,11 +1111,25 @@ export async function initMap(stage) {
       panel.scrollTo({ top: head.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop });
     });
   }
+  function openWelcome() {
+    showPage('welcome');
+    openPanel(contentsOpen);
+  }
   addEventListener('hashchange', openFromAddress);
+  // A first visit opens on the front door, without taking the focus from
+  // where the page put it; the browser remembers it was shown, and where it
+  // can't, every visit is a first. An address names what to open instead.
+  const WELCOMED = 'pm-euphonia-welcomed';
+  function firstVisit() {
+    if (location.hash) return false;
+    let seen = null;
+    try { seen = localStorage.getItem(WELCOMED); localStorage.setItem(WELCOMED, '1'); } catch { /* no storage: a first visit */ }
+    return !seen;
+  }
   // The address the page opens at waits for the globe's first measure:
   // a chapter zooms to its region, and before the globe has a size the fit
   // is no number (and the zoom with it, for good).
-  measured.then(openFromAddress);
+  measured.then(() => (firstVisit() ? openWelcome() : openFromAddress()));
 }
 
 const stage = document.getElementById('map-figure');

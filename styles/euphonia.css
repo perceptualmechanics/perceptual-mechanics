@@ -363,6 +363,24 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
 .map-panel-contents ul { list-style: none; margin: 0; padding: 0; }
 .map-panel-contents li { border-bottom: 1px solid var(--rule-faint); padding: 0.35rem 0; }
 .map-panel-page .note { font-size: 0.85rem; }
+/* The front door: the book's first sentences, one moment of it, then the ways
+   in, each door a heading as Contents has them and its ways buttons a thumb
+   can find. */
+.welcome-lead { font-size: 1.2rem; line-height: 1.4; margin: 0.4rem 0 0.8rem; }
+.welcome-moment { margin: 1.4rem 0; }
+.welcome-moment blockquote { margin: 0; padding: 0.1rem 0 0.1rem 1.1rem; border-left: 2px solid var(--line-accent); }
+.welcome-moment blockquote p { margin: 0; }
+.welcome-moment figcaption { color: var(--text-faint); font-size: 0.85rem; margin: 0.4rem 0 0 1.1rem; }
+.map-panel-welcome h3 { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 1.4rem 0 0.4rem; font-weight: 600; }
+.welcome-ways { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.welcome-ways :is(a, button) {
+  display: inline-flex; align-items: center; box-sizing: border-box; min-height: 2.75rem; /* the 44 px a fingertip needs */
+  font: inherit; font-size: 0.95rem; color: var(--accent); background: var(--surface); border: 1px solid var(--line-accent);
+  padding: 0.3rem 0.9rem; cursor: pointer; text-decoration: none;
+}
+.welcome-ways :is(a, button):hover, .welcome-ways :is(a, button):focus-visible { border-color: var(--accent); color: var(--accent-bright); }
+.welcome-ways :is(a, button):focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.welcome-open { color: var(--text-faint); font-size: 0.85rem; margin: 1.8rem 0 0; padding-top: 0.8rem; border-top: 1px solid var(--rule-faint); }
 .map-dates { width: 100%; border-collapse: collapse; margin: 0.4rem 0 1.2rem; font-size: 0.92rem; }
 .map-dates[hidden] { display: none; }
 .map-dates caption { text-align: left; color: var(--text-faint); font-size: 0.85rem; padding-bottom: 0.3rem; }
