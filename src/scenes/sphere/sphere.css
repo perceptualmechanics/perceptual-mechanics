@@ -61,6 +61,13 @@
   text-align: right; z-index: 310; line-height: 1.8;
   font-family: 'Arapey', serif;
 }
+
+/* The hint and the panel are in different stacking contexts (the hint in
+   #scene-chrome at 310, the panel inside the scene's wrapper at 300), so no
+   z-index on the panel can lift it over the hint. While a panel is open the
+   hint steps out instead: it crossed the panel's × on a desktop and its text
+   on a phone. */
+:root:has(.sphere-panel.open) .sphere-hint { visibility: hidden; }
 /* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base rule
    below targets the smallest viewport by default; the min-width query
    layers the wider-viewport values on top, never the reverse. */
@@ -70,7 +77,7 @@
     radial-gradient(ellipse at 30% 0%, rgba(70,110,180,0.25), transparent 60%),
     #05070d;
   border-left:1px solid rgba(120,170,255,0.18);
-  padding:2.2rem 1.5rem 2rem;transform:translateX(100%);
+  padding:2.2rem 1.5rem var(--footer-safe-zone);transform:translateX(100%);
   /* transform alone moves the panel off-screen but leaves it rendered, so
      the ✕ stayed in the tab order the whole time the panel was closed —
      a keyboard visitor Tabbing across the sphere hit a "Close fragment

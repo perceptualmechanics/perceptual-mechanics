@@ -64,10 +64,25 @@
   text-transform: uppercase; line-height: 1.8; text-align: right;
   color: var(--hint-text-color);
 }
+
+/* The hint and the panel are in different stacking contexts (the hint in
+   #scene-chrome at 310, the panel inside the scene's wrapper at 300), so no
+   z-index on the panel can lift it over the hint. While a panel is open the
+   hint steps out instead: it crossed the panel's × on a desktop and its text
+   on a phone. Below 701px the panel spans under the title too, so the title
+   steps out with it. */
+:root:has(.orbiter-panel.open) .orbiter-hint { visibility: hidden; }
+:root:has(.orbiter-panel.open) .orbiter-title {
+	visibility: hidden;
+
+	@media (min-width: 701px) {
+		visibility: visible;
+	}
+}
 .orbiter-panel {
   position: absolute; top: 0; right: 0; width: 88%; height: 100%;
   background: #060a07; border-left: 1px solid rgba(160,255,200,0.15);
-  padding: 2.2rem 1.3rem 2rem; transform: translateX(100%); 
+  padding: 2.2rem 1.3rem var(--footer-safe-zone); transform: translateX(100%); 
   /* visibility, not just transform: a transform-only hide leaves the panel
      in the tab order, so Tab from the canvas landed on the ✕ of a panel
      sitting entirely off-screen — focus on something the visitor can't

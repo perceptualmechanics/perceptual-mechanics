@@ -235,7 +235,9 @@ function expandScene(sceneName, triggerEl = null, pieceId = null, sceneArg = nul
         onStateChange: str => setHash(sceneName, null, { push: false, arg: str || null }),
         onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
       });
-      expContainer.setAttribute('tabindex', '-1');
+      // Focusable by script so a keyboard starts inside the scene; in the tab
+      // order only where the container is itself the control.
+      expContainer.setAttribute('tabindex', SCENES[sceneName].keysOnContainer ? '0' : '-1');
       cancelAnimationFrame(pendingFocusFrame);
       pendingFocusFrame = requestAnimationFrame(() => {
         pendingFocusFrame = 0;
@@ -403,6 +405,7 @@ function applyDerivedLayout() {
   const fit = desktop ? tileLayout(SCENE_COUNT, width, height) : null;
 
   list.classList.toggle('rows-forced', Boolean(fit));
+  list.dataset.laidOut = '';
   if (fit) {
     list.style.setProperty('--tile-cols', String(fit.cols));
     list.style.setProperty('--tile', `${fit.base}px`);
@@ -536,7 +539,9 @@ function glimpseKeyFor(node) {
 }
 document.addEventListener('focusin', e => pmGlimpse(glimpseKeyFor(e.target)));
 
-const fsEnabled = document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? false;
+// Asked before the first paint (public/landing-first.js), so the nav's slots
+// were already sized for this button.
+const fsEnabled = 'fullscreen' in document.documentElement.dataset;
 if (fsToggle && fsEnabled) {
   fsToggle.hidden = false;
   pmNav?.style.setProperty('--nav-extra', String(pmNav.querySelectorAll('.nav-tool:not([hidden])').length));

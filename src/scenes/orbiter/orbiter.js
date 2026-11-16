@@ -417,7 +417,9 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
 
     panelCloser = createPanelCloser(panel, container, {
       closeBtn: panel.querySelector('.orbiter-panel-close'),
-      onClose: () => { selectedSat = null; },
+      // Closed, the address drops the poem too, so a reload doesn't reopen
+      // what the reader closed.
+      onClose: () => { selectedSat = null; onPieceChange?.(null); },
     });
 
     panelContent.addEventListener('click', e => {

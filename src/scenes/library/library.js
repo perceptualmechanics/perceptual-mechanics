@@ -927,6 +927,9 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     if (!panel) return;
     panel.querySelector('.library-panel-video').innerHTML = '';
     selected = null;
+    // Closed, the address drops the item too, so a reload doesn't reopen
+    // what the reader closed.
+    onPieceChange?.(null);
   }
 
   const raycaster = new THREE.Raycaster();

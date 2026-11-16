@@ -334,6 +334,8 @@ export async function initMap(stage) {
   let marked = null;
   const closer = createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
+    // Where the focus goes on closing is this page's to say (opener, above).
+    returnToOrigin: false,
     // Closed, the glass draws back to the whole mount as the panel slides
     // away, the globe still turned where the reader left it.
     onClose: () => { unpeek(); chosen = null; pick = null; marked = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },

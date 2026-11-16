@@ -78,12 +78,32 @@ RewriteRule ^euphonia/(.*/)?index\.html$ /euphonia/%1 [L,R=301]
 # browser keep the copy — it just has to ask first, so an unchanged page
 # costs a 304 and a real deploy is never invisible. This also covers the
 # eleven prerendered text pages, each served as <dir>/index.html.
+#
+# json/bin — Euphonia's data, 2026-11-16: the relief grid, the world, the
+# borders, the classes and the rules. Vite content-hashes each into
+# assets/<name>-<8-character hash>.<ext>, so they earn the same year as the
+# bundles; DreamHost's default gave them two days (max-age=172800, measured).
+# The pattern names the hash so an unhashed .json put in public/ later can't
+# be pinned for a year by accident.
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css|woff2)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
+  <FilesMatch "-[A-Za-z0-9_-]{8}\.(json|bin)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
   <FilesMatch "\.html$">
     Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Compression for the same data, 2026-11-16. DreamHost gzips HTML, JS and CSS
+# on its own but sent application/json and application/octet-stream as they
+# are: 3.1 MB for Euphonia's seven largest files, 1.04 MB gzipped (measured,
+# gzip -6), and the globe waits on the world and the borders.
+<IfModule mod_deflate.c>
+  <FilesMatch "\.(json|bin)$">
+    SetOutputFilter DEFLATE
   </FilesMatch>
 </IfModule>
 

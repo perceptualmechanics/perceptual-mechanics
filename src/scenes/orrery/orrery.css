@@ -15,7 +15,7 @@
     radial-gradient(ellipse at 30% 0%, rgba(60,48,32,0.25), transparent 60%),
     #0d0a07;
   border-left: 1px solid rgba(220,200,180,0.15);
-  padding: 2.2rem 1.3rem 2rem; transform: translateX(100%);
+  padding: 2.2rem 1.3rem var(--footer-safe-zone); transform: translateX(100%);
   /* `visibility: hidden` on the CLOSED panel is load-bearing, not belt-and-
      braces: translateX(100%) only moves the panel off-screen, it doesn't
      take anything inside it out of the tab order, so the ✕ button stayed
@@ -101,6 +101,21 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		transition: none;
+	}
+}
+
+/* The hint and the panel are in different stacking contexts (the hint in
+   #scene-chrome at 310, the panel inside the scene's wrapper at 300), so no
+   z-index on the panel can lift it over the hint. While a panel is open the
+   hint steps out instead: it crossed the panel's × on a desktop and its text
+   on a phone. Below 701px the panel spans under the title too, so the title
+   steps out with it. */
+:root:has(.orrery-panel.open) .orrery-hint { visibility: hidden; }
+:root:has(.orrery-panel.open) .orrery-title {
+	visibility: hidden;
+
+	@media (min-width: 701px) {
+		visibility: visible;
 	}
 }
 /* .orrery-title shares the same z-index:310/body-level trick, for
@@ -223,11 +238,10 @@
    reappears whenever unlocked, rather than permanently hiding after
    first use. */
 .orrery-lock-prompt {
-  /* Clear of the walkpad's own top edge (bottom:1.6rem, height 6rem)
-     on narrow screens where corner UI crowds together — the mobile-first
-     base value (8rem) already clears it; the min-width override below
-     drops back to the ordinary corner offset once there's room. */
-  position: absolute; bottom: 8rem; right: 1.4rem;
+  /* Above the title block on narrow screens, where corner UI crowds
+     together, level with the walkpad opposite; the min-width override
+     below drops back to the ordinary corner offset once there's room. */
+  position: absolute; bottom: var(--title-block-clear-mobile); right: 1.4rem;
   z-index: 7; background: rgba(10,7,4,0.4); color: rgba(220,207,190,0.6);
   border: 1px solid rgba(220,200,180,0.2); border-radius: 1.4rem;
   --tracking: 0.06em;
@@ -261,11 +275,19 @@
 		transition: none;
 	}
 }
+/* On a narrow screen the centred title and #site-title's pill both reach
+   the bottom-left corner, so the pad stands above the title block, level
+   with the look-around prompt opposite. Once the pill's half-width clears
+   the pad (from 601px) it drops back into the corner. */
 .orrery-walkpad {
-  position: absolute; left: 1.2rem; bottom: 1.6rem; z-index: 7;
+  position: absolute; left: 1.2rem; bottom: var(--title-block-clear-mobile); z-index: 7;
   width: 8.6rem; height: 6rem; display: grid;
   grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr);
   gap: 0.35rem;
+
+	@media (min-width: 601px) {
+		bottom: 1.6rem;
+	}
 }
 .wp-btn {
   background: rgba(20,16,12,0.45); border: 1px solid rgba(220,200,180,0.25);

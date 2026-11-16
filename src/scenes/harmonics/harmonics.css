@@ -56,6 +56,21 @@
   font-family: 'Arapey', serif;
 }
 
+/* The hint and the panel are in different stacking contexts (the hint in
+   #scene-chrome at 310, the panel inside the scene's wrapper at 300), so no
+   z-index on the panel can lift it over the hint. While a panel is open the
+   hint steps out instead: it crossed the panel's × on a desktop and its text
+   on a phone. Below 701px the panel spans under the title too, so the title
+   steps out with it. */
+:root:has(.harmonics-panel.open) .harmonics-hint { visibility: hidden; }
+:root:has(.harmonics-panel.open) .harmonics-title-row {
+	visibility: hidden;
+
+	@media (min-width: 701px) {
+		visibility: visible;
+	}
+}
+
 /* ─── Sound toggle (round 10, 2026-08-18) ────────────────────────────────
    The explicit first-gesture trigger AND ongoing mute control for
    sonification — harmonics.js builds the actual Web Audio graph
@@ -116,7 +131,7 @@
     radial-gradient(ellipse at 82% 100%, rgba(90,120,200,0.16), transparent 55%),
     #05070d;
   border-left: 1px solid rgba(255,220,150,0.22);
-  padding: 2.2rem 1.5rem 2rem;
+  padding: 2.2rem 1.5rem var(--footer-safe-zone);
   transform: translateX(100%);
   /* Hidden, not just slid away: a closed panel kept its close button and
      links in the tab order and the accessibility tree. Same delayed-

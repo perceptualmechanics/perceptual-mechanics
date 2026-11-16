@@ -123,8 +123,10 @@
    not only at the ends, which is what the padding covers. Question four sat
    across "PERCEPTUAL MECHANICS" and both were unreadable. A mask fades the
    column out before it reaches the band, which fixes the collision and also
-   says there is more below, which a hard edge does not. */
-.quiz-form {
+   says there is more below, which a hard edge does not. The verdict is the
+   same full-height scrolling column, and on a phone its sheet ran under the
+   title unfaded, so it takes the same mask. */
+.quiz-form, .quiz-verdict {
   /* Gone by 4rem from the bottom, not merely dimmer there: the scene title's
      own block sits at --title-block-bottom (4.5rem), so anything still legible
      below that crosses it. */

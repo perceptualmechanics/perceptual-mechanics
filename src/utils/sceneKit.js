@@ -202,13 +202,23 @@ export function anyPanelOpen() {
   return false;
 }
 
-export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) {
+export function createPanelCloser(panel, container, { closeBtn, onClose, returnToOrigin = true } = {}) {
   openPanels.add(panel);
+  // Where the focus came from when it entered the panel (a jump list's item,
+  // say), so closing puts the reader back there rather than at the top of a
+  // 265-item list. A panel opened by pointer never takes the focus from
+  // anywhere, and closes to the container as before. A caller whose container
+  // decides where the focus goes itself (Euphonia's globe) turns this off.
+  let cameFrom = null;
+  const onFocusIn = e => { if (returnToOrigin && e.relatedTarget && !panel.contains(e.relatedTarget)) cameFrom = e.relatedTarget; };
+  panel.addEventListener('focusin', onFocusIn);
   function close() {
     if (!panel || !panel.classList.contains('open')) return;
     panel.classList.remove('open');
     onClose?.();
-    container.focus();
+    const back = cameFrom?.isConnected ? cameFrom : container;
+    cameFrom = null;
+    back.focus();
   }
 
   const onPanelClick = e => e.stopPropagation();
@@ -222,6 +232,7 @@ export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) 
     dispose() {
       openPanels.delete(panel);
       panel.removeEventListener('click', onPanelClick);
+      panel.removeEventListener('focusin', onFocusIn);
       closeBtn?.removeEventListener('click', onCloseBtnClick);
       escape.dispose();
     },

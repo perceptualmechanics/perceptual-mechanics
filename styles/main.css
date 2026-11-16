@@ -98,7 +98,10 @@
 
   --focus-ring-color: rgba(255, 255, 255, 0.75);
   --focus-ring: 2px solid var(--focus-ring-color);
-  --focus-ring-outer: 0 0 0 2px var(--focus-ring-color), 0 0 0 5px rgba(0, 0, 0, 0.72);
+  --focus-ring-halo: rgba(0, 0, 0, 0.72);
+  --focus-ring-outer: 0 0 0 2px var(--focus-ring-color), 0 0 0 5px var(--focus-ring-halo);
+  /* The same ring inside an element's edge, for one that fills the window. */
+  --focus-ring-inner: inset 0 0 0 2px var(--focus-ring-color), inset 0 0 0 5px var(--focus-ring-halo);
 
   --scene-crossfade: 600ms;
 }
@@ -137,9 +140,12 @@ html, body {
 
 #pm-nav {
   --nav-count: 14;
-  /* The tools shown without scripting: the Euphonia link. main.js recounts
-     once it knows whether fullscreen is offered. */
+  /* The tools shown without scripting: the Euphonia link. Where the browser
+     offers fullscreen, its button makes two, known before the first paint
+     (public/landing-first.js) so the slots never resize; main.js recounts
+     the shown tools all the same. */
   --nav-extra: 1;
+  :root[data-fullscreen] & { --nav-extra: 2; }
   --nav-units: calc(var(--nav-count) + var(--nav-extra));
   --nav-pad: 0.5rem;
   --nav-rule: 1.5rem;
@@ -319,10 +325,6 @@ html, body {
   color: rgba(255,255,255,0.55);
   text-shadow: 0 1px 5px rgba(0,0,0,0.85);
 
-	@media (min-width: 601px) {
-		bottom: calc(1.6rem - 0.375rem); left: 1.5rem; right: auto;
-		margin-inline: 0;
-	}
 }
 #landing-textlink, #landing-euphonia {
   /* The padding makes a 24px target of a 12px line (WCAG 2.5.8); the
@@ -339,7 +341,7 @@ html, body {
 	}
 }
 #landing-textlink:hover, #landing-euphonia:hover { color: rgba(255,255,255,0.9); }
-#landing-textlink:focus-visible, #landing-euphonia:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
+#landing-textlink:focus-visible, #landing-euphonia:focus-visible, #bench-hour-text:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
 
 /* The planetary hour, one line above the text link. Prerendered empty and
    hidden, so filling it in never moves anything. */
@@ -359,8 +361,21 @@ html, body {
   line-height: 1.6;
   color: rgba(255,255,255,0.55);
   text-shadow: 0 1px 5px rgba(0,0,0,0.85);
-
-	@media (min-width: 601px) {
+}
+/* The footer's two layouts. Stacked and centred, the links and the hour stand
+   above the title; side by side, they sit in its band at the bottom left.
+   Side by side needs the links clear of the centred title by the same 1.5rem
+   they keep from the window's edge: 2 x (24 + 269.9 + 24) + 239.6 = 875.4px,
+   the links' run and the title's width measured in Arapey. At 601px, where
+   it used to change, the title covered the last 30% of "euphonia" through
+   iPad portrait. One query, so the three can't disagree. */
+@media (min-width: 876px) {
+	#landing { padding-bottom: var(--footer-safe-zone); }
+	#landing-links {
+		bottom: calc(1.6rem - 0.375rem); left: 1.5rem; right: auto;
+		margin-inline: 0;
+	}
+	#bench-hour {
 		bottom: 2.9rem; left: 1.5rem; right: auto;
 		text-align: left;
 	}
@@ -453,7 +468,9 @@ html, body {
   align-items: flex-start;
   justify-content: center;
   padding-top: 3.5rem;    
-  padding-bottom: 4.5rem;
+  /* Clear of the footer stacked above the title (below), whose top line,
+     the planetary hour at 6.9rem, ends inside the title block's clearance. */
+  padding-bottom: var(--title-block-clear-mobile);
   overflow-y: auto;
 
 	@media (min-width: 481px) {
@@ -465,6 +482,16 @@ html, body {
 	}
 }
 
+/* From 601px the grid is laid out from the window's size by main.js
+   (applyDerivedLayout), after the first paint. Until then the tiles are
+   empty buttons, and drawing them in the fallback grid only to move them
+   100px (a 0.69 layout shift at 1280x720, measured) helps no one, so they
+   wait unseen. Without scripting the fallback grid is the layout, and shows. */
+#scene-previews:not([data-laid-out]) {
+	@media (scripting: enabled) and (min-width: 601px) {
+		visibility: hidden;
+	}
+}
 #scene-previews {
   --tile-cols: 4;
   list-style: none;
@@ -647,6 +674,13 @@ html, body {
   position: relative;
   overflow: hidden;
 }
+/* Focused by script when a scene opens, so the keyboard starts inside it; a
+   direct link to a scene then drew the browser's ring round the whole canvas.
+   The container is a control only where the scene is played on it (Medium:
+   tabindex 0), and only there does it ring, inside its edge, as the site's
+   other controls do. */
+#experience-container:focus { outline: none; }
+#experience-container[tabindex="0"]:focus-visible { box-shadow: var(--focus-ring-inner); }
 #experience-container canvas {
   position: absolute;
   inset: 0;

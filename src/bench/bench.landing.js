@@ -55,8 +55,12 @@ export function initBench() {
 
   async function useSky() {
     const sky = await requestPosition();
-    if (ask) ask.hidden = true;
     if (sky) { place = sky; render(); }
+    // The button goes either way: a refusal isn't asked twice. The focus goes
+    // first, to the line the answer changed, which reads out the hour it now
+    // shows, so it doesn't fall back to the top of the page with the button.
+    text.focus();
+    if (ask) ask.hidden = true;
   }
 
   ask?.addEventListener('click', useSky);

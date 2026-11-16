@@ -22,6 +22,13 @@
   text-transform: uppercase; line-height: 1.8; text-align: right;
   color: var(--hint-text-color);
 }
+
+/* The hint and the panel are in different stacking contexts (the hint in
+   #scene-chrome at 310, the panel inside the scene's wrapper at 300), so no
+   z-index on the panel can lift it over the hint. While a panel is open the
+   hint steps out instead: it crossed the panel's × on a desktop and its text
+   on a phone. */
+:root:has(.library-panel.open) .library-hint { visibility: hidden; }
 /* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base rule
    below targets the smallest viewport by default; the min-width query
    layers the wider-viewport values on top, never the reverse. */
@@ -37,7 +44,7 @@
   --library-panel-slide: .5s;
   position: absolute; top: 0; right: 0; width: 88%; height: 100%;
   background: #0a0806; border-left: 1px solid rgba(230,215,180,0.15);
-  padding: 2.2rem 1.3rem 2rem; transform: translateX(100%);
+  padding: 2.2rem 1.3rem var(--footer-safe-zone); transform: translateX(100%);
   /* Hidden, not just slid away: a closed panel kept its close button and
      links in the tab order and the accessibility tree. Same delayed-
      visibility pattern as .orbiter-panel. */

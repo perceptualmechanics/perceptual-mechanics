@@ -172,7 +172,9 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
       panelCloser = createPanelCloser(panel, container, {
         closeBtn: panel.querySelector('.sphere-panel-close'),
-        onClose: () => { if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; } },
+        // Closed, the address drops the fragment too, so a reload doesn't
+        // reopen what the reader closed.
+        onClose: () => { if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; } onPieceChange?.(null); },
       });
 
       function renderFragmentHtml(fragment) {
