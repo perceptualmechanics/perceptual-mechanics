@@ -312,35 +312,40 @@ export async function initBuilder(panel) {
     set(s => { s.base = Object.fromEntries([...scoreGrid.querySelectorAll('[data-ability]')].map(el => [el.dataset.ability, el.value === '' ? '' : Number(el.value)])); });
   }
 
-  // The skill choices, as the engine lists them.
-  // A skill chosen in one choice leaves the others, since proficiency counts
-  // once; one the character has without choosing (a background's, a
-  // feature's) is marked as theirs already and can't be chosen again.
+  // The skill choices, as the engine lists them. Proficiency counts once, so
+  // a skill the character has without choosing it (a background's, a
+  // feature's) or has chosen in another of these choices (Insight by an elf's
+  // Keen Senses, say) is marked as theirs already in the rest and can't be
+  // chosen there; unticked where it was taken, it is free everywhere again.
   function renderSkills(result) {
     const chosenAnywhere = new Set(Object.values(state.skills ?? {}).flat());
     const already = result.skills.filter(sk => sk.proficient && !chosenAnywhere.has(sk.name)).map(sk => sk.name);
     const shape = result.choices.map(c => `${c.key}:${c.count}:${c.upTo}:${c.from.join()}`).join('|') + `|${already.join()}`;
-    if (skillsBox.dataset.for === shape) return;
-    skillsBox.dataset.for = shape;
-    rebuild(skillsBox, ...(result.choices.length ? result.choices.map(c => {
-      const picked = state.skills?.[c.key] ?? [];
-      const read = e => {
-        const skill = e.target.value;
-        if (e.target.checked) for (const box of skillsBox.querySelectorAll('input[type=checkbox]')) if (box.value === skill && box !== e.target) box.checked = false;
-        set(s => {
-          s.skills = Object.fromEntries(Object.entries(s.skills ?? {}).map(([k, v]) => [k, k === c.key || !e.target.checked ? v : v.filter(x => x !== skill)]));
-          s.skills[c.key] = [...group.querySelectorAll('input:checked')].map(x => x.value);
-        });
-      };
-      const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`skills:${c.key}`) },
-        h('legend', {}, `${c.label}: ${c.given.length ? `${c.given.join(', ')}, plus ` : ''}choose ${c.upTo ? 'up to ' : ''}${c.count}${c.upTo ? ' (the rest tools)' : ''}`),
-        h('div', { class: 'b-checks' }, c.from.map(skill => {
-          const yours = already.includes(skill) && !picked.includes(skill);
-          return h('label', { class: yours ? 'is-yours' : null }, h('input', { type: 'checkbox', value: skill, 'data-key': `skill-${c.key}-${skill}`, checked: picked.includes(skill), disabled: yours || null, onchange: read }), ` ${skill}`, yours ? h('span', { class: 'b-mark' }, ' (already yours)') : null);
-        })),
-        problemSlot(`skills:${c.key}`));
-      return group;
-    }) : [h('p', { class: 'b-note' }, 'Your class and species bring their skill choices here.')]));
+    if (skillsBox.dataset.for !== shape) {
+      skillsBox.dataset.for = shape;
+      rebuild(skillsBox, ...(result.choices.length ? result.choices.map(c => {
+        const read = () => set(s => { s.skills = { ...s.skills, [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
+        const group = h('fieldset', { class: 'b-skills', 'data-choice': c.key, 'aria-describedby': idFor(`skills:${c.key}`) },
+          h('legend', {}, `${c.label}: ${c.given.length ? `${c.given.join(', ')}, plus ` : ''}choose ${c.upTo ? 'up to ' : ''}${c.count}${c.upTo ? ' (the rest tools)' : ''}`),
+          h('div', { class: 'b-checks' }, c.from.map(skill =>
+            h('label', {}, h('input', { type: 'checkbox', value: skill, 'data-key': `skill-${c.key}-${skill}`, checked: (state.skills?.[c.key] ?? []).includes(skill), onchange: read }), ` ${skill}`))),
+          problemSlot(`skills:${c.key}`));
+        return group;
+      }) : [h('p', { class: 'b-note' }, 'Your class and species bring their skill choices here.')]));
+    }
+    // Marked in place on every change, so ticking a box never rebuilds the
+    // lists under the reader's focus.
+    for (const box of skillsBox.querySelectorAll('fieldset[data-choice] input[type=checkbox]')) {
+      const key = box.closest('fieldset').dataset.choice, skill = box.value;
+      const yours = !box.checked && (already.includes(skill)
+        || Object.entries(state.skills ?? {}).some(([k, picked]) => k !== key && picked.includes(skill)));
+      const label = box.closest('label');
+      if (yours === label.classList.contains('is-yours')) continue;
+      box.disabled = yours;
+      label.classList.toggle('is-yours', yours);
+      if (yours) label.append(h('span', { class: 'b-mark' }, ' (already yours)'));
+      else label.querySelector('.b-mark')?.remove();
+    }
   }
 
   // The options a class's table counts (the Courtier's accomplishments): a
@@ -501,9 +506,11 @@ export async function initBuilder(panel) {
   function renderTools(result) {
     const given = result.tools.filter(t => !result.toolChoices.some(c => c.chosen.includes(t.name))).map(t => t.name);
     if (!fresh(toolsBox, JSON.stringify([result.toolChoices.map(c => [c.key, c.count, c.from, c.chosen]), result.toolExpertise.map(c => [c.key, c.from, c.chosen]), result.tools]))) return;
-    // A tool the character has from anywhere else can't be taken again: its
-    // box is disabled and says so. Expertise is with tools already had.
-    const elsewhere = (c, t) => result.tools.some(x => x.name === t && x.from.some(src => src !== c.label));
+    // A tool the character has, and didn't take in this choice, can't be taken
+    // again: its box is disabled and says so. Held, not sourced elsewhere: the
+    // Mhizha is given Tinker's Tools and its own choice offers them too, under
+    // the same label. Expertise is with tools already had.
+    const elsewhere = (c, t) => !c.chosen.includes(t) && result.tools.some(x => x.name === t);
     const checks = (c, store, legend, field, owned = true) => {
       const read = () => set(s => { s[store] = { ...s[store], [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
       const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`${field}:${c.key}`) }, h('legend', {}, legend),
