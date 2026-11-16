@@ -60,7 +60,7 @@
 	}
 }
 .orbiter-hint {
-  top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
+  top: 4.5rem; right: 1.2rem; font-size: var(--hint-font-size); letter-spacing: var(--hint-tracking);
   text-transform: uppercase; line-height: 1.8; text-align: right;
   color: var(--hint-text-color);
 }

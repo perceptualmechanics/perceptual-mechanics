@@ -27,7 +27,7 @@
 .butterfly-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;
   color: var(--hint-text-color);
-  font-size: 0.55rem; letter-spacing: 0.2em;
+  font-size: var(--hint-font-size); letter-spacing: var(--hint-tracking);
   text-transform: uppercase; pointer-events: none;
   text-align: right; z-index: 310; line-height: 1.8;
   font-family: 'Arapey', serif;

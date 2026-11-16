@@ -96,8 +96,8 @@
   /* The tracking lands after the last character too, so the box reaches one
      tracking further right and the centred line sits where it looks centred. */
   margin-right: calc(-1 * var(--tracking));
-  font-size: 0.72rem; letter-spacing: var(--tracking);
-  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--hint-font-size); letter-spacing: var(--tracking);
+  color: var(--hint-text-color);
   transition: opacity 400ms ease;
 }
 .quiz-hint[data-hidden='true'] { opacity: 0; }

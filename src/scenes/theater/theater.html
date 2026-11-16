@@ -34,11 +34,15 @@
   </div>
 
   <div class="tab-controls" role="group" aria-label="Theater playback controls">
-    <button type="button" class="tab-btn" data-act="prev" aria-label="Previous line">&lt; prev</button>
-    <button type="button" class="tab-btn" data-act="play" aria-label="Pause">&gt; play</button>
-    <button type="button" class="tab-btn" data-act="next" aria-label="Next line">next &gt;</button>
+    <button type="button" class="tab-btn" data-act="prev" aria-label="Previous line">&larr; Previous</button>
+    <button type="button" class="tab-btn" data-act="play" data-state="paused" aria-label="Play"><span data-when="playing">|| Pause</span><span data-when="paused">&gt; Play</span></button>
+    <button type="button" class="tab-btn" data-act="next" aria-label="Next line">Next &rarr;</button>
     <span class="tab-progress"></span>
   </div>
+
+  <!-- Shown only where the window is too short for the stage at its
+       smallest (theater.css); the reel holds still under it. -->
+  <p class="tab-turn" role="status">Turn your phone upright for the theater.</p>
 
   <div class="tab-sr-live" aria-live="polite" aria-atomic="true"></div>
 </div>

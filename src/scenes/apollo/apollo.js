@@ -768,7 +768,9 @@ export function createApollo(container, { preview = false, initialArg = null, on
     srSay(rulerOn
       ? (rulerFits
         ? 'Pitch ruler shown: the same lines laid out by frequency instead of wavelength.'
-        : 'Pitch ruler requested, but there is no room for it at this window size. Turn the phone, or open a wider window.')
+        // The ruler wants height (relayout), so the way to room is a taller
+        // window: upright, where the phone is on its side.
+        : `Pitch ruler requested, but there is no room for it at this window size. ${innerWidth > innerHeight ? 'Turn the phone upright, or open a taller window.' : 'Open a taller window.'}`)
       : 'Pitch ruler hidden.');
     rulerToggleEl?.classList.toggle('no-room', rulerOn && !rulerFits);
   }
@@ -903,8 +905,10 @@ export function createApollo(container, { preview = false, initialArg = null, on
       strike.type = 'button';
       strike.className = 'apollo-strike';
       strike.textContent = el.symbol;
+      // The name starts with the symbol the button shows, so "click He" by
+      // voice finds it (WCAG 2.5.3).
       strike.setAttribute('aria-label',
-        `Sound ${el.name} — ${count} line${count === 1 ? '' : 's'} in the band`);
+        `${el.symbol} — sound ${el.name}, ${count} line${count === 1 ? '' : 's'} in the band`);
       strike.addEventListener('click', () => strikeElement(el));
 
       const countEl = document.createElement('span');

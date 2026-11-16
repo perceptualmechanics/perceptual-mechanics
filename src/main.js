@@ -539,6 +539,46 @@ function glimpseKeyFor(node) {
 }
 document.addEventListener('focusin', e => pmGlimpse(glimpseKeyFor(e.target)));
 
+// The caption that names a scene: under its icon or tile while the pointer
+// rests there or the keyboard is on it, its name and the line its text page
+// opens with (data-line, from the build). One element for both, placed by
+// script, because the nav scrolls sideways and would clip a caption inside it.
+const caption = document.getElementById('scene-caption');
+const captionName = caption?.querySelector('.scene-caption-name');
+const captionLine = caption?.querySelector('.scene-caption-line');
+const CAPTION_GAP = 8;
+function showCaption(el) {
+  const key = el.dataset.scene ?? el.closest('.preview-wrapper')?.dataset.scene;
+  if (!caption || !SCENES[key]) return;
+  captionName.textContent = SCENES[key].label;
+  captionLine.textContent = el.dataset.line ?? '';
+  captionLine.hidden = !el.dataset.line;
+  caption.hidden = false;
+  const r = el.getBoundingClientRect(), c = caption.getBoundingClientRect();
+  const left = Math.min(Math.max(CAPTION_GAP, r.left + r.width / 2 - c.width / 2), innerWidth - c.width - CAPTION_GAP);
+  const below = r.bottom + CAPTION_GAP;
+  caption.style.left = `${left}px`;
+  caption.style.top = `${below + c.height <= innerHeight ? below : r.top - CAPTION_GAP - c.height}px`;
+}
+const hideCaption = () => { if (caption) caption.hidden = true; };
+const captioned = '.nav-icon, .preview-container';
+const hovers = matchMedia('(hover: hover)');
+document.addEventListener('pointerover', e => {
+  const el = e.target.closest?.(captioned);
+  if (el && hovers.matches && e.pointerType === 'mouse') showCaption(el);
+});
+document.addEventListener('pointerout', e => {
+  if (e.target.closest?.(captioned) && !e.relatedTarget?.closest?.(captioned)) hideCaption();
+});
+document.addEventListener('focusin', e => {
+  const el = e.target.closest?.(captioned);
+  if (el?.matches(':focus-visible')) showCaption(el); else hideCaption();
+});
+document.addEventListener('focusout', hideCaption);
+document.addEventListener('scroll', hideCaption, true);
+// Opening a scene (it takes the address) leaves no caption over it.
+addEventListener('hashchange', hideCaption);
+
 // Asked before the first paint (public/landing-first.js), so the nav's slots
 // were already sized for this button.
 const fsEnabled = 'fullscreen' in document.documentElement.dataset;

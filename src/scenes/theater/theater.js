@@ -300,6 +300,7 @@ export function createTheater(container, { preview = false } = {}) {
   const timers = trackTimers();
 
   let hostPaused = false;
+  let turnPaused = false;
   let resumeOnShow = false;
   let applyHostPaused = null;
 
@@ -341,7 +342,7 @@ export function createTheater(container, { preview = false } = {}) {
     }
 
     function setPlayLabel() {
-      playBtn.textContent = player.playing ? '|| pause' : '> play';
+      playBtn.dataset.state = player.playing ? 'playing' : 'paused';
       playBtn.setAttribute('aria-label', player.playing ? 'Pause' : 'Play');
     }
 
@@ -389,7 +390,15 @@ export function createTheater(container, { preview = false } = {}) {
       if (!player.isAtEnd) player.next();
     });
 
-    resize = bindGuardedResize(container, () => renderer.relayout());
+    // Where the window is too short for the stage (theater.css shows the
+    // prompt to turn the phone), the reel holds still under it, as it does
+    // while the page is hidden, and goes on when there is room again.
+    const turnEl = root.querySelector('.tab-turn');
+    const checkTurn = () => {
+      const turn = getComputedStyle(turnEl).display !== 'none';
+      if (turn !== turnPaused) { turnPaused = turn; applyHostPaused?.(); }
+    };
+    resize = bindGuardedResize(container, () => { renderer.relayout(); checkTurn(); });
 
     if (prefersReducedMotion()) player.goTo(0);
     else player.play();
@@ -401,7 +410,7 @@ export function createTheater(container, { preview = false } = {}) {
     });
 
     applyHostPaused = () => {
-      if (hostPaused) {
+      if (hostPaused || turnPaused) {
         if (player.playing) { resumeOnShow = true; player.pause(); }
       } else if (resumeOnShow) {
         resumeOnShow = false;
@@ -410,6 +419,7 @@ export function createTheater(container, { preview = false } = {}) {
       setPlayLabel();
     };
     applyHostPaused();
+    checkTurn();
   });
 
   return {

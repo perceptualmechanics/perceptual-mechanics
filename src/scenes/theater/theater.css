@@ -70,6 +70,12 @@
 		padding: 10px;
 	}
 }
+/* The stage takes the focus when the theater opens (theater.js), so the
+   keyboard starts inside the scene; it is not in the tab order and not a
+   control, so it draws no ring (the browser's own was a blue box round the
+   screen). */
+.tab-screen:focus { outline: none; }
+
 /* The marquee bulbs: a dot grid tiled across the whole frame, of which only
    the ring between `inset: 2px` and the screen's own edge is ever seen —
    .tab-screen paints over the middle of it, opaque, and comes later in tree
@@ -467,18 +473,27 @@
 	}
 }
 /* The buttons and the count take their larger size in landscape only from
-   622px: in a short window they flank #site-title (the short-landscape block
-   below), and back and pause at that size run 175px from a 1rem edge, which
-   clears the centred 239.6px title from W/2 - 119.8 >= 191, so W >= 622. */
+   722px: in a short window they flank #site-title (the short-landscape block
+   below), and "Previous" and "Pause" at that size run 209px from a 1rem edge,
+   which clears the centred 239.6px title from W/2 - 119.8 >= 225, so
+   W >= 722 (measured; at the smaller size they clear it from 648px). */
 .tab-btn {
   font-family: 'Courier New', monospace;
   background: #1a120b; border: 1px solid #6b5638; border-radius: 3px;
   cursor: pointer; color: #d8cdb8;
   font-size: 0.74rem; padding: 0.26rem 0.5rem;
 
-	@media (min-width: 701px), (min-width: 622px) and (orientation: landscape) {
+	@media (min-width: 722px), (min-width: 701px) and (orientation: portrait) {
 		font-size: 0.88rem; padding: 0.3rem 0.7rem;
 	}
+}
+/* Play and pause share a button that holds both labels in one cell, the one
+   not in force hidden, so it is always as wide as the longer and "Next"
+   beside it never moves when it toggles. */
+.tab-btn[data-act="play"] {
+  display: inline-grid;
+  & > span { grid-area: 1 / 1; }
+  &[data-state="playing"] > [data-when="paused"], &[data-state="paused"] > [data-when="playing"] { visibility: hidden; }
 }
 .tab-btn:hover, .tab-btn:focus-visible { background: #2a2018; border-color: #e8b84b; color: #e8b84b; }
 .tab-btn:active { transform: translateY(1px); }
@@ -486,7 +501,7 @@
   opacity: 0.55; text-align: center;
   min-width: auto; font-size: 0.7rem;
 
-	@media (min-width: 701px), (min-width: 622px) and (orientation: landscape) {
+	@media (min-width: 722px), (min-width: 701px) and (orientation: portrait) {
 		min-width: 5.5em; font-size: inherit;
 	}
 }
@@ -511,6 +526,28 @@
 		padding: 0 1rem; pointer-events: none;
 		& > * { pointer-events: auto; }
 		& [data-act="next"] { grid-column: 4; }
+	}
+}
+
+/* Shorter still, the band can't be kept: the stage at its 200px minimum and
+   the band need 379px (the screen measured H - 179px there). From 378px the
+   title and the curtain stand aside and the controls go back under the stage
+   in the column, which fits it down to 336px (the screen measured H - 136px). */
+@media (orientation: landscape) and (max-height: 378px) {
+	.tab-root { padding: 0.4rem 1rem; }
+	.tab-curtain { display: none; }
+	.tab-controls { position: static; display: flex; padding: 0.4rem 1rem 0; pointer-events: auto; }
+	:root:has(#experience-container .tab-root) #site-title-row { visibility: hidden; }
+}
+/* Below 336px the stage can't stand at its smallest at all, and squeezing it
+   further pushes the figures out of the frame (measured), so the reel holds
+   still under a word to turn the phone. */
+.tab-turn { display: none; }
+@media (orientation: landscape) and (max-height: 335px) {
+	.tab-turn {
+		display: flex; position: absolute; inset: 0; z-index: 6; margin: 0;
+		align-items: center; justify-content: center; padding: 1rem; text-align: center;
+		background: rgba(5, 3, 2, 0.72); color: #d8cdb8; font-size: 0.95rem;
 	}
 }
 

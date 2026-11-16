@@ -33,7 +33,13 @@ async function sheetOf(href) {
       return r.text();
     }).catch(err => { pages.delete(href); throw err; }));
   }
-  const doc = new DOMParser().parseFromString(await pages.get(href), 'text/html');
+  // The generator's styles go before parsing as well as after: a parsed
+  // document keeps this page's Content-Security-Policy, which reports the
+  // <style> and each style attribute it meets (five per sheet, in the console)
+  // though none would ever be applied. The sheets are the export's own pages,
+  // held to plain markup by verify-euphonia, so their style markup is regular.
+  const html = (await pages.get(href)).replace(/<style\b[\s\S]*?<\/style>/gi, '').replace(/\sstyle=(?:"[^"]*"|'[^']*')/gi, '');
+  const doc = new DOMParser().parseFromString(html, 'text/html');
   const wrap = doc.querySelector('main.wrap');
   if (!wrap) throw new Error('not a sheet');
   wrap.querySelectorAll('nav.back, script, style, link').forEach(n => n.remove());

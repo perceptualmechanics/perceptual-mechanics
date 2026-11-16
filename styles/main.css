@@ -86,7 +86,12 @@
 }
 
 :root {
-  --hint-text-color: rgba(255, 255, 255, 0.6);
+  /* Each scene's hint line: the most useful words a newcomer gets, so read at
+     12px rather than the 8.8px most were set at, with the tracking tightened so
+     the longer line wraps little more than it did. */
+  --hint-text-color: rgba(255, 255, 255, 0.72);
+  --hint-font-size: 0.75rem;
+  --hint-tracking: 0.12em;
 
   --title-block-bottom: 4.5rem;
   --title-block-bottom-mobile: 6.5rem;
@@ -382,6 +387,27 @@ html, body {
 		bottom: 2.9rem; left: 1.5rem; right: auto;
 		text-align: left;
 	}
+}
+/* The scene caption (main.js): the scene's name in the site's tracked
+   capitals, and under it the line its text page opens with. Placed by script
+   under the icon or tile it names. */
+#scene-caption {
+  position: fixed; z-index: 510; margin: 0;
+  max-width: min(22rem, calc(100vw - 1rem));
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+  padding: 0.45rem 0.8rem; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.78);
+  text-align: center; pointer-events: none;
+}
+#scene-caption[hidden], .scene-caption-line[hidden] { display: none; }
+.scene-caption-name {
+  font-size: 0.75rem; text-transform: uppercase;
+  --tracking: 0.24em; letter-spacing: var(--tracking); margin-right: calc(-1 * var(--tracking));
+  color: rgba(255, 255, 255, 0.92);
+}
+.scene-caption-line {
+  font-size: 0.85rem; font-style: italic; line-height: 1.35;
+  color: rgba(255, 255, 255, 0.78);
 }
 #bench-sky {
   background: none;

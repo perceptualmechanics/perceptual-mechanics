@@ -18,19 +18,23 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 // at build time, so the drawings never ship in the page's script.
 const withClass = (svg, cls) => svg.replace('<svg ', `<svg class="${cls}" `);
 
-export function navIconsHtml() {
+// A scene's line for the caption that names it on hover and focus
+// (prerender.js sceneLines), carried on its icon and its tile.
+const lineAttr = (lines, key) => (lines[key] ? ` data-line="${esc(lines[key])}"` : '');
+
+export function navIconsHtml(lines = {}) {
   return Object.entries(SCENES).map(([key, spec]) => {
     const sigil = ASSIGNMENTS[key]?.sigil;
     if (!sigil) throw new Error(`landing: scene "${key}" has no sigil in bench.text.js ASSIGNMENTS`);
-    return `    <button type="button" class="nav-icon" data-scene="${key}" data-sigil="${sigil}" aria-label="${esc(spec.label)}">`
+    return `    <button type="button" class="nav-icon" data-scene="${key}" data-sigil="${sigil}"${lineAttr(lines, key)} aria-label="${esc(spec.label)}">`
       + `${withClass(spec.icon, 'nav-scene')}${withClass(sigilSvg(sigil), 'nav-sigil')}\n    </button>`;
   }).join('\n\n');
 }
 
-export function previewTilesHtml() {
+export function previewTilesHtml(lines = {}) {
   return Object.entries(SCENES).map(([key, spec]) =>
     `      <li class="preview-wrapper" data-scene="${key}">\n`
-    + `        <button type="button" class="preview-container" id="preview-${key}"\n`
+    + `        <button type="button" class="preview-container" id="preview-${key}"${lineAttr(lines, key)}\n`
     + `             aria-label="${esc(tileAria(spec))}">\n`
     + `        </button>\n      </li>`).join('\n\n');
 }
@@ -47,12 +51,12 @@ export const TILES_MARKER = '<!--scene-tiles-->';
 const markerLine = (marker) =>
   new RegExp(`^[ \\t]*${marker.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}`, 'm');
 
-export function injectLanding(html) {
+export function injectLanding(html, lines = {}) {
   const missing = [NAV_MARKER, TILES_MARKER].filter(m => !html.includes(m));
   if (missing.length) {
     throw new Error(`index.html is missing ${missing.join(' and ')} — the landing markup has nowhere to go`);
   }
   return html
-    .replace(markerLine(NAV_MARKER), () => navIconsHtml())
-    .replace(markerLine(TILES_MARKER), () => previewTilesHtml());
+    .replace(markerLine(NAV_MARKER), () => navIconsHtml(lines))
+    .replace(markerLine(TILES_MARKER), () => previewTilesHtml(lines));
 }

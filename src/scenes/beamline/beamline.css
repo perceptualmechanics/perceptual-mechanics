@@ -128,7 +128,7 @@
   border-radius: 0.35rem;
 }
 .beamline-hint {
-  top: 4.5rem; right: 1.2rem; font-size: 0.7rem; letter-spacing: 0.18em;
+  top: 4.5rem; right: 1.2rem; font-size: var(--hint-font-size); letter-spacing: var(--hint-tracking);
   line-height: 1.8; text-align: right;
   padding: 0.4rem 0.7rem;
   border-radius: 0.5rem;

@@ -20,13 +20,6 @@
 		transition: none;
 	}
 }
-/* The <img> now sits inside a <picture> (WebP source + PNG fallback).
-   display:contents drops the <picture>'s own box so the <img> stays the
-   direct flex item of .colophon-mark and its width:78% keeps resolving
-   against the button's 48px content box exactly as it did before — a
-   <picture> with a box of its own would shrink-to-fit and the percentage
-   would resolve against that instead. */
-.colophon-mark picture { display: contents; }
 .colophon-mark img {
   width: 78%; height: auto; display: block; position: relative;
   /* Burnished-gold read: warm the ink's browns toward true gold and

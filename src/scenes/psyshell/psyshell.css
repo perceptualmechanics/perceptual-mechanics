@@ -36,21 +36,43 @@
 
 .psyshell-hint {
   top: 4.5rem; right: 1.2rem; max-width: 60vw; text-align: right;
-  font-size: 0.72rem; letter-spacing: 0.12em;
+  font-size: var(--hint-font-size); letter-spacing: var(--hint-tracking);
   color: var(--hint-text-color);
 }
 
-.psyshell-ordinal {
+/* The sentence the lightpen read, and under it its place in the lens. On a
+   phone it stands above the title block, clear of the sound toggle in the
+   same corner; on a wider screen it takes the bottom right. A long sentence
+   (23 of the 3,264 run past 300 characters, one to 1,895) scrolls inside it
+   rather than covering the crystal. */
+.psyshell-read {
   position: fixed; z-index: 311;
-  bottom: 5.7rem; right: 1.2rem; margin: 0;
-  font-family: 'Electrolize', sans-serif;
-  font-size: 0.68rem; letter-spacing: 0.22em;
-  color: rgba(196, 216, 228, 0.75);
-  pointer-events: none;
+  bottom: var(--title-block-clear-mobile); left: 1rem; right: 1rem;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;
+  text-align: right;
   transition: opacity 0.25s ease;
 
 	@media (min-width: 601px) {
-		bottom: 3.2rem; right: 1.5rem; font-size: 0.74rem;
+		bottom: 3.2rem; left: auto; right: 1.5rem; max-width: min(28rem, 40vw);
+	}
+}
+.psyshell-read[hidden], .psyshell-read-text[hidden] { display: none; }
+.psyshell-read-text {
+  margin: 0; max-height: 45vh; overflow-y: auto; overscroll-behavior: contain;
+  font-family: 'Arapey', serif; font-size: 1rem; line-height: 1.45;
+  color: rgba(230, 242, 248, 0.94);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  scrollbar-width: thin; scrollbar-color: rgba(170, 205, 225, 0.35) transparent;
+}
+.psyshell-read-text:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+.psyshell-ordinal {
+  margin: 0;
+  font-family: 'Electrolize', sans-serif;
+  font-size: 0.68rem; letter-spacing: 0.22em;
+  color: rgba(196, 216, 228, 0.75);
+
+	@media (min-width: 601px) {
+		font-size: 0.74rem;
 	}
 }
 
@@ -89,5 +111,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .psyshell-title, .psyshell-hint, .psyshell-ordinal { transition: none; }
+  .psyshell-title, .psyshell-hint, .psyshell-read { transition: none; }
 }

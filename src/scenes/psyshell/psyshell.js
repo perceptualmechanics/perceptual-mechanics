@@ -675,18 +675,28 @@ export function createPsyshell(container, { preview = false } = {}) {
   }
   writeLevels();
 
-  let titleEl = null, hintEl = null, ordinalEl = null, jumpList = null, soundToggle = null;
+  let titleEl = null, hintEl = null, readEl = null, readTextEl = null, ordinalEl = null, jumpList = null, soundToggle = null;
   let corpus = null;
   const srSay = msg => { if (srLiveEl) srLiveEl.textContent = msg; };
 
+  // The sentence the lightpen found, to read, with its place in the lens as
+  // a caption under it; the live region says the same aloud. Before the
+  // corpus has loaded there is only the place.
   function showRead(index) {
-    if (ordinalEl) {
-      ordinalEl.hidden = false;
-      ordinalEl.textContent = `${index + 1} / ${FILAPIXEL_COUNT}`;
-      placeOrdinal();
+    const src = corpus?.SOURCES[corpus.SOURCE_OF[index]];
+    if (readEl) {
+      readTextEl.textContent = corpus ? corpus.TEXTS[index] : '';
+      readTextEl.hidden = !corpus;
+      ordinalEl.textContent = `${index + 1} / ${FILAPIXEL_COUNT}${src ? ` · ${src.label}` : ''}`;
+      readEl.hidden = false;
+      readTextEl.scrollTop = 0;
+      // A sentence longer than the block scrolls, and then the keyboard can
+      // reach it to scroll it too.
+      if (readTextEl.scrollHeight > readTextEl.clientHeight) readTextEl.tabIndex = 0;
+      else readTextEl.removeAttribute('tabindex');
+      placeRead();
     }
     if (!corpus) { srSay(`Filapixel ${index + 1} of ${FILAPIXEL_COUNT}.`); return; }
-    const src = corpus.SOURCES[corpus.SOURCE_OF[index]];
     srSay(`Filapixel ${index + 1} of ${FILAPIXEL_COUNT}, from ${src.label}. ${corpus.TEXTS[index]}`);
   }
 
@@ -724,11 +734,13 @@ export function createPsyshell(container, { preview = false } = {}) {
     const frag = parseHTML(sceneTemplate('psyshell', psyshellHtml));
     titleEl = frag.querySelector('.psyshell-title');
     hintEl = frag.querySelector('.psyshell-hint');
-    ordinalEl = frag.querySelector('.psyshell-ordinal');
+    readEl = frag.querySelector('.psyshell-read');
+    readTextEl = readEl.querySelector('.psyshell-read-text');
+    ordinalEl = readEl.querySelector('.psyshell-ordinal');
     soundToggleEl = frag.querySelector('.psyshell-sound-toggle');
     soundLabelEl = frag.querySelector('.psyshell-sound-label');
     srLiveEl = frag.querySelector('.psyshell-sr-live');
-    sceneChromeRoot().append(titleEl, hintEl, ordinalEl, soundToggleEl, srLiveEl);
+    sceneChromeRoot().append(titleEl, hintEl, readEl, soundToggleEl, srLiveEl);
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'psyshell');
 
@@ -772,17 +784,18 @@ export function createPsyshell(container, { preview = false } = {}) {
     if (usableBottom - usableTop < H * 0.3) { usableTop = 0; usableBottom = H; }
     fitCamera();
 
-    placeOrdinal(titleBox);
+    placeRead(titleBox);
   }
 
-  function placeOrdinal(titleBox) {
-    if (!ordinalEl || ordinalEl.hidden) return;
+  function placeRead(titleBox) {
+    if (!readEl || readEl.hidden) return;
     const box = titleBox ?? titleEl?.getBoundingClientRect();
     if (!box) return;
-    const ordBox = ordinalEl.getBoundingClientRect();
-    if (!ordBox.width && !ordBox.height) return;
-    const overlaps = ordBox.left < box.right + 10 && ordBox.top < box.bottom;
-    ordinalEl.style.bottom = overlaps ? `${Math.round(window.innerHeight - box.top + 10)}px` : '';
+    readEl.style.bottom = '';
+    const readBox = readEl.getBoundingClientRect();
+    if (!readBox.width && !readBox.height) return;
+    const overlaps = readBox.left < box.right + 10 && readBox.bottom > box.top - 10;
+    readEl.style.bottom = overlaps ? `${Math.round(window.innerHeight - box.top + 10)}px` : '';
   }
 
   resizeCtl = bindGuardedResize(container, (cw, ch) => {
@@ -847,7 +860,7 @@ export function createPsyshell(container, { preview = false } = {}) {
       soundToggle?.dispose();
       jumpList?.dispose();
       if (!preview) container.removeEventListener('click', onClick);
-      titleEl?.remove(); hintEl?.remove(); ordinalEl?.remove();
+      titleEl?.remove(); hintEl?.remove(); readEl?.remove();
       soundToggleEl?.remove(); srLiveEl?.remove();
       if (audioCtx) {
         audioCtx.close().catch(() => {});
