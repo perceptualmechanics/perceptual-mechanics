@@ -1753,12 +1753,24 @@ export function character(book, state) {
     return [...(pick?.chosen ?? []).filter(sp => sp.level === 0).map(sp => sp.name), ...sc.given].map(n => book.spellFacts.get(n)).filter(sp => sp?.dice && (sp.attack || sp.save)).map(sp => {
       const step = sp.upgrade?.steps.filter(([lv]) => total >= lv).at(-1)?.[1];
       const roll = sp.upgrade?.kind === 'dice' && step ? step : sp.dice.dice, beams = sp.upgrade?.kind === 'beams' ? step ?? 1 : 1;
-      const plus = addOne && /^1d\d+$/.test(roll) ? mod[addOne] : 0;
+      // And an improvement chosen for it ("You can add your Charisma modifier
+      // to that spell's damage rolls", Agonizing Blast).
+      const improved = cantripTargets.filter(t => t.chosen === sp.name).map(t => features.find(f => (f.key ?? `${f.class} ${f.level} ${f.name}`) === t.key)?.text.match(/You can add your (\w+) modifier to that spell[’']s damage rolls/)?.[1]).filter(Boolean);
+      const plus = (addOne && /^1d\d+$/.test(roll) ? mod[addOne] : 0) + improved.reduce((n, a) => n + mod[a], 0);
       return { name: sp.name, kind: 'spell', class: sc.class, ability: sc.ability, bonus: sp.attack ? sc.attack : null, save: sp.save ? { ability: sp.save, dc: sc.dc } : null, proficient: true,
         damage: `${roll}${signedMod(plus)} ${sp.dice.type ?? 'of the chosen type'}`, beams: beams > 1 ? beams : null, versatile: null, reach: sp.reach ?? sp.range, mastery: null };
     });
   });
-  const attacks = [...carriedWeapons.map(strike), strike(UNARMED), ...ownAttacks, ...spellAttacks];
+  // A bonus that holds only in a state, noted on the attacks it adds to,
+  // not added in: "When you make an attack using Strength—with either a
+  // weapon or an Unarmed Strike—and deal damage to the target, you gain a
+  // bonus to the damage … as shown in the Rage Damage column" (Rage).
+  const riders = features.flatMap(f => {
+    const m = f.text.match(/When you make an attack using (\w+)—with either a weapon or an Unarmed Strike—and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as an? \w+, as shown in the ([\w ]+) column/);
+    return m ? [{ ability: m[1], note: `${atLevel(f.class, m[2])} damage in ${f.name}` }] : [];
+  });
+  const attacks = [...carriedWeapons.map(strike), strike(UNARMED), ...ownAttacks, ...spellAttacks]
+    .map(a => ({ ...a, riders: a.kind === 'spell' ? [] : riders.filter(r => r.ability === a.ability).map(r => r.note) }));
   // The Monster's card, for one who carries it, as Monster Form writes it:
   // the scores it swaps ("Your Strength and Intelligence scores swap, and
   // your Dexterity and Wisdom scores swap"), and with them the Armor Class
@@ -1862,7 +1874,7 @@ export function character(book, state) {
   // Immunity to conditions; and Advantage on saves against one ("to avoid
   // or end the Charmed condition"). One that holds only in a state ("while
   // your Rage is active", "In Monster Form") is for play.
-  const defenses = { resistances: new Set(), immunities: new Set(), conditionImmunities: new Set(), conditionAdvantages: new Set() };
+  const defenses = { resistances: new Set(), immunities: new Set(), conditionImmunities: new Set(), conditionAdvantages: new Set(), saveAdvantages: new Set() };
   const typeChosen = f => kindChoices.find(c => c.class === f.class && c.noun === 'damage type' && c.chosen)?.chosen;
   const traitSayings = [...(species?.traits ?? []).map(t => t.text), Object.values(optionRow ?? {}).slice(1).join(' '), ...feats.map(f => [f.feat.description, ...f.feat.benefits.map(b => b.text)].join('\n\n'))].flatMap(standing);
   const defenseSources = [...traitSayings.map(x => ({ x })), ...features.flatMap(f => sayings(f).map(x => ({ f, x })))];
@@ -1873,6 +1885,22 @@ export function character(book, state) {
     if (f && /Resistance to (?:that damage type|your attuned damage type)\b/.test(x) && typeChosen(f)) defenses.resistances.add(typeChosen(f));
     for (const m of x.matchAll(/\b(?:Immunity to|immune to) (?:disease and to )?the ((?:[A-Z]\w+(?:,? (?:and )?)?)+) conditions?\b/g)) list(m[1]).forEach(c => defenses.conditionImmunities.add(c));
     for (const m of x.matchAll(/Advantage on saving throws you make to avoid or end the (\w+) condition/g)) defenses.conditionAdvantages.add(m[1]);
+    // Advantage on saves by ability, with what for where it says ("on
+    // Intelligence, Wisdom, and Charisma saving throws", Gnomish Cunning;
+    // "on Constitution saving throws to maintain Concentration").
+    for (const m of x.matchAll(new RegExp(`Advantage on ((?:${ABILITIES.join('|')})(?:,? (?:and |or )?(?:${ABILITIES.join('|')}))*) saving throws( to [^.,;]+)?`, 'g'))) defenses.saveAdvantages.add(`${listed(list(m[1]))}${m[2] ?? ''}`);
+    // A resistance by a choice's table ("a damage type associated with your
+    // current land choice in the Circle Spells feature, as shown in the
+    // Nature's Ward table"), the land chosen.
+    const byTable = f && x.match(/Resistance to a damage type associated with your current (\w+) choice in the (.+?) feature, as shown in the (.+?) table/);
+    if (byTable) {
+      const chosen = spellSetChoices.find(c => c.class === f.class && c.chosen)?.chosen;
+      // Its table names the land as the set's name does, or by its first word
+      // ("Arid" for "Arid Land").
+      const row = chosen && f.text.split('\n').map(l => l.split('|').map(c => c.trim())).find(c => c[1] && (chosen === c[1] || chosen.startsWith(`${c[1]} `)));
+      const type = row?.[2];
+      if (type && book.damageTypes.includes(type)) defenses.resistances.add(type);
+    }
   }
   // Senses, as the species, its lineage, feats and features give them ("You
   // have Darkvision with a range of 60 feet", "The range of your Darkvision

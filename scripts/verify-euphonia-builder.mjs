@@ -714,6 +714,24 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const weak = run(someone([{ class: 'Fighter', level: 1 }], { base: { ...ABLE, Strength: 3 } }), 'Fighter 1, Strength 3')?.load;
   if (!(laden.over === null && weak?.over === srd.overloaded)) fail(`carrying too much: ${weak?.over} at Strength 3, ${laden?.over} at ${ABLE.Strength}`);
 
+  // What holds in a state or by a choice: Rage's damage noted on Strength
+  // attacks, from its column, not added; Agonizing Blast's modifier on the
+  // cantrip it improves; Nature's Ward's resistance for the land chosen, from
+  // its table; and Advantage on saves by ability (Gnomish Cunning).
+  const raging5 = run(someone([{ class: 'Barbarian', level: 5, subclass: 'Path of the Berserker' }]), 'Barbarian 5');
+  const rageColumn = srd.classes.find(c => c.name === 'Barbarian').table.rows[4]['Rage Damage'];
+  if (!(hitOf(raging5, 'Greataxe')?.riders?.some(r => r.startsWith(`${rageColumn} `)) && !hitOf(raging5, 'Shortbow')?.riders?.length)) fail(`Rage's damage on attacks: ${JSON.stringify(raging5?.attacks.map(a => [a.name, a.riders]))}`);
+  const blasting = targets => run(someone([{ class: 'Warlock', level: 5, subclass: 'Fiend Patron' }], { base: { ...ABLE, Charisma: 16 }, spells: { Warlock: ['Eldritch Blast'] }, options: { Warlock: [{ name: 'Agonizing Blast' }] }, cantripTargets: targets }), 'Warlock 5');
+  const agonized = blasting({ 'Warlock invocation 0': 'Eldritch Blast' });
+  if (hitOf(agonized, 'Eldritch Blast')?.damage !== `1d10 + ${agonized?.mod.Charisma} Force`) fail(`Agonizing Blast: Eldritch Blast deals ${hitOf(agonized, 'Eldritch Blast')?.damage}`);
+  const ward = srd.classes.find(c => c.name === 'Druid').subclasses.flatMap(x => x.features).find(f => /^Nature.s Ward$/.test(f.name)).text.split('\n').filter(l => /^\| (?!Land Type|-)/.test(l)).map(l => l.split('|').map(c => c.trim()).slice(1, 3));
+  for (const [land, type] of ward) {
+    const got = run(someone([{ class: 'Druid', level: 10, subclass: 'Circle of the Land' }], { spellSets: { 'Druid 3 Circle of the Land Spells': `${land} Land` } }), `Druid of ${land}`)?.defenses.resistances;
+    if (got?.join() !== type) fail(`Nature's Ward in ${land} land resists ${got?.join(', ')}, not ${type}`);
+  }
+  const gnome = run({ ...someone([{ class: 'Fighter', level: 1 }]), species: 'Gnome', option: 'Forest Gnome' }, 'Gnome')?.defenses.saveAdvantages ?? null;
+  if (gnome?.join() !== 'Intelligence, Wisdom and Charisma') fail(`Gnomish Cunning: ${JSON.stringify(gnome)}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

@@ -867,7 +867,8 @@ export async function initBuilder(panel) {
             result.defenses.resistances.length && `Resistance to ${listed(result.defenses.resistances)} damage`,
             result.defenses.immunities.length && `Immunity to ${listed(result.defenses.immunities)} damage`,
             result.defenses.conditionImmunities.length && `Immunity to the ${listed(result.defenses.conditionImmunities)} condition${result.defenses.conditionImmunities.length > 1 ? 's' : ''}`,
-            result.defenses.conditionAdvantages.length && `Advantage on saves against ${listed(result.defenses.conditionAdvantages)}`].filter(Boolean)),
+            result.defenses.conditionAdvantages.length && `Advantage on saves against ${listed(result.defenses.conditionAdvantages)}`,
+            ...result.defenses.saveAdvantages.map(x => `Advantage on ${x} saves`)].filter(Boolean)),
           Object.keys(result.senses).length ? [h('dt', {}, 'Senses'), h('dd', {}, Object.entries(result.senses).map(([k, v]) => `${k} ${v} feet`).join('; '))] : null,
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
           h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception)),
@@ -883,7 +884,7 @@ export async function initBuilder(panel) {
             h('td', {}, a.save ? `DC ${known(a.save.dc)} ${a.save.ability}` : signed(a.bonus)),
             h('td', {}, `${a.damage}${a.beams ? `, ${a.beams} beams` : ''}${a.versatile ? `; two-handed ${a.versatile}` : ''}`),
             h('td', {}, a.reach),
-            h('td', {}, [a.mastery && `Mastery: ${a.mastery}`, !a.proficient && 'not proficient', a.kind === 'spell' && `${a.class} cantrip`].filter(Boolean).join('; ') || '—')))))),
+            h('td', {}, [a.mastery && `Mastery: ${a.mastery}`, ...a.riders, !a.proficient && 'not proficient', a.kind === 'spell' && `${a.class} cantrip`].filter(Boolean).join('; ') || '—')))))),
       // The gear the builder sets the character up with: the kits, what its
       // features hand it, the armour it chose, the money left, and the magic
       // items for its level.
