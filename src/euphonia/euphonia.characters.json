@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "1c1e54efd84530aa91fa8cd57fac5d3cf73ef5a38edafc0d170d1ebe4383225b",
-  "modified": "2026-11-16T10:39:36-05:00",
+  "sha256": "32dd50932803bd1d15d25fec90a61db5eab62a8ea7d454459bf21fc861c2d284",
+  "modified": "2026-11-16T18:50:07-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 28,
+  "exporter_version": 30,
   "rules": {
    "banned": [
     "eladrin",
@@ -191,7 +191,7 @@
     ],
     "tool": "Choose one kind of Musical Instrument",
     "equipment": "Choose A or B: (A) Musical Instrument (same as above), Traveler's Clothes, Bedroll, Tinderbox, Pouch, 16 GP; or (B) 50 GP",
-    "about": "The Hidden took you, and you came home. Maybe you were a child and they left something in your cradle; maybe you followed music into a hill on your way back from market. You remember a feast, a dance that lasted a night and a road that kept turning back, and none of it in order. Home had moved on without you: a week, a year or a hundred, and the people who mourned you are older, or dead, or sure you're not you. You came back with a tune nobody taught you, a knack for the hedge-magic every fairy doctor wishes she had and the habit of looking for the way out of every room. Whether you carry a piece of the Hidden is your class's business, not this background's: a Danae, a Bordermarch Barbarian, a Hidden Bard, a Mortal Hunter or the stand-in Dreamwarden does, and a Rogue taken as a child may simply be quick and strange (The Hidden's Classes, above). Your country's word for the taken is in The State of the World, and the road you came home by is open (*Euphonia: Life on the Border*, Introduction, Open for Developers).",
+    "about": "The Hidden took you, and you came home. Maybe you were a child and they left something in your cradle; maybe you followed music into a hill on your way back from market. You remember a feast, a dance that lasted a night and a road that kept turning back, and none of it in order. Home had moved on without you: a week, a year or a hundred, and the people who mourned you are older, or dead, or sure you're not you. You came back with a tune nobody taught you, a knack for the hedge-magic every fairy doctor wishes she had and the habit of looking for the way out of every room. Whether you carry a piece of the Hidden is your class's business, not this background's: a Danae, a Bordermarch Barbarian, a Hidden Bard, a Mortal Hunter or the stand-in Dreamwarden does, and a Rogue taken as a child may simply be quick and strange (The Hidden's Classes, above). Your country's word for the taken is in The State of the World, and the road you came home by is open (Appendix F: Building on Euphonia).",
     "door": "The Hidden of one court know you by sight, and will parley with you where they'd raid anyone else.",
     "debt": "Something there still wants you back."
    }

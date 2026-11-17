@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "1c1e54efd84530aa91fa8cd57fac5d3cf73ef5a38edafc0d170d1ebe4383225b",
-  "modified": "2026-11-16T10:39:36-05:00",
+  "sha256": "32dd50932803bd1d15d25fec90a61db5eab62a8ea7d454459bf21fc861c2d284",
+  "modified": "2026-11-16T18:50:07-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 28,
+  "exporter_version": 30,
   "rules": {
    "banned": [
     "eladrin",
@@ -34,7 +34,7 @@
    "summary": "**The pitch.** In 1668 every ministry of magic in Europe has learned two things: it is behind Mutapa, and Spain has Mutapa's metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
    "ready": "",
    "hooks": [
-    "A court painter has finished a miniature of the young King of Spain for the Emperor's court, and three services want it before it reaches Vienna.",
+    "A court painter has finished a miniature of the young King of Spain for the Emperor's court, and Louis's ambassador wants a look at it before it reaches Vienna.",
     "A Viennese clerk has been copying the Emperor's register of licensed casters for another court; whoever catches him first will use him rather than hang him.",
     "A shewstone pair given by Mutapa has started answering in a voice that isn't the other stone's.",
     "An Agitator cell inside the Invisible College has a scheme for the Grand Divertissement; a natural philosopher among them has doubts.",
@@ -52,7 +52,7 @@
    "kind": "Heist, and a delve",
    "where": "Venice, then Toledo",
    "read_with": "Europe",
-   "summary": "**The pitch.** A solid intro heist: the prize is going on the market soon for a hefty fee, so why not take it and keep the money? The Republic is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
+   "summary": "**The pitch.** The Republic of Venice is about to sell the most wanted document in Europe, and a crew can be paid to take it before the sale. Venice is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
    "ready": "**Ready to run.** *The Venice Job: The First Night* is the heist's opening night as a one-shot, with five 3rd-level characters ready to play.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts and bravos; the Spanish one hires a crew.",
@@ -67,7 +67,7 @@
    ]
   },
   {
-   "title": "The Border: On the Edge of Civilization",
+   "title": "The Border: The Village and the Hidden",
    "kind": "Frontier",
    "where": "Any village at the edge of the Hidden",
    "read_with": "Running Euphonia; *Euphonia: Life on the Border*",
@@ -84,11 +84,11 @@
    ]
   },
   {
-   "title": "The Tomb Road: A Chinese Dungeon Crawl",
+   "title": "The Tomb Road: Robbing the Dead of Four Dynasties",
    "kind": "Dungeon crawl",
    "where": "China under the new Qing",
    "read_with": "East and Southeast Asia",
-   "summary": "The classic delve, Chinese style. A party starts in a minor Ming prince's sealed tomb, in a valley the Qing ignore, and years later ends in the First Emperor's, with its rivers of mercury and its crossbows set for intruders. Between lie the tombs the DM builds: the Han and Tang dead with their tomb-quelling beasts, the alchemists' graves full of cinnabar.",
+   "summary": "A campaign of delves through China's royal dead. A party starts in a minor Ming prince's sealed tomb, in a valley the Qing ignore, and years later ends in the First Emperor's, with its rivers of mercury and its crossbows set for intruders. Between lie the tombs the DM builds: the Han and Tang dead with their tomb-quelling beasts, the alchemists' graves full of cinnabar.",
    "ready": "",
    "hooks": [],
    "regions": [
@@ -100,7 +100,7 @@
    "kind": "War",
    "where": "The Andes and the Chocó",
    "read_with": "The Americas",
-   "summary": "**The pitch.** The conquest never finished. A century after the huacas rose, the Sapa Inca rules from Cusco again, Spain holds the coast and the silver mountain, and the line between them runs across the roof of the world. This is the war the rest of the world is about to join: whoever breaks the Andean siege, or robs Spain while it's pinned, decides who gets the metals that are turning the balance of magic. A three-sided war: the Inca, the Spanish and the people profiting off both. At stake: silver, mercury, guano, cinchona, the platina in the Chocó's rivers and the huacas that rose. It's the book's grittiest setting, for amoral soldier-of-fortune play in the *Wages of Fear* vein, or for Andeans defending their home. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
+   "summary": "**The pitch.** The conquest never finished. A century after the huacas rose, the Sapa Inca rules from Cusco again, Spain holds the coast and the silver mountain, and the line between them runs across the roof of the world. This is the war the rest of the world is about to join: whoever breaks the Andean siege, or robs Spain while it's pinned, decides who gets the metals that are turning the balance of magic. A three-sided war: the Inca, the Spanish and the people profiting off both. At stake: silver, mercury, guano, cinchona, the platina in the Chocó's rivers and the huacas that rose. It's the book's grittiest setting: Andeans defending their home, or amoral soldiers of fortune in the *Wages of Fear* vein. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
    "ready": "",
    "hooks": [
     "The keepers of Pariacaca say the mountain will close the pass to Spain for a season, if someone brings back what the extirpators carried off to Lima.",
@@ -119,10 +119,18 @@
    "title": "The Monsoon Road: Trading the Indian Ocean Coast",
    "kind": "Voyage",
    "where": "The Indian Ocean, from the Cape to Macau and out into the Pacific",
-   "read_with": "Mutapa and the Indian Ocean",
-   "summary": "The players are traders: a ship, a cargo and a living to make on the monsoon winds. The game is the voyage, the ports, the deals and what's worth more two harbors on.",
+   "read_with": "Mutapa and the Indian Ocean; Powers and Factions, Mutapa's Institutions",
+   "summary": "**The pitch.** The players are traders: a ship, a cargo and a living to make on the monsoon winds. The game is the voyage, the ports, the deals and what a cargo is worth two harbors on. The Indian Ocean in 1668 is the world's busiest sea, and no one owns it. The Portuguese hold forts and are losing them, Oman's fleets are taking them, the Dutch hold the spice islands and search every hold in the straits, the Gujarati houses finance half the trade by *hundi*, and Mutapa holds the gold port at Sofala and the gate at the Cape. A ship out of Sofala can carry what every port wants and no one else can make: Mutapan curiosities under the guild's stamp, legal in every harbor that honors the Bird's paper. The campaign's question arrives the first time someone offers the party more for the same cargo without the stamp.",
    "ready": "",
-   "hooks": [],
+   "hooks": [
+    "A Surat shroff will honor the party's letter on the Bird only if they carry a sealed *hundi* to Mocha and bring back the answer before the coast closes.",
+    "Robert Knox's family has paid a factor in Surat to get a letter to him in Kandy. The king reads everything that comes up the mountain, and the factor hasn't mentioned that.",
+    "The guild's crate in the hold hums at the flood, and the journeyman minding it has started sleeping on top of it.",
+    "The Omani squadron that sacked Diu is watering at Pate and wants a pilot who knows Fort Jesus by night. The fort's captain would pay more to learn the date.",
+    "A deckhand who signed on at Sofala under one name is on the guild's rolls under another, and listed as dead.",
+    "At Hoerikwaggo, a French captain offers the party a fortune to carry his returns past the harbor master's fee, and the harbor master is a friend.",
+    "The toll over the deep off Pemba was a song last voyage. This voyage it is the ship's name."
+   ],
    "regions": [
     "Oceania"
    ]

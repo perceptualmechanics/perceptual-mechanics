@@ -626,6 +626,13 @@ export function character(book, state) {
   // already known. A choice is the player's, kept apart from the rest.
   const revelationChoices = [], revelationsKnown = [];
   const plane = name => name.toLowerCase().replace(/^the /, '');
+  // A feature may name a group and then gloss it: "the Inner Circuit (the
+  // five planes the pathways reach at level 7)", "the Dominions' Quiet
+  // Corners". The group's name leads; a parenthesis or a possessive follows.
+  const namesGroup = (ref, group) => {
+    const r = plane(ref), g = plane(group);
+    return r === g || (r.startsWith(g) && /^(?: \(|['’])/.test(r.slice(g.length)));
+  };
   for (const c of known.filter(k => k.rules.revelations)) {
     const own = features.filter(f => f.class === c.class);
     const find = (name, f) => {
@@ -646,7 +653,7 @@ export function character(book, state) {
       const teaches = f.text.match(/You learn one Revelation of your choice from the Cosmography's (.+?)[:.](?:\s|$)/);
       if (!teaches) continue;
       const groups = teaches[1].split(/,\s*(?:or\s+)?|\s+or\s+/).map(g => {
-        const group = c.rules.cosmography.groups.find(x => plane(x.name) === plane(g));
+        const group = c.rules.cosmography.groups.find(x => namesGroup(g, x.name));
         if (!group) throw new Error(`${c.class}: ${f.name} teaches from the Cosmography's "${g}", which it doesn't have`);
         return group.name;
       });

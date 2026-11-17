@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "1c1e54efd84530aa91fa8cd57fac5d3cf73ef5a38edafc0d170d1ebe4383225b",
-  "modified": "2026-11-16T10:39:36-05:00",
+  "sha256": "32dd50932803bd1d15d25fec90a61db5eab62a8ea7d454459bf21fc861c2d284",
+  "modified": "2026-11-16T18:50:07-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 28,
+  "exporter_version": 30,
   "rules": {
    "banned": [
     "eladrin",
@@ -38,7 +38,7 @@
    "You are an exceptional person in a dynamic and changing world. A counsellor in the royal courts of Europe. An artificer plying their trade on the Monsoon Road on the Indian Ocean. A practitioner of healing magics in the halls of Constantinople. A weary Andean priest repelling a mercenary and Spanish raid on your home. A New England experimenter trying not to blow up his home (again). A hunter fighting sea monsters in the South Pacific. A disgraced alchemist breaking into a tomb in Beijing.",
    "Your talents, be they martial, magical or mental, set you apart and make you coveted by any number of powers and factions. Most adventurers end up bossing kings around. What if you work for those kings? What if you're opposed to them? Will you work for the common good? Will you try and walk the halls of power? Are you in it for the money? Or are there darker forces at work through you? Whatever your motivation, you are a power in a world at the crossroads of everything. What will you do with your power?"
   ],
-  "building": "**Building on Euphonia.** Euphonia is an umbrella, not a finished world, and what its books only sketch is open for anyone to build on. The brief for developers, with the Principles every Euphonia product follows, is Appendix F: Building on Euphonia.",
+  "building": "**Building on Euphonia.** Euphonia is an umbrella: what its books only sketch is open for anyone to build on. The brief for developers, with the Principles every Euphonia product follows, is Appendix F: Building on Euphonia.",
   "moment": {
    "text": "**The lamp in the kitchen.** In Mutapa a lamp that lights itself is a household thing. In Vienna it's a duchess's toy, until she tires of it and it goes downstairs: Regina Mayrhofer, cook to a countess on the Herrengasse, works late under one now and swears by it. It dims a little every month, and the polite foreign tinker who comes to set it right asks a great many friendly questions about the house. What the ministries have just worked out about that lamp is the Mark of 1668 (The World in 1668, The Mark), and what the tinker does with his questions is in Characters (Backgrounds, Mutapan Agent).",
    "where": "The Setting, Life in 1668, The Day"

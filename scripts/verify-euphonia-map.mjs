@@ -135,7 +135,7 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   if (!/Natural Earth/.test(gazetteer.provenance?.source ?? '') || !/^[0-9a-f]{64}$/.test(gazetteer.provenance?.sha256 ?? '')) fail('euphonia.gazetteer.json: no Natural Earth provenance');
   const resolved = resolvePlaces({ gazetteer, regions, calendars, people });
   for (const e of resolved.errors) fail(`a place the map can't find: ${e}`);
-  for (const p of resolved.people) if (resolved.people.filter(q => q.name === p.name).length > 1) { fail(`${p.name} is placed twice`); break; }
+  for (const p of resolved.people) if (resolved.people.filter(q => q.name === p.name).length > 1) { fail(`${p.name} is placed in two places`); break; }
   for (const r of regions) if (!(r.places?.length >= MIN_PLACES)) fail(`${r.name} names ${r.places?.length ?? 0} places; the map needs ${MIN_PLACES} to show where a region reaches`);
   // Each place's glow reaches halfway to the region's nearest place
   // somewhere else (euphonia.map.js); a region with every place at one site,

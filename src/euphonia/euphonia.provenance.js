@@ -19,11 +19,11 @@ export const LIVING = [
 // Where an item is at home, so a character from there finds it first.
 export const FROM = [
   { item: "Court Astrologer's Astrolabe", homelands: ['The Ottomans, Persia and the Horn'], because: ['The Safavid shah was crowned a second time'] },
-  { item: 'Inoculation Lancet', homelands: ['East and Southeast Asia', 'India'], because: ['Healers in China and India already do this'] },
+  { item: 'Inoculation Lancet', homelands: ['East and Southeast Asia'], because: ['Healers in China already do this'] },
   { item: 'Mutapan Curiosities', homelands: ['Mutapa and the Indian Ocean'], because: ["Prices are for Sofala, where they're made"] },
   { item: 'Shewstones', homelands: ['Mutapa and the Indian Ocean'], because: ["Mutapa's are platinum ore"] },
   { item: 'Lahore Astrolabe', homelands: ['India'], because: ['Lahore'] },
-  { item: 'Basalt of Nan Madol', homelands: ['Oceania'], because: ['Nan Madol'] },
+  { item: "Keeper's Basalt", homelands: ['Oceania'], because: ['Nan Madol'] },
 ];
 
 // What an item costs where it's bought, where the books price it by
