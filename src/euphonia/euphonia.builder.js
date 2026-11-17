@@ -836,7 +836,7 @@ export async function initBuilder(panel) {
         h('thead', {}, h('tr', {}, h('th', { scope: 'row' }, 'Level'), result.slots.map((n, i) => (n ? h('th', { scope: 'col' }, String(i + 1)) : null)))),
         h('tbody', {}, h('tr', {}, h('th', { scope: 'row' }, 'Slots'), result.slots.map(n => (n ? h('td', {}, String(n)) : null))))) : null,
       result.pacts.map(p => h('p', {}, `Pact Magic (${p.class}): ${p.slots} slot${p.slots === 1 ? '' : 's'} of level ${p.level}.`)),
-      h('ul', {}, result.spellcasting.map(s => h('li', {}, `${s.class}: ${s.cantrips ? `${s.cantrips} cantrips${s.given.length ? ` and ${s.given.length} always known` : ''}, ` : ''}${s.prepared} ${s.verb} spells, up to level ${s.highest}.${s.ability ? ` Spell save DC ${known(s.dc)}, spell attack ${signed(s.attack)} (${s.ability}).` : ''}`)))] : [];
+      h('ul', {}, result.spellcasting.map(s => h('li', {}, `${s.class}: ${s.cantrips ? `${s.cantrips} cantrips${s.given.length ? ` and ${s.given.length} always known` : ''}, ` : ''}${s.prepared} ${s.verb} spells, up to level ${s.highest}.${s.ability ? ` Spell save DC ${known(s.dc)}, spell attack ${signed(s.attack)} (${s.ability}${s.items ? `, with ${listed(s.items)}` : ''}).` : ''}`)))] : [];
     const chosenSpells = result.spellChoices.filter(c => c.chosen.length || c.given.length || c.always.length).map(c => h('div', { class: 'sheet-spell-list' },
       h('h4', {}, c.label),
       h('ul', {}, [...c.given.map(sp => ({ ...sp, kept: 'always known' })), ...c.always.map(sp => ({ ...sp, kept: `always prepared, from ${sp.from}` })), ...c.chosen].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(sp => h('li', {},
@@ -873,7 +873,8 @@ export async function initBuilder(panel) {
             result.defenses.immunities.length && `Immunity to ${listed(result.defenses.immunities)} damage`,
             result.defenses.conditionImmunities.length && `Immunity to the ${listed(result.defenses.conditionImmunities)} condition${result.defenses.conditionImmunities.length > 1 ? 's' : ''}`,
             result.defenses.conditionAdvantages.length && `Advantage on saves against ${listed(result.defenses.conditionAdvantages)}`,
-            ...result.defenses.saveAdvantages.map(x => `Advantage on ${x} saves`)].filter(Boolean)),
+            ...result.defenses.saveAdvantages.map(x => `Advantage on ${x}`),
+            result.saveItems.length && `saving throws include ${listed(result.saveItems)}`].filter(Boolean)),
           Object.keys(result.senses).length ? [h('dt', {}, 'Senses'), h('dd', {}, Object.entries(result.senses).map(([k, v]) => `${k} ${v} feet`).join('; '))] : null,
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
           h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception)),
@@ -906,7 +907,7 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Money'), h('dd', {}, `${gear.gold.toLocaleString('en')} GP${gear.levelGold ? `, with the ${gear.levelGold.toLocaleString('en')} GP a character starting at level ${result.level} has; roll ${gear.roll} more` : ''}`)),
         gear.magicItems.length ? [h('h4', {}, 'Magic items'),
           h('ul', { class: 'sheet-items' }, gear.magicItems.map((m, i) => h('li', {}, m.item
-            ? det(`item-${i}`, `${m.rarity}: ${m.item.name}${m.item.member ? ` (${m.item.member})` : ''}${m.item.bonus ? `, ${m.item.bonus}` : ''}${m.item.attunement ? `, requires Attunement${m.item.attunement.by ? ` by ${m.item.attunement.by}` : ''}` : ''}${m.item.living ? ', a living tradition of your homeland' : ''}`, h('div', { html: blocks(m.item.text) }))
+            ? det(`item-${i}`, `${m.rarity}: ${m.item.name}${m.item.member ? ` (${m.item.member})` : ''}${m.item.bonus ? `, ${m.item.bonus}` : ''}${m.item.attunement ? `, requires Attunement${m.item.attunement.by ? ` by ${m.item.attunement.by}` : ''}${result.unattuned.includes(m.item.name) ? `; carried, not attuned (${result.attunementMax} at a time)` : '; attuned'}` : ''}${m.item.living ? ', a living tradition of your homeland' : ''}`, h('div', { html: blocks(m.item.text) }))
             : `${m.rarity}: none of the books’ items fits; the DM’s choice`)))] : null,
         gear.forSale.length ? [h('h4', {}, 'The books’ gear you could buy'),
           h('ul', { class: 'sheet-gear' }, gear.forSale.map(x => h('li', {}, `${x.name}${x.of ? ` (${x.of})` : ''}${x.countsAs ? `, counts as ${x.countsAs.join(' or ')}` : ''}, ${x.cost === null ? x.note : `${x.cost.toLocaleString('en')} GP${x.note ? ` (${x.note})` : ''}`}`)))] : null),

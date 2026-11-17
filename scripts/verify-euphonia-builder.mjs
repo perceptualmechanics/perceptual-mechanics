@@ -732,7 +732,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     if (got?.join() !== type) fail(`Nature's Ward in ${land} land resists ${got?.join(', ')}, not ${type}`);
   }
   const gnome = run({ ...someone([{ class: 'Fighter', level: 1 }]), species: 'Gnome', option: 'Forest Gnome' }, 'Gnome')?.defenses.saveAdvantages ?? null;
-  if (gnome?.join() !== 'Intelligence, Wisdom and Charisma') fail(`Gnomish Cunning: ${JSON.stringify(gnome)}`);
+  if (gnome?.join() !== 'Intelligence, Wisdom and Charisma saves') fail(`Gnomish Cunning: ${JSON.stringify(gnome)}`);
 
   // Attacks from elsewhere and riders, each from its sentence: a Tiefling's
   // legacy cantrip by the ability chosen; the Breath Weapon's DC and dice at
@@ -766,6 +766,33 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const revelator5 = run(someone([{ class: 'Revelator', level: 5, subclass: 'The Tree' }]), 'Revelator 5');
   const planarRow = euphonia.data.find(c => c.name === 'Revelator').table.rows[4]['Planar Strike'], planarHit = hitOf(revelator5, 'Planar Strike');
   if (!planarHit?.damage.startsWith(`${planarRow}${(n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : ''))(+planarRow.match(/^\d+/)[0] * revelator5.mod.Wisdom)} `)) fail(`Planar Strike: ${JSON.stringify(planarHit)}`);
+
+  // Magic items on the numbers, each from its data and sentence: attuned to
+  // no more than the SRD allows, the rarest first; a weapon's bonus by its
+  // rarity on hit and damage; a focus's bonus to spell attacks and DCs; the
+  // Tuned Arc Gun's to the Arc Gun and the Mhizha's spells; a shirt's +1 to
+  // every save; a coat's defenses and its Armor Class without armor.
+  const rated = (name, rarity) => Number(items.items.find(i => i.name === name).rarities.find(r => r.rarity === rarity)?.bonus?.match(/\d+/)?.[0] ?? 0);
+  const revelator17 = run(someone([{ class: 'Revelator', level: 17, subclass: 'The Tree' }]), 'Revelator 17');
+  const atlas = revelator17?.equipment.magicItems.find(m => m.item?.name === 'Atlas of Roads');
+  const seer = revelator17?.spellcasting.find(x => x.class === 'Revelator');
+  const needing = revelator17?.equipment.magicItems.filter(m => m.item?.attunement).length ?? 0;
+  if (!(atlas && revelator17.unattuned && !revelator17.unattuned.includes('Atlas of Roads') && seer.dc === srd.attacks.spell_save_dc_base + revelator17.mod.Wisdom + revelator17.bonus + rated('Atlas of Roads', atlas.rarity) && revelator17.unattuned.length === Math.max(0, needing - srd.attunement_max)))
+    fail(`a Revelator 17's items: ${JSON.stringify({ atlas: atlas?.rarity, dc: seer?.dc, unattuned: revelator17?.unattuned })}`);
+  const repeating = revelator17?.attacks.find(a => a.name.startsWith('Repeating Crossbow')), crossbowRarity = revelator17?.equipment.magicItems.find(m => m.item?.name === 'Repeating Crossbow')?.rarity;
+  if (!(repeating?.bonus === revelator17.mod.Dexterity + revelator17.bonus + rated('Repeating Crossbow', crossbowRarity) && repeating.damage === `1d8 + ${revelator17.mod.Dexterity + rated('Repeating Crossbow', crossbowRarity)} Piercing`)) fail(`the Repeating Crossbow: ${JSON.stringify(repeating)}`);
+  const gunner11 = run(someone([{ class: 'Mhizha', level: 11, subclass: 'Gunner' }]), 'Mhizha 11');
+  const tunedAt = gunner11?.equipment.magicItems.find(m => m.item?.name === 'Tuned Arc Gun')?.rarity, tunedN = tunedAt ? rated('Tuned Arc Gun', tunedAt) : NaN;
+  if (!(hitOf(gunner11, 'Arc Gun')?.bonus === gunner11.mod.Intelligence + gunner11.bonus + tunedN && gunner11.spellcasting[0].dc === srd.attacks.spell_save_dc_base + gunner11.mod.Intelligence + gunner11.bonus + tunedN)) fail(`the Tuned Arc Gun: ${JSON.stringify({ tunedAt, arc: hitOf(gunner11, 'Arc Gun')?.bonus, dc: gunner11?.spellcasting[0].dc })}`);
+  const shirted = run({ ...someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), homeland: 'India' }, 'Fighter of India'), bare = run(someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), 'Fighter of nowhere');
+  if (!(shirted?.saveItems?.includes('Talismanic Shirt') && shirted.saves.every((x, i) => x.bonus === bare.saves[i].bonus + 1))) fail(`the Talismanic Shirt: ${JSON.stringify(shirted?.saves.map(x => x.bonus))} against ${JSON.stringify(bare?.saves.map(x => x.bonus))}`);
+  // The coat is the DM's to give, so it's planted as a Very Rare item a
+  // Physician 17 would be handed, to hold its sentences.
+  const coated = { ...items, items: items.items.map(i => (i.name === "Doctor's Coat" ? { ...i, dm: false, rarities: [{ rarity: 'Very Rare', bonus: null, member: null }] } : i)) };
+  const coatBook = engine.rulebook(srd, euphonia, setting, subclasses, coated);
+  const doctor17 = engine.character(coatBook, complete({ ...someone([{ class: 'Physician', level: 17, subclass: 'Doctor' }]), spellAbilities: {} }, 'Physician 17'));
+  if (!(doctor17.equipment.magicItems.some(m => m.item?.name === "Doctor's Coat") && doctor17.defenses?.saveAdvantages?.includes('saves against spells and other magical effects') && doctor17.unarmored.some(u => u.from === "Doctor's Coat" && u.ac === 15 + doctor17.mod.Dexterity)))
+    fail(`the Doctor's Coat: ${JSON.stringify({ items: doctor17.equipment.magicItems.map(m => m.item?.name), adv: doctor17.defenses.saveAdvantages, bare: doctor17.unarmored })}`);
 
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');

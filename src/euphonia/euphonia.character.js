@@ -303,6 +303,7 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     // and Fixed Hit Points by Class), so a setting class with the same die
     // takes the same: a d8's 8 at level 1, and 5 a level after.
     hitPoints: Object.fromEntries(srd.classes.map(c => [number(c.traits.find(t => t.trait === 'Hit Point Die').value.match(/^D(\d+)/)[1]), { first: srd.hit_points.level_1[c.name], fixed: srd.hit_points.fixed[c.name] }])),
+    attunementMax: srd.attunement_max,
     weights: { gear: srd.gear, ammunition: srd.ammunition, forms: srd.forms, coinsPerPound: srd.coins_per_pound, carrying: srd.carrying, overloaded: srd.overloaded },
     attacks: srd.attacks,
     backgroundIncreases: srd.ability_scores.background,
@@ -1576,7 +1577,7 @@ export function character(book, state) {
     if (!gear || ac > gear.ac || (ac === gear.ac && (quiet > gear.quiet || (quiet === gear.quiet && spent < gear.spent)))) gear = { ac, quiet, spent, worn, shield };
   }
   const { worn, shield } = gear;
-  const { unarmored, ac: armorClass } = acOf(mod, worn, shield);
+  const { unarmored: bareClasses, ac: wornClass } = acOf(mod, worn, shield);
   // Magic items, as many of each rarity as the table gives past level 1,
   // from the books' own: one for no one in particular, or for one of the
   // character's classes or its subclass (a family's member for that
@@ -1607,8 +1608,52 @@ export function character(book, state) {
       .filter(x => x.at).sort((a, b) => nearness(a.item) - nearness(b.item) || athome(b.item) - athome(a.item))[0];
     if (!pick) return { rarity, item: null };
     taken.add(pick.item.name);
-    return { rarity, item: { name: pick.item.name, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: pick.item.attunement, living: Boolean(pick.item.living), text: pick.item.text } };
+    return { rarity, item: { name: pick.item.name, kind: pick.item.kind, base: pick.item.base, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: pick.item.attunement, living: Boolean(pick.item.living), text: pick.item.text } };
   })).toSorted((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
+  // What the magic items do to the numbers, each as its sentence says, the
+  // character wearing or holding them and attuned to as many as the SRD
+  // allows ("You can be attuned to no more than three magic items at a
+  // time"; the builder attunes the rarest first), the rest carried: "a +1
+  // bonus to Armor Class"; "your base Armor
+  // Class is 15 plus your Dexterity modifier" without armor; "a +1 bonus to
+  // saving throws"; a magic weapon's "+2 bonus to attack rolls and damage
+  // rolls made with it", or the bonus its rarity gives; "a +3 bonus to spell
+  // attack rolls and to the saving throw DCs of your Revelator spells", the
+  // highest of those that "doesn't stack with another Danae focus's bonus";
+  // and the Tuned Arc Gun's bonus to "attack rolls with the Arc Gun".
+  const attuned = magicItems.filter(m => m.item?.attunement).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).slice(0, book.attunementMax).map(m => m.item.name);
+  const inUse = magicItems.filter(m => m.item && (!m.item.attunement || attuned.includes(m.item.name))).map(m => ({ ...m.item, rated: Number(m.item.bonus?.match(/^\+(\d+)$/)?.[1] ?? 0) }));
+  const unattuned = magicItems.filter(m => m.item?.attunement && !inUse.some(x => x.name === m.item.name)).map(m => m.item.name);
+  const said = (item, re) => item.text.match(re);
+  const armorBonus = inUse.map(i => ({ name: i.name, n: +(said(i, /you have a \+(\d+) bonus to Armor Class/)?.[1] ?? 0) })).filter(x => x.n);
+  const itemBare = inUse.flatMap(i => { const m = said(i, /If you aren[’']t wearing armor, your base Armor Class is (\d+) plus your (\w+) modifier/); return m ? [{ from: i.name, ac: +m[1] + mod[m[2]] + (shield?.bonus ?? 0) }] : []; });
+  const unarmored = [...bareClasses, ...itemBare];
+  const bareBest = !worn ? unarmored.reduce((best, u) => (u.ac > best.ac ? u : best), wornClass) : wornClass;
+  const armorClass = { ...bareBest, ac: bareBest.ac + armorBonus.reduce((n, x) => n + x.n, 0), from: [bareBest.from, ...armorBonus.map(x => x.name)].join(' and ') };
+  const saveBonus = inUse.map(i => ({ name: i.name, n: +(said(i, /you have a \+(\d+) bonus to saving throws/)?.[1] ?? 0) })).filter(x => x.n);
+  const magicWeapons = inUse.flatMap(i => {
+    const base = i.kind === 'Weapon' ? i.base : said(i, /It can be wielded as a magic (\w+)/)?.[1];
+    const w = base && (book.weapons ?? []).find(x => x.name === base);
+    if (!w) return [];
+    const n = +(said(i, /grants a \+(\d+) bonus to attack rolls and damage rolls made with it/)?.[1] ?? said(i, /You have a \+(\d+) bonus to attack and damage rolls made with this magic weapon/)?.[1] ?? (/bonus to attack and damage rolls made with this magic weapon, determined by its rarity/.test(i.text) ? i.rated : 0));
+    return [{ name: i.name, w, n }];
+  });
+  // Spell attacks and DCs, by class ("of your Revelator spells") or every
+  // class's ("a +2 bonus to spell attack rolls").
+  const castingBoosts = inUse.flatMap(i => {
+    const m = said(i, /(?:a \+(\d+) bonus|a bonus(?:, determined by the item[’']s rarity,)?) to (?:spell attack rolls and to the saving throw DCs|the attack rolls and saving throw DCs|attack rolls with [^,]+, [^,]+, and [^,]+, and to the spell attack rolls and spell save DCs) of your (\w+) spells/);
+    const any = said(i, /a \+(\d+) bonus to spell attack rolls\b(?! and)/);
+    const focus = said(i, /doesn[’']t stack with another (\w+) focus[’']s bonus/)?.[1];
+    return [m && { name: i.name, cls: m[2], n: m[1] ? +m[1] : i.rated, dc: true, focus }, any && { name: i.name, cls: null, n: +any[1], dc: false }].filter(x => x && x.n);
+  });
+  for (const sc of spellcasting.filter(x => x.ability)) {
+    const mine = castingBoosts.filter(b => !b.cls || b.cls === sc.class), focused = mine.filter(b => b.focus), plain = mine.filter(b => !b.focus);
+    const n = plain.reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.map(b => b.n)), dcn = plain.filter(b => b.dc).reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.filter(b => b.dc).map(b => b.n));
+    if (n) sc.attack += n;
+    if (dcn) sc.dc += dcn;
+    if (n || dcn) sc.items = [...plain, ...focused].map(b => b.name);
+  }
+  const featureBoosts = inUse.flatMap(i => { const m = said(i, /to attack rolls with the ([\w ]+?), /); return m ? [{ attack: m[1], n: i.rated, name: i.name }] : []; });
   // The books' gear, for the player to buy at the table with what's left:
   // the setting's own and its classes' chapters', each piece of a priced set
   // on its own, and the period's weapons that count as one the character is
@@ -1792,7 +1837,7 @@ export function character(book, state) {
     return [great && { test: w => w !== UNARMED && w.range === 'Melee' && list(great[1]).some(k => hasProperty(w, k)), note: `${f.feat.name}: a 1 or 2 on a damage die counts as 3, two-handed` },
       two && { test: w => w !== UNARMED && hasProperty(w, 'Light'), note: `${f.feat.name}: the Light property's extra attack adds your modifier` }].filter(Boolean);
   }));
-  const strike = w => {
+  const strike = (w, magic = null) => {
     const base = w === UNARMED ? rules.unarmed.ability : w.range === 'Melee' ? rules.melee : rules.ranged;
     // A feature that sets the ability ("you use Intelligence for their
     // attack rolls") leaves no choice; one that allows it ("you can use") adds one.
@@ -1806,9 +1851,9 @@ export function character(book, state) {
     // The SRD's Heavy property: Disadvantage below the score it asks.
     const heavy = w !== UNARMED && hasProperty(w, 'Heavy') && rules.heavy[w.range] && scores[rules.heavy[w.range].ability] < rules.heavy[w.range].score ? rules.heavy[w.range] : null;
     return {
-      name: w.name, kind: w === UNARMED ? 'unarmed' : 'weapon', ability, bonus: mod[ability] + (proficient ? bonus : 0) + featBonus(w.range), proficient,
-      damage: flat !== null ? `${Math.max(flat, 0)} ${type}` : `${roll}${signedMod(/^\d+d\d+$/.test(roll) ? mod[ability] : 0)} ${type}`,
-      versatile: versatile && !bigger ? `${versatile}${signedMod(mod[ability])} ${type}` : null, reach: w === UNARMED ? 'reach 5 feet' : reach(w),
+      name: magic ? `${magic.name} (${w.name})` : w.name, kind: w === UNARMED ? 'unarmed' : 'weapon', ability, bonus: mod[ability] + (proficient ? bonus : 0) + featBonus(w.range) + (magic?.n ?? 0), proficient,
+      damage: flat !== null ? `${Math.max(flat, 0)} ${type}` : `${roll}${signedMod((/^\d+d\d+$/.test(roll) ? mod[ability] : 0) + (magic?.n ?? 0))} ${type}`,
+      versatile: versatile && !bigger ? `${versatile}${signedMod(mod[ability] + (magic?.n ?? 0))} ${type}` : null, reach: w === UNARMED ? 'reach 5 feet' : reach(w),
       mastery: mastered.includes(w.name) ? w.mastery : null, disadvantage: heavy ? `Heavy, with ${heavy.ability} under ${heavy.score}` : null,
       riders: riders.filter(r => r.test?.(w, ability)).map(r => r.note),
     };
@@ -1833,7 +1878,8 @@ export function character(book, state) {
     const m = f.text.match(/make a ranged attack roll using (\w+) against a creature or object within (\d+) feet of yourself, adding your Proficiency Bonus\. On a hit, the target takes (\w+) damage equal to the dice shown in the ([\w ]+) column of the \w+ Features table plus your \1 modifier/);
     if (!m) return [];
     reads(f);
-    return [{ name: f.name, kind: 'feature', ability: m[1], bonus: mod[m[1]] + bonus, proficient: true, damage: `${atLevel(f.class, m[4])}${signedMod(mod[m[1]])} ${m[3]}`, versatile: null, reach: `${m[2]} feet`, mastery: null }];
+    const tuned = featureBoosts.filter(b => b.attack === f.name).reduce((n, b) => n + b.n, 0);
+    return [{ name: f.name, kind: 'feature', ability: m[1], bonus: mod[m[1]] + bonus + tuned, proficient: true, damage: `${atLevel(f.class, m[4])}${signedMod(mod[m[1]])} ${m[3]}`, versatile: null, reach: `${m[2]} feet`, mastery: null }];
   });
   const spellAttacks = spellcasting.filter(sc => sc.ability).flatMap(sc => {
     const pick = spellChoices.find(x => x.key === sc.class);
@@ -1881,7 +1927,7 @@ export function character(book, state) {
     return [{ name: t.name, kind: 'trait', class: species.name, ability: m[5], bonus: null, save: { ability: m[3], dc: +m[4] + mod[m[5]] + bonus }, proficient: true,
       damage: `${roll} ${optionRow?.['Damage Type'] ?? 'of your ancestry'}`, beams: null, versatile: null, reach: `${m[1]}-foot Cone or ${m[2]}-foot Line`, mastery: null }];
   });
-  const attacks = [...carriedWeapons.map(strike), strike(UNARMED), ...ownAttacks, ...spellAttacks, ...innateAttacks, ...breaths]
+  const attacks = [...magicWeapons.map(x => strike(x.w, x)), ...carriedWeapons.map(w => strike(w)), strike(UNARMED), ...ownAttacks, ...spellAttacks, ...innateAttacks, ...breaths]
     .map(a => ({ ...a, riders: [...(a.riders ?? []), ...riders.filter(r => r.any && a.bonus !== null && a.bonus !== undefined).map(r => r.note)] }));
   // The Monster's card, for one who carries it, as Monster Form writes it:
   // the scores it swaps ("Your Strength and Intelligence scores swap, and
@@ -1986,7 +2032,10 @@ export function character(book, state) {
   const defenses = { resistances: new Set(), immunities: new Set(), conditionImmunities: new Set(), conditionAdvantages: new Set(), saveAdvantages: new Set() };
   const typeChosen = f => kindChoices.find(c => c.class === f.class && c.noun === 'damage type' && c.chosen)?.chosen;
   const traitSayings = [...(species?.traits ?? []).map(t => t.text), Object.values(optionRow ?? {}).slice(1).join(' '), ...feats.map(f => [f.feat.description, ...f.feat.benefits.map(b => b.text)].join('\n\n'))].flatMap(standing);
-  const defenseSources = [...traitSayings.map(x => ({ x })), ...features.flatMap(f => sayings(f).map(x => ({ f, x })))];
+  // An item's, worn or held as the builder has it ("While you wear the
+  // shirt, you have …" is said of the shirt on).
+  const itemSayings = inUse.flatMap(i => standing(i.text.replace(/(^|\. |\n- |\n)While (?:you (?:wear|hold|are attuned to)|wearing|holding) (?:it|them|the [\w’' ]+?), (\w)/g, (m, lead, c) => lead + c.toUpperCase())));
+  const defenseSources = [...traitSayings.map(x => ({ x })), ...itemSayings.map(x => ({ x })), ...features.flatMap(f => sayings(f).map(x => ({ f, x })))];
   for (const { f, x } of defenseSources) {
     if (/\bwhile (?:your|you)\b|\bwhile in\b/.test(x) || !/\b[Yy]ou (?:have|gain|are immune)\b/.test(x)) continue;
     for (const m of x.matchAll(/\b(Resistance|Immunity) to ((?:[A-Z]\w+(?:,? (?:and |or )?)?)+) damage\b/g)) list(m[2]).filter(t => book.damageTypes.includes(t)).forEach(t => defenses[m[1] === 'Resistance' ? 'resistances' : 'immunities'].add(t));
@@ -1997,7 +2046,8 @@ export function character(book, state) {
     // Advantage on saves by ability, with what for where it says ("on
     // Intelligence, Wisdom, and Charisma saving throws", Gnomish Cunning;
     // "on Constitution saving throws to maintain Concentration").
-    for (const m of x.matchAll(new RegExp(`Advantage on ((?:${ABILITIES.join('|')})(?:,? (?:and |or )?(?:${ABILITIES.join('|')}))*) saving throws( to [^.,;]+)?`, 'g'))) defenses.saveAdvantages.add(`${listed(list(m[1]))}${m[2] ?? ''}`);
+    for (const m of x.matchAll(new RegExp(`Advantage on ((?:${ABILITIES.join('|')})(?:,? (?:and |or )?(?:${ABILITIES.join('|')}))*) saving throws( to [^.,;]+)?`, 'g'))) defenses.saveAdvantages.add(`${listed(list(m[1]))} saves${m[2] ?? ''}`);
+    for (const m of x.matchAll(/Advantage on saving throws against (spells and other magical effects)/g)) defenses.saveAdvantages.add(`saves against ${m[1]}`);
     // A resistance by a choice's table ("a damage type associated with your
     // current land choice in the Circle Spells feature, as shown in the
     // Nature's Ward table"), the land chosen.
@@ -2047,7 +2097,7 @@ export function character(book, state) {
     // features, the cantrips, the spells and the slots.
     classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null,
       columns: Object.entries(c.rules.table.rows[c.level - 1]).filter(([k]) => ![c.rules.table.columns[0], 'Proficiency Bonus', 'Class Features', 'Cantrips', c.rules.spellsColumn, ...c.rules.slotLevels.map(String), ...(c.rules.pact ? ['Spell Slots', 'Slot Level'] : [])].includes(k)).map(([name, value]) => ({ name, value })) })),
-    saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
+    saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) + saveBonus.reduce((n, x) => n + x.n, 0) })), saveItems: saveBonus.map(x => x.name), unattuned, attunementMax: book.attunementMax,
     skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, abilityChoices, packageChoices: packageChoices.map(({ kit, ...c }) => c), languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hpMethod: rolled ? 'Rolled' : 'Fixed', hpRolls, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
     load, attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),

@@ -20319,6 +20319,7 @@
    }
   ]
  },
+ "attunement_max": 3,
  "coins_per_pound": 50,
  "ammunition": [
   {

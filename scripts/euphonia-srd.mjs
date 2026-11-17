@@ -1014,6 +1014,8 @@ const data = {
   // A focus or symbol's forms, each its own weight ("Arcane Focus (crystal)").
   forms: Object.fromEntries([['Arcane Focus', 'Arcane Focuses', 'Focus'], ['Holy Symbol', 'Holy Symbols', 'Symbol'], ['Druidic Focus', 'Druidic Focuses', 'Focus']].map(([item, title, column]) =>
     [item, titledTable(title, [column, 'Weight', 'Cost']).map(r => ({ name: r[column].replace(/ \(.*\)$/, ''), also: r[column].match(/\(also an? (.+?)\)$/)?.[1] ?? null, weight: pounds(r.Weight, `${item} "${r[column]}"`) }))])),
+  // How many magic items one can be attuned to ("no more than three").
+  attunement_max: wordNumber(wholeText().match(/You can be attuned to no more than (\w+) magic items at a time\./)?.[1] ?? 'none'),
   coins_per_pound: wordNumber(wholeText().match(/so (\w+) coins weigh a pound/)?.[1] ?? 'none'),
   ammunition: titledTable('Ammunition', ['Type', 'Amount', 'Storage', 'Weight', 'Cost']).map(r => ({ name: r.Type, amount: +r.Amount, storage: r.Storage, weight: pounds(r.Weight, `ammunition "${r.Type}"`) })),
   // What carrying more than the most means ("your Speed can be no more than
