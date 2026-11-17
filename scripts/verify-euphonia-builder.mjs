@@ -631,6 +631,30 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const monks = [2, 6, 18].map(lv => run(someone([{ class: 'Monk', level: lv, subclass: lv >= 3 ? 'Warrior of the Open Hand' : '' }]), `Monk ${lv}`)?.speed);
   if (fast !== +human + 10 || monks.some((v, i) => v !== +human + monkRow([2, 6, 18][i]))) fail(`speed from features: a Barbarian 5 ${fast} feet; Monks 2, 6, 18 ${monks.join(', ')}`);
 
+  // Attacks, each number worked from the SRD's tables: a weapon's die from
+  // the Weapons table and its ability's modifier, the Proficiency Bonus, the
+  // Attack action's count; a Monk's Martial Arts column; a cantrip's dice at
+  // the character's level and its class's save DC; a feature that sets the
+  // ability (the Lionskin's gauntlets) or offers one (Calculation).
+  const weapon = n => srd.weapons.find(w => w.name === n);
+  const hitOf = (r, n) => r?.attacks?.find(a => a.name === n);
+  const champion11 = run(someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), 'Fighter 11');
+  const sword = hitOf(champion11, 'Greatsword'), plus = n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : '');
+  if (!(champion11?.attacksPerAction === 3 && sword?.bonus === champion11.mod.Strength + champion11.bonus && sword.damage === `${weapon('Greatsword').damage.split(' ')[0]}${plus(champion11.mod.Strength)} ${weapon('Greatsword').damage.split(' ')[1]}`))
+    fail(`a Fighter 11's Greatsword: ${JSON.stringify(sword)}, ${champion11?.attacksPerAction} attacks`);
+  const monk5 = run(someone([{ class: 'Monk', level: 5, subclass: 'Warrior of the Open Hand' }]), 'Monk 5');
+  const art = srd.classes.find(c => c.name === 'Monk').table.rows[4]['Martial Arts'];
+  if (!hitOf(monk5, 'Unarmed Strike')?.damage.startsWith(`${art} `)) fail(`a Monk 5's Unarmed Strike deals ${hitOf(monk5, 'Unarmed Strike')?.damage}, not its Martial Arts ${art}`);
+  const wizard5 = run(someone([{ class: 'Wizard', level: 5, subclass: 'Evoker' }], { spells: { Wizard: ['Fire Bolt'] } }), 'Wizard 5');
+  const bolt = hitOf(wizard5, 'Fire Bolt'), boltSpell = srd.spells.find(x => x.name === 'Fire Bolt');
+  const casting = wizard5?.spellcasting.find(x => x.class === 'Wizard');
+  if (!(casting?.dc === srd.attacks.spell_save_dc_base + wizard5.mod.Intelligence + wizard5.bonus && bolt?.bonus === wizard5.mod.Intelligence + wizard5.bonus && bolt.damage === `${boltSpell.upgrade.steps.filter(([lv]) => lv <= 5).at(-1)[1]} Fire`))
+    fail(`a Wizard 5: ${JSON.stringify({ casting: casting && [casting.ability, casting.dc, casting.attack], bolt })}`);
+  const fists = hitOf(model('Guardian'), 'Unarmed Strike'), lion = model('Guardian');
+  if (!(fists?.ability === 'Intelligence' && fists.damage === `${1 + lion.mod.Intelligence} Force`)) fail(`a Lionskin's gauntlets: ${JSON.stringify(fists)}`);
+  const counsellor = run(someone([{ class: 'Counsellor', level: 1 }], { base: { ...ABLE, Intelligence: 18 } }), 'Counsellor 1');
+  if (hitOf(counsellor, 'Rapier')?.ability !== 'Intelligence') fail(`Calculation: a Counsellor's Rapier uses ${hitOf(counsellor, 'Rapier')?.ability}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

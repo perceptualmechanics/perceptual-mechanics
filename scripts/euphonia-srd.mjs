@@ -17,6 +17,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const OUT = new URL('../src/euphonia/euphonia.srd.json', import.meta.url);
+// The counts the SRD spells out in words ("two beams at level 5").
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five'];
 const COLUMN_SPLIT = 300, FOOTER_Y = 740, INDENT = 8, LINE_TOLERANCE = 2.5;
 const [pdfPath, wordsPath] = process.argv.slice(2);
 if (!pdfPath || !wordsPath) throw new Error('usage: node scripts/euphonia-srd.mjs <SRD pdf> <srd-words.tsv>');
@@ -788,10 +790,58 @@ function spells() {
     const text = join(lines.slice(k + 1, end).map(l => l.text));
     const casting = text.match(/Casting Time: (.+?) Range:/)?.[1];
     if (!casting) throw new Error(`the spell "${lines[i].text}" has no Casting Time`);
-    out.push({ name: lines[i].text, level: head[1] ? +head[1] : 0, school: head[2] ?? head[3], classes: head[4].split(/,\s*/), casting, damage: DAMAGE.filter(d => dealt(d).test(text)) });
+    // What a sheet needs to list it as an attack: its range, the spell
+    // attack it makes or the save it forces, the damage its first effect
+    // deals ("takes 1d10 Fire damage", "1d8 damage of a type you choose"),
+    // and a cantrip's growth, in the five forms the SRD writes it: the damage
+    // increases ("5 (2d10), 11 (3d10), and 17 (4d10)"), its die changes
+    // (Shillelagh), it adds damage (True Strike), its range doubles (Spare
+    // the Dying), or it makes more beams.
+    const range = text.match(/Range: (.+?) Components?:/)?.[1];
+    if (!range) throw new Error(`the spell "${lines[i].text}" has no Range`);
+    const attack = text.match(/\b[Mm]ake an? (melee|ranged) spell attack\b/)?.[1] ?? null;
+    // A spell of range Self that throws something has its own reach ("hurl
+    // fire at a creature or an object within 60 feet of you").
+    const reach = range === 'Self' && attack ? text.match(/within (\d+ feet) of you/)?.[1] ?? null : null;
+    const save = text.match(/\b(?:succeed on|make|makes) an? (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw\b/)?.[1] ?? null;
+    const hit = text.match(/\btakes? (\d+d\d+) (?:(\w+) damage|damage of a type you choose)/);
+    const growth = text.match(/Cantrip Upgrade\. (.+?) when you reach levels (\d+) \(([^)]+)\), (\d+) \(([^)]+)\), and (\d+) \(([^)]+)\)\./);
+    const beams = text.match(/Cantrip Upgrade\. The spell creates (\w+) beams at level (\d+), (\w+) beams at level (\d+), and (\w+) beams at level (\d+)\./);
+    const kind = growth && (/^The damage increases by /.test(growth[1]) ? 'dice' : /^The damage die changes$/.test(growth[1]) ? 'die' : /extra \w+ damage$/.test(growth[1]) ? 'extra' : /^The range doubles$/.test(growth[1]) ? 'range' : null);
+    if (/Cantrip Upgrade\./.test(text) && !(kind || beams)) throw new Error(`the cantrip "${lines[i].text}" grows in a way the export can't read`);
+    const upgrade = kind ? { kind, steps: [[+growth[2], growth[3]], [+growth[4], growth[5]], [+growth[6], growth[7]]] }
+      : beams ? { kind: 'beams', steps: [[+beams[2], NUMBER_WORDS.indexOf(beams[1])], [+beams[4], NUMBER_WORDS.indexOf(beams[3])], [+beams[6], NUMBER_WORDS.indexOf(beams[5])]] } : null;
+    out.push({ name: lines[i].text, level: head[1] ? +head[1] : 0, school: head[2] ?? head[3], classes: head[4].split(/,\s*/), casting, damage: DAMAGE.filter(d => dealt(d).test(text)),
+      range, reach, attack, save, dice: hit ? { dice: hit[1], type: hit[2] ?? null } : null, upgrade });
   }
   if (!out.length) throw new Error('the SRD has no spells');
   return out;
+}
+
+// ---------- attacks: how a character's attack and damage rolls are made,
+// from the SRD's own rules: the Attack Roll Abilities table (Strength for a
+// melee attack with a weapon or an Unarmed Strike, Dexterity for a ranged
+// one), the Proficiency Bonus with a weapon one is proficient with, the same
+// modifier added to damage, Finesse's choice and a thrown Melee weapon's
+// melee ability, the Unarmed Strike's bonus and damage, and the spell save
+// DC and attack modifier.
+function attackRules() {
+  // The whole text, paragraph by paragraph (joining it at once is slow), the
+  // sidebars blocks() counts as it goes counted once, by the classes.
+  const counted = asides, text = blocks(0, lines.length).filter(b => b.text).map(b => b.text).join(' ');
+  asides = counted;
+  const need = (re, what) => { const m = text.match(re); if (!m) throw new Error(`the SRD's ${what} didn't read`); return m; };
+  const rows = titledTable('Attack Roll Abilities', ['Ability', 'Attack Type']);
+  const by = re => { const r = rows.find(x => re.test(x['Attack Type'])); if (!r) throw new Error(`the Attack Roll Abilities table has no row for ${re}`); return r.Ability; };
+  need(/You add your Proficiency Bonus to your attack roll when you attack using a weapon you have proficiency with, as well as when you attack with a spell\./, 'Proficiency Bonus on attack rolls');
+  need(/you add your ability modifier—the same modifier used for the attack roll—to the damage roll\./, 'damage roll modifier');
+  const finesse = need(/When making an attack with a Finesse weapon, use your choice of your (\w+) or (\w+) modifier for the attack and damage rolls\./, 'Finesse property');
+  need(/If the weapon is a Melee weapon, use the same ability modifier for the attack and damage rolls that you use for a melee attack/, 'Thrown property');
+  const unarmed = need(/Your bonus to the roll equals your (\w+) modifier plus your Proficiency Bonus\. On a hit, the target takes (\w+) damage equal to (\d+) plus your \1 modifier\./, 'Unarmed Strike');
+  const dc = need(/Spell save DC = (\d+) \+ your spellcasting ability modifier \+ your Proficiency Bonus/, 'spell save DC');
+  need(/Spell attack modifier = your spellcasting ability modifier \+ your Proficiency Bonus/, 'spell attack modifier');
+  return { melee: by(/^Melee attack with a weapon/), ranged: by(/^Ranged attack with a weapon/), finesse: [finesse[1], finesse[2]],
+    unarmed: { ability: unarmed[1], type: unarmed[2], base: +unarmed[3] }, spell_save_dc_base: +dc[1] };
 }
 
 // ---------- languages: the rule a character starts by ("Common plus two
@@ -927,6 +977,7 @@ const data = {
     higher_level_equipment: titledTable('Starting Equipment at Higher Levels', ['Starting Level', 'Equipment and Money', 'Magic Items']),
     damage_types: titledTable('Damage Types', ['Type', 'Examples']),
   },
+  attacks: attackRules(),
 };
 writeFileSync(OUT, `${JSON.stringify(data, null, 1)}\n`);
 console.log(`euphonia.srd.json: ${data.classes.length} classes (${data.classes.reduce((n, c) => n + c.features.length, 0)} features), ${data.backgrounds.length} backgrounds, ${data.species.length} species (${data.species.reduce((n, s) => n + s.traits.length, 0)} traits), ${data.feats.length} feats`);

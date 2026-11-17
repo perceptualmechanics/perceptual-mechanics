@@ -810,7 +810,7 @@ export async function initBuilder(panel) {
         h('thead', {}, h('tr', {}, h('th', { scope: 'row' }, 'Level'), result.slots.map((n, i) => (n ? h('th', { scope: 'col' }, String(i + 1)) : null)))),
         h('tbody', {}, h('tr', {}, h('th', { scope: 'row' }, 'Slots'), result.slots.map(n => (n ? h('td', {}, String(n)) : null))))) : null,
       result.pacts.map(p => h('p', {}, `Pact Magic (${p.class}): ${p.slots} slot${p.slots === 1 ? '' : 's'} of level ${p.level}.`)),
-      h('ul', {}, result.spellcasting.map(s => h('li', {}, `${s.class}: ${s.cantrips ? `${s.cantrips} cantrips${s.given.length ? ` and ${s.given.length} always known` : ''}, ` : ''}${s.prepared} ${s.verb} spells, up to level ${s.highest}.`)))] : [];
+      h('ul', {}, result.spellcasting.map(s => h('li', {}, `${s.class}: ${s.cantrips ? `${s.cantrips} cantrips${s.given.length ? ` and ${s.given.length} always known` : ''}, ` : ''}${s.prepared} ${s.verb} spells, up to level ${s.highest}.${s.ability ? ` Spell save DC ${known(s.dc)}, spell attack ${signed(s.attack)} (${s.ability}).` : ''}`)))] : [];
     const chosenSpells = result.spellChoices.filter(c => c.chosen.length || c.given.length || c.always.length).map(c => h('div', { class: 'sheet-spell-list' },
       h('h4', {}, c.label),
       h('ul', {}, [...c.given.map(sp => ({ ...sp, kept: 'always known' })), ...c.always.map(sp => ({ ...sp, kept: `always prepared, from ${sp.from}` })), ...c.chosen].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(sp => h('li', {},
@@ -844,7 +844,19 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Speed'), h('dd', {}, result.speed ? `${result.speed} feet` : '—'),
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
           h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception)),
-          result.masteryChoices.some(c => c.chosen.length) ? [h('dt', {}, 'Weapon Mastery'), h('dd', {}, result.masteryChoices.flatMap(c => c.chosen).map(w => `${w.name} (${w.mastery})`).join(', '))] : null)),
+          h('dt', {}, 'Attacks'), h('dd', {}, `${result.attacksPerAction} when you take the Attack action`),
+          result.masteryChoices.some(c => c.chosen.length) ? [h('dt', {}, 'Weapon Mastery'), h('dd', {}, result.masteryChoices.flatMap(c => c.chosen).map(w => `${w.name} (${w.mastery})`).join(', '))] : null),
+        // The attacks the sheet's numbers give: each weapon carried, the
+        // Unarmed Strike, a feature's own, and each cantrip that attacks or
+        // forces a save.
+        h('table', { class: 'sheet-attacks' }, h('caption', {}, 'Attacks'),
+          h('thead', {}, h('tr', {}, ['Attack', 'To hit or save', 'Damage', 'Range', 'Notes'].map(t => h('th', { scope: 'col' }, t)))),
+          h('tbody', {}, result.attacks.map(a => h('tr', {},
+            h('th', { scope: 'row' }, a.name),
+            h('td', {}, a.save ? `DC ${known(a.save.dc)} ${a.save.ability}` : signed(a.bonus)),
+            h('td', {}, `${a.damage}${a.beams ? `, ${a.beams} beams` : ''}${a.versatile ? `; two-handed ${a.versatile}` : ''}`),
+            h('td', {}, a.reach),
+            h('td', {}, [a.mastery && `Mastery: ${a.mastery}`, !a.proficient && 'not proficient', a.kind === 'spell' && `${a.class} cantrip`].filter(Boolean).join('; ') || '—')))))),
       // The gear the builder sets the character up with: the kits, what its
       // features hand it, the armour it chose, the money left, and the magic
       // items for its level.

@@ -299,6 +299,7 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     standardArray: srd.ability_scores.standard_array,
     pointBudget: srd.ability_scores.point_budget,
     damageTypes: srd.tables.damage_types.map(r => r.Type),
+    attacks: srd.attacks,
     backgroundIncreases: srd.ability_scores.background,
     species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
     backgrounds: [...srd.backgrounds.map(b => ({ ...b, source: 'SRD 5.2.1' })), ...setting.data.backgrounds.map(b => ({ ...b, source: 'Euphonia' }))]
@@ -1249,6 +1250,11 @@ export function character(book, state) {
     }
     entry.list = list;
     if (list.length) pickSpells(c.class, c.class, list, entry.cantrips, entry.prepared, entry.highest, { verb, given: entry.given, always: entry.always });
+    // Its ability, as its Spellcasting says ("Intelligence is your
+    // spellcasting ability for your Wizard spells"), and with it the SRD's
+    // save DC and attack modifier.
+    const ability = c.rules.features.map(f => f.text.match(new RegExp(`(\\w+) is (?:your|the) spellcasting ability for your ${c.class} spells`))?.[1]).find(Boolean) ?? null;
+    if (ability) Object.assign(entry, { ability, dc: book.attacks.spell_save_dc_base + mod[ability] + bonus, attack: mod[ability] + bonus });
     return entry;
   });
   // A feature's own spell: one of the player's choice from the list it names,
@@ -1597,6 +1603,102 @@ export function character(book, state) {
   // the feature is.
   const carried = features.filter(f => /(?:^|\.\s+)You carry an? /.test(f.text)).map(f => ({ name: f.name, from: `${f.subclass ?? f.class} ${f.level}` }));
   const equipment = { carried, buying: { place: market, places, chosen: places.includes(state.market) }, kits: kits.map(k => ({ from: k.from, items: k.items })), bought: gear.spent ? { name: worn.madeFrom ?? worn.name, cost: gear.spent } : null, gold: left, levelGold: higher?.gold ?? 0, roll: higher?.roll ?? null, magicItems, forSale };
+  // Attacks, as the SRD's Attack Roll Abilities table sets them (Strength
+  // for a melee weapon or an Unarmed Strike, Dexterity for a ranged one,
+  // Finesse either), the Proficiency Bonus with a weapon the character is
+  // proficient with and the same modifier on the damage. A feature's own
+  // ability counts where it names the weapon ("When you make an attack roll
+  // with a crossbow or a firearm, you can use your Intelligence modifier
+  // instead", Ballistics; "of your Unarmed Strikes and Monk weapons",
+  // Dexterous Attacks), the best one taken, as is its die where it's larger
+  // (the Martial Arts column), each only while its condition holds; a feat's
+  // bonus ("a +2 bonus to attack rolls you make with Ranged weapons"); and a
+  // feature's own attack (the Arc Gun, its dice in its class's column). Then
+  // each cantrip known that makes a spell attack or forces a save, its dice
+  // grown with the character's level ("5 (2d10), 11 (3d10), and 17
+  // (4d10)"), or its beams.
+  const rules = book.attacks, UNARMED = { name: 'Unarmed Strike', range: 'Melee', properties: [] };
+  const signedMod = n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : '');
+  const atLevel = (c, column) => { const k = known.find(x => x.class === c); return k?.rules.table.rows[k.level - 1]?.[column] ?? null; };
+  const firearms = features.map(f => f.text.match(/A firearm is (.+?), or a period firearm/)?.[1]).find(Boolean)?.split(/,\s*/).map(x => x.replace(/^an? /, '')) ?? [];
+  const mastered = masteryChoices.flatMap(c => c.chosen.map(w => w.name));
+  // What a phrase names: "a Simple weapon", "a Martial weapon that has the
+  // Finesse or Light property", "a crossbow", "a firearm", "a weapon whose
+  // mastery property you can use", "your Unarmed Strikes", and a name the
+  // feature defines ("Monk weapons, which are the following: …", "The Saw
+  // is any of those weapons, or a Handaxe or Sickle").
+  const covers = (phrase, w, f) => phrase.split(/,? (?:or|and) (?:with )?(?=an? |your |Monk |Unarmed )/).map(p => p.replace(/^(?:an?|your) /, '')).some(p => {
+    if (/^Unarmed Strikes?$/.test(p)) return w === UNARMED;
+    if (w === UNARMED) return false;
+    const kind = p.match(/^(?:(Simple|Martial) )?(?:(Melee|Ranged) )?weapons?(?: that ha(?:s|ve) the (.+?) propert(?:y|ies))?$/);
+    if (kind) return (!kind[1] || w.category === kind[1]) && (!kind[2] || w.range === kind[2]) && (!kind[3] || list(kind[3]).some(x => hasProperty(w, x)));
+    if (/^crossbows?$/.test(p)) return /Crossbow/.test(w.name);
+    if (/^firearms?$/.test(p)) return firearms.includes(w.name);
+    if (/^weapon whose mastery property you can use$/.test(p)) return mastered.includes(w.name);
+    const defined = f.text.match(new RegExp(`${p}, which are the following:\\s*((?:\\n- .+)+)`));
+    if (defined) return defined[1].trim().split('\n').some(x => covers(x.replace(/^- /, ''), w, f));
+    const saw = f.text.match(new RegExp(`The ${p} is any of those weapons, or an? (.+?)\\.`));
+    if (saw) return [...(f.text.match(/following (?:Simple|Martial) weapons: (.+?)\./)?.[1].replace(/\bthe /g, '').split(/,(?: and)? /) ?? []), ...list(saw[1])].includes(w.name);
+    return false;
+  });
+  // A feature's condition on its benefits ("while you are unarmed or
+  // wielding only Monk weapons and you aren't wearing armor or wielding a
+  // Shield").
+  const free = f => !/while you are unarmed or wielding only \w+ weapons and you aren[’']t wearing armor or wielding a Shield/.test(f.text) || (!worn && !shield);
+  const swaps = features.flatMap(f => [
+    ...[...f.text.matchAll(/When you (?:make an attack roll with|attack with) (.+?), you can use your (\w+) modifier instead of your (?:Strength or Dexterity|Strength|Dexterity) modifier for the attack and damage rolls/g)].map(m => ({ f, phrase: m[1], ability: m[2] })),
+    ...[...f.text.matchAll(/You can use your (\w+) modifier instead of your (?:Strength or Dexterity|Strength|Dexterity) modifier for the attack and damage rolls (?:of|you make with) (.+?)\./g)].map(m => ({ f, phrase: m[2], ability: m[1] })),
+  ]).filter(x => free(x.f));
+  const fists = features.map(f => ({ f, m: f.text.match(/Your Unarmed Strikes deal (\w+) damage equal to (\d+) plus your (\w+) modifier, and you use \3 for their attack rolls/) })).find(x => x.m);
+  const ownDice = features.flatMap(f => { const m = f.text.match(/You can roll (\d+d\d+) in place of the normal damage of your Unarmed Strike or (\w+ weapons)\. This die changes as you gain \w+ levels, as shown in the ([\w ]+) column/); return m && free(f) ? [{ f, phrase: `Unarmed Strikes and ${m[2]}`, die: atLevel(f.class, m[3]) ?? m[1] }] : []; });
+  const average = d => { const m = String(d).match(/^(\d+)d(\d+)$/); return m ? m[1] * (+m[2] + 1) / 2 : Number(d); };
+  const featBonus = range => feats.reduce((n, f) => n + [f.feat.description, ...f.feat.benefits.map(b => b.text)].reduce((m, t) => m + Number(t?.match(new RegExp(`You gain a \\+(\\d+) bonus to attack rolls you make with ${range} weapons`))?.[1] ?? 0), 0), 0);
+  const perAction = Math.max(1, ...features.map(f => ({ twice: 2, 'three times': 3, 'four times': 4 })[f.text.match(/You can attack (twice|three times|four times) instead of once/)?.[1]] ?? 1));
+  const reach = w => {
+    const thrown = w.properties.find(p => p.startsWith('Thrown'))?.match(/Range ([\d/]+)/)?.[1], ammo = w.properties.find(p => p.startsWith('Ammunition'))?.match(/Range ([\d/]+)/)?.[1];
+    return w.range === 'Ranged' ? `${ammo ?? thrown} feet` : `reach ${hasProperty(w, 'Reach') ? 10 : 5} feet${thrown ? `, or thrown ${thrown} feet` : ''}`;
+  };
+  const strike = w => {
+    const base = w === UNARMED ? rules.unarmed.ability : w.range === 'Melee' ? rules.melee : rules.ranged;
+    // A feature that sets the ability ("you use Intelligence for their
+    // attack rolls") leaves no choice; one that allows it ("you can use") adds one.
+    const options = fists && w === UNARMED ? [fists.m[3]] : [[base], hasProperty(w, 'Finesse') ? rules.finesse : [], ...swaps.filter(x => covers(x.phrase, w, x.f)).map(x => [x.ability])].flat();
+    const ability = options.reduce((best, a) => (mod[a] > mod[best] ? a : best));
+    const proficient = w === UNARMED || proficientWeapons.some(p => p.name === w.name);
+    const [, die, type] = w === UNARMED ? [null, null, fists ? fists.m[1] : rules.unarmed.type] : w.damage.match(/^(\S+) (\w+)$/);
+    const bigger = ownDice.filter(x => covers(x.phrase, w, x.f)).map(x => x.die).find(d => average(d) > average(die ?? 0));
+    const roll = bigger ?? die, flat = w === UNARMED && !bigger ? (fists ? +fists.m[2] : rules.unarmed.base) + mod[ability] : null;
+    const versatile = w.properties.find(p => p.startsWith('Versatile'))?.match(/\((\d+d\d+)\)/)?.[1];
+    return {
+      name: w.name, kind: w === UNARMED ? 'unarmed' : 'weapon', ability, bonus: mod[ability] + (proficient ? bonus : 0) + featBonus(w.range), proficient,
+      damage: flat !== null ? `${Math.max(flat, 0)} ${type}` : `${roll}${signedMod(/^\d+d\d+$/.test(roll) ? mod[ability] : 0)} ${type}`,
+      versatile: versatile && !bigger ? `${versatile}${signedMod(mod[ability])} ${type}` : null, reach: w === UNARMED ? 'reach 5 feet' : reach(w),
+      mastery: mastered.includes(w.name) ? w.mastery : null,
+    };
+  };
+  const carriedWeapons = [...new Map(items.map(item => {
+    const m = item.match(/^(?:(\d+) )?(.+?)(?: and \d+ \w+)?$/), w = (book.weapons ?? []).find(x => [x.name, `${x.name}s`, `${x.name}es`].includes(m[2]));
+    return w && [w.name, w];
+  }).filter(Boolean)).values()];
+  const ownAttacks = features.flatMap(f => {
+    const m = f.text.match(/make a ranged attack roll using (\w+) against a creature or object within (\d+) feet of yourself, adding your Proficiency Bonus\. On a hit, the target takes (\w+) damage equal to the dice shown in the ([\w ]+) column of the \w+ Features table plus your \1 modifier/);
+    if (!m) return [];
+    reads(f);
+    return [{ name: f.name, kind: 'feature', ability: m[1], bonus: mod[m[1]] + bonus, proficient: true, damage: `${atLevel(f.class, m[4])}${signedMod(mod[m[1]])} ${m[3]}`, versatile: null, reach: `${m[2]} feet`, mastery: null }];
+  });
+  const spellAttacks = spellcasting.filter(sc => sc.ability).flatMap(sc => {
+    const pick = spellChoices.find(x => x.key === sc.class);
+    const one = features.find(f => f.class === sc.class && new RegExp(`When you cast an? ${sc.class} cantrip that rolls only one damage die, add your (\\w+) modifier to the damage`).test(f.text));
+    const addOne = one?.text.match(/add your (\w+) modifier to the damage/)?.[1];
+    return [...(pick?.chosen ?? []).filter(sp => sp.level === 0).map(sp => sp.name), ...sc.given].map(n => book.spellFacts.get(n)).filter(sp => sp?.dice && (sp.attack || sp.save)).map(sp => {
+      const step = sp.upgrade?.steps.filter(([lv]) => total >= lv).at(-1)?.[1];
+      const roll = sp.upgrade?.kind === 'dice' && step ? step : sp.dice.dice, beams = sp.upgrade?.kind === 'beams' ? step ?? 1 : 1;
+      const plus = addOne && /^1d\d+$/.test(roll) ? mod[addOne] : 0;
+      return { name: sp.name, kind: 'spell', class: sc.class, ability: sc.ability, bonus: sp.attack ? sc.attack : null, save: sp.save ? { ability: sp.save, dc: sc.dc } : null, proficient: true,
+        damage: `${roll}${signedMod(plus)} ${sp.dice.type ?? 'of the chosen type'}`, beams: beams > 1 ? beams : null, versatile: null, reach: sp.reach ?? sp.range, mastery: null };
+    });
+  });
+  const attacks = [...carriedWeapons.map(strike), strike(UNARMED), ...ownAttacks, ...spellAttacks];
   // The Monster's card, for one who carries it, as Monster Form writes it:
   // the scores it swaps ("Your Strength and Intelligence scores swap, and
   // your Dexterity and Wisdom scores swap"), and with them the Armor Class
@@ -1667,6 +1769,7 @@ export function character(book, state) {
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
     skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
+    attacks, attacksPerAction: perAction,
     features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,
   };

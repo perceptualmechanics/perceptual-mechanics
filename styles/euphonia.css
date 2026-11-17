@@ -591,7 +591,7 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .sheet th, .sheet td { text-align: left; padding: 0.2rem 0.9rem 0.2rem 0; border-bottom: 1px solid var(--sheet-rule); vertical-align: top; }
 .sheet th { font-weight: 600; }
 .sheet caption { text-align: left; color: var(--sheet-muted); font-size: 0.85rem; padding-bottom: 0.2rem; }
-.sheet-abilities td, .sheet-slots td { font-variant-numeric: tabular-nums; }
+.sheet-abilities td, .sheet-slots td, .sheet-attacks td { font-variant-numeric: tabular-nums; }
 .sheet-skills { list-style: none; margin: 0; padding: 0; columns: 2 12rem; column-gap: 1.6rem; font-size: 0.92rem; }
 .sheet-skills li { break-inside: avoid; color: var(--sheet-muted); }
 .sheet-skills li.is-proficient { color: var(--ink); font-weight: 600; }
