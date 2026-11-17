@@ -80,9 +80,11 @@ jobs:
       # in dev-only through vite -> postcss) sat unnoticed in the lockfile;
       # nothing in CI would have said so. --audit-level=high fails only on
       # high/critical, so a low/moderate transitive advisory with no fix
-      # available doesn't block a deploy of unrelated content.
+      # available doesn't block a deploy of unrelated content. A high one with
+      # no patched release that can't reach the shipped site is excepted by
+      # name in the script, and only until a patch exists.
       - name: Audit dependencies
-        run: npm audit --audit-level=high
+        run: node scripts/audit-deps.mjs
 
       - name: Build
         run: npm run build
