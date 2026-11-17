@@ -2941,3 +2941,87 @@ Noto Sans Symbols 2 (OFL 1.1), cut to the one character, 2.5 kB, last in every
 theme's stack. The Wheel's road names stand where each pathway rises, so two
 sit on the right instead of four. QA in a GPU Chrome: the builder 22/22, the
 globe 53/53, layout 53/53, and axe clean with the Equipment block open.
+
+### 7.6.0 — the people of 1668, their borders, and a full character sheet
+
+**The people, every one with a sheet.** class-kit's exporter (v20–v24) writes
+each region's People and Running Euphonia's Notable People: 129 people in
+the regions and the notables, on one People page with a region list and a
+search.
+Each carries a hidden @at place, so a name turns the globe to them and rings
+the spot; a chapter's @places and @names lines do the same for 132 titles,
+rulers and powers. Each person's character sheet is shown once its text
+passes the site's rules (125 shown, none waiting), in a dialog dressed as
+the builder's sheet,
+from the People page and from their chapter. The 2024 rules' own names keep
+"Fey" (Fey Ancestry, Conjure Fey); elsewhere it reads "fae".
+
+**Borders for 1668.** The globe draws each power's outline from Cliopatria
+v0.2.1 (CC BY 4.0): firm lines where the record is sure, dashed reaches
+where it isn't, and the book's departures marked as the book's. An @ground
+line ends firm ground: Siberia is a zone from 60E to the Pacific (8.7
+million km²). The book's 37 @peoples are lettered at their region's zoom.
+The gate holds every shape to its chapter's @borders line.
+
+**A front door.** A first visit opens on Welcome to Euphonia, in the book's
+words: its opening line, the Pitch, the lamp in the kitchen, and the games
+ready to run. Gear follows the homeland: a living tradition (the khipu, fu
+papers, talismanic shirts) goes only to a character of its homeland, and a
+Mutapan curiosity costs five times as much at a Road port as in Sofala.
+
+**The UX pass.** Euphonia's data is gzipped and cached (3.1 MB to 1.04 MB).
+The landing's first-visit layout shift goes from 0.69 to none. On a phone
+Euphonia's chrome folds to one row, so the globe starts at 118 px of an 844
+px screen, not 220. Every scene's hint is 12 px (ten were 8.8 px). Theater's
+controls flank the title in a short landscape window, and upright on a phone
+the speech is a 15 px caption. Butterfly and Beamline hold still under
+reduced motion. The landing's scene captions came and went (Scott's call).
+
+**Only the released master ships.** scripts/euphonia-release.mjs pins the
+master the book released in euphonia.release.json; verify-euphonia fails an
+export from any other, and verify-euphonia-map borders drawn from another.
+The deploy checks the same on GitHub. The map's Tide follows the book's rule
+by hemisphere; the old model fails 22 of the new checks. The deploy's audit
+excepts picomatch's unpatched advisory by name, and fails again once a patch
+exists. A legal file inlined as a data: URL had stopped the builder loading
+live; the build now inlines only what the CSP allows. Exports of 15, 16 and
+17 November, the last from master 162b58ed.
+
+**The builder, to D&D Beyond's measure.** The sheet now shows:
+- attacks: each weapon carried, the Unarmed Strike, the Arc Gun, Planar
+  Strike, the Breath Weapon, and every cantrip and prepared spell that
+  attacks or forces a save, with its higher slot in the SRD's words. A
+  Fighter 11's Greatsword reads +7, 2d6 + 3, three attacks; a Wizard 5's
+  Fire Bolt +6, 2d10;
+- what adds now and then, noted: Rage, Sneak Attack, Telling Cut,
+  Calculated Shot, Exploit, Great Weapon and Two-Weapon Fighting, Eldritch
+  Spear's range, a Heavy weapon's Disadvantage below 13;
+- each class's spell save DC and attack, its own table columns (Rages,
+  Focus Points, Favors), senses, every speed, defenses and save advantages;
+- weight carried against capacity (a Fighter's kits, 148 lb. of 240), and
+  hit points rolled or fixed, from the SRD's tables by Hit Die;
+- starting equipment as chosen, A, B or the gold, the kit naming the tools
+  picked;
+- magic items on the numbers, attuned to three, rarest first: the Atlas of
+  Roads and the Inked Wheel take a Revelator 17 to DC 23. Each class's own
+  gear comes a rarity
+  ahead of the SRD's table: a Chirurgeon's Bonesaw and the Ward from 11,
+  the Doctor's Coat at 17; a shield only for the Shield-trained, and no Rod
+  for the Chirurgeon (Scott's).
+
+Choices that stand until a rest are offered: the Lionskin's Infiltrator or
+Guardian, Fiendish Resilience, and the spellcasting ability a Tiefling's
+legacy or Magic Initiate asks. Of 425 choice sentences in 794 class and
+subclass features, three a character keeps were missing; one, the
+Revelator's First Voyage, had vanished when the book reworded it. The gate
+now fails a choice that stands until a rest unless it's offered as its
+feature's own. The SRD export adds what the sheet reads: damage types, the
+attack rules and spell DC formula, each spell's attack, save, dice, growth
+and higher slot, weights, carrying capacity and the attunement limit. Three
+soft hyphens from the PDF had kept a Rogue's Shortsword from counting.
+
+**Gates.** Each new builder check was seen failing on the engine before it.
+223 class and subclass builds, compared before and after each change, moved
+only where intended. QA in headless Chrome: each stage's sheet read on the
+local build and live; the attack table and the new form sections at 375 px,
+with no horizontal scroll; no errors.
