@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as defaultEngine from '../src/euphonia/euphonia.character.js';
-import { LIVING, FROM, PRICES } from '../src/euphonia/euphonia.provenance.js';
+import { LIVING, FROM, PRICES, WITHOUT } from '../src/euphonia/euphonia.provenance.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 
@@ -379,11 +379,12 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     const got = geared([{ class: c.name, level: 17, subclass: sub.name }]);
     if (!got) continue;
     const table = book.higherLevelEquipment.find(r => r.lo <= 17 && r.hi >= 17).magic;
-    if (got.equipment.magicItems.length !== table.reduce((n, r) => n + r.count, 0)) fail(`${c.name} 17: ${got.equipment.magicItems.length} magic item slots, not the table's`);
-    const picked = got.equipment.magicItems.filter(m => m.item).map(m => book.items.find(i => i.name === m.item.name));
+    // The table's slots, and the class's own gear beside them.
+    if (got.equipment.magicItems.filter(m => !m.classGear).length !== table.reduce((n, r) => n + r.count, 0)) fail(`${c.name} 17: ${got.equipment.magicItems.length} magic item slots, not the table's`);
+    const picked = got.equipment.magicItems.filter(m => m.item).map(m => ({ ...book.items.find(i => i.name === m.item.name), classGear: m.classGear }));
     if (new Set(picked.map(i => i.name)).size !== picked.length) fail(`${c.name} 17: an item given twice`);
     for (const i of picked) {
-      if (i.dm) fail(`${c.name} 17: ${i.name} is one the DM hands out`);
+      if (i.dm && !i.classGear) fail(`${c.name} 17: ${i.name} is one the DM hands out, in a table slot`);
       if (/No one starts play with/.test(i.text)) fail(`${c.name} 17: ${i.name} starts play, though "No one starts play with" one`);
       if (i.who && !(i.who.class === c.name && (!i.who.subclasses || i.who.subclasses.includes(sub.name)))) fail(`${c.name} (${sub.name}) 17: given ${i.name}, which requires Attunement by ${i.attunement.by}`);
     }
@@ -777,22 +778,37 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const atlas = revelator17?.equipment.magicItems.find(m => m.item?.name === 'Atlas of Roads');
   const seer = revelator17?.spellcasting.find(x => x.class === 'Revelator');
   const needing = revelator17?.equipment.magicItems.filter(m => m.item?.attunement).length ?? 0;
-  if (!(atlas && revelator17.unattuned && !revelator17.unattuned.includes('Atlas of Roads') && seer.dc === srd.attacks.spell_save_dc_base + revelator17.mod.Wisdom + revelator17.bonus + rated('Atlas of Roads', atlas.rarity) && revelator17.unattuned.length === Math.max(0, needing - srd.attunement_max)))
+  if (!(atlas && revelator17.unattuned && !revelator17.unattuned.includes('Atlas of Roads') && seer.dc === srd.attacks.spell_save_dc_base + revelator17.mod.Wisdom + revelator17.bonus + rated('Atlas of Roads', atlas.rarity) + +items.items.find(i => i.name === 'The Inked Wheel').text.match(/a \+(\d+) bonus to spell attack rolls and to the saving throw DCs/)[1] && revelator17.unattuned.length === Math.max(0, needing - srd.attunement_max)))
     fail(`a Revelator 17's items: ${JSON.stringify({ atlas: atlas?.rarity, dc: seer?.dc, unattuned: revelator17?.unattuned })}`);
-  const repeating = revelator17?.attacks.find(a => a.name.startsWith('Repeating Crossbow')), crossbowRarity = revelator17?.equipment.magicItems.find(m => m.item?.name === 'Repeating Crossbow')?.rarity;
-  if (!(repeating?.bonus === revelator17.mod.Dexterity + revelator17.bonus + rated('Repeating Crossbow', crossbowRarity) && repeating.damage === `1d8 + ${revelator17.mod.Dexterity + rated('Repeating Crossbow', crossbowRarity)} Piercing`)) fail(`the Repeating Crossbow: ${JSON.stringify(repeating)}`);
+  const crossbowman = champion11, repeating = crossbowman?.attacks.find(a => a.name.startsWith('Repeating Crossbow')), crossbowRarity = crossbowman?.equipment.magicItems.find(m => m.item?.name === 'Repeating Crossbow')?.rarity;
+  // Held to the same character's plain Shortbow, another ranged weapon by
+  // the same ability: its bonus, plus the item's.
+  const plainBow = hitOf(crossbowman, 'Shortbow');
+  if (!(repeating?.bonus === plainBow?.bonus + rated('Repeating Crossbow', crossbowRarity) && repeating.damage === `1d8 + ${crossbowman.mod.Dexterity + rated('Repeating Crossbow', crossbowRarity)} Piercing`)) fail(`the Repeating Crossbow: ${JSON.stringify(repeating)} beside ${JSON.stringify(plainBow)}`);
+  // A carried crossbow, not attuned, adds nothing.
+  if (revelator17?.unattuned.includes('Repeating Crossbow') && revelator17.attacks.some(a => a.name.startsWith('Repeating Crossbow'))) fail('a Repeating Crossbow not attuned still adds its bonus');
   const gunner11 = run(someone([{ class: 'Mhizha', level: 11, subclass: 'Gunner' }]), 'Mhizha 11');
   const tunedAt = gunner11?.equipment.magicItems.find(m => m.item?.name === 'Tuned Arc Gun')?.rarity, tunedN = tunedAt ? rated('Tuned Arc Gun', tunedAt) : NaN;
   if (!(hitOf(gunner11, 'Arc Gun')?.bonus === gunner11.mod.Intelligence + gunner11.bonus + tunedN && gunner11.spellcasting[0].dc === srd.attacks.spell_save_dc_base + gunner11.mod.Intelligence + gunner11.bonus + tunedN)) fail(`the Tuned Arc Gun: ${JSON.stringify({ tunedAt, arc: hitOf(gunner11, 'Arc Gun')?.bonus, dc: gunner11?.spellcasting[0].dc })}`);
   const shirted = run({ ...someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), homeland: 'India' }, 'Fighter of India'), bare = run(someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), 'Fighter of nowhere');
   if (!(shirted?.saveItems?.includes('Talismanic Shirt') && shirted.saves.every((x, i) => x.bonus === bare.saves[i].bonus + 1))) fail(`the Talismanic Shirt: ${JSON.stringify(shirted?.saves.map(x => x.bonus))} against ${JSON.stringify(bare?.saves.map(x => x.bonus))}`);
-  // The coat is the DM's to give, so it's planted as a Very Rare item a
-  // Physician 17 would be handed, to hold its sentences.
-  const coated = { ...items, items: items.items.map(i => (i.name === "Doctor's Coat" ? { ...i, dm: false, rarities: [{ rarity: 'Very Rare', bonus: null, member: null }] } : i)) };
-  const coatBook = engine.rulebook(srd, euphonia, setting, subclasses, coated);
-  const doctor17 = engine.character(coatBook, complete({ ...someone([{ class: 'Physician', level: 17, subclass: 'Doctor' }]), spellAbilities: {} }, 'Physician 17'));
-  if (!(doctor17.equipment.magicItems.some(m => m.item?.name === "Doctor's Coat") && doctor17.defenses?.saveAdvantages?.includes('saves against spells and other magical effects') && doctor17.unarmored.some(u => u.from === "Doctor's Coat" && u.ac === 15 + doctor17.mod.Dexterity)))
-    fail(`the Doctor's Coat: ${JSON.stringify({ items: doctor17.equipment.magicItems.map(m => m.item?.name), adv: doctor17.defenses.saveAdvantages, bare: doctor17.unarmored })}`);
+  // The class's own gear, a rarity ahead of the table (Scott, 17 November):
+  // a Chirurgeon's Very Rare Bonesaw from the row that first gives Rare, not
+  // before; the Ward only to one trained in Shields; the Legendary coat at
+  // 17, with its Armor Class without armor, its defenses and "Your spell save
+  // DC and spell attack bonus each increase by 2".
+  const gearOf = (cls, sub, lv) => run(someone([{ class: cls, level: lv, subclass: sub }]), `${sub} ${lv}`);
+  const firstRare = book.higherLevelEquipment.find(r => r.magic.some(m => m.rarity === 'Rare')).lo;
+  const gearNames = r => r?.equipment.magicItems.filter(m => m.classGear).map(m => m.item.name) ?? [];
+  if (!(gearNames(gearOf('Physician', 'Chirurgeon', firstRare)).includes('Bonesaw') && !gearNames(gearOf('Physician', 'Chirurgeon', firstRare - 1)).includes('Bonesaw'))) fail(`the Bonesaw: ${gearNames(gearOf('Physician', 'Chirurgeon', firstRare))} at ${firstRare}, ${gearNames(gearOf('Physician', 'Chirurgeon', firstRare - 1))} at ${firstRare - 1}`);
+  if (gearNames(gearOf('Physician', 'Doctor', firstRare)).includes('The Ward') || !gearNames(gearOf('Physician', 'Combat Medic', firstRare)).includes('The Ward')) fail('the Ward goes to one untrained in Shields, or not to a Combat Medic');
+  for (const w of WITHOUT) if (!book.items.some(i => i.name === w.item) || !book.classes.some(c => c.subclasses.some(x => x.name === w.subclass))) fail(`euphonia.provenance.js WITHOUT: ${w.item} or ${w.subclass} isn't in the books`);
+  if (gearNames(gearOf('Physician', 'Chirurgeon', book.higherLevelEquipment.at(-1).lo)).includes('Rod of the Doctor')) fail('a Chirurgeon is given the Rod of the Doctor, which WITHOUT keeps from it');
+  const last = book.higherLevelEquipment.at(-1).lo, doctor17 = gearOf('Physician', 'Doctor', last), bare17 = gearOf('Physician', 'Doctor', last - 1);
+  const coatAc = 15 + doctor17?.mod.Dexterity;
+  if (!(gearNames(doctor17).includes("Doctor's Coat") && !gearNames(bare17).includes("Doctor's Coat") && doctor17.armorClass.ac === coatAc && doctor17.defenses.saveAdvantages.includes('saves against spells and other magical effects')
+    && doctor17.spellcasting[0].dc === srd.attacks.spell_save_dc_base + doctor17.mod.Intelligence + doctor17.bonus + 2))
+    fail(`the Doctor's Coat at ${last}: ${JSON.stringify({ gear: gearNames(doctor17), ac: doctor17?.armorClass, dc: doctor17?.spellcasting[0].dc })}`);
 
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');

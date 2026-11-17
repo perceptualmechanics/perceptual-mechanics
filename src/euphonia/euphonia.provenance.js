@@ -16,6 +16,12 @@ export const LIVING = [
   { item: 'Talismanic Shirt', homelands: ['The Ottomans, Persia and the Horn', 'India'], because: ['Ottoman princes and generals wore them into battle, and so did the Mughal and Deccan courts'] },
 ];
 
+// Class gear a subclass goes without (Scott, 17 November): the Chirurgeon
+// has the Bonesaw, its own instrument, and not the Rod of the Doctor.
+export const WITHOUT = [
+  { item: 'Rod of the Doctor', subclass: 'Chirurgeon' },
+];
+
 // Where an item is at home, so a character from there finds it first.
 export const FROM = [
   { item: "Court Astrologer's Astrolabe", homelands: ['The Ottomans, Persia and the Horn'], because: ['Court astrologers from Istanbul to Isfahan'] },

@@ -6,7 +6,7 @@
 // error, not a guess. Pure, so the gate (verify-euphonia-builder) runs it
 // against the SRD's own worked examples.
 
-import { LIVING, FROM, PRICES } from './euphonia.provenance.js';
+import { LIVING, FROM, PRICES, WITHOUT } from './euphonia.provenance.js';
 
 export const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 export const MAX_LEVEL = 20;
@@ -1490,12 +1490,109 @@ export function character(book, state) {
   // Class, and a Shield only where its sentence allows one ("aren't wearing
   // armor or wielding a Shield" doesn't).
   const trainedIn = text => [...new Set([...(text.match(/\b(Light|Medium|Heavy)\b/g) ?? []), ...(/\bShields?\b/.test(text) ? ['Shield'] : [])])];
-  const training = [...new Set([...(first ? trainedIn(first.traits.find(t => t.trait === 'Armor Training')?.value ?? '') : []),
+  const ownTraining = [...new Set([...(first ? trainedIn(first.traits.find(t => t.trait === 'Armor Training')?.value ?? '') : []),
     ...known.slice(1).flatMap(c => trainedIn(c.rules.multiclass.gains.match(/training with (.+)$/)?.[1] ?? '')),
     // A feature's own, the whole clause ("training with Medium armor and
     // Shields", the Chirurgeon's) or the other order ("You gain Heavy armor
     // training", the Lionskin's).
     ...features.flatMap(f => [...f.text.matchAll(/training with ([^,.;]*(?:armor|Shields?)\b)|\b((?:Light|Medium|Heavy) armor) training\b/g)].flatMap(m => trainedIn(m[1] ?? m[2])))])];
+  const higher = book.higherLevelEquipment.find(r => total >= r.lo && total <= r.hi) ?? null;
+  // Magic items, as many of each rarity as the table gives past level 1,
+  // from the books' own: one for no one in particular, or for one of the
+  // character's classes or its subclass (a family's member for that
+  // subclass), never one the DM hands out or one that comes only in the
+  // story. The builder chooses, as with
+  // armour: first what's made for its subclass (its chapter's, or the
+  // family member for it), then its classes', then the setting's own, then
+  // other classes' chapters, each the homeland's first, then in the books'
+  // order; the rarest slots first, so an item that comes in several rarities
+  // (+1, +2, +3) fills the rarest it can. A living tradition goes only to a
+  // character of its homeland. A rarity no item fits is left for the DM to
+  // fill.
+  const has = cls => known.some(k => k.class === cls);
+  const subclassOf = cls => known.find(k => k.class === cls && k.level >= k.rules.subclassLevel)?.subclass || null;
+  const memberFor = item => item.members.find(mb => mb.subclass === subclassOf(item.place.class_name)) ?? null;
+  const homeland = state.homeland || null;
+  const usable = item => (!item.living || item.living.includes(homeland)) && (!item.who || (has(item.who.class) && (!item.who.subclasses || item.who.subclasses.includes(subclassOf(item.who.class))))) && (!item.bound || memberFor(item));
+  // A rarity a family gives one member ("Uncommon, or Rare for the Spare
+  // Barrel") is that member's, and the others take the rest.
+  const ratedAt = (item, member) => (item.rarities.some(r => r.member && r.member === member?.name) ? item.rarities.filter(r => r.member === member.name) : item.rarities.filter(r => !r.member));
+  const nearness = item => ((item.place.subclass && item.place.subclass === subclassOf(item.place.class_name)) || memberFor(item) ? 0 : has(item.place.class_name) || (item.who && has(item.who.class)) ? 1 : item.place.class_name ? 3 : 2);
+  const athome = item => Number(item.from.includes(homeland) || Boolean(item.living));
+  const taken = new Set();
+  const RARITIES = ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Legendary', 'Artifact'];
+  // A character also has its class's own gear, what the table never gives:
+  // the chapter's items rarer than any of the table's, and those the books
+  // leave the DM to give (Scott, 17 November). Each comes a rarity ahead of
+  // the table, at the row that first gives the rarity below it (a Very Rare
+  // Bonesaw at 11–16, where the table first gives Rare; the Legendary coat
+  // at 17–20), and all of it in the table's last row; each for one who can
+  // use it (the Bonesaw a Chirurgeon's), and a shield only for one trained
+  // in Shields without it, and none a subclass goes without (WITHOUT, in
+  // euphonia.provenance.js).
+  const tableTop = RARITIES.indexOf(book.higherLevelEquipment.at(-1).magic.at(-1).rarity);
+  const gearArrives = r => higher && (higher === book.higherLevelEquipment.at(-1) || RARITIES.indexOf(r) <= RARITIES.indexOf(higher.magic.at(-1)?.rarity) + 1);
+  const classGear = () => book.items.filter(i => i.magical && !i.story && i.place.class_name && has(i.place.class_name) && usable(i) && !taken.has(i.name)
+    && (i.dm || i.rarities.every(r => RARITIES.indexOf(r.rarity) > tableTop)) && gearArrives(i.rarities.at(-1).rarity)
+    && !(i.kind === 'Armor' && i.base === 'Shield' && !ownTraining.includes('Shield')) && !WITHOUT.some(w => w.item === i.name && w.subclass === subclassOf(i.place.class_name)))
+    .map(i => { taken.add(i.name); return { rarity: i.rarities.at(-1).rarity, classGear: true, item: { name: i.name, kind: i.kind, base: i.base, member: memberFor(i) && (memberFor(i).name ?? memberFor(i).subclass), bonus: i.rarities.at(-1).bonus, attunement: i.attunement, living: Boolean(i.living), text: i.text } }; });
+  const magicItems = (higher?.magic ?? []).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).flatMap(({ count, rarity }) => Array.from({ length: count }, () => {
+    const pick = book.items.filter(i => i.magical && !i.dm && !i.story && !taken.has(i.name) && usable(i))
+      .map(i => ({ item: i, member: memberFor(i), at: ratedAt(i, memberFor(i)).find(r => r.rarity === rarity) }))
+      .filter(x => x.at).sort((a, b) => nearness(a.item) - nearness(b.item) || athome(b.item) - athome(a.item))[0];
+    if (!pick) return { rarity, item: null };
+    taken.add(pick.item.name);
+    return { rarity, item: { name: pick.item.name, kind: pick.item.kind, base: pick.item.base, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: pick.item.attunement, living: Boolean(pick.item.living), text: pick.item.text } };
+  })).concat(classGear()).toSorted((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
+  // What the magic items do to the numbers, each as its sentence says, the
+  // character wearing or holding them and attuned to as many as the SRD
+  // allows ("You can be attuned to no more than three magic items at a
+  // time"; the builder attunes the rarest first), the rest carried: "a +1
+  // bonus to Armor Class"; "your base Armor
+  // Class is 15 plus your Dexterity modifier" without armor; "a +1 bonus to
+  // saving throws"; a magic weapon's "+2 bonus to attack rolls and damage
+  // rolls made with it", or the bonus its rarity gives; "a +3 bonus to spell
+  // attack rolls and to the saving throw DCs of your Revelator spells", the
+  // highest of those that "doesn't stack with another Danae focus's bonus";
+  // and the Tuned Arc Gun's bonus to "attack rolls with the Arc Gun".
+  const attuned = magicItems.filter(m => m.item?.attunement).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).slice(0, book.attunementMax).map(m => m.item.name);
+  const inUse = magicItems.filter(m => m.item && (!m.item.attunement || attuned.includes(m.item.name))).map(m => ({ ...m.item, rated: Number(m.item.bonus?.match(/^\+(\d+)$/)?.[1] ?? 0) }));
+  const unattuned = magicItems.filter(m => m.item?.attunement && !inUse.some(x => x.name === m.item.name)).map(m => m.item.name);
+  const said = (item, re) => item.text.match(re);
+  const armorBonus = inUse.map(i => ({ name: i.name, n: +(said(i, /you have a \+(\d+) bonus to Armor Class/)?.[1] ?? 0) })).filter(x => x.n);
+  const itemBare = inUse.flatMap(i => { const m = said(i, /If you aren[’']t wearing armor, your base Armor Class is (\d+) plus your (\w+) modifier/); return m ? [{ from: i.name, base: +m[1], ability: m[2] }] : []; });
+  // A shield that hovers ("you don't need a free hand to benefit from it",
+  // the Ward), the SRD's Shield, and the training it brings ("While attuned
+  // to the shield, you have Shield training").
+  const hovering = inUse.find(i => i.kind === 'Armor' && i.base === 'Shield' && /you don[’']t need a free hand to benefit from it/.test(i.text));
+  const itemTraining = inUse.flatMap(i => [...i.text.matchAll(/you have (\w+) training/g)].map(m => m[1]));
+  const saveBonus = inUse.map(i => ({ name: i.name, n: +(said(i, /you have a \+(\d+) bonus to saving throws/)?.[1] ?? 0) })).filter(x => x.n);
+  const magicWeapons = inUse.flatMap(i => {
+    const base = i.kind === 'Weapon' ? i.base : said(i, /It can be wielded as a magic (\w+)/)?.[1];
+    const w = base && (book.weapons ?? []).find(x => x.name === base);
+    if (!w) return [];
+    const n = +(said(i, /grants a \+(\d+) bonus to attack rolls and damage rolls made with it/)?.[1] ?? said(i, /You have a \+(\d+) bonus to attack and damage rolls made with this magic weapon/)?.[1] ?? (/bonus to attack and damage rolls made with this magic weapon, determined by its rarity/.test(i.text) ? i.rated : 0));
+    return [{ name: i.name, w, n }];
+  });
+  // Spell attacks and DCs, by class ("of your Revelator spells") or every
+  // class's ("a +2 bonus to spell attack rolls").
+  const castingBoosts = inUse.flatMap(i => {
+    const m = said(i, /(?:a \+(\d+) bonus|a bonus(?:, determined by the item[’']s rarity,)?) to (?:spell attack rolls and to the saving throw DCs|the attack rolls and saving throw DCs|attack rolls with [^,]+, [^,]+, and [^,]+, and to the spell attack rolls and spell save DCs) of your (\w+) spells/);
+    const any = said(i, /a \+(\d+) bonus to spell attack rolls\b(?! and)/);
+    const both = said(i, /Your spell save DC and spell attack bonus each increase by (\d+)/);
+    const focus = said(i, /doesn[’']t stack with another (\w+) focus[’']s bonus/)?.[1];
+    return [m && { name: i.name, cls: m[2], n: m[1] ? +m[1] : i.rated, dc: true, focus }, any && { name: i.name, cls: null, n: +any[1], dc: false }, both && { name: i.name, cls: null, n: +both[1], dc: true }].filter(x => x && x.n);
+  });
+  for (const sc of spellcasting.filter(x => x.ability)) {
+    const mine = castingBoosts.filter(b => !b.cls || b.cls === sc.class), focused = mine.filter(b => b.focus), plain = mine.filter(b => !b.focus);
+    const n = plain.reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.map(b => b.n)), dcn = plain.filter(b => b.dc).reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.filter(b => b.dc).map(b => b.n));
+    if (n) sc.attack += n;
+    if (dcn) sc.dc += dcn;
+    if (n || dcn) sc.items = [...plain, ...focused].map(b => b.name);
+  }
+  const featureBoosts = inUse.flatMap(i => { const m = said(i, /to attack rolls with the ([\w ]+?), /); return m ? [{ attack: m[1], n: i.rated, name: i.name }] : []; });
+  // With an item's ("you have Shield training", the Ward).
+  const training = [...new Set([...ownTraining, ...itemTraining.flatMap(trainedIn)])];
   // The Armor Class a body armour and a Shield give (either may be none),
   // by the modifiers it's worked from: the character's, or a form's that
   // swaps scores (the Monster's card). Without armour, each feature's own
@@ -1511,10 +1608,15 @@ export function character(book, state) {
       if (shield && noShield) continue;
       unarmored.push({ from: f.name, ac: 10 + mods[m[1]] + mods[m[2]] + shieldBonus });
     }
+    // An item's own ("your base Armor Class is 15 plus your Dexterity
+    // modifier" without armor, the Doctor's Coat).
+    for (const b of itemBare) unarmored.push({ from: b.from, ac: b.base + mods[b.ability] + shieldBonus });
     const ac = worn
       ? { from: worn.name, ac: worn.base + (worn.dex ? Math.min(mods.Dexterity, worn.dex_max ?? Infinity) : 0) + shieldBonus }
       : { ...unarmored.reduce((best, u) => (u.ac > best.ac ? u : best)) };
-    if (shieldBonus) ac.from += ' and Shield';
+    if (shieldBonus) ac.from += hovering ? ` and ${hovering.name}` : ' and Shield';
+    // And what an item adds ("a +1 bonus to Armor Class").
+    for (const x of armorBonus) { ac.ac += x.n; ac.from += ` and ${x.name}`; }
     // A feat's own sentence: "While you’re wearing Light, Medium, or Heavy
     // armor, you gain a +1 bonus to Armor Class" (Defense).
     for (const f of feats) {
@@ -1547,7 +1649,6 @@ export function character(book, state) {
       kit: { from: src.from, items: pack.items.flatMap(i => resolve(i, chosen)), gold: pack.gold } };
   });
   const kits = packageChoices.map(c => c.kit);
-  const higher = book.higherLevelEquipment.find(r => total >= r.lo && total <= r.hi) ?? null;
   const items = kits.flatMap(k => k.items), money = kits.reduce((n, k) => n + k.gold, 0) + (higher?.gold ?? 0);
   const armorNamed = item => book.armor.items.find(a => a.name === item);
   const wearable = a => a.category !== 'Shield' && training.includes(a.category) && (!a.strength || scores.Strength >= a.strength);
@@ -1572,88 +1673,12 @@ export function character(book, state) {
   }).find(Boolean);
   let gear = null;
   if (suitOf) gear = { spent: suitOf.spent, worn: suitOf.worn, shield: null };
-  else for (const shield of kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of wears) {
+  else for (const shield of hovering ? [book.armor.items.find(x => x.category === 'Shield')] : kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of wears) {
     const ac = acOf(mod, worn, shield).ac.ac, quiet = !worn?.stealth_disadvantage;
     if (!gear || ac > gear.ac || (ac === gear.ac && (quiet > gear.quiet || (quiet === gear.quiet && spent < gear.spent)))) gear = { ac, quiet, spent, worn, shield };
   }
   const { worn, shield } = gear;
-  const { unarmored: bareClasses, ac: wornClass } = acOf(mod, worn, shield);
-  // Magic items, as many of each rarity as the table gives past level 1,
-  // from the books' own: one for no one in particular, or for one of the
-  // character's classes or its subclass (a family's member for that
-  // subclass), never one the DM hands out or one that comes only in the
-  // story. The builder chooses, as with
-  // armour: first what's made for its subclass (its chapter's, or the
-  // family member for it), then its classes', then the setting's own, then
-  // other classes' chapters, each the homeland's first, then in the books'
-  // order; the rarest slots first, so an item that comes in several rarities
-  // (+1, +2, +3) fills the rarest it can. A living tradition goes only to a
-  // character of its homeland. A rarity no item fits is left for the DM to
-  // fill.
-  const has = cls => known.some(k => k.class === cls);
-  const subclassOf = cls => known.find(k => k.class === cls && k.level >= k.rules.subclassLevel)?.subclass || null;
-  const memberFor = item => item.members.find(mb => mb.subclass === subclassOf(item.place.class_name)) ?? null;
-  const homeland = state.homeland || null;
-  const usable = item => (!item.living || item.living.includes(homeland)) && (!item.who || (has(item.who.class) && (!item.who.subclasses || item.who.subclasses.includes(subclassOf(item.who.class))))) && (!item.bound || memberFor(item));
-  // A rarity a family gives one member ("Uncommon, or Rare for the Spare
-  // Barrel") is that member's, and the others take the rest.
-  const ratedAt = (item, member) => (item.rarities.some(r => r.member && r.member === member?.name) ? item.rarities.filter(r => r.member === member.name) : item.rarities.filter(r => !r.member));
-  const nearness = item => ((item.place.subclass && item.place.subclass === subclassOf(item.place.class_name)) || memberFor(item) ? 0 : has(item.place.class_name) || (item.who && has(item.who.class)) ? 1 : item.place.class_name ? 3 : 2);
-  const athome = item => Number(item.from.includes(homeland) || Boolean(item.living));
-  const taken = new Set();
-  const RARITIES = ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Legendary'];
-  const magicItems = (higher?.magic ?? []).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).flatMap(({ count, rarity }) => Array.from({ length: count }, () => {
-    const pick = book.items.filter(i => i.magical && !i.dm && !i.story && !taken.has(i.name) && usable(i))
-      .map(i => ({ item: i, member: memberFor(i), at: ratedAt(i, memberFor(i)).find(r => r.rarity === rarity) }))
-      .filter(x => x.at).sort((a, b) => nearness(a.item) - nearness(b.item) || athome(b.item) - athome(a.item))[0];
-    if (!pick) return { rarity, item: null };
-    taken.add(pick.item.name);
-    return { rarity, item: { name: pick.item.name, kind: pick.item.kind, base: pick.item.base, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: pick.item.attunement, living: Boolean(pick.item.living), text: pick.item.text } };
-  })).toSorted((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
-  // What the magic items do to the numbers, each as its sentence says, the
-  // character wearing or holding them and attuned to as many as the SRD
-  // allows ("You can be attuned to no more than three magic items at a
-  // time"; the builder attunes the rarest first), the rest carried: "a +1
-  // bonus to Armor Class"; "your base Armor
-  // Class is 15 plus your Dexterity modifier" without armor; "a +1 bonus to
-  // saving throws"; a magic weapon's "+2 bonus to attack rolls and damage
-  // rolls made with it", or the bonus its rarity gives; "a +3 bonus to spell
-  // attack rolls and to the saving throw DCs of your Revelator spells", the
-  // highest of those that "doesn't stack with another Danae focus's bonus";
-  // and the Tuned Arc Gun's bonus to "attack rolls with the Arc Gun".
-  const attuned = magicItems.filter(m => m.item?.attunement).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).slice(0, book.attunementMax).map(m => m.item.name);
-  const inUse = magicItems.filter(m => m.item && (!m.item.attunement || attuned.includes(m.item.name))).map(m => ({ ...m.item, rated: Number(m.item.bonus?.match(/^\+(\d+)$/)?.[1] ?? 0) }));
-  const unattuned = magicItems.filter(m => m.item?.attunement && !inUse.some(x => x.name === m.item.name)).map(m => m.item.name);
-  const said = (item, re) => item.text.match(re);
-  const armorBonus = inUse.map(i => ({ name: i.name, n: +(said(i, /you have a \+(\d+) bonus to Armor Class/)?.[1] ?? 0) })).filter(x => x.n);
-  const itemBare = inUse.flatMap(i => { const m = said(i, /If you aren[’']t wearing armor, your base Armor Class is (\d+) plus your (\w+) modifier/); return m ? [{ from: i.name, ac: +m[1] + mod[m[2]] + (shield?.bonus ?? 0) }] : []; });
-  const unarmored = [...bareClasses, ...itemBare];
-  const bareBest = !worn ? unarmored.reduce((best, u) => (u.ac > best.ac ? u : best), wornClass) : wornClass;
-  const armorClass = { ...bareBest, ac: bareBest.ac + armorBonus.reduce((n, x) => n + x.n, 0), from: [bareBest.from, ...armorBonus.map(x => x.name)].join(' and ') };
-  const saveBonus = inUse.map(i => ({ name: i.name, n: +(said(i, /you have a \+(\d+) bonus to saving throws/)?.[1] ?? 0) })).filter(x => x.n);
-  const magicWeapons = inUse.flatMap(i => {
-    const base = i.kind === 'Weapon' ? i.base : said(i, /It can be wielded as a magic (\w+)/)?.[1];
-    const w = base && (book.weapons ?? []).find(x => x.name === base);
-    if (!w) return [];
-    const n = +(said(i, /grants a \+(\d+) bonus to attack rolls and damage rolls made with it/)?.[1] ?? said(i, /You have a \+(\d+) bonus to attack and damage rolls made with this magic weapon/)?.[1] ?? (/bonus to attack and damage rolls made with this magic weapon, determined by its rarity/.test(i.text) ? i.rated : 0));
-    return [{ name: i.name, w, n }];
-  });
-  // Spell attacks and DCs, by class ("of your Revelator spells") or every
-  // class's ("a +2 bonus to spell attack rolls").
-  const castingBoosts = inUse.flatMap(i => {
-    const m = said(i, /(?:a \+(\d+) bonus|a bonus(?:, determined by the item[’']s rarity,)?) to (?:spell attack rolls and to the saving throw DCs|the attack rolls and saving throw DCs|attack rolls with [^,]+, [^,]+, and [^,]+, and to the spell attack rolls and spell save DCs) of your (\w+) spells/);
-    const any = said(i, /a \+(\d+) bonus to spell attack rolls\b(?! and)/);
-    const focus = said(i, /doesn[’']t stack with another (\w+) focus[’']s bonus/)?.[1];
-    return [m && { name: i.name, cls: m[2], n: m[1] ? +m[1] : i.rated, dc: true, focus }, any && { name: i.name, cls: null, n: +any[1], dc: false }].filter(x => x && x.n);
-  });
-  for (const sc of spellcasting.filter(x => x.ability)) {
-    const mine = castingBoosts.filter(b => !b.cls || b.cls === sc.class), focused = mine.filter(b => b.focus), plain = mine.filter(b => !b.focus);
-    const n = plain.reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.map(b => b.n)), dcn = plain.filter(b => b.dc).reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.filter(b => b.dc).map(b => b.n));
-    if (n) sc.attack += n;
-    if (dcn) sc.dc += dcn;
-    if (n || dcn) sc.items = [...plain, ...focused].map(b => b.name);
-  }
-  const featureBoosts = inUse.flatMap(i => { const m = said(i, /to attack rolls with the ([\w ]+?), /); return m ? [{ attack: m[1], n: i.rated, name: i.name }] : []; });
+  const { unarmored, ac: armorClass } = acOf(mod, worn, shield);
   // The books' gear, for the player to buy at the table with what's left:
   // the setting's own and its classes' chapters', each piece of a priced set
   // on its own, and the period's weapons that count as one the character is
