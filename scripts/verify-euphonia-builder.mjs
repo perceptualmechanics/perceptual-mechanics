@@ -655,6 +655,28 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const counsellor = run(someone([{ class: 'Counsellor', level: 1 }], { base: { ...ABLE, Intelligence: 18 } }), 'Counsellor 1');
   if (hitOf(counsellor, 'Rapier')?.ability !== 'Intelligence') fail(`Calculation: a Counsellor's Rapier uses ${hitOf(counsellor, 'Rapier')?.ability}`);
 
+  // Senses, speeds, defenses and weapon training, each from its sentence:
+  // an Elf's Darkvision and the Drow's lineage row; a Dragonborn's
+  // resistance from its ancestry's row, and none from Rage, whose benefits
+  // hold only while it's active; the Lionskin's Climb Speed only as an
+  // Infiltrator, and its Fly Speed at 14; a Rogue's weapons as its class
+  // writes them.
+  const elfSpecies = srd.species.find(x => x.name === 'Elf'), lineage = n => Object.values(elfSpecies.tables).flat().find(r => Object.values(r)[0] === n);
+  const seeing = o => run({ ...someone([{ class: 'Fighter', level: 1 }]), species: 'Elf', option: o, skills: { Fighter: ['Athletics', 'History'], 'Elf Keen Senses': ['Insight'] } }, `${o}`)?.senses.Darkvision;
+  const feetIn = t => +t.match(/(\d+) feet/)[1];
+  if (seeing('Wood Elf') !== feetIn(elfSpecies.traits.find(t => t.name === 'Darkvision').text) || seeing('Drow') !== feetIn(lineage('Drow')['Level 1'])) fail(`Darkvision: a Wood Elf ${seeing('Wood Elf')} feet, a Drow ${seeing('Drow')}`);
+  const blackResists = run({ ...someone([{ class: 'Fighter', level: 1 }]), species: 'Dragonborn', option: 'Black' }, 'Black Dragonborn')?.defenses.resistances;
+  const ancestryType = Object.values(srd.species.find(x => x.name === 'Dragonborn').tables).flat().find(r => Object.values(r)[0] === 'Black')['Damage Type'];
+  if (blackResists?.join() !== ancestryType) fail(`a Black Dragonborn resists ${blackResists?.join(', ')}, not ${ancestryType}`);
+  const unraged = run(someone([{ class: 'Barbarian', level: 5, subclass: 'Path of the Berserker' }]), 'Barbarian 5')?.defenses.resistances;
+  if (!unraged || unraged.length) fail(`a Barbarian out of Rage resists ${unraged?.join(', ')}`);
+  const climbs = (m, lv) => run(someone([{ class: 'Mhizha', level: lv, subclass: 'Lionskin' }], { kinds: { 'Mhizha 3 Powered Suit': m } }), `Lionskin ${lv} ${m}`);
+  const [inf6, grd6, grd14] = [climbs('Infiltrator', 6), climbs('Guardian', 6), climbs('Guardian', 14)];
+  if (!(inf6?.speeds.Climb === inf6.speed && !grd6?.speeds.Climb && grd14?.speeds.Fly === grd14.speed && !grd6.speeds.Fly)) fail(`the Lionskin's speeds: ${JSON.stringify([inf6?.speeds, grd6?.speeds, grd14?.speeds])}`);
+  const rogueWeapons = run(someone([{ class: 'Rogue', level: 1 }]), 'Rogue 1')?.weaponTraining;
+  const finesseMartial = srd.weapons.filter(w => w.category === 'Martial' && w.properties.some(p => /^(?:Finesse|Light)\b/.test(p))).map(w => w.name);
+  if (!(rogueWeapons?.categories.join() === 'Simple' && rogueWeapons.named.join() === finesseMartial.join())) fail(`a Rogue's weapons: ${JSON.stringify(rogueWeapons)}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

@@ -1389,6 +1389,10 @@ export function character(book, state) {
     if (pick) proficientWith.push(w => w.name === pick.name); else fail(`weapon:${key}`, `Choose a ${m[1]} weapon for ${f.name}.`);
   }
   const proficientWeapons = (book.weapons ?? []).filter(w => proficientWith.some(r => r(w)));
+  // As the sheet says it: each category the character has whole ("Simple
+  // weapons"), then the others by name.
+  const whole = ['Simple', 'Martial'].filter(k => (book.weapons ?? []).filter(w => w.category === k).every(w => proficientWeapons.includes(w)));
+  const weaponTraining = { categories: whole, named: proficientWeapons.filter(w => !whole.includes(w.category)).map(w => w.name) };
   // Weapon Mastery: so many kinds of weapon, by the class's Weapon Mastery
   // column where it has one or by its sentence ("three kinds of Simple or
   // Martial weapons of your choice"), from what the sentence allows: its
@@ -1737,18 +1741,45 @@ export function character(book, state) {
   // aren't wearing Heavy armor", Fast Movement; "…, and your Speed increases
   // by 10 feet", the Infiltrator's model), each while its condition holds of
   // the armour worn, and by its class table's column where the table grows
-  // it (Unarmored Movement). A line offering a lasting choice adds only as
-  // chosen; a sentence framed by a moment ("For 1 minute", "While charged")
-  // isn't the sheet's.
+  // it (Unarmored Movement).
   const unchosen = f => {
     const k = kindChoices.find(c => c.key === (f.key ?? `${f.class} ${f.level} ${f.name}`));
     return k ? f.text.split('\n').filter(l => !k.offered.some(o => l.startsWith(`- *${o} `) || l.startsWith(`> **${o}.`) || l.startsWith(`| ${o} |`))).join('\n') : f.text;
   };
   const holds = condition => !condition || (/^Heavy armor$/.test(condition) ? worn?.category !== 'Heavy' : /^armor or wielding a Shield$/.test(condition) ? !worn && !shield : false);
+  // A clause for one option of a lasting choice ("*Infiltrator:* you have a
+  // Climb Speed …") counts only as chosen.
+  const asChosen = text => text.split(/(?=\*\w+:\*)/).filter(part => { const label = part.match(/^\*(\w+):\*/)?.[1]; return !label || !kindChoices.some(c => c.offered.includes(label)) || kindChoices.some(c => c.chosen === label); }).join(' ');
+  // The sentences of a text that hold on the sheet. One framed by a moment
+  // or a state ("For 1 minute", "While charged", "In Monster Form") is for
+  // play, as is the rest of its paragraph and the list that paragraph leads
+  // ("While active, your Rage follows the rules below. **Damage
+  // Resistance.** …"); a frame the sheet already meets ("While you wear the
+  // suit", with the suit worn) isn't one.
+  const FRAME = /^(?:For|While|When|Whenever|Until|If|As (?:a|an|part)|On your turn|Once|During|In Monster Form)\b/;
+  // A frame inside one item of a list ends with that item.
+  const standing = text => {
+    let carried = false;
+    return (text ?? '').split(/\n{2,}/).flatMap(par => {
+      const item = /^\s*(?:\*\*|- |\*[A-Z])/.test(par), kept = [];
+      let led = false;
+      for (const line of par.split('\n')) {
+        let framed = carried;
+        for (const x of line.replace(/^- /, '').split(/(?<=[.!])\s+/)) {
+          const bare = x.replace(/^\*{1,3}[^*]+?\*{1,3}\s*/, '');
+          if (FRAME.test(bare) && !(/^While you wear (?:the|your) suit\b/.test(bare) && worn?.madeFrom)) framed = true;
+          else if (!framed) kept.push(x);
+        }
+        led = led || framed;
+      }
+      if (!item) carried = led && /(?:following \w+\.?|below\.|:)\s*$/.test(par.trim());
+      return kept;
+    });
+  };
+  const sayings = f => standing(asChosen(unchosen(f)));
   const added = features.reduce((n, f) => {
-    const sentences = unchosen(f).replace(/^- /gm, '').split(/(?<=[.!])\s+/);
+    const sentences = sayings(f);
     return n + sentences.reduce((m, x, i) => {
-      if (/^(?:For|While|When|Whenever|Until|If|As (?:a|an|part)|On your turn|Once)\b/.test(x)) return m;
       const by = x.match(/\b[Yy]our [Ss]peed increases by (\d+) feet(?: while you aren[’']t wearing (.+?))?\.$/);
       if (!by || !holds(by[2])) return m;
       reads(f);
@@ -1758,6 +1789,49 @@ export function character(book, state) {
     }, 0);
   }, 0);
   const speed = Number(faster ?? species?.speed.match(/^(\d+)/)?.[1] ?? 0) + added;
+  // Other speeds ("You also have a Climb Speed and a Swim Speed equal to
+  // your Speed", "You have a Fly Speed of 60 feet").
+  const moving = {};
+  for (const x of features.flatMap(sayings)) {
+    for (const m of x.matchAll(/\b[Yy]ou (?:also )?(?:have|gain) an? (Fly|Climb|Swim|Burrow) Speed(?: and an? (Fly|Climb|Swim|Burrow) Speed)? (?:equal to (your Speed|half your Speed)|of (\d+) feet)/g)) {
+      const feet = m[4] ? +m[4] : m[3] === 'your Speed' ? speed : Math.floor(speed / 2);
+      for (const k of [m[1], m[2]].filter(Boolean)) moving[k] = Math.max(moving[k] ?? 0, feet);
+    }
+  }
+  // Defenses, as the species, feats and features write them: Resistance or
+  // Immunity to damage types by name ("Resistance to Bludgeoning, Piercing,
+  // and Slashing damage"), or to the type a choice set ("the damage type
+  // determined by your Draconic Ancestry trait", the ancestry's row; "that
+  // damage type", "your attuned damage type", the feature's choice);
+  // Immunity to conditions; and Advantage on saves against one ("to avoid
+  // or end the Charmed condition"). One that holds only in a state ("while
+  // your Rage is active", "In Monster Form") is for play.
+  const defenses = { resistances: new Set(), immunities: new Set(), conditionImmunities: new Set(), conditionAdvantages: new Set() };
+  const typeChosen = f => kindChoices.find(c => c.class === f.class && c.noun === 'damage type' && c.chosen)?.chosen;
+  const traitSayings = [...(species?.traits ?? []).map(t => t.text), Object.values(optionRow ?? {}).slice(1).join(' '), ...feats.map(f => [f.feat.description, ...f.feat.benefits.map(b => b.text)].join('\n\n'))].flatMap(standing);
+  const defenseSources = [...traitSayings.map(x => ({ x })), ...features.flatMap(f => sayings(f).map(x => ({ f, x })))];
+  for (const { f, x } of defenseSources) {
+    if (/\bwhile (?:your|you)\b|\bwhile in\b/.test(x) || !/\b[Yy]ou (?:have|gain|are immune)\b/.test(x)) continue;
+    for (const m of x.matchAll(/\b(Resistance|Immunity) to ((?:[A-Z]\w+(?:,? (?:and |or )?)?)+) damage\b/g)) list(m[2]).filter(t => book.damageTypes.includes(t)).forEach(t => defenses[m[1] === 'Resistance' ? 'resistances' : 'immunities'].add(t));
+    if (/Resistance to the damage type determined by your Draconic Ancestry/.test(x) && optionRow?.['Damage Type']) defenses.resistances.add(optionRow['Damage Type']);
+    if (f && /Resistance to (?:that damage type|your attuned damage type)\b/.test(x) && typeChosen(f)) defenses.resistances.add(typeChosen(f));
+    for (const m of x.matchAll(/\b(?:Immunity to|immune to) (?:disease and to )?the ((?:[A-Z]\w+(?:,? (?:and )?)?)+) conditions?\b/g)) list(m[1]).forEach(c => defenses.conditionImmunities.add(c));
+    for (const m of x.matchAll(/Advantage on saving throws you make to avoid or end the (\w+) condition/g)) defenses.conditionAdvantages.add(m[1]);
+  }
+  // Senses, as the species, its lineage, feats and features give them ("You
+  // have Darkvision with a range of 60 feet", "The range of your Darkvision
+  // increases to 120 feet", "…, or your Darkvision's range increases by 30
+  // feet if you already have it", "grants you Blindsight with a range of 30
+  // feet", "Tremorsense out to 30 feet"); one framed by a moment ("As a
+  // Bonus Action, you gain Tremorsense …") is for play.
+  const SENSES = 'Darkvision|Blindsight|Tremorsense|Truesight';
+  const senses = {};
+  for (const x of [...traitSayings, ...features.flatMap(sayings)]) {
+    const has = x.match(new RegExp(`\\b(?:You have|grants you) (${SENSES}) (?:with a range of|out to) (\\d+) feet`)), to = x.match(new RegExp(`The range of your (${SENSES}) increases to (\\d+) feet`));
+    const more = x.match(new RegExp(`or your (${SENSES})[’']s range increases by (\\d+) feet if you already have it`));
+    if (has) senses[has[1]] = senses[has[1]] && more?.[1] === has[1] ? senses[has[1]] + +more[2] : Math.max(senses[has[1]] ?? 0, +has[2]);
+    if (to) senses[to[1]] = Math.max(senses[to[1]] ?? 0, +to[2]);
+  }
   const sizes = species?.size.match(/\b(Tiny|Small|Medium|Large)\b/g) ?? [];
   if (sizes.length > 1 && !sizes.includes(state.size)) fail('size', `Choose ${sizes.join(' or ')}.`);
   const size = sizes.length > 1 ? state.size : sizes[0];
@@ -1767,9 +1841,9 @@ export function character(book, state) {
     xp: advancement.xp, nextXp: book.advancement[total]?.xp ?? null,
     classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
-    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
+    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
-    attacks, attacksPerAction: perAction,
+    attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
     features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,
   };
