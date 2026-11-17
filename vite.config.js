@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import fs from 'fs';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import { prerender, sceneLines, PAGE_STYLE_SHA256 } from './scripts/prerender.js';
+import { prerender, PAGE_STYLE_SHA256 } from './scripts/prerender.js';
 import { verifyLinks } from './scripts/verify-links.mjs';
 import { verifyResonances } from './scripts/verify-resonances.mjs';
 import { verifyScrollMarks } from './scripts/verify-scroll-marks.mjs';
@@ -33,7 +33,7 @@ function landingMarkupPlugin() {
     name: 'pm-landing-markup',
     transformIndexHtml: {
       order: 'pre',
-      handler: (html, { filename }) => filename === resolve(HERE, 'index.html') ? injectLanding(html, sceneLines()) : html,
+      handler: (html, { filename }) => filename === resolve(HERE, 'index.html') ? injectLanding(html) : html,
     },
   };
 }

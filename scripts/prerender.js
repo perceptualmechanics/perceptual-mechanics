@@ -786,28 +786,12 @@ ${pages.map(p => `  <li><a href="/text/${p.slugPath}/">${esc(p.title)}</a><span 
 }
 
 
-// The text pages, built once: prerender() writes them, and the landing's
-// captions take each scene's line from its page's description.
-let textPages = null;
-function buildPages() {
-  return textPages ??= [
+export function prerender(outDir) {
+  const pages = [
     buildScroll(), buildPoems(), buildFragments(),
     buildTheater(), buildOrrery(), buildBeamline(), buildLibrary(),
     buildApollo(), buildPsyshell(), buildMedium(), buildQuiz(),
   ];
-}
-
-// Each scene's one line for the landing's caption: its text page's
-// description up to the dash that turns from the piece to the page ("A Ouija
-// board that can spell — a séance run at build time, …"). A scene the
-// registry exempts from a page has no line, and its caption is its name.
-export function sceneLines() {
-  return Object.fromEntries(buildPages().filter(p => p.sceneKey)
-    .map(p => [p.sceneKey, p.description.split(' — ')[0].replace(/\.$/, '')]));
-}
-
-export function prerender(outDir) {
-  const pages = buildPages();
   const all = [buildIndex(pages), ...pages];
 
   {
@@ -842,7 +826,7 @@ export function prerender(outDir) {
         else if (opens !== 1 || closes !== 1) problems.push(`${key}'s icon holds ${opens} <svg> opening and ${closes} closing tags; it must be exactly one element`);
         else if (!svg.startsWith('<svg') || !svg.endsWith('</svg>')) problems.push(`${key}'s icon has markup outside its <svg> element`);
       }
-      const generated = injectLanding(src, sceneLines());
+      const generated = injectLanding(src);
       const nIcons = (generated.match(/class="nav-icon"/g) || []).length;
       const nTiles = (generated.match(/class="preview-wrapper"/g) || []).length;
       const n = Object.keys(SCENES).length;
