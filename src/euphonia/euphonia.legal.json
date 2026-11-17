@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "32dd50932803bd1d15d25fec90a61db5eab62a8ea7d454459bf21fc861c2d284",
-  "modified": "2026-11-16T18:50:07-05:00",
+  "sha256": "e1c8841a3c6b46cea54636abb76b9fa53f8e1ada001a802a4d5a285edb5fa131",
+  "modified": "2026-11-17T11:43:35-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 30,
+  "exporter_version": 32,
   "rules": {
    "banned": [
     "eladrin",
@@ -20,8 +20,8 @@
     "D&D"
    ],
    "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b|(?<=\\bConjure )Fey\\b",
-   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November)."
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b|(?<=\\bConjure )Fey\\b|\\b(?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead), Fey\\b|\\bFey(?=,? (?:and|or) (?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead)\\b)",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November). So does a list of creature types: \"any Undead, Fey, or Elemental\"."
   }
  },
  "withheld": [],

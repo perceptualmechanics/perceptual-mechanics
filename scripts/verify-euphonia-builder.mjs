@@ -561,8 +561,8 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   // two at level 1 and eight at 20; the College of Arms closes an
   // accomplishment that counts only as Letters and gives The Code; Regard is
   // the different arts; one taken "twice" can't be taken a third time; and it
-  // knows its spells, two at level 1, with two cantrips chosen beside the
-  // three it always knows. Every Table asks two skills of its four.
+  // prepares its spells, two at level 1, with two cantrips chosen beside
+  // the three it always knows. Every Table asks two skills of its four.
   if (book.classNamed('Courtier')) {
     const courtier = (lv, sub, options, extra = {}) => run(someone([{ class: 'Courtier', level: lv, subclass: sub }], { skills: { Courtier: ['Arcana', 'History', 'Insight'], 'Human Skillful': ['Athletics'] }, options: { Courtier: options }, ...extra }), `Courtier ${lv}`);
     const accomplishments = got => got?.optionChoices.find(o => o.class === 'Courtier');
@@ -575,7 +575,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     if (!(arms?.problems.some(p => p.field === 'option:Courtier:0') && accomplishments(arms)?.given.some(g => g.name === 'The Code'))) fail('the College of Arms leaves Letters open, or doesn\'t give The Code');
     if (accomplishments(one)?.regard !== 2 || accomplishments(arms)?.regard !== 4) fail(`Regard reads ${accomplishments(one)?.regard} and ${accomplishments(arms)?.regard}, not 2 and 4`);
     if (!thrice?.problems.some(p => p.field === 'option:Courtier:2' && /twice/.test(p.message))) fail('a Courtier takes A Secret three times');
-    if (!(casting?.prepared === 2 && casting.verb === 'known' && casting.cantrips === 2 && casting.given.map(s => s.name).join() === 'Prestidigitation,Mending,Message' && casting.list.some(sp => sp.name === 'Friends'))) fail(`the Courtier's spells read ${JSON.stringify(casting && { known: casting.prepared, verb: casting.verb, cantrips: casting.cantrips, given: casting.given.map(s => s.name) })}`);
+    if (!(casting?.prepared === 2 && casting.verb === 'prepared' && casting.cantrips === 2 && casting.given.map(s => s.name).join() === 'Prestidigitation,Mending,Message' && casting.list.some(sp => sp.name === 'Vicious Mockery'))) fail(`the Courtier's spells read ${JSON.stringify(casting && { prepared: casting.prepared, verb: casting.verb, cantrips: casting.cantrips, given: casting.given.map(s => s.name) })}`);
     if (!(every?.count === 2 && every.from.join() === 'Deception,Insight,Intimidation,Persuasion')) fail('Every Table doesn\'t ask two of its four skills');
   }
   const fighter = (lv, styles) => run(someone([{ class: 'Fighter', level: lv, subclass: lv >= 3 ? 'Champion' : '' }], { styles, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'] }, improvements: Object.fromEntries([4, 6].filter(x => x <= lv).map(x => [`Fighter ${x}`, { feat: 'Ability Score Improvement', increases: { Strength: 1, Constitution: 1 } }])) }), 'Fighting Style');

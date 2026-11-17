@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "32dd50932803bd1d15d25fec90a61db5eab62a8ea7d454459bf21fc861c2d284",
-  "modified": "2026-11-16T18:50:07-05:00",
+  "sha256": "e1c8841a3c6b46cea54636abb76b9fa53f8e1ada001a802a4d5a285edb5fa131",
+  "modified": "2026-11-17T11:43:35-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 30,
+  "exporter_version": 32,
   "rules": {
    "banned": [
     "eladrin",
@@ -20,8 +20,8 @@
     "D&D"
    ],
    "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b|(?<=\\bConjure )Fey\\b",
-   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November)."
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b|(?<=\\bConjure )Fey\\b|\\b(?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead), Fey\\b|\\bFey(?=,? (?:and|or) (?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead)\\b)",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November). So does a list of creature types: \"any Undead, Fey, or Elemental\"."
   }
  },
  "withheld": [],
@@ -77,7 +77,7 @@
     ],
     "tool": "Herbalism Kit",
     "equipment": "Choose A or B: (A) Herbalism Kit, Healer's Kit, Quarterstaff, Book (charms and receipts), Traveler's Clothes, 10 Candles, Pouch, 12 GP; or (B) 50 GP",
-    "about": "You healed, found lost things and charmed warts and cattle out of the back room of a family business, because somebody had to. Like most of your kind you read; in England the law has let unlicensed herb-knowers treat external complaints since 1542. Your magic is the same as Lanternhall's. Your protection isn't: the crime now is unlicensed magic, and when a healer tells a court her skill came from the fairies, the court writes down the Devil. Your network knows who's safe and who's informing, and your clients live at the edge, so you know the border too (the Hidden Domain, in *Life on the Border*). Druids, Clerics and Physicians who skipped the hospital come from here; the Physician's Hedge Witch is the model. See The Cunning Folk, in Powers and Factions.",
+    "about": "You healed, found lost things and charmed warts and cattle out of the back room of a family business, because somebody had to. Like most of your kind you read; in England the law has let unlicensed herb-knowers treat external complaints since 1542. Your magic is the same as Lanternhall's. You have none of its protection: when a healer tells a court her skill came from the fairies, the court writes down the Devil. Your network knows who's safe and who's informing, and your clients live at the edge, so you know the border too (the Hidden Domain, in *Life on the Border*). Druids, Clerics and Physicians who skipped the hospital come from here; the Physician's Hedge Witch is the model. See The Cunning Folk, in Powers and Factions.",
     "door": "Your network knows who's safe and who's informing in any district, and hides its own.",
     "debt": "You're unlicensed, and someone knows it."
    },
@@ -118,7 +118,7 @@
      "Stealth"
     ],
     "tool": "Tinker's Tools",
-    "equipment": "Choose A or B: (A) Tinker's Tools, Traveler's Clothes; or (B) 50 GP",
+    "equipment": "Choose A or B: (A) Tinker's Tools; or (B) 50 GP",
     "about": "You work abroad for Mutapa, under the cover it gives its people: a Mhizha taught you to retune curiosities (see Mutapan Curiosities). Every Mutapan lamp in a Viennese drawing room drifts, so a quiet technician with Tinker's Tools can enter any great house in Europe and be thanked for it. What you carry home is what you saw. Mutapa's spymaster is brilliant and badly resourced, and her service runs on people like you. You may be a Shona clerk of the House of the Bird, Mutapa's bank, a Khoekhoe go-between from Hoerikwaggo or a foreigner recruited at Sofala; loyal, bought or both. Europe has just worked out what platinum is, and you're the one in the room (see Mutapa and the Indian Ocean, in The State of the World). Mhizha, Counsellors and Rogues come this way.",
     "door": "Any house that owns a curiosity lets you in to retune it, and thanks you.",
     "debt": "Mutapa's spymaster expects a report."
@@ -173,7 +173,7 @@
     ],
     "tool": "Smith's Tools",
     "equipment": "Choose A or B: (A) Smith's Tools, Sling, 20 Sling Bullets, Dagger, Hunting Trap, 10 Iron Spikes, Hooded Lantern, Oil, Traveler's Clothes, Pouch of salt, 14 GP; or (B) 50 GP",
-    "about": "You grew up where the Hidden come over. The village ironed and salted its doors every night of the dark half, Samhain to Beltane; the smith was the most important person in it, and you were her hand. You know the tide by the moon, which fields nobody plows and why the fiddler who came home last spring is a hundred years out of date. Somebody you knew was taken, and somebody went to get them back, or didn't. You sleep light: you came back from the open night because you heard it coming. Your country's name for the Hidden is in The State of the World. A Border-Born may have grown up on either side of the border (*Euphonia: Life on the Border*). In the courts, you're the one who notices the iron is missing from the doorframe.",
+    "about": "You grew up where the Hidden come over. The village ironed and salted its doors every night of the dark half; the smith was the most important person in it, and you were her hand. You know the tide by the moon, which fields nobody plows and why the fiddler who came home last spring is a hundred years out of date. Somebody you knew was taken, and somebody went to get them back, or didn't. You sleep light: you came back from the open night because you heard it coming. Your country's name for the Hidden is in The State of the World. A Border-Born may have grown up on either side of the border (*Euphonia: Life on the Border*). In the courts, you're the one who notices the iron is missing from the doorframe.",
     "door": "Any border village takes you in and asks you to look at its doors.",
     "debt": "Somebody you knew was taken, and nobody has brought them back."
    },
@@ -191,7 +191,7 @@
     ],
     "tool": "Choose one kind of Musical Instrument",
     "equipment": "Choose A or B: (A) Musical Instrument (same as above), Traveler's Clothes, Bedroll, Tinderbox, Pouch, 16 GP; or (B) 50 GP",
-    "about": "The Hidden took you, and you came home. Maybe you were a child and they left something in your cradle; maybe you followed music into a hill on your way back from market. You remember a feast, a dance that lasted a night and a road that kept turning back, and none of it in order. Home had moved on without you: a week, a year or a hundred, and the people who mourned you are older, or dead, or sure you're not you. You came back with a tune nobody taught you, a knack for the hedge-magic every fairy doctor wishes she had and the habit of looking for the way out of every room. Whether you carry a piece of the Hidden is your class's business, not this background's: a Danae, a Bordermarch Barbarian, a Hidden Bard, a Mortal Hunter or the stand-in Dreamwarden does, and a Rogue taken as a child may simply be quick and strange (The Hidden's Classes, above). Your country's word for the taken is in The State of the World, and the road you came home by is open (Appendix F: Building on Euphonia).",
+    "about": "The Hidden took you, and you came home. Maybe you were a child and they left something in your cradle; maybe you followed music into a hill on your way back from market. You remember a feast, a dance that lasted a night and a road that kept turning back, and none of it in order. Home had moved on without you: a week, a year or a hundred, and the people who mourned you are older, or dead, or sure you're not you. You came back with a tune nobody taught you, a knack for the hedge-magic every fairy doctor wishes she had and the habit of looking for the way out of every room. Whether you carry a piece of the Hidden is settled by your class: a Danae, a Bordermarch Barbarian, a Hidden Bard, a Mortal Hunter or the stand-in Dreamwarden does, and a Rogue taken as a child may simply be quick and strange (The Hidden's Classes, above). Your country's word for the taken is in The State of the World, and the road you came home by is open (Appendix F: Building on Euphonia).",
     "door": "The Hidden of one court know you by sight, and will parley with you where they'd raid anyone else.",
     "debt": "Something there still wants you back."
    }
@@ -210,7 +210,7 @@
      "Gnome",
      "Halfling"
     ],
-    "line": "The Hidden folk, high and low, with each culture's own name"
+    "line": "Hearthfolk, with each culture's own name"
    },
    {
     "species": [
@@ -228,7 +228,7 @@
     "species": [
      "Goliath"
     ],
-    "line": "Of the giants, which are among the shapes the Hidden took; a goliath forgot the same way the Hidden folk did, though nobody calls a goliath one of the Hidden folk"
+    "line": "Of the giants, which are among the shapes the Hidden took; a goliath's ancestors forgot the same way, though nobody counts a goliath among the hearthfolk"
    },
    {
     "species": [

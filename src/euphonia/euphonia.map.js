@@ -155,14 +155,14 @@ export async function initMap(stage) {
   // The map's two buttons sit in the bar over it, beside the tabs.
   const reset = document.querySelector('.map-reset');
   const hiddenText = ({ half, open }) => [
-    half === 'dark' ? 'the dark half' : half === 'other' ? 'the other half' : 'as the DM says',
-    open && `${open}'s open night`,
+    half ? `the ${half} half` : 'as the DM says',
+    open && `the ${open} open night`,
   ].filter(Boolean).join('; ');
   const day = ms => new Date(ms).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' });
   const clock = ms => { const d = new Date(ms); return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`; };
 
   // The instant the map holds: today's month and day in the book's year,
-  // which runs from Samhain 1668 to Samhain 1669, at this moment's UT.
+  // which runs from 1 November 1668 to 31 October 1669, at this moment's UT.
   const now = new Date();
   const instant = Date.UTC(now.getMonth() >= 10 ? 1668 : 1669, now.getMonth(), now.getDate(), now.getUTCHours(), now.getUTCMinutes());
   // The globe in WebGL2 where it can be (euphonia.gl.js), on a canvas of its
@@ -722,14 +722,13 @@ export async function initMap(stage) {
       const deg = apart(g, at);
       if (!nearest || deg < nearest.deg) nearest = { region: r, place: g, deg };
     }
-    const half = hiddenAt(instant, null, at).half;
     const polity = polityAt(at);
     return [
       ['Where', `${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}, ${onLand(data.land, at.lat, at.lon) ? 'on land' : 'at sea'} (Natural Earth's modern coasts)`],
       ['In 1668', polity ? (polity.kind === 'departs' ? `${polity.label}, the book's: ${polity.star}` : polity.ground ? `${polity.label}'s reach, ${polity.ground}, by Cliopatria's record and the book's` : `${polity.label}, by Cliopatria's record`) : "no state, by Cliopatria's record"],
       ['Nearest named place', `${placeName(nearest.place)}, in ${nearest.region.name}: ${Math.round(nearest.deg * RAD * EARTH_KM).toLocaleString('en-GB')} km`],
       ['By the sun', `${sunClock(instant, at.lon)}; the sun ${sunDay}`],
-      ['The Hidden (Euphonia)', `at the ${tideAt(instant)}; ${half === 'dark' ? 'the dark half, by the sun between the tropics' : half === 'other' ? 'the other half, by the sun between the tropics' : 'the half of the year as the DM says: the book gives this place no calendar'}`],
+      ['The Hidden (Euphonia)', `at the ${tideAt(instant)}; the half of the year by the place's own calendar, which the book doesn't give here, so as the DM says`],
     ];
   }
 
@@ -744,8 +743,7 @@ export async function initMap(stage) {
     const sun = subsolar(instant);
     const moon = moonAt(instant);
     const tide = tideAt(instant);
-    const tropicDark = sun.lat >= 0 ? 'south' : 'north';
-    tideLine.textContent = `In Euphonia, Scott Cohen's setting (not history), the Hidden are at the ${tide}: the moon is ${tide === 'flood' ? 'waxing' : 'waning'}. Between the tropics the dark half lies ${tropicDark} of the equator, where the sun isn't.`;
+    tideLine.textContent = `In Euphonia, Scott Cohen's setting (not history), the Hidden are at the ${tide}: the moon is between its ${tide === 'flood' ? 'first quarter and its last' : 'last quarter and its first'}.`;
     datesBody.replaceChildren(...datesAt(instant, calendars, places.seats, (p, seat) => hiddenText(hiddenAt(instant, p, seat))).map(r => {
       const tr = document.createElement('tr');
       for (const text of [r.calendar, r.date, r.also, r.polities.join(', ')]) tr.insertCell().textContent = text;

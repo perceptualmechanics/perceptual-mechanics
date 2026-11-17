@@ -50,9 +50,9 @@ function skillGrant(text, skills, classFrom) {
 // the Courtier's accomplishments. Read for the column that counts them, the
 // name the feature gives one ("You gain two accomplishments from the list
 // below"), and each option's level, the arts it can count as, how often it
-// can be taken ("twice", "more than once") and its text. A subclass's lead
-// says the art it gives up ("Its price: it forgoes Letters", or "forgoes no
-// art"), and a subclass feature can give an option outright ("You have The
+// can be taken ("twice", "more than once") and its text. A subclass says
+// the art it gives up, in its lead or its first feature ("Your college
+// forgoes Letters", or "forgoes no art"), and a subclass feature can give an option outright ("You have The
 // Code without spending an accomplishment on it").
 function optionsOf(c) {
   if (c.options?.length) return sectionOptions(c);
@@ -69,9 +69,11 @@ function optionsOf(c) {
     }
   }
   if (!list.length) throw new Error(`${c.name}: ${f.name} names no options the builder can read`);
+  const arts = new Set(list.flatMap(o => o.arts));
   const forgoes = Object.fromEntries(c.subclasses.map(s => {
-    const art = s.lead?.match(/it forgoes (\w+)\./)?.[1];
-    if (!art && !/forgoes no art/.test(s.lead ?? '')) throw new Error(`${c.name}: the ${s.name} subclass doesn't say which art it forgoes`);
+    const said = [s.lead ?? '', ...s.features.map(f => f.text)].join('\n');
+    const art = said.match(/(?:\bit|Your college) forgoes (\w+)\b/)?.[1];
+    if (!(art && arts.has(art)) && !/forgoes no art/.test(said)) throw new Error(`${c.name}: the ${s.name} subclass doesn't say which art it forgoes`);
     return [s.name, art ?? null];
   }));
   // One a subclass gives ("You have The Code without spending an
@@ -554,10 +556,13 @@ export function character(book, state) {
   // prepared. Its sections are features from then on, the record's with them.
   const optionalRules = [], optionalSpells = [];
   for (const c of known) for (const rule of c.rules.optional_rules ?? []) {
-    const who = rule.lead.match(/only an? (\w+) can take it\. You choose it when you reach \w+ level (\d+)/);
-    if (!who) throw new Error(`${c.class}: the optional rule ${rule.name} doesn't say who may take it`);
-    const key = `${c.class} ${rule.name}`, kept = state.optional?.[key] ?? {}, at = +who[2];
-    if (c.subclass !== who[1] || c.level < at) continue;
+    // Who may take it is the lead's; when, the lead's or a section's ("The
+    // Path in Order": "You choose it when you reach Physician level 4").
+    const who = rule.lead.match(/only an? (\w+) can take it\./)?.[1];
+    const when = [rule.lead, ...rule.sections.map(x => x.text)].join('\n').match(/You choose it when you reach \w+ level (\d+)/);
+    if (!who || !when) throw new Error(`${c.class}: the optional rule ${rule.name} doesn't say who may take it, and when`);
+    const key = `${c.class} ${rule.name}`, kept = state.optional?.[key] ?? {}, at = +when[1];
+    if (c.subclass !== who || c.level < at) continue;
     const section = name => rule.sections.find(x => x.name === name)?.text ?? '';
     const numbered = (text, title) => (text.match(new RegExp(`\\*\\*[^*]*${title}[^*]*\\*\\*[^\\n]*`))?.[0].split(/\*\*\(\d\)\*\*\s*/).slice(1) ?? []).map(x => x.replace(/[;.]\s*$/, '').trim());
     const rites = section('The Rites'), ascendance = numbered(rites, 'Ascendance'), overgrowth = numbered(rites, 'the Monster');
@@ -645,12 +650,16 @@ export function character(book, state) {
       const start = f.text.match(/You start knowing \w+, [^:]+: (.+?)\./);
       const names = [...(start ? start[1].split(/,\s*|\s+and\s+/) : []), ...[...f.text.matchAll(/You know the Revelation of ([^,.]+)/g)].map(m => m[1])];
       for (const n of names) granted.set(find(n, f).name, { ...find(n, f), from: f.name });
-      if (names.length || /Revelations? (?:of your choice|are the planes you know)|You know every Revelation/.test(f.text)) reads(f);
+      // A choice of Revelation is read where it's offered, below.
+      if (names.length || /Revelations are the planes you know|You know every Revelation/.test(f.text)) reads(f);
     }
     const every = own.find(f => /You know every Revelation in the Cosmography/.test(f.text));
     const chosen = [];
     for (const f of own) {
-      const teaches = f.text.match(/You learn one Revelation of your choice from the Cosmography's (.+?)[:.](?:\s|$)/);
+      // "…from the Cosmography's Near Planes: …", or "…from the Near Planes,
+      // the Inner Circuit, the Borderlands, or the Dominions (The Planes by
+      // Tier)." A parenthesis there points to where the groups are listed.
+      const teaches = f.text.match(/You learn one Revelation of your choice from (?:the Cosmography's )?(.+?)(?: \([^)]*\))?[:.](?:\s|$)/);
       if (!teaches) continue;
       const groups = teaches[1].split(/,\s*(?:or\s+)?|\s+or\s+/).map(g => {
         const group = c.rules.cosmography.groups.find(x => namesGroup(g, x.name));
@@ -1116,8 +1125,8 @@ export function character(book, state) {
   // Spells a class's features grant by name, as they word it: always
   // prepared ("You always have the Divine Smite spell prepared", "You always
   // have *Sending* prepared"); a cantrip known besides those chosen ("you
-  // learn the *Mind Sliver* cantrip", "You know *Vicious Mockery*", and one
-  // more of the list's if it was already known); a spell added to the
+  // learn the *Vicious Mockery* cantrip", and one more of the list's if it
+  // was already known); a spell added to the
   // spellbook ("You add *Telekinesis* and *Resilient Sphere* to your
   // spellbook", "**Level 5.** You add *Fly* …" from that level); and an
   // Attunement's set, its cantrip known and a spell of each level from 1 to
@@ -1156,8 +1165,8 @@ export function character(book, state) {
         const levelOf = sp => book.spellFacts.get(sp.name)?.level ?? sp.level;
         const key = `${whole?.name ?? f.name} ${type} ${level}`, at = pool.filter(sp => levelOf(sp) === level);
         // None of this level deals it only where the set's own spell is of a
-        // lower one (Call Lightning at 4); one the data doesn't hold (a
-        // Player's Handbook spell, Witch Bolt) is of the level it's set at.
+        // lower one (Call Lightning at 4); one the data doesn't hold is of
+        // the level it's set at.
         const none = !at.length && book.spellFacts.has(own) && book.spellFacts.get(own).level < level;
         const offered = [...new Set([own, ...(none ? pool.filter(sp => levelOf(sp) < level && levelOf(sp) >= 1) : at).map(sp => sp.name)])];
         const pick = swap ? offered.find(n => n === state.swaps?.[key]) ?? own : own;
@@ -1254,9 +1263,13 @@ export function character(book, state) {
     const tome = f.text.match(/choose (\w+) cantrips, and choose (\w+) level 1 spells that have the Ritual tag\. The spells can be from any class[’']s spell list/);
     if (tome) reads(f);
     if (tome) pickSpells(key, label, allSpells.filter(sp => sp.level === 0 || (sp.level === 1 && /\bR\b/.test(sp.special ?? ''))), NUMBERS.indexOf(tome[1]), NUMBERS.indexOf(tome[2]), 1, { verb: 'known' });
-    const own = f.text.match(/You learn one spell of your choice from the (.+?) spell list, of a level for which you have spell slots/);
+    // A spell chosen once, learned ("You learn one spell of your choice
+    // from…") or kept prepared ("Choose one spell from… You always have it
+    // prepared"), as the feature says.
+    const kept = /You always have it prepared/.test(f.text) ? 'always prepared' : 'known';
+    const own = f.text.match(/(?:You learn|Choose) one spell (?:of your choice )?from the (.+?) spell list, of a level for which you have spell slots/);
     if (own) reads(f);
-    if (own) pickSpells(key, label, book.classNamed(own[1]).spellList.filter(sp => sp.level > 0), 0, 1, spellcasting.find(s => s.class === f.class)?.highest ?? 0, { verb: 'known' });
+    if (own) pickSpells(key, label, book.classNamed(own[1]).spellList.filter(sp => sp.level > 0), 0, 1, spellcasting.find(s => s.class === f.class)?.highest ?? 0, { verb: kept });
     // Spells a feature has the player choose and keeps always prepared:
     // "Choose two spells from the Cleric spell list, each of a level for which
     // the Physician Features table gives you spell slots" (and "an additional
@@ -1284,13 +1297,13 @@ export function character(book, state) {
     if (mastery) { reads(f); for (const lv of [+mastery[1], +mastery[2]]) pickSpells(`${key} ${lv}`, `${f.name}, level ${lv} (${f.class})`, written.filter(sp => sp.level === lv && (!mastery[3] || book.spellFacts.get(sp.name)?.casting === 'Action')), 0, 1, lv, { verb: 'always prepared' }); }
     const signature = f.text.match(/Choose (\w+) level (\d) spells in your spellbook/);
     if (signature) { reads(f); pickSpells(key, label, written.filter(sp => sp.level === +signature[2]), 0, NUMBERS.indexOf(signature[1]), +signature[2], { verb: 'always prepared' }); }
-    const any = f.text.match(/You learn one level (\d) spell of your choice from any class's spell list/);
+    const any = f.text.match(/(?:You learn|Choose) one level (\d) spell (?:of your choice )?from any class's spell list/);
     if (any) {
       reads(f);
       const at = known.find(c => c.class === f.class)?.level ?? 0;
-      const steps = f.text.match(/when you reach \w+ levels ([\d, and]+), you can replace the spell with one a level higher/);
+      const steps = f.text.match(/when you reach \w+ levels ([\d, and]+), you can replace (?:the spell|it) with one a level higher/);
       const highest = +any[1] + (steps ? steps[1].match(/\d+/g).map(Number).filter(t => at >= t).length : 0);
-      pickSpells(key, label, allSpells.filter(sp => sp.level >= +any[1]), 0, 1, highest, { verb: 'known' });
+      pickSpells(key, label, allSpells.filter(sp => sp.level >= +any[1]), 0, 1, highest, { verb: kept });
     }
   }
   for (const w of warriorCantrips) pickSpells(w.key, w.label, book.classNamed(w.list).spellList.filter(sp => sp.level === 0), w.count, 0, 0, { verb: 'known' });

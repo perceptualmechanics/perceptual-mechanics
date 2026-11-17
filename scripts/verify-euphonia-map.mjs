@@ -222,52 +222,55 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   }
 
   // The Tide, as the map reads the rule. Its inputs are the checks above;
-  // these hold the reading: the flood from each new moon, the ebb from each
-  // full; each polity's eves at its own sunset on its own 31 October and
-  // 30 April, the dark half turning there and the open night ending at
-  // sunrise; no half where the calendar has no 1 November; and between the
-  // tropics, the dark half wherever the sun isn't.
+  // these hold the reading: the flood from each first quarter, the ebb from
+  // each last; each polity's eves at its own sunset on its own 31 October and
+  // 30 April, the autumn open night opening the dark half and the spring
+  // open night closing it at sunrise, the two trading dates south of the
+  // equator; each seat's half by its hemisphere, the tropics' included; and
+  // no half where the calendar has no 31 October.
   let eves = 0;
   for (const [utc, phase] of placed ? phaseRows : []) {
-    if (phase !== 'new' && phase !== 'full') continue;
+    if (!phase.endsWith('quarter')) continue;
     const c = computed.find(p => Math.abs(p.ms - Date.parse(utc)) < 2 * 60000);
-    const want = phase === 'new' ? 'flood' : 'ebb';
+    const want = phase === 'first quarter' ? 'flood' : 'ebb';
     if (!c || tide.tideAt(c.ms + 60000) !== want) { fail(`a minute after the ${phase} moon of ${utc} the Hidden aren't at the ${want}`); break; }
   }
   const sunsetOn = (jdn, seat) => solarEvents((jdn - 2440587.5) * DAY_MS - DAY_MS / 2, (jdn - 2440587.5) * DAY_MS + DAY_MS, seat.lat, seat.lon)
     .find(e => e.kind === 'set' && cal.localDay(e.t, seat.lon) === jdn)?.t;
   const sunriseOn = (jdn, seat) => solarEvents((jdn - 2440587.5) * DAY_MS - DAY_MS / 2, (jdn - 2440587.5) * DAY_MS + DAY_MS, seat.lat, seat.lon)
     .find(e => e.kind === 'rise' && cal.localDay(e.t, seat.lon) === jdn)?.t;
+  // At each eve: the open night it is, the half before its sunset, after it,
+  // and after the next sunrise.
+  const EVES = { north: [[1668, 10, 31, 'autumn', 'light', 'dark', 'dark'], [1669, 4, 30, 'spring', 'dark', 'dark', 'light']],
+    south: [[1668, 10, 31, 'spring', 'dark', 'dark', 'light'], [1669, 4, 30, 'autumn', 'light', 'dark', 'dark']] };
+  let hemispheres = 0;
   for (const p of placed ? calendars.polities : []) {
     const seat = seats.seats[p.seat[0]];
     const at = ms => tide.hiddenAt(ms, p, seat);
     if (p.calendar === 'hijri-tabular') {
       const any = [0, 60, 120, 180, 240, 300].map(d => at(Date.UTC(1668, 10, 1) + d * DAY_MS));
-      if (any.some(h => h.half || h.open)) fail(`${p.name} keeps no 1 November, but the map gives it a half or an open night`);
+      if (any.some(h => h.half || h.open)) fail(`${p.name} keeps no 31 October, but the map gives it a half or an open night`);
       continue;
     }
     const toJdn = p.calendar === 'gregorian' ? cal.jdnFromGregorian : cal.jdnFromJulian;
-    for (const [name, year, m, d, before, after] of [['Samhain', 1668, 10, 31, 'other', 'dark'], ['Beltane', 1669, 4, 30, 'dark', 'other']]) {
+    for (const [year, m, d, name, before, after, morn] of EVES[seat.lat >= 0 ? 'north' : 'south']) {
       const jdn = toJdn(year, m, d), set = sunsetOn(jdn, seat), rise = sunriseOn(jdn + 1, seat);
       const was = at(set - 60000), is = at(set + 60000), morning = at(rise + 60000);
-      const want = seat.lat >= 0 ? [before, after] : [after, before];
-      if (was.half !== want[0] || is.half !== want[1] || was.open || is.open !== name || morning.open) {
-        fail(`${p.name}: at sunset on ${d} ${m === 10 ? 'October' : 'April'} ${year} (its own calendar) the map goes from ${was.half}${was.open ? ', ' + was.open : ''} to ${is.half}${is.open ? ', ' + is.open : ''}, and the morning after is ${morning.open ?? 'no open night'}`);
+      if (was.half !== before || is.half !== after || morning.half !== morn || was.open || is.open !== name || morning.open) {
+        fail(`${p.name}: at sunset on ${d} ${m === 10 ? 'October' : 'April'} ${year} (its own calendar) the map goes from ${was.half}${was.open ? ', ' + was.open : ''} to ${is.half}${is.open ? ', ' + is.open : ''}, and the morning after is ${morning.half}${morning.open ? ', ' + morning.open : ''}`);
         break;
       }
       eves++;
     }
-  }
-  let tropicChecks = 0;
-  for (let k = 0; k < 53; k++) {
-    const t = Date.UTC(1668, 10, 1) + k * 7 * DAY_MS + 12 * 3600000, sun = geo.subsolar(t);
-    for (const lat of [-0.9, -0.5, -0.1, 0.1, 0.5, 0.9].map(f => f * sun.obliquity)) {
-      const { half } = tide.hiddenAt(t, null, { lat, lon: 0 });
-      if (half !== ((sun.lat >= 0) !== (lat >= 0) ? 'dark' : 'other')) { fail(`between the tropics, at ${lat.toFixed(1)}° on ${new Date(t).toISOString().slice(0, 10)}, the half doesn't follow the sun`); break; }
-      tropicChecks++;
+    // Midwinter and midsummer by its own hemisphere, whatever the sun does.
+    for (const [m, northHalf] of [[0, 'dark'], [6, 'light']]) {
+      const { half } = at(Date.UTC(1669, m, 15, 12) - seat.lon / 360 * DAY_MS);
+      const want = seat.lat >= 0 ? northHalf : northHalf === 'dark' ? 'light' : 'dark';
+      if (half !== want) { fail(`${p.name} (${seat.lat.toFixed(1)}°) is in the ${half} half on 15 ${m ? 'July' : 'January'} 1669, not the ${want}`); break; }
+      hemispheres++;
     }
-    if (tide.hiddenAt(t, null, { lat: 50, lon: 0 }).half !== null) { fail('outside the tropics, a place with no known calendar is given a half'); break; }
   }
+  if (placed && tide.hiddenAt(Date.UTC(1669, 0, 15, 12), null, { lat: 50, lon: 0 }).half !== null) fail('a place with no known calendar is given a half');
 
   // The projection: the formulas the relief's shader runs, against d3-geo's
   // own orthographic, from every view; the centre at the middle, a point and
@@ -495,6 +498,7 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   if (!/^v\d+\.\d+\.\d+$/.test(bp.release ?? '') || !/^[0-9a-f]{64}$/.test(bp.sha256 ?? '')) fail('euphonia.borders.json: no release or SHA-256 for what was vendored');
   if (bp.tolerance_deg !== prov.tolerance_deg) fail(`euphonia.borders.json is simplified at ${bp.tolerance_deg}°, the coasts at ${prov.tolerance_deg}°`);
   if (bp.book !== vendored('regions')().provenance?.sha256) fail('euphonia.borders.json was drawn from another export of the book; run scripts/euphonia-borders.mjs again');
+  if (bp.book !== vendored('release')().sha256) fail(`euphonia.borders.json was drawn from master ${bp.book?.slice(0, 12)}…, not the released one euphonia.release.json pins`);
   const text = name => (regions.find(r => r.name === name)?.sections ?? []).map(sec => sec.text).join('\n');
   const record = (borders.polities ?? []).filter(q => q.kind !== 'departs');
   for (const q of record) {
@@ -586,7 +590,7 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, its extent the same from all; ${record.length} polities of ${bp.year} from Cliopatria ${bp.release}, each as its region classes it, ${departed.length} ✦ departures and ${(borders.fronts ?? []).length} front from the book, cut at its ${grounds.length} @ground lines, its ${resolved.regions.reduce((n, r) => n + r.peoples.length, 0)} peoples on no firm ground, ${(bp.corrections ?? []).length} corrections sourced, ${segs.length} border segments with ${wet} over the sea`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and holding ${hemispheres} seasons by hemisphere; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, its extent the same from all; ${record.length} polities of ${bp.year} from Cliopatria ${bp.release}, each as its region classes it, ${departed.length} ✦ departures and ${(borders.fronts ?? []).length} front from the book, cut at its ${grounds.length} @ground lines, its ${resolved.regions.reduce((n, r) => n + r.peoples.length, 0)} peoples on no firm ground, ${(bp.corrections ?? []).length} corrections sourced, ${segs.length} border segments with ${wet} over the sea`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

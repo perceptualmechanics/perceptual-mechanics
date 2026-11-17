@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { plain, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { ABILITIES } from '../src/euphonia/euphonia.character.js';
 import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
+import { RELEASE, releasedMaster, stampsBeside } from './euphonia-release.mjs';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
@@ -19,6 +20,7 @@ const FILES = ['classes', 'subclasses', 'items', 'people', 'sheets', 'regions', 
 export function euphoniaFiles() {
   const d = Object.fromEntries(FILES.map(f => [f, JSON.parse(read(`src/euphonia/euphonia.${f}.json`))]));
   d.rules = JSON.parse(read('src/euphonia/euphonia.rules.json'));
+  d.release = existsSync(RELEASE) ? JSON.parse(readFileSync(RELEASE, 'utf8')) : null;
   return d;
 }
 
@@ -27,6 +29,7 @@ export function euphoniaData() {
   // The master is on Scott's machine and nowhere else, the deploy included.
   const path = d.classes.provenance?.master?.replace(/^~(?=\/)/, homedir());
   d.master = path && existsSync(path) ? { path, sha256: createHash('sha256').update(readFileSync(path)).digest('hex') } : null;
+  d.stamps = stampsBeside(d.release?.master);
   return d;
 }
 
@@ -65,6 +68,16 @@ export function verifyEuphonia(d = euphoniaData()) {
     if (p?.sha256 !== prov[0]?.sha256 || p?.exporter_version !== prov[0]?.exporter_version) fail(`euphonia.${f}.json: from a different export than euphonia.classes.json; refresh them all together`);
     if (canonical(p?.rules) !== canonical(d.rules)) fail(`euphonia.${f}.json: exported under different rules than euphonia.rules.json holds; run npm run euphonia:refresh`);
   });
+  // From the released master, as pinned (scripts/euphonia-release.mjs); and
+  // where the book's stamps are on this machine, the pin is theirs.
+  if (!/^[0-9a-f]{64}$/.test(d.release?.sha256 ?? '')) fail('euphonia.release.json: no released master pinned; run node scripts/euphonia-release.mjs');
+  else {
+    if (prov[0]?.sha256 !== d.release.sha256) fail(`the export is from master ${prov[0]?.sha256?.slice(0, 12)}…, not the released ${d.release.sha256.slice(0, 12)}…; export from the released master`);
+    const released = d.stamps && releasedMaster(d.stamps);
+    if (!d.stamps) log.push(`euphonia: the book's stamps aren't on this machine, so the pin (${d.release.sha256.slice(0, 12)}…) is taken as released`);
+    else if (released.error) fail(`euphonia.release.json: ${released.error}`);
+    else if (released.sha256 !== d.release.sha256) fail(`euphonia.release.json pins ${d.release.sha256.slice(0, 12)}…, but the book released ${released.sha256.slice(0, 12)}…; run node scripts/euphonia-release.mjs`);
+  }
   const rulesFailures = problemsFound.length;
   if (!Array.isArray(d.rules.banned) || !d.rules.banned.length || !d.rules.banned.every(w => typeof w === 'string' && w)) fail('euphonia.rules.json: "banned" is not a list of names');
   try { new RegExp(d.rules.fey_type); } catch { fail('euphonia.rules.json: "fey_type" is not a pattern'); }
@@ -92,8 +105,8 @@ export function verifyEuphonia(d = euphoniaData()) {
   if (d.regions.status !== 'draft') fail(`euphonia.regions.json: status is "${d.regions.status}", not "draft"; the chapters call themselves a draft`);
 
   // The Tide the map reads, whole: the rule names each thing the map shows.
-  const tide = d.hidden.data?.tide ?? '';
-  for (const word of ['**The Tide.**', '**at the flood**', '**at the ebb**', '**dark half**', 'Samhain', 'Beltane', '**open nights**']) {
+  const tide = (d.hidden.data?.tide ?? []).join('\n\n');
+  for (const word of ['**at the flood**', '**at the ebb**', 'first quarter', '**dark half**', 'light half', '**open nights**', '**autumn open night**', '**spring open night**', '31 October', '1 May']) {
     if (!tide.includes(word)) fail(`euphonia.hidden.json: the Tide doesn't say ${word}, which the map shows`);
   }
 

@@ -334,7 +334,7 @@ ${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}
 </nav>
 ${welcomePage(welcome.data, adventures.data)}
 <section class="map-panel-page map-panel-moment" data-page="moment" data-title="This moment" hidden>
-<p class="map-readout">The world between Samhain 1668 and Samhain 1669, on one globe.</p>
+<p class="map-readout">The world between 1 November 1668 and 31 October 1669, on one globe.</p>
 <table class="map-dates" hidden>
 <caption>The same moment, as each kept the date</caption>
 <thead><tr><th scope="col">Calendar</th><th scope="col">Date</th><th scope="col">The Hidden (Euphonia)</th><th scope="col">Kept in</th></tr></thead>
@@ -345,9 +345,9 @@ ${welcomePage(welcome.data, adventures.data)}
 </section>
 <section class="map-panel-page" data-page="about" data-title="About the map" hidden>
 <blockquote class="map-rule">
-<p>${inline(hidden.data.tide)}</p>
+${hidden.data.tide.map(p => `<p>${inline(p)}</p>`).join('\n')}
 <p class="by">From Euphonia, Scott Cohen's setting: not history. ${esc(hidden.data.where)}.</p>
-<p class="by">How the map reads it, where the rule says the DM decides (Scott, 1 November 2026): an open night is the eve, from sunset on 31 October or 30 April to the next sunrise, in each place's own calendar; the halves of the year turn at those sunsets; between the tropics it is the dark half in whichever hemisphere the sun isn't overhead. Where a place's calendar has no 31 October, its half and open nights are as the DM says. The moon, the sun and the dates the rule reads are computed; the rule is Scott's.</p>
+<p class="by">How the map reads it, where the rule leaves it to the DM (Scott, 1 November 2026): a night runs from sunset to sunrise in each place's own calendar, so the dark half begins at sunset on its first night and ends at sunrise after its last. Where a place's calendar has no 31 October, its half and open nights are as the DM says. The moon, the sun and the dates the rule reads are computed; the rule is Scott's.</p>
 </blockquote>
 <p class="note">Coasts, lakes and rivers are Natural Earth's (public domain, versions ${esc(versions)}), and modern. Natural Earth has no outlines from 1668; where it has older ones, the map draws them dashed, each with its own date: ${lakes}. The regions glow round the places each chapter names, looked up in Natural Earth's populated places.</p>
 <p class="note">Relief and ocean depths are ${esc(relief.provenance.source)}, averaged to a quarter degree; its detail is ${esc(relief.provenance.note.split(';')[0].replace(/^Five-minute resolution/, 'five-minute'))}, and coarser elsewhere. The land is lit from the northwest, its slopes steepened ${relief.shading.exaggeration.toFixed(0)} times, so the steepest hundredth of them shade as 45°; the sea is banded at Natural Earth's bathymetric depths. The wind roses stand at the ${rosesData().roses.length} points of open sea farthest from the coasts this map draws.</p>
