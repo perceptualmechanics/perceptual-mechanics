@@ -16607,6 +16607,60 @@
     "Equipment and Money": "20,000 GP plus 1d10 × 250 GP plus normal starting equipment",
     "Magic Items": "2 Common, 4 Uncommon, 3 Rare, 1 Very Rare"
    }
+  ],
+  "damage_types": [
+   {
+    "Type": "Acid",
+    "Examples": "Corrosive liquids, digestive enzymes"
+   },
+   {
+    "Type": "Bludgeoning",
+    "Examples": "Blunt objects, constriction, falling"
+   },
+   {
+    "Type": "Cold",
+    "Examples": "Freezing water, icy blasts"
+   },
+   {
+    "Type": "Fire",
+    "Examples": "Flames, unbearable heat"
+   },
+   {
+    "Type": "Force",
+    "Examples": "Pure magical energy"
+   },
+   {
+    "Type": "Lightning",
+    "Examples": "Electricity"
+   },
+   {
+    "Type": "Necrotic",
+    "Examples": "Life-draining energy"
+   },
+   {
+    "Type": "Piercing",
+    "Examples": "Fangs, puncturing objects"
+   },
+   {
+    "Type": "Poison",
+    "Examples": "Toxic gas, venom"
+   },
+   {
+    "Type": "Psychic",
+    "Examples": "Mind-rending energy"
+   },
+   {
+    "Type": "Radiant",
+    "Examples": "Holy energy, searing radiation"
+   },
+   {
+    "Type": "Slashing",
+    "Examples": "Claws, cutting objects"
+   },
+   {
+    "Type": "Thunder",
+    "Examples": "Concussive sound"
+   }
   ]
  }
 }

@@ -298,6 +298,7 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     pointCosts: new Map(srd.tables.point_costs.map(r => [number(r.Score), number(r.Cost)])),
     standardArray: srd.ability_scores.standard_array,
     pointBudget: srd.ability_scores.point_budget,
+    damageTypes: srd.tables.damage_types.map(r => r.Type),
     backgroundIncreases: srd.ability_scores.background,
     species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
     backgrounds: [...srd.backgrounds.map(b => ({ ...b, source: 'SRD 5.2.1' })), ...setting.data.backgrounds.map(b => ({ ...b, source: 'Euphonia' }))]
@@ -602,25 +603,31 @@ export function character(book, state) {
   // "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant" (the
   // Immortalist's Attuned Energy), "Choose one of those types: Acid, …"
   // (Elemental Affinity), "Choose the light half or the dark half" (the
-  // Danae's Half). A choice made inside a "when" is made in play, and isn't
-  // one. The one chosen is a feature from then on, with what the feature
-  // sets beside it: its rows of a table ("| Light | **Spring** |"), or its
-  // line of a list ("**Fire.** *Fire Bolt*, then …").
+  // Danae's Half), "Choose one damage type, other than Force" (the SRD's
+  // types, Fiendish Resilience). A choice made inside a "when" is made in
+  // play, and isn't one, except one that stands until the next rest ("When
+  // you finish a Long Rest, choose the suit's model, Infiltrator or
+  // Guardian"): the sheet shows the one in force. The one chosen is a feature
+  // from then on, with what the feature sets beside it: its rows of a table
+  // ("| Light | **Spring** |"), or its line of a list ("**Fire.** *Fire
+  // Bolt*, then …", "- *Infiltrator model.* …").
   const kindChoices = [];
   for (const f of [...features]) {
     const named = f.text.match(/(?:^|[.!]\s+)Choose (?:an? |one of (?:those|these) )([a-z ]+?): ((?:[A-Z][\w']*(?: [A-Z][\w']*)*, )+or [A-Z][\w']*(?: [A-Z][\w']*)*)\./);
     const pair = f.text.match(/(?:^|[.!]\s+)Choose the (\w+) (\w+) or the (\w+) \2\./);
-    if (!named && !pair) continue;
+    const typed = f.text.match(/(?:^|[.!]\s+)Choose (?:one|a) damage type(?!:)(?:, other than ([^,.]+),)?/);
+    const rested = f.text.match(/(?:^|[.!]\*?\s+)When you finish a Long Rest, choose the [\w’']+ (\w+), ([A-Z]\w+) or ([A-Z]\w+)\./);
+    if (!named && !pair && !typed && !rested) continue;
     // "One of those types" asks for one type.
-    const noun = named ? named[1].replace(/s$/, '') : pair[2], cap = x => x[0].toUpperCase() + x.slice(1);
-    const offered = named ? list(named[2]) : [cap(pair[1]), cap(pair[3])];
+    const noun = named ? named[1].replace(/s$/, '') : pair ? pair[2] : typed ? 'damage type' : rested[1], cap = x => x[0].toUpperCase() + x.slice(1);
+    const offered = named ? list(named[2]) : pair ? [cap(pair[1]), cap(pair[3])] : typed ? book.damageTypes.filter(t => !list(typed[1] ?? '').includes(t)) : [rested[2], rested[3]];
     const key = f.key ?? `${f.class} ${f.level} ${f.name}`, chosen = offered.find(x => x === state.kinds?.[key]) ?? null;
     kindChoices.push({ key, class: f.class, label: `${f.name} (${f.class} ${f.level})`, noun, offered, chosen });
     reads(f);
     if (!chosen) { fail(`kind:${key}`, `Choose ${/^[aeiou]/.test(noun) ? 'an' : 'a'} ${noun} for ${f.name}.`); continue; }
-    const rows = f.text.split('\n').filter(l => new RegExp(`^\\| ${chosen} \\||^> \\*\\*${chosen}\\.\\*\\*`).test(l));
+    const rows = f.text.split('\n').filter(l => new RegExp(`^\\| ${chosen} \\||^> \\*\\*${chosen}\\.\\*\\*|^- \\*${chosen} ${noun}\\.\\*`).test(l));
     const head = rows[0]?.startsWith('|') ? f.text.split('\n').find(l => /^\| [A-Z]/.test(l)) : null;
-    features.push({ class: f.class, subclass: f.subclass, level: f.level, name: `${f.name}: ${chosen}`, kind: true, text: rows.length ? [head, head && head.replace(/[^|]+/g, '---'), ...rows].filter(Boolean).map(l => l.replace(/^> /, '')).join('\n') : `${chosen}.` });
+    features.push({ class: f.class, subclass: f.subclass, level: f.level, name: `${f.name}: ${chosen}`, kind: true, text: rows.length ? [head, head && head.replace(/[^|]+/g, '---'), ...rows].filter(Boolean).map(l => l.replace(/^> |^- /, '')).join('\n') : `${chosen}.` });
   }
 
   // The Revelations a class with a Cosmography knows: those its features
@@ -700,14 +707,15 @@ export function character(book, state) {
     if (!named) fail(`note:${key}`, `Name your ${what.replace(/^(?:court or great house|gaming house, salon, or court)$/, x => x.replace(/, or | or /, ' or '))} for ${f.name}.`);
   }
   // A Revelation that counts as walked (Soul's Journey's First Voyage):
-  // "one Revelation you know, other than your earth end or the Border
-  // Ethereal", the player's.
+  // "one Revelation you know counts as walked", the player's, and none the
+  // sentence rules out where it does ("other than your earth end or the
+  // Border Ethereal").
   const walkedChoices = [];
   for (const k of revelationsKnown) for (const f of features.filter(x => x.class === k.class)) {
-    const m = f.text.match(/one Revelation you know, other than (.+?), counts as walked/);
+    const m = f.text.match(/one Revelation you know(?:, other than (.+?),)? counts as walked/);
     if (!m) continue;
     reads(f);
-    const not = m[1].split(/,\s*(?:or\s+)?|\s+or\s+/), key = `${f.class} ${f.level} ${f.name}`;
+    const not = m[1]?.split(/,\s*(?:or\s+)?|\s+or\s+/) ?? [], key = `${f.class} ${f.level} ${f.name}`;
     const offered = k.known.filter(r => !not.some(n => (/earth end/.test(n) ? r.group === 'The Earth Ends' : plane(r.name) === plane(n)))).map(r => r.name);
     const pick = offered.find(n => n === state.walked?.[key]) ?? null;
     walkedChoices.push({ key, label: `${f.name} (${f.class} ${f.level})`, offered, chosen: pick });
@@ -1513,7 +1521,11 @@ export function character(book, state) {
     if (!m) return null;
     reads(f);
     const [from, spent] = wears.filter(([a]) => a).sort((x, y) => x[1] - y[1])[0] ?? [];
-    return from && { worn: { name: f.name, madeFrom: from.name, category: m[1], base: +m[2], dex: !m[3], strength: /no Strength requirement/.test(f.text) ? null : from.strength, stealth_disadvantage: /Disadvantage on Dexterity \(Stealth\) checks while you wear it/.test(f.text) }, spent };
+    // Its model, where it has one, may lift the Disadvantage ("The suit
+    // doesn't give you Disadvantage on Dexterity (Stealth) checks").
+    const model = features.find(x => x.kind && x.name.startsWith(`${f.name}: `))?.text ?? '';
+    const loud = /Disadvantage on Dexterity \(Stealth\) checks while you wear it/.test(f.text) && !/doesn[’']t give you Disadvantage on Dexterity \(Stealth\) checks/.test(model);
+    return from && { worn: { name: f.name, madeFrom: from.name, category: m[1], base: +m[2], dex: !m[3], strength: /no Strength requirement/.test(f.text) ? null : from.strength, stealth_disadvantage: loud }, spent };
   }).find(Boolean);
   let gear = null;
   if (suitOf) gear = { spent: suitOf.spent, worn: suitOf.worn, shield: null };
@@ -1619,7 +1631,31 @@ export function character(book, state) {
   if (options && !options.names.includes(state.option)) fail('option', `Choose your ${options.label}.`);
   const optionRow = species && Object.values(species.tables ?? {}).flat().find(r => Object.values(r)[0] === state.option);
   const faster = Object.values(optionRow ?? {}).join(' ').match(/Your Speed increases to (\d+) feet/)?.[1];
-  const speed = Number(faster ?? species?.speed.match(/^(\d+)/)?.[1] ?? 0);
+  // And what features add ("Your speed increases by 10 feet while you
+  // aren't wearing Heavy armor", Fast Movement; "…, and your Speed increases
+  // by 10 feet", the Infiltrator's model), each while its condition holds of
+  // the armour worn, and by its class table's column where the table grows
+  // it (Unarmored Movement). A line offering a lasting choice adds only as
+  // chosen; a sentence framed by a moment ("For 1 minute", "While charged")
+  // isn't the sheet's.
+  const unchosen = f => {
+    const k = kindChoices.find(c => c.key === (f.key ?? `${f.class} ${f.level} ${f.name}`));
+    return k ? f.text.split('\n').filter(l => !k.offered.some(o => l.startsWith(`- *${o} `) || l.startsWith(`> **${o}.`) || l.startsWith(`| ${o} |`))).join('\n') : f.text;
+  };
+  const holds = condition => !condition || (/^Heavy armor$/.test(condition) ? worn?.category !== 'Heavy' : /^armor or wielding a Shield$/.test(condition) ? !worn && !shield : false);
+  const added = features.reduce((n, f) => {
+    const sentences = unchosen(f).replace(/^- /gm, '').split(/(?<=[.!])\s+/);
+    return n + sentences.reduce((m, x, i) => {
+      if (/^(?:For|While|When|Whenever|Until|If|As (?:a|an|part)|On your turn|Once)\b/.test(x)) return m;
+      const by = x.match(/\b[Yy]our [Ss]peed increases by (\d+) feet(?: while you aren[’']t wearing (.+?))?\.$/);
+      if (!by || !holds(by[2])) return m;
+      reads(f);
+      const grows = /^This bonus increases when you reach certain \w+ levels, as shown on the .+? table\.$/.test(sentences[i + 1] ?? '');
+      const row = grows && known.find(k => k.class === f.class)?.rules.table.rows[known.find(k => k.class === f.class).level - 1];
+      return m + (grows ? Number(row?.[f.name]?.match(/^\+(\d+)/)?.[1] ?? 0) : +by[1]);
+    }, 0);
+  }, 0);
+  const speed = Number(faster ?? species?.speed.match(/^(\d+)/)?.[1] ?? 0) + added;
   const sizes = species?.size.match(/\b(Tiny|Small|Medium|Large)\b/g) ?? [];
   if (sizes.length > 1 && !sizes.includes(state.size)) fail('size', `Choose ${sizes.join(' or ')}.`);
   const size = sizes.length > 1 ? state.size : sizes[0];

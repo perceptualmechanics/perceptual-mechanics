@@ -177,6 +177,13 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     '\\byou choose (?:which|for each|when|whether|the|one of them|either|how)\\b', '\\bwhen you choose\\b', '\\bChoose (?:a|any) number of\\b', '\\bcan choose to\\b', '\\byour choice for each\\b', '\\bChoose one:',
     '\\bChoose (?:a|an|one|any number of) (?:creature|point|Observed creature|ability score|damage type, other than)',
   ].join('|'));
+  // Except a choice that stands until it's made again ("When you finish a
+  // Long Rest, choose the suit's model", "Choose one damage type … whenever
+  // you finish a Short or Long Rest") or is made once, as the feature comes
+  // ("When you gain this feature, one Revelation you know counts as
+  // walked"): the sheet shows it, so the builder has to offer it, as a
+  // choice of that feature's own and not only by reading the feature.
+  const STANDING = /^(?:When you gain this feature|(?:When|Whenever) you finish an? (?:Short or )?Long Rest, choose)\b|\bChoose [^.]+? whenever you finish\b/;
   // Sentences by paragraph, a sidebar (a blockquote: the book's commentary
   // and summaries) left out. A sentence after one made in play, in its
   // paragraph, tells what that does, and is in play too ("As a Bonus Action,
@@ -192,20 +199,23 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
       const item = /^\s*(?:\*\*|- |\*[A-Z])/.test(par);
       if (!item) framed = false;
       const open = [];
-      for (const x of all) { if (INPLAY.test(x)) framed = true; else if (!framed) open.push(x); }
+      for (const x of all) { if (STANDING.test(x)) open.push(x); else if (INPLAY.test(x)) framed = true; else if (!framed) open.push(x); }
       // The frame carries into the list a paragraph leads ("… the following
       // benefits.", "…:"), and on through its items.
       framed = framed && (item || /(?:following \w+\.?|:)\s*$/.test(par.trim()));
       return open;
     });
   };
-  const asks = text => sentencesOf(text).filter(x => CHOICE.test(x) && !INPLAY.test(x) && !/\b(?:can't|cannot|don't|doesn't) choose\b/.test(x));
+  const asks = text => sentencesOf(text).filter(x => CHOICE.test(x) && (!INPLAY.test(x) || STANDING.test(x)) && !/\b(?:can't|cannot|don't|doesn't) choose\b/.test(x));
   const unread = [];
   let units = 0;
   const cover = (c, got, f) => {
     units++;
-    const left = asks(f.text);
-    if (left.length && !got.read.includes(`${c.name} ${f.level} ${f.name}`)) unread.push(`${c.name}${f.subclass ? ` (${f.subclass})` : ''} ${f.level}, ${f.name}: "${left[0].slice(0, 90)}"`);
+    const left = asks(f.text), key = `${c.name} ${f.level} ${f.name}`;
+    const offered = Object.entries(got).filter(([k, v]) => /Choices$/.test(k) && Array.isArray(v)).some(([, v]) => v.some(x => x.key === key));
+    const standing = left.find(x => STANDING.test(x));
+    if (left.length && !got.read.includes(key)) unread.push(`${c.name}${f.subclass ? ` (${f.subclass})` : ''} ${f.level}, ${f.name}: "${left[0].slice(0, 90)}"`);
+    else if (standing && !offered) unread.push(`${c.name}${f.subclass ? ` (${f.subclass})` : ''} ${f.level}, ${f.name}, read but not offered: "${standing.slice(0, 90)}"`);
   };
   for (const c of book.classes) {
     for (const sub of c.subclasses) {
@@ -603,6 +613,23 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const carried = (lv, sub) => run(someone([{ class: 'Mhizha', level: lv, subclass: sub }]), `Mhizha ${lv} ${sub}`)?.equipment.carried?.map(x => x.name).join() ?? null;
   const CARRIED = [[1, '', 'Arc Gun'], [3, 'Mapmaker', 'Arc Gun,The Map'], [3, 'Gunner', 'Arc Gun']];
   for (const [lv, sub, want] of CARRIED) if (carried(lv, sub) !== want) fail(`a Mhizha ${lv}${sub ? ` ${sub}` : ''} carries ${carried(lv, sub)}, not ${want}`);
+
+  // The Lionskin's model, as its lines say: the Infiltrator quiet in the suit
+  // and 10 feet faster, the Guardian neither. The Fiend's Resilience, any of
+  // the SRD's damage types but the one it rules out. Speed a feature adds,
+  // as its condition and its class table allow (Fast Movement; Unarmored
+  // Movement's column).
+  const model = m => run(someone([{ class: 'Mhizha', level: 3, subclass: 'Lionskin' }], { kinds: { 'Mhizha 3 Powered Suit': m } }), `Lionskin ${m}`);
+  const [infiltrator, guardian] = [model('Infiltrator'), model('Guardian')];
+  const human = book.species.find(s => s.name === 'Human').speed.match(/^(\d+)/)?.[1];
+  if (!(infiltrator?.speed === +human + 10 && !infiltrator.stealthDisadvantage && guardian?.speed === +human && guardian.stealthDisadvantage))
+    fail(`the Lionskin's models: Infiltrator ${infiltrator?.speed} feet${infiltrator?.stealthDisadvantage ? ', loud' : ''}; Guardian ${guardian?.speed} feet${guardian?.stealthDisadvantage ? '' : ', quiet'}`);
+  const resilience = run(someone([{ class: 'Warlock', level: 10, subclass: 'Fiend Patron' }]), 'Fiend 10')?.kindChoices.find(c => c.key === 'Warlock 10 Fiendish Resilience')?.offered ?? [];
+  if (resilience.join() !== srd.tables.damage_types.map(r => r.Type).filter(t => t !== 'Force').join()) fail(`Fiendish Resilience offers ${resilience.join(', ') || 'nothing'}`);
+  const monkRow = lv => +srd.classes.find(c => c.name === 'Monk').table.rows[lv - 1]['Unarmored Movement'].match(/^\+(\d+)/)[1];
+  const fast = run(someone([{ class: 'Barbarian', level: 5, subclass: 'Path of the Berserker' }]), 'Barbarian 5')?.speed;
+  const monks = [2, 6, 18].map(lv => run(someone([{ class: 'Monk', level: lv, subclass: lv >= 3 ? 'Warrior of the Open Hand' : '' }]), `Monk ${lv}`)?.speed);
+  if (fast !== +human + 10 || monks.some((v, i) => v !== +human + monkRow([2, 6, 18][i]))) fail(`speed from features: a Barbarian 5 ${fast} feet; Monks 2, 6, 18 ${monks.join(', ')}`);
 
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');

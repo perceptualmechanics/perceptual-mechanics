@@ -925,6 +925,7 @@ const data = {
     ability_modifiers: titledTable('Ability Scores and Modifiers', ['Score', 'Modifier', 'Score', 'Modifier']),
     multiclass_slots: titledTable('Multiclass Spellcaster:', ['Level', ...LEVELS]),
     higher_level_equipment: titledTable('Starting Equipment at Higher Levels', ['Starting Level', 'Equipment and Money', 'Magic Items']),
+    damage_types: titledTable('Damage Types', ['Type', 'Examples']),
   },
 };
 writeFileSync(OUT, `${JSON.stringify(data, null, 1)}\n`);
