@@ -808,7 +808,8 @@ function spells() {
     if (!casting) throw new Error(`the spell "${lines[i].text}" has no Casting Time`);
     // What a sheet needs to list it as an attack: its range, the spell
     // attack it makes or the save it forces, the damage its first effect
-    // deals ("takes 1d10 Fire damage", "1d8 damage of a type you choose"),
+    // deals ("takes 1d10 Fire damage", "taking 8d6 Fire damage", "takes an
+    // extra 2d8 Radiant damage", "1d8 damage of a type you choose"),
     // and a cantrip's growth, in the five forms the SRD writes it: the damage
     // increases ("5 (2d10), 11 (3d10), and 17 (4d10)"), its die changes
     // (Shillelagh), it adds damage (True Strike), its range doubles (Spare
@@ -819,8 +820,12 @@ function spells() {
     // A spell of range Self that throws something has its own reach ("hurl
     // fire at a creature or an object within 60 feet of you").
     const reach = range === 'Self' && attack ? text.match(/within (\d+ feet) of you/)?.[1] ?? null : null;
+    // A Self spell's area ("a 15-foot Cone"), and what a higher slot does, in
+    // the SRD's own sentence.
+    const area = range.startsWith('Self') ? text.match(/\b(\d+-foot(?:-radius|-long|-wide|-high)? (?:Cone|Cube|Line|Sphere|Emanation|Cylinder))\b/)?.[1] ?? null : null;
+    const higher = text.match(/Using a Higher-Level Spell Slot\. (.+?\.)(?= [A-Z]|$)/)?.[1] ?? null;
     const save = text.match(/\b(?:succeed on|make|makes) an? (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw\b/)?.[1] ?? null;
-    const hit = text.match(/\btakes? (\d+d\d+) (?:(\w+) damage|damage of a type you choose)/);
+    const hit = text.match(/\b(?:takes?|taking)(?: an extra)? (\d+d\d+) (?:(\w+) damage|damage of a type you choose)/);
     const growth = text.match(/Cantrip Upgrade\. (.+?) when you reach levels (\d+) \(([^)]+)\), (\d+) \(([^)]+)\), and (\d+) \(([^)]+)\)\./);
     const beams = text.match(/Cantrip Upgrade\. The spell creates (\w+) beams at level (\d+), (\w+) beams at level (\d+), and (\w+) beams at level (\d+)\./);
     const kind = growth && (/^The damage increases by /.test(growth[1]) ? 'dice' : /^The damage die changes$/.test(growth[1]) ? 'die' : /extra \w+ damage$/.test(growth[1]) ? 'extra' : /^The range doubles$/.test(growth[1]) ? 'range' : null);
@@ -828,7 +833,7 @@ function spells() {
     const upgrade = kind ? { kind, steps: [[+growth[2], growth[3]], [+growth[4], growth[5]], [+growth[6], growth[7]]] }
       : beams ? { kind: 'beams', steps: [[+beams[2], wordNumber(beams[1])], [+beams[4], wordNumber(beams[3])], [+beams[6], wordNumber(beams[5])]] } : null;
     out.push({ name: lines[i].text, level: head[1] ? +head[1] : 0, school: head[2] ?? head[3], classes: head[4].split(/,\s*/), casting, damage: DAMAGE.filter(d => dealt(d).test(text)),
-      range, reach, attack, save, dice: hit ? { dice: hit[1], type: hit[2] ?? null } : null, upgrade });
+      range, reach, area, higher, attack, save, dice: hit ? { dice: hit[1], type: hit[2] ?? null } : null, upgrade });
   }
   if (!out.length) throw new Error('the SRD has no spells');
   return out;
@@ -839,8 +844,8 @@ function spells() {
 // melee attack with a weapon or an Unarmed Strike, Dexterity for a ranged
 // one), the Proficiency Bonus with a weapon one is proficient with, the same
 // modifier added to damage, Finesse's choice and a thrown Melee weapon's
-// melee ability, the Unarmed Strike's bonus and damage, and the spell save
-// DC and attack modifier.
+// melee ability, the Unarmed Strike's bonus and damage, the spell save DC
+// and attack modifier, and the scores a Heavy weapon asks.
 // The whole text, paragraph by paragraph (joining it at once is slow), the
 // sidebars blocks() counts as it goes counted once, by the classes.
 let whole = null;
@@ -862,9 +867,11 @@ function attackRules() {
   need(/If the weapon is a Melee weapon, use the same ability modifier for the attack and damage rolls that you use for a melee attack/, 'Thrown property');
   const unarmed = need(/Your bonus to the roll equals your (\w+) modifier plus your Proficiency Bonus\. On a hit, the target takes (\w+) damage equal to (\d+) plus your \1 modifier\./, 'Unarmed Strike');
   const dc = need(/Spell save DC = (\d+) \+ your spellcasting ability modifier \+ your Proficiency Bonus/, 'spell save DC');
+  const heavy = need(/You have Disadvantage on attack rolls with a Heavy weapon if it’s a Melee weapon and your (\w+) score isn’t at least (\d+) or if it’s a Ranged weapon and your (\w+) score isn’t at least (\d+)\./, 'Heavy property');
   need(/Spell attack modifier = your spellcasting ability modifier \+ your Proficiency Bonus/, 'spell attack modifier');
   return { melee: by(/^Melee attack with a weapon/), ranged: by(/^Ranged attack with a weapon/), finesse: [finesse[1], finesse[2]],
-    unarmed: { ability: unarmed[1], type: unarmed[2], base: +unarmed[3] }, spell_save_dc_base: +dc[1] };
+    unarmed: { ability: unarmed[1], type: unarmed[2], base: +unarmed[3] }, spell_save_dc_base: +dc[1],
+    heavy: { Melee: { ability: heavy[1], score: +heavy[2] }, Ranged: { ability: heavy[3], score: +heavy[4] } } };
 }
 
 // ---------- languages: the rule a character starts by ("Common plus two

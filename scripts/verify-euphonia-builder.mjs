@@ -25,14 +25,16 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   try { book = engine.rulebook(srd, euphonia, setting, subclasses, items); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
   // Weapon Mastery and languages have checks of their own (below); a build
   // that doesn't name its weapons takes the first kinds the engine offers,
-  // and one that doesn't name its languages takes as many distinct ones as
-  // it's asked, so other checks test only what they quote.
+  // one that doesn't name its languages takes as many distinct ones as it's
+  // asked, and one that doesn't name a trait's or feat's spellcasting
+  // ability takes the first, so other checks test only what they quote.
   const run = (state, where) => {
     try {
       const got = engine.character(book, state);
       const fill = {};
       if (!state.mastery && got.masteryChoices?.length) fill.mastery = Object.fromEntries(got.masteryChoices.map(c => [c.key, c.from.slice(0, c.count).map(w => w.name)]));
       if (!state.languages && got.languageChoices?.length) { let n = 0; fill.languages = Object.fromEntries(got.languageChoices.map(c => [c.key, Array.from({ length: c.count }, () => `Tongue ${++n}`)])); }
+      if (!state.spellAbilities && got.abilityChoices?.length) fill.spellAbilities = Object.fromEntries(got.abilityChoices.map(c => [c.key, c.offered[0]]));
       return Object.keys(fill).length ? engine.character(book, { ...state, ...fill }) : got;
     } catch (e) { fail(`${where}: ${e.message}`); return null; }
   };
@@ -731,6 +733,39 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   }
   const gnome = run({ ...someone([{ class: 'Fighter', level: 1 }]), species: 'Gnome', option: 'Forest Gnome' }, 'Gnome')?.defenses.saveAdvantages ?? null;
   if (gnome?.join() !== 'Intelligence, Wisdom and Charisma') fail(`Gnomish Cunning: ${JSON.stringify(gnome)}`);
+
+  // Attacks from elsewhere and riders, each from its sentence: a Tiefling's
+  // legacy cantrip by the ability chosen; the Breath Weapon's DC and dice at
+  // level 5; a Heavy weapon's Disadvantage below its score; Great Weapon
+  // Fighting on a two-handed weapon; Sneak Attack on a Finesse weapon and not
+  // a Spear; Telling Cut on a weapon and not a fist; a leveled spell at its
+  // own dice, with its higher slot; Eldritch Spear's range and Repelling
+  // Blast's push; Planar Strike's dice and Wisdom once for each.
+  const legacyRow = Object.values(srd.species.find(x => x.name === 'Tiefling').tables).flat().find(r => Object.values(r)[0] === 'Abyssal');
+  const legacyCantrip = legacyRow['Level 1'].match(/know the (.+?) cantrip/)[1], spray = srd.spells.find(x => x.name === legacyCantrip);
+  const tiefling = run({ ...someone([{ class: 'Fighter', level: 5, subclass: 'Champion' }], { base: { ...ABLE, Charisma: 16 } }), species: 'Tiefling', option: 'Abyssal', spellAbilities: { 'Tiefling Fiendish Legacy': 'Charisma' } }, 'Abyssal Tiefling');
+  const sprayed = hitOf(tiefling, legacyCantrip);
+  if (!(sprayed?.bonus === tiefling.mod.Charisma + tiefling.bonus && sprayed.damage === `${spray.upgrade.steps.filter(([lv]) => lv <= 5).at(-1)[1]} ${spray.dice.type}`)) fail(`a Tiefling's ${legacyCantrip}: ${JSON.stringify(sprayed)}`);
+  const red = run({ ...someone([{ class: 'Fighter', level: 5, subclass: 'Champion' }]), species: 'Dragonborn', option: 'Red' }, 'Red Dragonborn');
+  const breath = hitOf(red, 'Breath Weapon'), redType = Object.values(srd.species.find(x => x.name === 'Dragonborn').tables).flat().find(r => Object.values(r)[0] === 'Red')['Damage Type'];
+  if (!(breath?.save?.dc === 8 + red.mod.Constitution + red.bonus && breath.damage === `2d10 ${redType}`)) fail(`a Red Dragonborn's Breath Weapon: ${JSON.stringify(breath)}`);
+  const weakling = run(someone([{ class: 'Fighter', level: 1 }], { base: { ...ABLE, Strength: 8 }, styles: { 'Fighter 1 Fighting Style': 'Great Weapon Fighting' } }), 'Fighter, Strength 8');
+  const heavySword = hitOf(weakling, 'Greatsword');
+  if (!(heavySword?.disadvantage && !hitOf(champion11, 'Greatsword')?.disadvantage && heavySword.riders.some(r => /^Great Weapon Fighting/.test(r)) && !hitOf(weakling, 'Flail')?.riders.length)) fail(`Heavy and Great Weapon Fighting: ${JSON.stringify(heavySword)}`);
+  const sneaky = run(someone([{ class: 'Rogue', level: 5, subclass: 'Thief' }]), 'Rogue 5');
+  const sneakDice = srd.classes.find(c => c.name === 'Rogue').table.rows[4]['Sneak Attack'];
+  if (!(hitOf(sneaky, 'Shortsword')?.riders.some(r => r.includes(sneakDice)) && !hitOf(sneaky, 'Spear')?.riders.length)) fail(`Sneak Attack: ${JSON.stringify(sneaky?.attacks.map(a => [a.name, a.riders]))}`);
+  const courtly = run(someone([{ class: 'Courtier', level: 5, subclass: 'Arms' }]), 'Courtier 5');
+  if (!(hitOf(courtly, 'Rapier')?.riders.some(r => /^Telling Cut/.test(r)) && !hitOf(courtly, 'Unarmed Strike')?.riders.length)) fail(`Telling Cut: ${JSON.stringify(courtly?.attacks.map(a => [a.name, a.riders]))}`);
+  const cleric5 = run(someone([{ class: 'Cleric', level: 5, subclass: 'Life Domain' }], { spells: { Cleric: ['Guiding Bolt'] } }), 'Cleric 5');
+  const bolt5 = hitOf(cleric5, 'Guiding Bolt'), guiding = srd.spells.find(x => x.name === 'Guiding Bolt');
+  if (!(bolt5?.damage === `${guiding.dice.dice} ${guiding.dice.type}` && bolt5.riders.includes(`With a higher slot: ${guiding.higher.replace(/\.$/, '')}`))) fail(`a Cleric's Guiding Bolt: ${JSON.stringify(bolt5)}`);
+  const spearing = targets => run(someone([{ class: 'Warlock', level: 5, subclass: 'Fiend Patron' }], { spells: { Warlock: ['Eldritch Blast'] }, options: { Warlock: [{ name: 'Eldritch Spear' }, { name: 'Repelling Blast' }] }, cantripTargets: targets }), 'Warlock 5 spear');
+  const speared = hitOf(spearing({ 'Warlock invocation 0': 'Eldritch Blast', 'Warlock invocation 1': 'Eldritch Blast' }), 'Eldritch Blast');
+  if (!(speared?.reach === `${+srd.spells.find(x => x.name === 'Eldritch Blast').range.match(/\d+/)[0] + 30 * 5} feet` && speared.riders.some(r => /^Push/.test(r)))) fail(`Eldritch Spear and Repelling Blast: ${JSON.stringify(speared)}`);
+  const revelator5 = run(someone([{ class: 'Revelator', level: 5, subclass: 'The Tree' }]), 'Revelator 5');
+  const planarRow = euphonia.data.find(c => c.name === 'Revelator').table.rows[4]['Planar Strike'], planarHit = hitOf(revelator5, 'Planar Strike');
+  if (!planarHit?.damage.startsWith(`${planarRow}${(n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : ''))(+planarRow.match(/^\d+/)[0] * revelator5.mod.Wisdom)} `)) fail(`Planar Strike: ${JSON.stringify(planarHit)}`);
 
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');

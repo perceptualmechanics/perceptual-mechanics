@@ -1663,6 +1663,46 @@ export function character(book, state) {
     const known = [name, name.replace(/es$/, ''), name.replace(/s$/, '')].map(curly).find(x => weightOf.has(x));
     return { item: part, weight: known ? n * weightOf.get(known) : null };
   });
+  // The species' option (a lineage, a legacy, an ancestry) and its row.
+  const options = speciesOptions(species);
+  if (options && !options.names.includes(state.option)) fail('option', `Choose your ${options.label}.`);
+  const optionRow = species && Object.values(species.tables ?? {}).flat().find(r => Object.values(r)[0] === state.option);
+  // The spellcasting ability a species trait or a feat lets the player
+  // choose ("Intelligence, Wisdom, or Charisma is your spellcasting ability
+  // for the spells you cast with this trait", the Tiefling's legacy; "for
+  // this feat's spells", Magic Initiate), and the cantrips each brings: a
+  // lineage's ("You also know the Poison Spray cantrip"), a trait's own ("You
+  // know the Thaumaturgy cantrip … the same spellcasting ability you use for
+  // your Fiendish Legacy trait"), the feat's chosen ones.
+  const ABILITY_CHOICE = /(\w+), (\w+), or (\w+) is your spellcasting ability for (?:the spells you cast with this trait|this feat[’']s spells)/;
+  const abilityChoices = [];
+  const askAbility = (key, label, text) => {
+    const m = text.match(ABILITY_CHOICE);
+    if (!m) return null;
+    const offered = [m[1], m[2], m[3]], chosen = offered.find(a => a === state.spellAbilities?.[key]) ?? null;
+    abilityChoices.push({ key, label, noun: 'spellcasting ability', offered, chosen });
+    if (!chosen) fail(`ability:${key}`, `Choose the spellcasting ability for ${label}.`);
+    return chosen;
+  };
+  const lineage = species ? Object.values(optionRow ?? {}).slice(1).join(' ') : '';
+  // A trait's text with the options not chosen left out ("**Forest Gnome.**
+  // You know the Minor Illusion cantrip …").
+  const ownOption = text => text.split('\n').filter(l => { const o = l.replace(/^[-\s]*/, '').match(/^\*\*(.+?)\.\*\*/)?.[1]; return !o || !options?.names.includes(o) || o === state.option; }).join('\n');
+  const innate = [];
+  for (const t of species?.traits ?? []) {
+    const ability = askAbility(`${species.name} ${t.name}`, `${t.name} (${species.name})`, t.text);
+    const text = ownOption(t.text) + (ability !== null && /Lineage|Legacy|lineage|legacy/.test(t.name) ? ` ${lineage}` : '');
+    const same = t.text.match(/uses the same spellcasting ability you use for your (.+?) trait/)?.[1];
+    const by = ability ?? (same ? abilityChoices.find(c => c.label.startsWith(`${same} (`))?.chosen ?? null : null);
+    for (const m of text.matchAll(/You (?:also )?know the ([A-Z][\w’' ]+?) cantrip/g)) innate.push({ name: m[1], ability: by, from: `${species.name}, ${t.name}` });
+  }
+  for (const f of feats) {
+    const key = `feat ${f.from}`, ability = askAbility(key, `${f.feat.name} (${f.from})`, f.feat.benefits.map(b => b.text).join(' '));
+    for (const sp of spellChoices.find(c => c.key === key)?.chosen.filter(x => x.level === 0) ?? []) innate.push({ name: sp.name, ability, from: f.feat.name });
+  }
+  // Fighting Style's cantrips ("The chosen cantrips count as Paladin spells
+  // for you"), by the class's own ability.
+  for (const w of warriorCantrips) for (const sp of spellChoices.find(c => c.key === w.key)?.chosen ?? []) innate.push({ name: sp.name, ability: spellcasting.find(x => x.class === w.class)?.ability ?? null, from: w.label });
   // Attacks, as the SRD's Attack Roll Abilities table sets them (Strength
   // for a melee weapon or an Unarmed Strike, Dexterity for a ranged one,
   // Finesse either), the Proficiency Bonus with a weapon the character is
@@ -1679,6 +1719,7 @@ export function character(book, state) {
   // (4d10)"), or its beams.
   const rules = book.attacks, UNARMED = { name: 'Unarmed Strike', range: 'Melee', properties: [] };
   const signedMod = n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : '');
+  const f0 = t => t[0].toUpperCase() + t.slice(1);
   const atLevel = (c, column) => { const k = known.find(x => x.class === c); return k?.rules.table.rows[k.level - 1]?.[column] ?? null; };
   const firearms = features.map(f => f.text.match(/A firearm is (.+?), or a period firearm/)?.[1]).find(Boolean)?.split(/,\s*/).map(x => x.replace(/^an? /, '')) ?? [];
   const mastered = masteryChoices.flatMap(c => c.chosen.map(w => w.name));
@@ -1718,6 +1759,39 @@ export function character(book, state) {
     const thrown = w.properties.find(p => p.startsWith('Thrown'))?.match(/Range ([\d/]+)/)?.[1], ammo = w.properties.find(p => p.startsWith('Ammunition'))?.match(/Range ([\d/]+)/)?.[1];
     return w.range === 'Ranged' ? `${ammo ?? thrown} feet` : `reach ${hasProperty(w, 'Reach') ? 10 : 5} feet${thrown ? `, or thrown ${thrown} feet` : ''}`;
   };
+  // What adds to an attack only now and then, noted on the attacks it can
+  // add to, not added in, each as its sentence bounds it: a state ("When you
+  // make an attack using Strength—with either a weapon or an Unarmed
+  // Strike— … as shown in the Rage Damage column", Rage); once a turn
+  // ("Once per turn, you can deal an extra 1d6 damage … if … the attack uses
+  // a Finesse or a Ranged weapon", Sneak Attack; "Once on each of your turns
+  // when you hit a creature with a weapon attack … your Telling Cut die plus
+  // your Charisma modifier"; "when you hit a creature you're studying with an
+  // attack roll using a crossbow or a firearm", Calculated Shot); against an
+  // Observed creature (Exploit); and a Fighting Style's ("a Melee weapon that
+  // you are holding with two hands … Two-Handed or Versatile property";
+  // "an extra attack as a result of using a weapon that has the Light
+  // property").
+  const riders = features.flatMap(f => {
+    const rage = f.text.match(/When you make an attack using (\w+)—with either a weapon or an Unarmed Strike—and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as an? \w+, as shown in the ([\w ]+) column/);
+    const sneak = f.text.match(/Once per turn, you can deal an extra \d+d\d+ damage to one creature you hit with an attack roll if .+? and the attack uses an? (\w+) or an? (\w+) weapon\.[\s\S]*?as shown in the ([\w ]+) column/);
+    const cut = f.text.match(/Once on each of your turns when you hit a creature with a weapon attack, the creature takes extra (\w+) damage equal to a roll of your ([\w ]+) die plus your (\w+) modifier/);
+    const shot = f.text.match(/Once per turn, when you hit a creature you[’']re studying with an attack roll using (.+?), the attack deals the extra damage shown in the ([\w ]+) column/);
+    const exploit = /hits an Observed creature/.test(f.text) && f.text.match(/The attack deals the extra damage shown in the ([\w ]+) column/);
+    return [
+      rage && { test: (w, ability) => ability === rage[1], note: `${atLevel(f.class, rage[2])} damage in ${f.name}` },
+      sneak && { test: w => w !== UNARMED && [sneak[1], sneak[2]].some(k => hasProperty(w, k) || w.range === k), note: `${f.name} ${atLevel(f.class, sneak[3])} once a turn` },
+      cut && { test: w => w !== UNARMED, note: `${f.name} ${atLevel(f.class, cut[2])}${signedMod(mod[cut[3]])} ${cut[1]} once a turn` },
+      shot && { test: w => covers(shot[1], w, f), note: `${shot[2]} ${atLevel(f.class, shot[2])} against a creature you're studying, once a turn` },
+      exploit && { any: true, note: `${exploit[1]} ${atLevel(f.class, exploit[1])} against an Observed creature` },
+    ].filter(Boolean);
+  }).concat(feats.flatMap(f => {
+    const text = [f.feat.description, ...f.feat.benefits.map(b => b.text)].join(' ');
+    const great = text.match(/a Melee weapon that you are holding with two hands, you can treat any 1 or 2 on a damage die as a 3\. The weapon must have the (.+?) property/);
+    const two = /an extra attack as a result of using a weapon that has the Light property, you can add your ability modifier to the damage/.test(text);
+    return [great && { test: w => w !== UNARMED && w.range === 'Melee' && list(great[1]).some(k => hasProperty(w, k)), note: `${f.feat.name}: a 1 or 2 on a damage die counts as 3, two-handed` },
+      two && { test: w => w !== UNARMED && hasProperty(w, 'Light'), note: `${f.feat.name}: the Light property's extra attack adds your modifier` }].filter(Boolean);
+  }));
   const strike = w => {
     const base = w === UNARMED ? rules.unarmed.ability : w.range === 'Melee' ? rules.melee : rules.ranged;
     // A feature that sets the ability ("you use Intelligence for their
@@ -1729,11 +1803,14 @@ export function character(book, state) {
     const bigger = ownDice.filter(x => covers(x.phrase, w, x.f)).map(x => x.die).find(d => average(d) > average(die ?? 0));
     const roll = bigger ?? die, flat = w === UNARMED && !bigger ? (fists ? +fists.m[2] : rules.unarmed.base) + mod[ability] : null;
     const versatile = w.properties.find(p => p.startsWith('Versatile'))?.match(/\((\d+d\d+)\)/)?.[1];
+    // The SRD's Heavy property: Disadvantage below the score it asks.
+    const heavy = w !== UNARMED && hasProperty(w, 'Heavy') && rules.heavy[w.range] && scores[rules.heavy[w.range].ability] < rules.heavy[w.range].score ? rules.heavy[w.range] : null;
     return {
       name: w.name, kind: w === UNARMED ? 'unarmed' : 'weapon', ability, bonus: mod[ability] + (proficient ? bonus : 0) + featBonus(w.range), proficient,
       damage: flat !== null ? `${Math.max(flat, 0)} ${type}` : `${roll}${signedMod(/^\d+d\d+$/.test(roll) ? mod[ability] : 0)} ${type}`,
       versatile: versatile && !bigger ? `${versatile}${signedMod(mod[ability])} ${type}` : null, reach: w === UNARMED ? 'reach 5 feet' : reach(w),
-      mastery: mastered.includes(w.name) ? w.mastery : null,
+      mastery: mastered.includes(w.name) ? w.mastery : null, disadvantage: heavy ? `Heavy, with ${heavy.ability} under ${heavy.score}` : null,
+      riders: riders.filter(r => r.test?.(w, ability)).map(r => r.note),
     };
   };
   const carriedWeapons = [...new Map(items.map(item => {
@@ -1741,6 +1818,18 @@ export function character(book, state) {
     return w && [w.name, w];
   }).filter(Boolean)).values()];
   const ownAttacks = features.flatMap(f => {
+    // A spell attack a feature makes, not a spell ("a melee spell attack
+    // against a creature within 5 feet of yourself, or a ranged spell attack
+    // … within 60 feet", "the dice shown in the Planar Strike column …, plus
+    // your Wisdom modifier once for each of those dice").
+    const planar = f.text.match(/a melee spell attack against a creature within (\d+) feet of yourself, or a ranged spell attack against a creature within (\d+) feet of yourself/);
+    const planarDice = f.text.match(/the target takes the dice shown in the ([\w ]+) column of the \w+ Features table, plus your (\w+) modifier once for each of those dice/);
+    if (planar && planarDice) {
+      reads(f);
+      const sc = spellcasting.find(x => x.class === f.class), dice = atLevel(f.class, planarDice[1]), n = +dice.match(/^(\d+)d/)[1];
+      const type = f.text.match(/If you have no vista open, it[’']s (\w+) damage/)?.[1];
+      return [{ name: f.name, kind: 'feature', ability: sc?.ability ?? planarDice[2], bonus: sc?.attack ?? mod[planarDice[2]] + bonus, proficient: true, damage: `${dice}${signedMod(n * mod[planarDice[2]])} ${type ? `${type}, or your open vista's type` : 'by your vista'}`, versatile: null, reach: `reach ${planar[1]} feet, or ${planar[2]} feet`, mastery: null }];
+    }
     const m = f.text.match(/make a ranged attack roll using (\w+) against a creature or object within (\d+) feet of yourself, adding your Proficiency Bonus\. On a hit, the target takes (\w+) damage equal to the dice shown in the ([\w ]+) column of the \w+ Features table plus your \1 modifier/);
     if (!m) return [];
     reads(f);
@@ -1750,27 +1839,50 @@ export function character(book, state) {
     const pick = spellChoices.find(x => x.key === sc.class);
     const one = features.find(f => f.class === sc.class && new RegExp(`When you cast an? ${sc.class} cantrip that rolls only one damage die, add your (\\w+) modifier to the damage`).test(f.text));
     const addOne = one?.text.match(/add your (\w+) modifier to the damage/)?.[1];
-    return [...(pick?.chosen ?? []).filter(sp => sp.level === 0).map(sp => sp.name), ...sc.given].map(n => book.spellFacts.get(n)).filter(sp => sp?.dice && (sp.attack || sp.save)).map(sp => {
-      const step = sp.upgrade?.steps.filter(([lv]) => total >= lv).at(-1)?.[1];
+    // Its cantrips, and its level 1+ spells prepared or always prepared, each
+    // at its own level ("4d6 Radiant" for Guiding Bolt).
+    const names = [...new Set([...(pick?.chosen ?? []).map(sp => sp.name), ...sc.given, ...sc.always.map(sp => sp.name)])];
+    return names.map(n => book.spellFacts.get(n)).filter(sp => sp?.dice && (sp.attack || sp.save)).sort((a, b) => a.level - b.level).map(sp => {
+      const step = sp.level === 0 ? sp.upgrade?.steps.filter(([lv]) => total >= lv).at(-1)?.[1] : undefined;
+      // What an invocation chosen for it does ("its range increases by a
+      // number of feet equal to 30 times your Warlock level", Eldritch Spear;
+      // "When you hit a Large or smaller creature with that cantrip, you can
+      // push the creature up to 10 feet straight away from you", Repelling
+      // Blast).
+      const targeted = cantripTargets.filter(t => t.chosen === sp.name).map(t => features.find(f => (f.key ?? `${f.class} ${f.level} ${f.name}`) === t.key)).filter(Boolean);
+      const farther = targeted.reduce((n, f) => { const m = f.text.match(/its range increases by a number of feet equal to (\d+) times your (\w+) level/); return n + (m ? +m[1] * (known.find(k => k.class === m[2])?.level ?? 0) : 0); }, 0);
+      const onHit = targeted.map(f => f.text.match(/When you hit (.+?) with that cantrip, you can (.+?)\./)).filter(Boolean).map(m => `${f0(m[2])} on a hit (${m[1]})`);
       const roll = sp.upgrade?.kind === 'dice' && step ? step : sp.dice.dice, beams = sp.upgrade?.kind === 'beams' ? step ?? 1 : 1;
       // And an improvement chosen for it ("You can add your Charisma modifier
       // to that spell's damage rolls", Agonizing Blast).
       const improved = cantripTargets.filter(t => t.chosen === sp.name).map(t => features.find(f => (f.key ?? `${f.class} ${f.level} ${f.name}`) === t.key)?.text.match(/You can add your (\w+) modifier to that spell[’']s damage rolls/)?.[1]).filter(Boolean);
       const plus = (addOne && /^1d\d+$/.test(roll) ? mod[addOne] : 0) + improved.reduce((n, a) => n + mod[a], 0);
-      return { name: sp.name, kind: 'spell', class: sc.class, ability: sc.ability, bonus: sp.attack ? sc.attack : null, save: sp.save ? { ability: sp.save, dc: sc.dc } : null, proficient: true,
-        damage: `${roll}${signedMod(plus)} ${sp.dice.type ?? 'of the chosen type'}`, beams: beams > 1 ? beams : null, versatile: null, reach: sp.reach ?? sp.range, mastery: null };
+      const range = sp.reach ?? (sp.area ? `${sp.range}, a ${sp.area}` : sp.range), feet = range.match(/^(\d+) feet$/);
+      return { name: sp.name, kind: 'spell', class: sc.class, level: sp.level, ability: sc.ability, bonus: sp.attack ? sc.attack : null, save: sp.save ? { ability: sp.save, dc: sc.dc } : null, proficient: true,
+        damage: `${roll}${signedMod(plus)} ${sp.dice.type ?? 'of the chosen type'}`, beams: beams > 1 ? beams : null, versatile: null, reach: farther && feet ? `${+feet[1] + farther} feet` : range, mastery: null,
+        // A higher slot's effect, in the spell's own sentence.
+        riders: [...onHit, ...(sp.higher ? [`With a higher slot: ${sp.higher.replace(/\.$/, '')}`] : [])] };
     });
   });
-  // A bonus that holds only in a state, noted on the attacks it adds to,
-  // not added in: "When you make an attack using Strength—with either a
-  // weapon or an Unarmed Strike—and deal damage to the target, you gain a
-  // bonus to the damage … as shown in the Rage Damage column" (Rage).
-  const riders = features.flatMap(f => {
-    const m = f.text.match(/When you make an attack using (\w+)—with either a weapon or an Unarmed Strike—and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as an? \w+, as shown in the ([\w ]+) column/);
-    return m ? [{ ability: m[1], note: `${atLevel(f.class, m[2])} damage in ${f.name}` }] : [];
+  // Those cantrips, by the ability their source gives, and a species'
+  // own attack ("must make a Dexterity saving throw (DC 8 plus your
+  // Constitution modifier and Proficiency Bonus) … takes 1d10 damage of the
+  // type determined by your Draconic Ancestry trait … increases by 1d10 when
+  // you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10)").
+  const innateAttacks = innate.filter(x => x.ability).map(x => ({ ...x, sp: book.spellFacts.get(x.name) })).filter(x => x.sp?.dice && (x.sp.attack || x.sp.save)).map(({ name, ability, from, sp }) => {
+    const step = sp.upgrade?.steps.filter(([lv]) => total >= lv).at(-1)?.[1], roll = sp.upgrade?.kind === 'dice' && step ? step : sp.dice.dice;
+    return { name, kind: 'spell', class: from, ability, bonus: sp.attack ? mod[ability] + bonus : null, save: sp.save ? { ability: sp.save, dc: book.attacks.spell_save_dc_base + mod[ability] + bonus } : null, proficient: true,
+      damage: `${roll} ${sp.dice.type ?? 'of the chosen type'}`, beams: sp.upgrade?.kind === 'beams' && step > 1 ? step : null, versatile: null, reach: sp.reach ?? sp.range, mastery: null };
   });
-  const attacks = [...carriedWeapons.map(strike), strike(UNARMED), ...ownAttacks, ...spellAttacks]
-    .map(a => ({ ...a, riders: a.kind === 'spell' ? [] : riders.filter(r => r.ability === a.ability).map(r => r.note) }));
+  const breaths = (species?.traits ?? []).flatMap(t => {
+    const m = t.text.match(/(\d+)-foot Cone or a (\d+)-foot Line[^.]*\. Each creature in that area must make a (\w+) saving throw \(DC (\d+) plus your (\w+) modifier and Proficiency Bonus\)\. On a failed save, a creature takes (\d+d\d+) damage of the type determined by your .+? trait\..*?This damage increases by \d+d\d+ when you reach character levels (\d+) \((\d+d\d+)\), (\d+) \((\d+d\d+)\), and (\d+) \((\d+d\d+)\)/);
+    if (!m) return [];
+    const roll = [[+m[7], m[8]], [+m[9], m[10]], [+m[11], m[12]]].filter(([lv]) => total >= lv).at(-1)?.[1] ?? m[6];
+    return [{ name: t.name, kind: 'trait', class: species.name, ability: m[5], bonus: null, save: { ability: m[3], dc: +m[4] + mod[m[5]] + bonus }, proficient: true,
+      damage: `${roll} ${optionRow?.['Damage Type'] ?? 'of your ancestry'}`, beams: null, versatile: null, reach: `${m[1]}-foot Cone or ${m[2]}-foot Line`, mastery: null }];
+  });
+  const attacks = [...carriedWeapons.map(strike), strike(UNARMED), ...ownAttacks, ...spellAttacks, ...innateAttacks, ...breaths]
+    .map(a => ({ ...a, riders: [...(a.riders ?? []), ...riders.filter(r => r.any && a.bonus !== null && a.bonus !== undefined).map(r => r.note)] }));
   // The Monster's card, for one who carries it, as Monster Form writes it:
   // the scores it swaps ("Your Strength and Intelligence scores swap, and
   // your Dexterity and Wisdom scores swap"), and with them the Armor Class
@@ -1801,9 +1913,6 @@ export function character(book, state) {
       resistance: r.growth.find(g => /Resistance to/.test(g))?.match(/Resistance to (.+?) damage/)?.[1] ?? null,
     };
   }
-  const options = speciesOptions(species);
-  if (options && !options.names.includes(state.option)) fail('option', `Choose your ${options.label}.`);
-  const optionRow = species && Object.values(species.tables ?? {}).flat().find(r => Object.values(r)[0] === state.option);
   const faster = Object.values(optionRow ?? {}).join(' ').match(/Your Speed increases to (\d+) feet/)?.[1];
   // And what features add ("Your speed increases by 10 feet while you
   // aren't wearing Heavy armor", Fast Movement; "…, and your Speed increases
@@ -1939,7 +2048,7 @@ export function character(book, state) {
     classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null,
       columns: Object.entries(c.rules.table.rows[c.level - 1]).filter(([k]) => ![c.rules.table.columns[0], 'Proficiency Bonus', 'Class Features', 'Cantrips', c.rules.spellsColumn, ...c.rules.slotLevels.map(String), ...(c.rules.pact ? ['Spell Slots', 'Slot Level'] : [])].includes(k)).map(([name, value]) => ({ name, value })) })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
-    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, packageChoices: packageChoices.map(({ kit, ...c }) => c), languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
+    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, abilityChoices, packageChoices: packageChoices.map(({ kit, ...c }) => c), languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hpMethod: rolled ? 'Rolled' : 'Fixed', hpRolls, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
     load, attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
     features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,

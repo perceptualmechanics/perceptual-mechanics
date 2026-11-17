@@ -116,6 +116,7 @@ export async function initBuilder(panel) {
   const spellSetBox = h('div', { class: 'b-picks' });
   const kindBox = h('div', { class: 'b-picks' });
   const packageBox = h('div', { class: 'b-picks' });
+  const abilityBox = h('div', { class: 'b-picks' });
   const saveBox = h('div', { class: 'b-picks' });
   const weaponBox = h('div', { class: 'b-picks' });
   const targetBox = h('div', { class: 'b-picks' });
@@ -156,7 +157,7 @@ export async function initBuilder(panel) {
     section('Class', h('p', { class: 'b-note' }, 'The first is the class you began in. Its levels and the others’ make your character level.'), classList, addClass, problemSlot('classes'),
       book.unfinished.length ? h('p', { class: 'b-note' }, `${listed(book.unfinished.map((n, i) => `${i ? 'the' : 'The'} ${n}`))} ${book.unfinished.length === 1 ? 'is' : 'are'} still being written, and join${book.unfinished.length === 1 ? 's' : ''} the builder when finished.`) : null),
     optionSection,
-    section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, speciesTraits),
+    section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, abilityBox, speciesTraits),
     section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
       h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink,
       h('label', { class: 'b-field' }, h('span', {}, 'Buying in'), marketSelect),
@@ -437,6 +438,10 @@ export async function initBuilder(panel) {
       h('input', { type: 'number', min: 1, max: r.die, step: 1, value: r.roll ?? '', 'aria-describedby': idFor(`hp:${r.key}`),
         onchange: e => set(s => { s.hp = { ...s.hp, rolls: { ...s.hp?.rolls, [r.key]: e.target.value === '' ? undefined : Number(e.target.value) } }; }) }),
       problemSlot(`hp:${r.key}`))));
+  }
+  function renderAbilities(result) {
+    if (!fresh(abilityBox, JSON.stringify(result.abilityChoices))) return;
+    rebuild(abilityBox, ...result.abilityChoices.map(c => oneOf(c, 'ability', 'spellAbilities', `${c.label}: your spellcasting ability`)));
   }
   function renderPackages(result) {
     if (!fresh(packageBox, JSON.stringify(result.packageChoices))) return;
@@ -875,8 +880,8 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Attacks'), h('dd', {}, `${result.attacksPerAction} when you take the Attack action`),
           result.masteryChoices.some(c => c.chosen.length) ? [h('dt', {}, 'Weapon Mastery'), h('dd', {}, result.masteryChoices.flatMap(c => c.chosen).map(w => `${w.name} (${w.mastery})`).join(', '))] : null),
         // The attacks the sheet's numbers give: each weapon carried, the
-        // Unarmed Strike, a feature's own, and each cantrip that attacks or
-        // forces a save.
+        // Unarmed Strike, a feature's own or a species', and each spell known
+        // or prepared that attacks or forces a save.
         h('table', { class: 'sheet-attacks' }, h('caption', {}, 'Attacks'),
           h('thead', {}, h('tr', {}, ['Attack', 'To hit or save', 'Damage', 'Range', 'Notes'].map(t => h('th', { scope: 'col' }, t)))),
           h('tbody', {}, result.attacks.map(a => h('tr', {},
@@ -884,7 +889,7 @@ export async function initBuilder(panel) {
             h('td', {}, a.save ? `DC ${known(a.save.dc)} ${a.save.ability}` : signed(a.bonus)),
             h('td', {}, `${a.damage}${a.beams ? `, ${a.beams} beams` : ''}${a.versatile ? `; two-handed ${a.versatile}` : ''}`),
             h('td', {}, a.reach),
-            h('td', {}, [a.mastery && `Mastery: ${a.mastery}`, ...a.riders, !a.proficient && 'not proficient', a.kind === 'spell' && `${a.class} cantrip`].filter(Boolean).join('; ') || '—')))))),
+            h('td', {}, [a.disadvantage && `Disadvantage: ${a.disadvantage}`, a.mastery && `Mastery: ${a.mastery}`, ...a.riders, !a.proficient && 'not proficient', a.kind === 'spell' && (a.level ? `level ${a.level} ${a.class} spell` : `${a.class} cantrip`)].filter(Boolean).join('; ') || '—')))))),
       // The gear the builder sets the character up with: the kits, what its
       // features hand it, the armour it chose, the money left, and the magic
       // items for its level.
@@ -978,6 +983,7 @@ export async function initBuilder(panel) {
     renderNotes(result);
     renderKinds(result);
     renderPackages(result);
+    renderAbilities(result);
     renderRolls(result);
     renderSaves(result);
     renderWeapons(result);
