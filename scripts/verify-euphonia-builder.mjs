@@ -577,6 +577,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     if (!thrice?.problems.some(p => p.field === 'option:Courtier:2' && /twice/.test(p.message))) fail('a Courtier takes A Secret three times');
     if (!(casting?.prepared === 2 && casting.verb === 'prepared' && casting.cantrips === 2 && casting.given.map(s => s.name).join() === 'Prestidigitation,Mending,Message' && casting.list.some(sp => sp.name === 'Vicious Mockery'))) fail(`the Courtier's spells read ${JSON.stringify(casting && { prepared: casting.prepared, verb: casting.verb, cantrips: casting.cantrips, given: casting.given.map(s => s.name) })}`);
     if (!(every?.count === 2 && every.from.join() === 'Deception,Insight,Intimidation,Persuasion')) fail('Every Table doesn\'t ask two of its four skills');
+    if (!arms?.proficientWeapons.some(w => w.name === 'Longbow')) fail('Horse and Bow gives no proficiency with Longbows');
   }
   const fighter = (lv, styles) => run(someone([{ class: 'Fighter', level: lv, subclass: lv >= 3 ? 'Champion' : '' }], { styles, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'] }, improvements: Object.fromEntries([4, 6].filter(x => x <= lv).map(x => [`Fighter ${x}`, { feat: 'Ability Score Improvement', increases: { Strength: 1, Constitution: 1 } }])) }), 'Fighting Style');
   const champion = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Defense' });
@@ -584,6 +585,24 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const defended = fighter(1, { 'Fighter 1 Fighting Style': 'Defense' });
   if (!(champion?.problems.length === 0 && champion.armorClass.ac === 17 + 1 && same?.problems.some(p => /already yours/.test(p.message)) && defended?.armorClass.ac === 16 + 1 && defended.unarmored[0].ac === 10 + defended.mod.Dexterity))
     fail(`Fighting Style: the Champion's second, Defense's +1 in armour and not out of it: ${JSON.stringify([champion?.problems, champion?.armorClass, defended?.armorClass, defended?.unarmored])}`);
+
+  // What a feature gives a character to fight and work with, from its
+  // sentences: the Lionskin's suit, worn without the kit's Shield; the
+  // Chirurgeon's training and the weapons it names; and what a feature hands
+  // over to carry (the Arc Gun, the Mapmaker's map).
+  const featureText = (cls, sub, name) => euphonia.data.find(c => c.name === cls)?.subclasses.find(s => s.name === sub)?.features.find(f => f.name === name)?.text ?? '';
+  const lionskin = run(someone([{ class: 'Mhizha', level: 3, subclass: 'Lionskin' }]), 'Lionskin 3');
+  const suitAc = +featureText('Mhizha', 'Lionskin', 'Powered Suit').match(/base Armor Class of (\d+)/)?.[1];
+  if (!(suitAc && lionskin?.armor?.name === 'Powered Suit' && lionskin.armor.madeFrom === 'Scale Mail' && !lionskin.shield && lionskin.armorClass.ac === suitAc && lionskin.training.includes('Heavy') && lionskin.stealthDisadvantage))
+    fail(`a Lionskin wears ${JSON.stringify(lionskin && { armor: lionskin.armor?.name, madeFrom: lionskin.armor?.madeFrom, shield: lionskin.shield, ac: lionskin.armorClass, training: lionskin.training })}, not its suit at ${suitAc} without a Shield`);
+  const chirurgeon = run(someone([{ class: 'Physician', level: 3, subclass: 'Chirurgeon' }]), 'Chirurgeon 3');
+  const theatre = featureText('Physician', 'Chirurgeon', 'Theatre Training').match(/following Martial weapons: (.+?)\./)?.[1].replace(/\bthe /g, '').split(/,(?: and)? /) ?? [];
+  const missing = theatre.filter(n => !chirurgeon?.proficientWeapons.some(w => w.name === n));
+  if (!theatre.length || missing.length || !['Medium', 'Shield'].every(t => chirurgeon?.training.includes(t)))
+    fail(`a Chirurgeon's Theatre Training: training ${chirurgeon?.training.join(', ')}; ${theatre.length ? `not proficient with ${missing.join(', ') || 'nothing missing'}` : 'its weapons aren\'t read'}`);
+  const carried = (lv, sub) => run(someone([{ class: 'Mhizha', level: lv, subclass: sub }]), `Mhizha ${lv} ${sub}`)?.equipment.carried?.map(x => x.name).join() ?? null;
+  const CARRIED = [[1, '', 'Arc Gun'], [3, 'Mapmaker', 'Arc Gun,The Map'], [3, 'Gunner', 'Arc Gun']];
+  for (const [lv, sub, want] of CARRIED) if (carried(lv, sub) !== want) fail(`a Mhizha ${lv}${sub ? ` ${sub}` : ''} carries ${carried(lv, sub)}, not ${want}`);
 
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');

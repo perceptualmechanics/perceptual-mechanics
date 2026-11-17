@@ -845,13 +845,15 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
           h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception)),
           result.masteryChoices.some(c => c.chosen.length) ? [h('dt', {}, 'Weapon Mastery'), h('dd', {}, result.masteryChoices.flatMap(c => c.chosen).map(w => `${w.name} (${w.mastery})`).join(', '))] : null)),
-      // The gear the builder sets the character up with: the kits, the armour
-      // it chose, the money left, and the magic items for its level.
+      // The gear the builder sets the character up with: the kits, what its
+      // features hand it, the armour it chose, the money left, and the magic
+      // items for its level.
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-equipment' },
         h('h3', { id: 'sheet-equipment' }, 'Equipment'),
         h('dl', { class: 'sheet-facts' },
-          h('dt', {}, 'Armor'), h('dd', {}, `${result.armor?.name ?? 'None'}${result.shield ? ' and a Shield' : ''}${gear.bought ? `, the armor bought for ${gear.bought.cost.toLocaleString('en')} GP` : ''}`),
+          h('dt', {}, 'Armor'), h('dd', {}, `${result.armor?.name ?? 'None'}${result.armor?.madeFrom ? `, made from ${result.armor.madeFrom}` : ''}${result.shield ? ' and a Shield' : ''}${gear.bought ? `, the armor bought for ${gear.bought.cost.toLocaleString('en')} GP` : ''}`),
           h('dt', {}, 'Training'), h('dd', {}, result.training.length ? listed(result.training.map(t => (t === 'Shield' ? 'Shields' : `${t} armor`))) : 'None'),
+          gear.carried.length ? [h('dt', {}, 'From your features'), h('dd', {}, gear.carried.map(x => `${x.name} (${x.from})`).join(', '))] : null,
           gear.kits.map(k => [h('dt', {}, `${k.from}’s kit`), h('dd', {}, k.items.join(', ') || 'Nothing but the coin')]),
           h('dt', {}, 'Money'), h('dd', {}, `${gear.gold.toLocaleString('en')} GP${gear.levelGold ? `, with the ${gear.levelGold.toLocaleString('en')} GP a character starting at level ${result.level} has; roll ${gear.roll} more` : ''}`)),
         gear.magicItems.length ? [h('h4', {}, 'Magic items'),

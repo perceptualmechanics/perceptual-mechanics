@@ -1355,8 +1355,13 @@ export function character(book, state) {
     }
     return rules;
   };
+  // A feature's weapons by name: "proficiency with Longbows" (Horse and
+  // Bow), "with the following Martial weapons: the Battleaxe, Glaive, …"
+  // (the Chirurgeon's).
+  const namedIn = text => [...text.matchAll(/proficiency with ([^.;]+)/g)].flatMap(m => (book.weapons ?? [])
+    .filter(w => new RegExp(`\\b${w.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?\\b`).test(m[1])).map(w => x => x.name === w.name));
   const proficientWith = [...(first ? weaponRules(first.traits.find(t => t.trait === 'Weapon Proficiencies')?.value ?? '') : []),
-    ...known.slice(1).flatMap(c => weaponRules(c.rules.multiclass.gains)), ...features.flatMap(f => weaponRules(f.text.match(/proficiency with Martial weapons/)?.[0] ?? ''))];
+    ...known.slice(1).flatMap(c => weaponRules(c.rules.multiclass.gains)), ...features.flatMap(f => [...weaponRules(f.text.match(/proficiency with Martial weapons/)?.[0] ?? ''), ...namedIn(f.text)])];
   // And one weapon of the player's choice ("proficiency with one Martial
   // weapon of your choice", the Courtier's Second Weapon).
   const weaponChoices = [];
@@ -1449,8 +1454,10 @@ export function character(book, state) {
   const trainedIn = text => [...new Set([...(text.match(/\b(Light|Medium|Heavy)\b/g) ?? []), ...(/\bShields?\b/.test(text) ? ['Shield'] : [])])];
   const training = [...new Set([...(first ? trainedIn(first.traits.find(t => t.trait === 'Armor Training')?.value ?? '') : []),
     ...known.slice(1).flatMap(c => trainedIn(c.rules.multiclass.gains.match(/training with (.+)$/)?.[1] ?? '')),
-    // A feature's own ("training with Heavy armor", the Protector's).
-    ...features.flatMap(f => trainedIn(f.text.match(/training with (\w+) armor/)?.[1] ?? ''))])];
+    // A feature's own, the whole clause ("training with Medium armor and
+    // Shields", the Chirurgeon's) or the other order ("You gain Heavy armor
+    // training", the Lionskin's).
+    ...features.flatMap(f => [...f.text.matchAll(/training with ([^,.;]*(?:armor|Shields?)\b)|\b((?:Light|Medium|Heavy) armor) training\b/g)].flatMap(m => trainedIn(m[1] ?? m[2])))])];
   // The Armor Class a body armour and a Shield give (either may be none),
   // by the modifiers it's worked from: the character's, or a form's that
   // swaps scores (the Monster's card). Without armour, each feature's own
@@ -1496,8 +1503,21 @@ export function character(book, state) {
   const kitShield = items.map(armorNamed).find(a => a?.category === 'Shield' && training.includes('Shield'));
   const owned = items.map(armorNamed).filter(a => a && wearable(a));
   const wears = [[null, 0], ...owned.map(a => [a, 0]), ...book.armor.items.filter(a => wearable(a) && a.cost <= money && !owned.includes(a)).map(a => [a, a.cost])];
+  // A suit a feature makes of the armour worn (the Lionskin's Powered Suit):
+  // armour of its own category and base Armor Class, its Dexterity, Strength
+  // and Stealth as the sentence gives them, worn without a Shield. The
+  // subclass is built on it (its other features work only in the suit), so
+  // the builder wears it, made from the armour that costs least to have.
+  const suitOf = features.map(f => {
+    const m = f.text.match(/make any armor you wear into your suit\. Whatever it was made from, the suit is (Light|Medium|Heavy) armor with a base Armor Class of (\d+)( \(your Dexterity doesn't add to it\))?/);
+    if (!m) return null;
+    reads(f);
+    const [from, spent] = wears.filter(([a]) => a).sort((x, y) => x[1] - y[1])[0] ?? [];
+    return from && { worn: { name: f.name, madeFrom: from.name, category: m[1], base: +m[2], dex: !m[3], strength: /no Strength requirement/.test(f.text) ? null : from.strength, stealth_disadvantage: /Disadvantage on Dexterity \(Stealth\) checks while you wear it/.test(f.text) }, spent };
+  }).find(Boolean);
   let gear = null;
-  for (const shield of kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of wears) {
+  if (suitOf) gear = { spent: suitOf.spent, worn: suitOf.worn, shield: null };
+  else for (const shield of kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of wears) {
     const ac = acOf(mod, worn, shield).ac.ac, quiet = !worn?.stealth_disadvantage;
     if (!gear || ac > gear.ac || (ac === gear.ac && (quiet > gear.quiet || (quiet === gear.quiet && spent < gear.spent)))) gear = { ac, quiet, spent, worn, shield };
   }
@@ -1560,7 +1580,11 @@ export function character(book, state) {
     ...book.items.filter(i => !i.magical && (!i.place.class_name || has(i.place.class_name))).flatMap(i => (i.pieces.length ? i.pieces.map(p => ({ name: p.name, of: i.name, home: i.from.includes(homeland), ...priced(i, p.cost) })) : [{ name: i.name, of: null, home: i.from.includes(homeland), ...priced(i, i.cost) }])),
     ...book.periodWeapons.filter(w => w.counts_as.some(n => proficientWeapons.some(p => p.name === n))).map(w => ({ name: w.name, cost: w.cost, of: null, note: null, home: false, countsAs: w.counts_as })),
   ].filter(affordable).toSorted((a, b) => b.home - a.home);
-  const equipment = { buying: { place: market, places, chosen: places.includes(state.market) }, kits: kits.map(k => ({ from: k.from, items: k.items })), bought: gear.spent ? { name: worn.name, cost: gear.spent } : null, gold: left, levelGold: higher?.gold ?? 0, roll: higher?.roll ?? null, magicItems, forSale };
+  // What a feature hands the character with it ("You carry a weapon of your
+  // own design", the Arc Gun; "You carry a map that draws itself"), named as
+  // the feature is.
+  const carried = features.filter(f => /(?:^|\.\s+)You carry an? /.test(f.text)).map(f => ({ name: f.name, from: `${f.subclass ?? f.class} ${f.level}` }));
+  const equipment = { carried, buying: { place: market, places, chosen: places.includes(state.market) }, kits: kits.map(k => ({ from: k.from, items: k.items })), bought: gear.spent ? { name: worn.madeFrom ?? worn.name, cost: gear.spent } : null, gold: left, levelGold: higher?.gold ?? 0, roll: higher?.roll ?? null, magicItems, forSale };
   // The Monster's card, for one who carries it, as Monster Form writes it:
   // the scores it swaps ("Your Strength and Intelligence scores swap, and
   // your Dexterity and Wisdom scores swap"), and with them the Armor Class
