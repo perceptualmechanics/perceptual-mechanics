@@ -509,6 +509,14 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 /* Problems tuck under the field they're about; under a button they stand clear of it. */
 .b-button + .b-problem { margin-top: 0.6rem; }
 .b-check { display: block; margin: 0 0 0.7rem; }
+/* The gear carried, each with its Remove; what to buy or add under it. */
+.b-gear-list { list-style: none; margin: 0 0 0.7rem; padding: 0; }
+.b-gear-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.2rem 0.8rem; padding: 0.2rem 0; border-bottom: 1px solid var(--rule-faint); }
+.b-gear-add { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0 0 0.7rem; }
+.b-gear-add select { flex: 1 1 14rem; min-width: 0; }
+.b-gear-add input { width: 4.5rem; }
+.b-link { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.b-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .b-notes { margin: 0 0 0.7rem; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.85rem; }
 .b-notes:empty { display: none; }
 .b-spell-choice { border: 1px solid var(--frame-edge); margin: 0 0 0.8rem; padding: 0.5rem 0.8rem 0.4rem; min-width: 0; }

@@ -810,6 +810,26 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     && doctor17.spellcasting[0].dc === srd.attacks.spell_save_dc_base + doctor17.mod.Intelligence + doctor17.bonus + 2))
     fail(`the Doctor's Coat at ${last}: ${JSON.stringify({ gear: gearNames(doctor17), ac: doctor17?.armorClass, dc: doctor17?.spellcasting[0].dc })}`);
 
+  // The inventory as a tracker: a kit's item taken out goes from the attacks
+  // and the weight; one bought costs the SRD's price and is an attack; a
+  // bundle of ammunition counts up ("40 Arrows"); spending more than there
+  // is asks for less; the armor worn as told, and none it doesn't own; a
+  // magic item given acts on the sheet, and a table's item taken out goes.
+  const tracked = inventory => run(someone([{ class: 'Fighter', level: 1 }], { inventory }), 'Fighter 1 tracked');
+  const plain1 = tracked({}), swap = tracked({ remove: ['Greatsword'], add: [{ name: 'Longsword', how: 'bought' }, { name: 'Arrows', count: 2, how: 'bought' }] });
+  const priceOf = n => srd.weapons.find(w => w.name === n)?.cost ?? srd.ammunition.find(x => x.name === n)?.cost;
+  if (!(swap && !hitOf(swap, 'Greatsword') && hitOf(swap, 'Longsword') && swap.equipment.gold === plain1.equipment.gold - priceOf('Longsword') - 2 * priceOf('Arrows')
+    && swap.load.items === plain1.load.items - srd.weapons.find(w => w.name === 'Greatsword').weight + srd.weapons.find(w => w.name === 'Longsword').weight + 2 * srd.ammunition.find(x => x.name === 'Arrows').weight
+    && swap.inventory?.goods.some(g => g.item === `${2 * srd.ammunition.find(x => x.name === 'Arrows').amount} Arrows`)))
+    fail(`the tracker: ${JSON.stringify({ gold: [plain1?.equipment.gold, swap?.equipment.gold], load: [plain1?.load.items, swap?.load.items], goods: swap?.inventory?.goods })}`);
+  if (!tracked({ add: [{ name: 'Plate Armor', how: 'bought' }] })?.problems.some(p => p.field === 'inventory')) fail('buying more than the money is never asked about');
+  const bareFighter = tracked({ wear: 'none' }), noSuch = tracked({ wear: 'Plate Armor' });
+  if (!(bareFighter?.armor === null && noSuch?.problems.some(p => p.field === 'wear'))) fail(`the armor worn as told: ${bareFighter?.armor?.name}, ${JSON.stringify(noSuch?.problems.filter(p => p.field === 'wear'))}`);
+  const givenCoat = run(someone([{ class: 'Physician', level: 5, subclass: 'Doctor' }], { inventory: { add: [{ name: "Doctor's Coat", how: 'given' }] } }), 'Physician 5, given the coat');
+  if (!(givenCoat?.equipment.magicItems.some(m => m.given && m.item.name === "Doctor's Coat") && givenCoat.armorClass.ac === 15 + givenCoat.mod.Dexterity)) fail(`a coat given: ${JSON.stringify(givenCoat?.armorClass)}`);
+  const tableItem = champion11?.equipment.magicItems.find(m => m.item)?.item.name;
+  if (run(someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }], { inventory: { remove: [tableItem] } }), 'Fighter 11 without')?.equipment.magicItems.some(m => m.item?.name === tableItem)) fail(`${tableItem}, taken out, is still given`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

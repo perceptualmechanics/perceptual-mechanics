@@ -694,6 +694,19 @@ const pounds = (text, where) => {
   if (!m || !(m[1] || m[2] || m[3])) throw new Error(`${where}: a weight the exporter doesn't read: "${text}"`);
   return m[3] ? m[3] / m[4] : +(m[1] ?? '0').replace(/,/g, '') + (FRACTIONS[m[2]] ?? 0);
 };
+// A price in gold pieces by the Coin Values table ("2 SP" is 0.2 GP, "5
+// CP" 0.05); a dash or "Varies" no one price (null).
+let coinValues = null;
+const priced = (text, where) => {
+  coinValues ??= Object.fromEntries(titledTable('Coin Values', ['Coin', 'Value in GP']).map(r => {
+    const [n, d = 1] = r['Value in GP'].split('/').map(Number);
+    return [r.Coin.match(/\((\w+)\)$/)[1], n / d];
+  }));
+  if (text === '—' || text === 'Varies') return null;
+  const m = text.match(/^([\d,]+) (\w+)$/);
+  if (!m || !(m[2].toUpperCase() in coinValues)) throw new Error(`${where}: a price the exporter doesn't read: "${text}"`);
+  return Math.round(+m[1].replace(/,/g, '') * coinValues[m[2].toUpperCase()] * 100) / 100;
+};
 function armor() {
   const t = lines.findIndex((l, k) => l.kind === 'title' && l.text === 'Armor' && lines[k + 1]?.kind === 'table');
   if (t < 0) throw new Error('the SRD has no Armor table');
@@ -724,7 +737,7 @@ function weapons() {
   return table(titled(t), ['Name', 'Damage', 'Properties', 'Mastery', 'Weight', 'Cost']).map(r => {
     const group = r.group?.match(/^(Simple|Martial) (Melee|Ranged) Weapons$/);
     if (!group) throw new Error(`weapon "${r.Name}" under no category ("${r.group}")`);
-    return { name: r.Name, category: group[1], range: group[2], damage: r.Damage, properties: r.Properties === '—' ? [] : r.Properties.split(/,\s*(?![^(]*\))/), mastery: r.Mastery, weight: pounds(r.Weight, `weapon "${r.Name}"`) };
+    return { name: r.Name, category: group[1], range: group[2], damage: r.Damage, properties: r.Properties === '—' ? [] : r.Properties.split(/,\s*(?![^(]*\))/), mastery: r.Mastery, weight: pounds(r.Weight, `weapon "${r.Name}"`), cost: priced(r.Cost, `weapon "${r.Name}"`) };
   });
 }
 
@@ -739,7 +752,7 @@ function tools() {
     if (from < 0) throw new Error(`the SRD has no ${title}`);
     const to = lines.findIndex((l, k) => k > from && l.kind === 'section');
     for (let i = from + 1; i < to; i++) {
-      const head = lines[i].kind === 'item' && lines[i].text.match(/^(.+?) \((?:[\d,]+ [GSC]P|Varies)\)$/);
+      const head = lines[i].kind === 'item' && lines[i].text.match(/^(.+?) \(([\d,]+ [GSC]P|Varies)\)$/);
       if (!head) continue;
       const end = lines.findIndex((l, k) => k > i && l.kind !== 'table');
       // A word broken across a line ("dul-", "cimer") is the typesetter's,
@@ -748,9 +761,12 @@ function tools() {
       const entry = label => text.match(new RegExp(`${label}: (.+?)(?= (?:Weight|Utilize|Craft|Variants):|$)`))?.[1].trim() ?? null;
       const ability = entry('Ability');
       if (!ability) throw new Error(`the tool "${head[1]}" has no Ability`);
-      const variants = entry('Variants')?.split(/,\s*(?![^(]*\))/).map(v => v.replace(/ \(.*\)$/, '').replace(/^\w/, c => c.toUpperCase()));
+      const listed = entry('Variants')?.split(/,\s*(?![^(]*\))/) ?? null;
+      const variants = listed?.map(v => v.replace(/ \(.*\)$/, '').replace(/^\w/, c => c.toUpperCase()));
+      // Each variant's own price and weight ("Bagpipes (30 GP, 6 lb.)").
+      const variantGoods = listed?.map((v, k) => { const m = v.match(/\(([\d,]+ [GSC]P)(?:, (.+? lb\.))?\)$/); return { name: variants[k], cost: m ? priced(m[1], `the tool variant "${v}"`) : null, weight: m?.[2] ? pounds(m[2], `the tool variant "${v}"`) : null }; });
       const weight = entry('Weight');
-      out.push({ name: head[1], category, ability, weight: weight ? pounds(weight, `the tool "${head[1]}"`) : null, utilize: entry('Utilize'), craft: entry('Craft'), ...(variants ? { variants } : {}) });
+      out.push({ name: head[1], category, ability, cost: priced(head[2], `the tool "${head[1]}"`), weight: weight ? pounds(weight, `the tool "${head[1]}"`) : null, utilize: entry('Utilize'), craft: entry('Craft'), ...(variants ? { variants, variant_goods: variantGoods } : {}) });
     }
   }
   return out;
@@ -1010,14 +1026,14 @@ const data = {
   // What things weigh, and what a character can carry: the Adventuring Gear
   // and Ammunition tables, and the Carrying Capacity table's multiples of the
   // Strength score by size ("Small/Medium | Str. × 15 lb.").
-  gear: titledTable('Adventuring Gear', ['Item', 'Weight', 'Cost']).map(r => ({ name: r.Item, weight: pounds(r.Weight, `gear "${r.Item}"`) })),
+  gear: titledTable('Adventuring Gear', ['Item', 'Weight', 'Cost']).map(r => ({ name: r.Item, weight: pounds(r.Weight, `gear "${r.Item}"`), cost: priced(r.Cost, `gear "${r.Item}"`) })),
   // A focus or symbol's forms, each its own weight ("Arcane Focus (crystal)").
   forms: Object.fromEntries([['Arcane Focus', 'Arcane Focuses', 'Focus'], ['Holy Symbol', 'Holy Symbols', 'Symbol'], ['Druidic Focus', 'Druidic Focuses', 'Focus']].map(([item, title, column]) =>
-    [item, titledTable(title, [column, 'Weight', 'Cost']).map(r => ({ name: r[column].replace(/ \(.*\)$/, ''), also: r[column].match(/\(also an? (.+?)\)$/)?.[1] ?? null, weight: pounds(r.Weight, `${item} "${r[column]}"`) }))])),
+    [item, titledTable(title, [column, 'Weight', 'Cost']).map(r => ({ name: r[column].replace(/ \(.*\)$/, ''), also: r[column].match(/\(also an? (.+?)\)$/)?.[1] ?? null, weight: pounds(r.Weight, `${item} "${r[column]}"`), cost: priced(r.Cost, `${item} "${r[column]}"`) }))])),
   // How many magic items one can be attuned to ("no more than three").
   attunement_max: wordNumber(wholeText().match(/You can be attuned to no more than (\w+) magic items at a time\./)?.[1] ?? 'none'),
   coins_per_pound: wordNumber(wholeText().match(/so (\w+) coins weigh a pound/)?.[1] ?? 'none'),
-  ammunition: titledTable('Ammunition', ['Type', 'Amount', 'Storage', 'Weight', 'Cost']).map(r => ({ name: r.Type, amount: +r.Amount, storage: r.Storage, weight: pounds(r.Weight, `ammunition "${r.Type}"`) })),
+  ammunition: titledTable('Ammunition', ['Type', 'Amount', 'Storage', 'Weight', 'Cost']).map(r => ({ name: r.Type, amount: +r.Amount, storage: r.Storage, weight: pounds(r.Weight, `ammunition "${r.Type}"`), cost: priced(r.Cost, `ammunition "${r.Type}"`) })),
   // What carrying more than the most means ("your Speed can be no more than
   // 5 feet").
   overloaded: wholeText().match(/While dragging, lifting, or pushing weight in ex?cess of the maximum weight you can carry, your Speed can be no more than (\d+) feet\./)?.[0] ?? (() => { throw new Error('the Carrying Capacity rule didn\'t read'); })(),

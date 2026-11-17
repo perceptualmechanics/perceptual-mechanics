@@ -17847,7 +17847,8 @@
     "Light"
    ],
    "mastery": "Slow",
-   "weight": 2
+   "weight": 2,
+   "cost": 0.1
   },
   {
    "name": "Dagger",
@@ -17860,7 +17861,8 @@
     "Thrown (Range 20/60)"
    ],
    "mastery": "Nick",
-   "weight": 1
+   "weight": 1,
+   "cost": 2
   },
   {
    "name": "Greatclub",
@@ -17871,7 +17873,8 @@
     "Two-Handed"
    ],
    "mastery": "Push",
-   "weight": 10
+   "weight": 10,
+   "cost": 0.2
   },
   {
    "name": "Handaxe",
@@ -17883,7 +17886,8 @@
     "Thrown (Range 20/60)"
    ],
    "mastery": "Vex",
-   "weight": 2
+   "weight": 2,
+   "cost": 5
   },
   {
    "name": "Javelin",
@@ -17894,7 +17898,8 @@
     "Thrown (Range 30/120)"
    ],
    "mastery": "Slow",
-   "weight": 2
+   "weight": 2,
+   "cost": 0.5
   },
   {
    "name": "Light Hammer",
@@ -17906,7 +17911,8 @@
     "Thrown (Range 20/60)"
    ],
    "mastery": "Nick",
-   "weight": 2
+   "weight": 2,
+   "cost": 2
   },
   {
    "name": "Mace",
@@ -17915,7 +17921,8 @@
    "damage": "1d6 Bludgeoning",
    "properties": [],
    "mastery": "Sap",
-   "weight": 4
+   "weight": 4,
+   "cost": 5
   },
   {
    "name": "Quarterstaff",
@@ -17926,7 +17933,8 @@
     "Versatile (1d8)"
    ],
    "mastery": "Topple",
-   "weight": 4
+   "weight": 4,
+   "cost": 0.2
   },
   {
    "name": "Sickle",
@@ -17937,7 +17945,8 @@
     "Light"
    ],
    "mastery": "Nick",
-   "weight": 2
+   "weight": 2,
+   "cost": 1
   },
   {
    "name": "Spear",
@@ -17949,7 +17958,8 @@
     "Versatile (1d8)"
    ],
    "mastery": "Sap",
-   "weight": 3
+   "weight": 3,
+   "cost": 1
   },
   {
    "name": "Dart",
@@ -17961,7 +17971,8 @@
     "Thrown (Range 20/60)"
    ],
    "mastery": "Vex",
-   "weight": 0.25
+   "weight": 0.25,
+   "cost": 0.05
   },
   {
    "name": "Light Crossbow",
@@ -17974,7 +17985,8 @@
     "Two-Handed"
    ],
    "mastery": "Slow",
-   "weight": 5
+   "weight": 5,
+   "cost": 25
   },
   {
    "name": "Shortbow",
@@ -17986,7 +17998,8 @@
     "Two-Handed"
    ],
    "mastery": "Vex",
-   "weight": 2
+   "weight": 2,
+   "cost": 25
   },
   {
    "name": "Sling",
@@ -17997,7 +18010,8 @@
     "Ammunition (Range 30/120; Bullet)"
    ],
    "mastery": "Slow",
-   "weight": 0
+   "weight": 0,
+   "cost": 0.1
   },
   {
    "name": "Battleaxe",
@@ -18008,7 +18022,8 @@
     "Versatile (1d10)"
    ],
    "mastery": "Topple",
-   "weight": 4
+   "weight": 4,
+   "cost": 10
   },
   {
    "name": "Flail",
@@ -18017,7 +18032,8 @@
    "damage": "1d8 Bludgeoning",
    "properties": [],
    "mastery": "Sap",
-   "weight": 2
+   "weight": 2,
+   "cost": 10
   },
   {
    "name": "Glaive",
@@ -18030,7 +18046,8 @@
     "Two-Handed"
    ],
    "mastery": "Graze",
-   "weight": 6
+   "weight": 6,
+   "cost": 20
   },
   {
    "name": "Greataxe",
@@ -18042,7 +18059,8 @@
     "Two-Handed"
    ],
    "mastery": "Cleave",
-   "weight": 7
+   "weight": 7,
+   "cost": 30
   },
   {
    "name": "Greatsword",
@@ -18054,7 +18072,8 @@
     "Two-Handed"
    ],
    "mastery": "Graze",
-   "weight": 6
+   "weight": 6,
+   "cost": 50
   },
   {
    "name": "Halberd",
@@ -18067,7 +18086,8 @@
     "Two-Handed"
    ],
    "mastery": "Cleave",
-   "weight": 6
+   "weight": 6,
+   "cost": 20
   },
   {
    "name": "Lance",
@@ -18080,7 +18100,8 @@
     "Two-Handed (unless mounted)"
    ],
    "mastery": "Topple",
-   "weight": 6
+   "weight": 6,
+   "cost": 10
   },
   {
    "name": "Longsword",
@@ -18091,7 +18112,8 @@
     "Versatile (1d10)"
    ],
    "mastery": "Sap",
-   "weight": 3
+   "weight": 3,
+   "cost": 15
   },
   {
    "name": "Maul",
@@ -18103,7 +18125,8 @@
     "Two-Handed"
    ],
    "mastery": "Topple",
-   "weight": 10
+   "weight": 10,
+   "cost": 10
   },
   {
    "name": "Morningstar",
@@ -18112,7 +18135,8 @@
    "damage": "1d8 Piercing",
    "properties": [],
    "mastery": "Sap",
-   "weight": 4
+   "weight": 4,
+   "cost": 15
   },
   {
    "name": "Pike",
@@ -18125,7 +18149,8 @@
     "Two-Handed"
    ],
    "mastery": "Push",
-   "weight": 18
+   "weight": 18,
+   "cost": 5
   },
   {
    "name": "Rapier",
@@ -18136,7 +18161,8 @@
     "Finesse"
    ],
    "mastery": "Vex",
-   "weight": 2
+   "weight": 2,
+   "cost": 25
   },
   {
    "name": "Scimitar",
@@ -18148,7 +18174,8 @@
     "Light"
    ],
    "mastery": "Nick",
-   "weight": 3
+   "weight": 3,
+   "cost": 25
   },
   {
    "name": "Shortsword",
@@ -18160,7 +18187,8 @@
     "Light"
    ],
    "mastery": "Vex",
-   "weight": 2
+   "weight": 2,
+   "cost": 10
   },
   {
    "name": "Trident",
@@ -18172,7 +18200,8 @@
     "Versatile (1d10)"
    ],
    "mastery": "Topple",
-   "weight": 4
+   "weight": 4,
+   "cost": 5
   },
   {
    "name": "Warhammer",
@@ -18183,7 +18212,8 @@
     "Versatile (1d10)"
    ],
    "mastery": "Push",
-   "weight": 5
+   "weight": 5,
+   "cost": 15
   },
   {
    "name": "War Pick",
@@ -18194,7 +18224,8 @@
     "Versatile (1d10)"
    ],
    "mastery": "Sap",
-   "weight": 2
+   "weight": 2,
+   "cost": 5
   },
   {
    "name": "Whip",
@@ -18206,7 +18237,8 @@
     "Reach"
    ],
    "mastery": "Slow",
-   "weight": 3
+   "weight": 3,
+   "cost": 2
   },
   {
    "name": "Blowgun",
@@ -18218,7 +18250,8 @@
     "Loading"
    ],
    "mastery": "Vex",
-   "weight": 1
+   "weight": 1,
+   "cost": 10
   },
   {
    "name": "Hand Crossbow",
@@ -18231,7 +18264,8 @@
     "Loading"
    ],
    "mastery": "Vex",
-   "weight": 3
+   "weight": 3,
+   "cost": 75
   },
   {
    "name": "Heavy Crossbow",
@@ -18245,7 +18279,8 @@
     "Two-Handed"
    ],
    "mastery": "Push",
-   "weight": 18
+   "weight": 18,
+   "cost": 50
   },
   {
    "name": "Longbow",
@@ -18258,7 +18293,8 @@
     "Two-Handed"
    ],
    "mastery": "Slow",
-   "weight": 2
+   "weight": 2,
+   "cost": 50
   },
   {
    "name": "Musket",
@@ -18271,7 +18307,8 @@
     "Two-Handed"
    ],
    "mastery": "Slow",
-   "weight": 10
+   "weight": 10,
+   "cost": 500
   },
   {
    "name": "Pistol",
@@ -18283,7 +18320,8 @@
     "Loading"
    ],
    "mastery": "Vex",
-   "weight": 3
+   "weight": 3,
+   "cost": 250
   }
  ],
  "tools": [
@@ -18291,6 +18329,7 @@
    "name": "Alchemist’s Supplies",
    "category": "Artisan’s Tools",
    "ability": "Intelligence",
+   "cost": 50,
    "weight": 8,
    "utilize": "Identify a substance (DC 15), or start a fire (DC 15)",
    "craft": "Acid, Alchemist’s Fire, Component Pouch, Oil, Paper, Perfume"
@@ -18299,6 +18338,7 @@
    "name": "Brewer’s Supplies",
    "category": "Artisan’s Tools",
    "ability": "Intelligence",
+   "cost": 20,
    "weight": 9,
    "utilize": "Detect poisoned drink (DC 15), or identify alcohol (DC 10)",
    "craft": "Antitoxin"
@@ -18307,6 +18347,7 @@
    "name": "Calligrapher’s Supplies",
    "category": "Artisan’s Tools",
    "ability": "Dexterity",
+   "cost": 10,
    "weight": 5,
    "utilize": "Write text with impressive flourishes that guard against forgery (DC 15)",
    "craft": "Ink, Spell Scroll"
@@ -18315,6 +18356,7 @@
    "name": "Carpenter’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Strength",
+   "cost": 8,
    "weight": 6,
    "utilize": "Seal or pry open a door or container (DC 20)",
    "craft": "Club, Greatclub, Quarterstaff, Barrel, Chest, Ladder, Pole, Portable Ram, Torch"
@@ -18323,6 +18365,7 @@
    "name": "Cartographer’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Wisdom",
+   "cost": 15,
    "weight": 6,
    "utilize": "Draft a map of a small area (DC 15)",
    "craft": "Map"
@@ -18331,6 +18374,7 @@
    "name": "Cobbler’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Dexterity",
+   "cost": 5,
    "weight": 5,
    "utilize": "Modify footwear to give Advantage on the wearer’s next Dexterity (Acrobatics) check (DC 10)",
    "craft": "Climber’s Kit"
@@ -18339,6 +18383,7 @@
    "name": "Cook’s Utensils",
    "category": "Artisan’s Tools",
    "ability": "Wisdom",
+   "cost": 1,
    "weight": 8,
    "utilize": "Improve food’s flavor (DC 10), or detect spoiled or poisoned food (DC 15)",
    "craft": "Rations"
@@ -18347,6 +18392,7 @@
    "name": "Glassblower’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Intelligence",
+   "cost": 30,
    "weight": 5,
    "utilize": "Discern what a glass object held in the past 24 hours (DC 15)",
    "craft": "Glass Bottle, Magnifying Glass, Spyglass, Vial"
@@ -18355,6 +18401,7 @@
    "name": "Jeweler’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Intelligence",
+   "cost": 25,
    "weight": 2,
    "utilize": "Discern a gem’s value (DC 15)",
    "craft": "Arcane Focus, Holy Symbol"
@@ -18363,6 +18410,7 @@
    "name": "Leatherworker’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Dexterity",
+   "cost": 5,
    "weight": 5,
    "utilize": "Add a design to a leather item (DC 10)",
    "craft": "Sling, Whip, Hide Armor, Leather Armor, Studded Leather Armor, Backpack, Crossbow Bolt Case, Map or Scroll Case, Parchment, Pouch, Quiver, Waterskin"
@@ -18371,6 +18419,7 @@
    "name": "Mason’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Strength",
+   "cost": 10,
    "weight": 8,
    "utilize": "Chisel a symbol or hole in stone (DC 10)",
    "craft": "Block and Tackle"
@@ -18379,6 +18428,7 @@
    "name": "Painter’s Supplies",
    "category": "Artisan’s Tools",
    "ability": "Wisdom",
+   "cost": 10,
    "weight": 5,
    "utilize": "Paint a recognizable image of something you’ve seen (DC 10)",
    "craft": "Druidic Focus, Holy Symbol"
@@ -18387,6 +18437,7 @@
    "name": "Potter’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Intelligence",
+   "cost": 10,
    "weight": 3,
    "utilize": "Discern what a ceramic object held in the past 24 hours (DC 15)",
    "craft": "Jug, Lamp"
@@ -18395,6 +18446,7 @@
    "name": "Smith’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Strength",
+   "cost": 20,
    "weight": 8,
    "utilize": "Pry open a door or container (DC 20)",
    "craft": "Any Melee weapon (except Club, Greatclub, Quarterstaff, and Whip), Medium armor (except Hide), Heavy armor, Ball Bearings, Bucket, Caltrops, Chain, Crowbar, Firearm Bullets, Grappling Hook, Iron Pot, Iron Spikes, Sling Bullets"
@@ -18403,6 +18455,7 @@
    "name": "Tinker’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Dexterity",
+   "cost": 50,
    "weight": 10,
    "utilize": "Assemble a Tiny item composed of scrap, which falls apart in 1 minute (DC 20)",
    "craft": "Musket, Pistol, Bell, Bullseye Lantern, Flask, Hooded Lantern, Hunting Trap, Lock, Manacles, Mirror, Shovel, Signal Whistle, Tinderbox"
@@ -18411,6 +18464,7 @@
    "name": "Weaver’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Dexterity",
+   "cost": 1,
    "weight": 5,
    "utilize": "Mend a tear in clothing (DC 10), or sew a Tiny design (DC 10)",
    "craft": "Padded Armor, Basket, Bedroll, Blanket, Fine Clothes, Net, Robe, Rope, Sack, String, Tent, Traveler’s Clothes"
@@ -18419,6 +18473,7 @@
    "name": "Woodcarver’s Tools",
    "category": "Artisan’s Tools",
    "ability": "Dexterity",
+   "cost": 1,
    "weight": 5,
    "utilize": "Carve a pattern in wood (DC 10)",
    "craft": "Club, Greatclub, Quarterstaff, Ranged weapons (except Pistol, Musket, and Sling), Arcane Focus, Arrows, Bolts, Druidic Focus, Ink Pen, Needles"
@@ -18427,6 +18482,7 @@
    "name": "Disguise Kit",
    "category": "Other",
    "ability": "Charisma",
+   "cost": 25,
    "weight": 3,
    "utilize": "Apply makeup (DC 10)",
    "craft": "Costume"
@@ -18435,6 +18491,7 @@
    "name": "Forgery Kit",
    "category": "Other",
    "ability": "Dexterity",
+   "cost": 15,
    "weight": 5,
    "utilize": "Mimic 10 or fewer words of someone else’s handwriting (DC 15), or duplicate a wax seal (DC 20)",
    "craft": null
@@ -18443,6 +18500,7 @@
    "name": "Gaming Set",
    "category": "Other",
    "ability": "Wisdom",
+   "cost": null,
    "weight": 0,
    "utilize": "Discern whether someone is cheating (DC 10), or win the game (DC 20)",
    "craft": null,
@@ -18451,12 +18509,35 @@
     "Dragonchess",
     "Playing cards",
     "Three-dragon ante"
+   ],
+   "variant_goods": [
+    {
+     "name": "Dice",
+     "cost": 0.1,
+     "weight": null
+    },
+    {
+     "name": "Dragonchess",
+     "cost": 1,
+     "weight": null
+    },
+    {
+     "name": "Playing cards",
+     "cost": 0.5,
+     "weight": null
+    },
+    {
+     "name": "Three-dragon ante",
+     "cost": 1,
+     "weight": null
+    }
    ]
   },
   {
    "name": "Herbalism Kit",
    "category": "Other",
    "ability": "Intelligence",
+   "cost": 5,
    "weight": 3,
    "utilize": "Identify a plant (DC 10)",
    "craft": "Antitoxin, Candle, Healer’s Kit, Potion of Healing"
@@ -18465,6 +18546,7 @@
    "name": "Musical Instrument",
    "category": "Other",
    "ability": "Charisma",
+   "cost": null,
    "weight": null,
    "utilize": "Play a known tune (DC 10), or improvise a song (DC 15)",
    "craft": null,
@@ -18479,12 +18561,65 @@
     "Pan flute",
     "Shawm",
     "Viol"
+   ],
+   "variant_goods": [
+    {
+     "name": "Bagpipes",
+     "cost": 30,
+     "weight": 6
+    },
+    {
+     "name": "Drum",
+     "cost": 6,
+     "weight": 3
+    },
+    {
+     "name": "Dulcimer",
+     "cost": 25,
+     "weight": 10
+    },
+    {
+     "name": "Flute",
+     "cost": 2,
+     "weight": 1
+    },
+    {
+     "name": "Horn",
+     "cost": 3,
+     "weight": 2
+    },
+    {
+     "name": "Lute",
+     "cost": 35,
+     "weight": 2
+    },
+    {
+     "name": "Lyre",
+     "cost": 30,
+     "weight": 2
+    },
+    {
+     "name": "Pan flute",
+     "cost": 12,
+     "weight": 2
+    },
+    {
+     "name": "Shawm",
+     "cost": 2,
+     "weight": 1
+    },
+    {
+     "name": "Viol",
+     "cost": 30,
+     "weight": 1
+    }
    ]
   },
   {
    "name": "Navigator’s Tools",
    "category": "Other",
    "ability": "Wisdom",
+   "cost": 25,
    "weight": 2,
    "utilize": "Plot a course (DC 10), or determine position by stargazing (DC 15)",
    "craft": null
@@ -18493,6 +18628,7 @@
    "name": "Poisoner’s Kit",
    "category": "Other",
    "ability": "Intelligence",
+   "cost": 50,
    "weight": 2,
    "utilize": "Detect a poisoned object (DC 10)",
    "craft": "Basic Poison"
@@ -18501,6 +18637,7 @@
    "name": "Thieves’ Tools",
    "category": "Other",
    "ability": "Dexterity",
+   "cost": 25,
    "weight": 1,
    "utilize": "Pick a lock (DC 15), or disarm a trap (DC 15)",
    "craft": null
@@ -19929,331 +20066,413 @@
  "gear": [
   {
    "name": "Acid",
-   "weight": 1
+   "weight": 1,
+   "cost": 25
   },
   {
    "name": "Alchemist’s Fire",
-   "weight": 1
+   "weight": 1,
+   "cost": 50
   },
   {
    "name": "Ammunition",
-   "weight": null
+   "weight": null,
+   "cost": null
   },
   {
    "name": "Antitoxin",
-   "weight": 0
+   "weight": 0,
+   "cost": 50
   },
   {
    "name": "Arcane Focus",
-   "weight": null
+   "weight": null,
+   "cost": null
   },
   {
    "name": "Backpack",
-   "weight": 5
+   "weight": 5,
+   "cost": 2
   },
   {
    "name": "Ball Bearings",
-   "weight": 2
+   "weight": 2,
+   "cost": 1
   },
   {
    "name": "Barrel",
-   "weight": 70
+   "weight": 70,
+   "cost": 2
   },
   {
    "name": "Basket",
-   "weight": 2
+   "weight": 2,
+   "cost": 0.4
   },
   {
    "name": "Bedroll",
-   "weight": 7
+   "weight": 7,
+   "cost": 1
   },
   {
    "name": "Bell",
-   "weight": 0
+   "weight": 0,
+   "cost": 1
   },
   {
    "name": "Blanket",
-   "weight": 3
+   "weight": 3,
+   "cost": 0.5
   },
   {
    "name": "Block and Tackle",
-   "weight": 5
+   "weight": 5,
+   "cost": 1
   },
   {
    "name": "Book",
-   "weight": 5
+   "weight": 5,
+   "cost": 25
   },
   {
    "name": "Bottle, Glass",
-   "weight": 2
+   "weight": 2,
+   "cost": 2
   },
   {
    "name": "Bucket",
-   "weight": 2
+   "weight": 2,
+   "cost": 0.05
   },
   {
    "name": "Burglar’s Pack",
-   "weight": 42
+   "weight": 42,
+   "cost": 16
   },
   {
    "name": "Caltrops",
-   "weight": 2
+   "weight": 2,
+   "cost": 1
   },
   {
    "name": "Candle",
-   "weight": 0
+   "weight": 0,
+   "cost": 0.01
   },
   {
    "name": "Case, Crossbow Bolt",
-   "weight": 1
+   "weight": 1,
+   "cost": 1
   },
   {
    "name": "Case, Map or Scroll",
-   "weight": 1
+   "weight": 1,
+   "cost": 1
   },
   {
    "name": "Chain",
-   "weight": 10
+   "weight": 10,
+   "cost": 5
   },
   {
    "name": "Chest",
-   "weight": 25
+   "weight": 25,
+   "cost": 5
   },
   {
    "name": "Climber’s Kit",
-   "weight": 12
+   "weight": 12,
+   "cost": 25
   },
   {
    "name": "Clothes, Fine",
-   "weight": 6
+   "weight": 6,
+   "cost": 15
   },
   {
    "name": "Clothes, Traveler’s",
-   "weight": 4
+   "weight": 4,
+   "cost": 2
   },
   {
    "name": "Component Pouch",
-   "weight": 2
+   "weight": 2,
+   "cost": 25
   },
   {
    "name": "Costume",
-   "weight": 4
+   "weight": 4,
+   "cost": 5
   },
   {
    "name": "Crowbar",
-   "weight": 5
+   "weight": 5,
+   "cost": 2
   },
   {
    "name": "Diplomat’s Pack",
-   "weight": 39
+   "weight": 39,
+   "cost": 39
   },
   {
    "name": "Druidic Focus",
-   "weight": null
+   "weight": null,
+   "cost": null
   },
   {
    "name": "Dungeoneer’s Pack",
-   "weight": 55
+   "weight": 55,
+   "cost": 12
   },
   {
    "name": "Entertainer’s Pack",
-   "weight": 58.5
+   "weight": 58.5,
+   "cost": 40
   },
   {
    "name": "Explorer’s Pack",
-   "weight": 55
+   "weight": 55,
+   "cost": 10
   },
   {
    "name": "Flask",
-   "weight": 1
+   "weight": 1,
+   "cost": 0.02
   },
   {
    "name": "Grappling Hook",
-   "weight": 4
+   "weight": 4,
+   "cost": 2
   },
   {
    "name": "Healer’s Kit",
-   "weight": 3
+   "weight": 3,
+   "cost": 5
   },
   {
    "name": "Holy Symbol",
-   "weight": null
+   "weight": null,
+   "cost": null
   },
   {
    "name": "Holy Water",
-   "weight": 1
+   "weight": 1,
+   "cost": 25
   },
   {
    "name": "Hunting Trap",
-   "weight": 25
+   "weight": 25,
+   "cost": 5
   },
   {
    "name": "Ink",
-   "weight": 0
+   "weight": 0,
+   "cost": 10
   },
   {
    "name": "Ink Pen",
-   "weight": 0
+   "weight": 0,
+   "cost": 0.02
   },
   {
    "name": "Jug",
-   "weight": 4
+   "weight": 4,
+   "cost": 0.02
   },
   {
    "name": "Ladder",
-   "weight": 25
+   "weight": 25,
+   "cost": 0.1
   },
   {
    "name": "Lamp",
-   "weight": 1
+   "weight": 1,
+   "cost": 0.5
   },
   {
    "name": "Lantern, Bullseye",
-   "weight": 2
+   "weight": 2,
+   "cost": 10
   },
   {
    "name": "Lantern, Hooded",
-   "weight": 2
+   "weight": 2,
+   "cost": 5
   },
   {
    "name": "Lock",
-   "weight": 1
+   "weight": 1,
+   "cost": 10
   },
   {
    "name": "Magnifying Glass",
-   "weight": 0
+   "weight": 0,
+   "cost": 100
   },
   {
    "name": "Manacles",
-   "weight": 6
+   "weight": 6,
+   "cost": 2
   },
   {
    "name": "Map",
-   "weight": 0
+   "weight": 0,
+   "cost": 1
   },
   {
    "name": "Mirror",
-   "weight": 0.5
+   "weight": 0.5,
+   "cost": 5
   },
   {
    "name": "Net",
-   "weight": 3
+   "weight": 3,
+   "cost": 1
   },
   {
    "name": "Oil",
-   "weight": 1
+   "weight": 1,
+   "cost": 0.1
   },
   {
    "name": "Paper",
-   "weight": 0
+   "weight": 0,
+   "cost": 0.2
   },
   {
    "name": "Parchment",
-   "weight": 0
+   "weight": 0,
+   "cost": 0.1
   },
   {
    "name": "Perfume",
-   "weight": 0
+   "weight": 0,
+   "cost": 5
   },
   {
    "name": "Poison, Basic",
-   "weight": 0
+   "weight": 0,
+   "cost": 100
   },
   {
    "name": "Pole",
-   "weight": 7
+   "weight": 7,
+   "cost": 0.05
   },
   {
    "name": "Pot, Iron",
-   "weight": 10
+   "weight": 10,
+   "cost": 2
   },
   {
    "name": "Potion of Healing",
-   "weight": 0.5
+   "weight": 0.5,
+   "cost": 50
   },
   {
    "name": "Pouch",
-   "weight": 1
+   "weight": 1,
+   "cost": 0.5
   },
   {
    "name": "Priest’s Pack",
-   "weight": 29
+   "weight": 29,
+   "cost": 33
   },
   {
    "name": "Quiver",
-   "weight": 1
+   "weight": 1,
+   "cost": 1
   },
   {
    "name": "Ram, Portable",
-   "weight": 35
+   "weight": 35,
+   "cost": 4
   },
   {
    "name": "Rations",
-   "weight": 2
+   "weight": 2,
+   "cost": 0.5
   },
   {
    "name": "Robe",
-   "weight": 4
+   "weight": 4,
+   "cost": 1
   },
   {
    "name": "Rope",
-   "weight": 5
+   "weight": 5,
+   "cost": 1
   },
   {
    "name": "Sack",
-   "weight": 0.5
+   "weight": 0.5,
+   "cost": 0.01
   },
   {
    "name": "Scholar’s Pack",
-   "weight": 22
+   "weight": 22,
+   "cost": 40
   },
   {
    "name": "Shovel",
-   "weight": 5
+   "weight": 5,
+   "cost": 2
   },
   {
    "name": "Signal Whistle",
-   "weight": 0
+   "weight": 0,
+   "cost": 0.05
   },
   {
    "name": "Spell Scroll (Cantrip)",
-   "weight": 0
+   "weight": 0,
+   "cost": 30
   },
   {
    "name": "Spell Scroll (Level 1)",
-   "weight": 0
+   "weight": 0,
+   "cost": 50
   },
   {
    "name": "Spikes, Iron",
-   "weight": 5
+   "weight": 5,
+   "cost": 1
   },
   {
    "name": "Spyglass",
-   "weight": 1
+   "weight": 1,
+   "cost": 1000
   },
   {
    "name": "String",
-   "weight": 0
+   "weight": 0,
+   "cost": 0.1
   },
   {
    "name": "Tent",
-   "weight": 20
+   "weight": 20,
+   "cost": 2
   },
   {
    "name": "Tinderbox",
-   "weight": 1
+   "weight": 1,
+   "cost": 0.5
   },
   {
    "name": "Torch",
-   "weight": 1
+   "weight": 1,
+   "cost": 0.01
   },
   {
    "name": "Vial",
-   "weight": 0
+   "weight": 0,
+   "cost": 1
   },
   {
    "name": "Waterskin",
-   "weight": 5
+   "weight": 5,
+   "cost": 0.2
   }
  ],
  "forms": {
@@ -20261,61 +20480,72 @@
    {
     "name": "Crystal",
     "also": null,
-    "weight": 1
+    "weight": 1,
+    "cost": 10
    },
    {
     "name": "Orb",
     "also": null,
-    "weight": 3
+    "weight": 3,
+    "cost": 20
    },
    {
     "name": "Rod",
     "also": null,
-    "weight": 2
+    "weight": 2,
+    "cost": 10
    },
    {
     "name": "Staff",
     "also": "Quarterstaff",
-    "weight": 4
+    "weight": 4,
+    "cost": 5
    },
    {
     "name": "Wand",
     "also": null,
-    "weight": 1
+    "weight": 1,
+    "cost": 10
    }
   ],
   "Holy Symbol": [
    {
     "name": "Amulet",
     "also": null,
-    "weight": 1
+    "weight": 1,
+    "cost": 5
    },
    {
     "name": "Emblem",
     "also": null,
-    "weight": 0
+    "weight": 0,
+    "cost": 5
    },
    {
     "name": "Reliquary",
     "also": null,
-    "weight": 2
+    "weight": 2,
+    "cost": 5
    }
   ],
   "Druidic Focus": [
    {
     "name": "Sprig of mistletoe",
     "also": null,
-    "weight": 0
+    "weight": 0,
+    "cost": 1
    },
    {
     "name": "Wooden staff",
     "also": "Quarterstaff",
-    "weight": 4
+    "weight": 4,
+    "cost": 5
    },
    {
     "name": "Yew wand",
     "also": null,
-    "weight": 1
+    "weight": 1,
+    "cost": 10
    }
   ]
  },
@@ -20326,31 +20556,36 @@
    "name": "Arrows",
    "amount": 20,
    "storage": "Quiver",
-   "weight": 1
+   "weight": 1,
+   "cost": 1
   },
   {
    "name": "Bolts",
    "amount": 20,
    "storage": "Case",
-   "weight": 1.5
+   "weight": 1.5,
+   "cost": 1
   },
   {
    "name": "Bullets, Firearm",
    "amount": 10,
    "storage": "Pouch",
-   "weight": 2
+   "weight": 2,
+   "cost": 3
   },
   {
    "name": "Bullets, Sling",
    "amount": 20,
    "storage": "Pouch",
-   "weight": 1.5
+   "weight": 1.5,
+   "cost": 0.04
   },
   {
    "name": "Needles",
    "amount": 50,
    "storage": "Pouch",
-   "weight": 1
+   "weight": 1,
+   "cost": 1
   }
  ],
  "overloaded": "While dragging, lifting, or pushing weight in excess of the maximum weight you can carry, your Speed can be no more than 5 feet.",

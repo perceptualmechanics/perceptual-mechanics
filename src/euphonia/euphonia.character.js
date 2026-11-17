@@ -304,6 +304,17 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     // takes the same: a d8's 8 at level 1, and 5 a level after.
     hitPoints: Object.fromEntries(srd.classes.map(c => [number(c.traits.find(t => t.trait === 'Hit Point Die').value.match(/^D(\d+)/)[1]), { first: srd.hit_points.level_1[c.name], fixed: srd.hit_points.fixed[c.name] }])),
     attunementMax: srd.attunement_max,
+    // What a character can buy, at the SRD's prices in gold: its weapons,
+    // armor, gear, a focus's forms, ammunition by the bundle, and tools by
+    // their variants; each with what it reads as in the inventory.
+    catalog: [
+      ...srd.weapons.map(w => ({ name: w.name, kind: 'Weapons', cost: w.cost })),
+      ...srd.armor.items.map(a => ({ name: a.name, kind: 'Armor', cost: a.cost })),
+      ...srd.gear.filter(g => g.cost !== null).map(g => ({ name: g.name, kind: 'Adventuring Gear', cost: g.cost })),
+      ...Object.entries(srd.forms).flatMap(([item, forms]) => forms.map(f => ({ name: `${item} (${f.name})`, kind: 'Adventuring Gear', cost: f.cost }))),
+      ...srd.ammunition.map(a => ({ name: a.name, kind: 'Ammunition', cost: a.cost, bundle: a.amount })),
+      ...srd.tools.flatMap(t => (t.variant_goods ? t.variant_goods.map(v => ({ name: `${t.name} (${v.name})`, kind: 'Tools', cost: v.cost, weight: v.weight })) : [{ name: t.name, kind: 'Tools', cost: t.cost }])),
+    ].filter(x => x.cost !== null),
     weights: { gear: srd.gear, ammunition: srd.ammunition, forms: srd.forms, coinsPerPound: srd.coins_per_pound, carrying: srd.carrying, overloaded: srd.overloaded },
     attacks: srd.attacks,
     backgroundIncreases: srd.ability_scores.background,
@@ -1536,6 +1547,15 @@ export function character(book, state) {
     && (i.dm || i.rarities.every(r => RARITIES.indexOf(r.rarity) > tableTop)) && gearArrives(i.rarities.at(-1).rarity)
     && !(i.kind === 'Armor' && i.base === 'Shield' && !ownTraining.includes('Shield')) && !WITHOUT.some(w => w.item === i.name && w.subclass === subclassOf(i.place.class_name)))
     .map(i => { taken.add(i.name); return { rarity: i.rarities.at(-1).rarity, classGear: true, item: { name: i.name, kind: i.kind, base: i.base, member: memberFor(i) && (memberFor(i).name ?? memberFor(i).subclass), bonus: i.rarities.at(-1).bonus, attunement: i.attunement, living: Boolean(i.living), text: i.text } }; });
+  // The inventory the player keeps (a tracker; Scott, 17 November): what
+  // it takes out, what it adds, bought or given (a magic item only given,
+  // as the DM gives one), and the armor it wears.
+  const inventory = state.inventory ?? {};
+  const givenMagic = (inventory.add ?? []).map((a, index) => ({ a, index, item: a.how === 'given' ? book.items.find(i => i.magical && i.name === a.name) : null })).filter(x => x.item).map(({ a, index, item }) => {
+    taken.add(item.name);
+    const at = item.rarities.find(r => r.rarity === a.rarity) ?? item.rarities.at(-1);
+    return { rarity: at.rarity, given: true, index, item: { name: item.name, kind: item.kind, base: item.base, member: null, bonus: at.bonus, attunement: item.attunement, living: Boolean(item.living), text: item.text } };
+  });
   const magicItems = (higher?.magic ?? []).toSorted((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity)).flatMap(({ count, rarity }) => Array.from({ length: count }, () => {
     const pick = book.items.filter(i => i.magical && !i.dm && !i.story && !taken.has(i.name) && usable(i))
       .map(i => ({ item: i, member: memberFor(i), at: ratedAt(i, memberFor(i)).find(r => r.rarity === rarity) }))
@@ -1543,7 +1563,7 @@ export function character(book, state) {
     if (!pick) return { rarity, item: null };
     taken.add(pick.item.name);
     return { rarity, item: { name: pick.item.name, kind: pick.item.kind, base: pick.item.base, member: pick.member && (pick.member.name ?? pick.member.subclass), bonus: pick.at.bonus, attunement: pick.item.attunement, living: Boolean(pick.item.living), text: pick.item.text } };
-  })).concat(classGear()).toSorted((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
+  })).concat(classGear(), givenMagic).filter(m => !m.item || !(inventory.remove ?? []).includes(m.item.name)).toSorted((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
   // What the magic items do to the numbers, each as its sentence says, the
   // character wearing or holding them and attuned to as many as the SRD
   // allows ("You can be attuned to no more than three magic items at a
@@ -1649,7 +1669,18 @@ export function character(book, state) {
       kit: { from: src.from, items: pack.items.flatMap(i => resolve(i, chosen)), gold: pack.gold } };
   });
   const kits = packageChoices.map(c => c.kit);
-  const items = kits.flatMap(k => k.items), money = kits.reduce((n, k) => n + k.gold, 0) + (higher?.gold ?? 0);
+  // The kits' items less those taken out, and the goods added, a bundle of
+  // ammunition by its count ("40 Arrows"); what's bought comes out of the
+  // money, and more than there is asks for less.
+  const removing = [...(inventory.remove ?? [])];
+  const kept = kits.flatMap(k => k.items).filter(i => { const at = removing.indexOf(i); if (at < 0) return true; removing.splice(at, 1); return false; });
+  const goods = (inventory.add ?? []).map((a, index) => ({ ...a, index, count: Math.max(1, Math.floor(Number(a.count) || 1)), entry: book.catalog.find(c => c.name === a.name) })).filter(a => a.entry);
+  for (const a of inventory.add ?? []) if (!book.catalog.some(c => c.name === a.name) && !book.items.some(i => i.magical && i.name === a.name)) fail('inventory', `${a.name} isn't in the books.`);
+  const asItem = g => (g.entry.bundle ? `${g.count * g.entry.bundle} ${g.name}` : g.count > 1 ? `${g.count} ${g.name}` : g.name);
+  const items = [...kept, ...goods.map(asItem)];
+  const purse = kits.reduce((n, k) => n + k.gold, 0) + (higher?.gold ?? 0), bought = goods.filter(g => g.how === 'bought').reduce((n, g) => n + g.entry.cost * g.count, 0);
+  const money = purse - bought;
+  if (money < 0) fail('inventory', `What's bought costs ${bought.toLocaleString('en')} GP; there's ${purse.toLocaleString('en')}.`);
   const armorNamed = item => book.armor.items.find(a => a.name === item);
   const wearable = a => a.category !== 'Shield' && training.includes(a.category) && (!a.strength || scores.Strength >= a.strength);
   const kitShield = items.map(armorNamed).find(a => a?.category === 'Shield' && training.includes('Shield'));
@@ -1671,9 +1702,14 @@ export function character(book, state) {
     const loud = /Disadvantage on Dexterity \(Stealth\) checks while you wear it/.test(f.text) && !/doesn[’']t give you Disadvantage on Dexterity \(Stealth\) checks/.test(model);
     return from && { worn: { name: f.name, madeFrom: from.name, category: m[1], base: +m[2], dex: !m[3], strength: /no Strength requirement/.test(f.text) ? null : from.strength, stealth_disadvantage: loud }, spent };
   }).find(Boolean);
+  // The armor the player says to wear, of what it owns and can wear, or
+  // none; otherwise the builder's pick. A suit stays on.
+  const wearOptions = suitOf ? [] : owned.map(a => a.name);
+  const told = !suitOf && inventory.wear && inventory.wear !== 'auto' ? (inventory.wear === 'none' ? [null, 0] : wears.find(([a, spent]) => a?.name === inventory.wear && spent === 0)) : null;
+  if (!suitOf && inventory.wear && inventory.wear !== 'auto' && !told) fail('wear', `${inventory.wear} isn't armor the character owns and can wear.`);
   let gear = null;
   if (suitOf) gear = { spent: suitOf.spent, worn: suitOf.worn, shield: null };
-  else for (const shield of hovering ? [book.armor.items.find(x => x.category === 'Shield')] : kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of wears) {
+  else for (const shield of hovering ? [book.armor.items.find(x => x.category === 'Shield')] : kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of told ? [told] : wears) {
     const ac = acOf(mod, worn, shield).ac.ac, quiet = !worn?.stealth_disadvantage;
     if (!gear || ac > gear.ac || (ac === gear.ac && (quiet > gear.quiet || (quiet === gear.quiet && spent < gear.spent)))) gear = { ac, quiet, spent, worn, shield };
   }
@@ -2125,6 +2161,7 @@ export function character(book, state) {
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) + saveBonus.reduce((n, x) => n + x.n, 0) })), saveItems: saveBonus.map(x => x.name), unattuned, attunementMax: book.attunementMax,
     skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, abilityChoices, packageChoices: packageChoices.map(({ kit, ...c }) => c), languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hpMethod: rolled ? 'Rolled' : 'Fixed', hpRolls, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
+    inventory: { kept, goods: goods.map(g => ({ name: g.name, count: g.count, how: g.how, cost: g.entry.cost, item: asItem(g), index: g.index })), given: givenMagic.map(m => m.item.name), removed: inventory.remove ?? [], bought, wear: told ? (told[0]?.name ?? 'none') : 'auto', wearOptions },
     load, attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
     features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,

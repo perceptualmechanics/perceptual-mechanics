@@ -117,6 +117,7 @@ export async function initBuilder(panel) {
   const kindBox = h('div', { class: 'b-picks' });
   const packageBox = h('div', { class: 'b-picks' });
   const abilityBox = h('div', { class: 'b-picks' });
+  const gearBox = h('div', { class: 'b-gear' });
   const saveBox = h('div', { class: 'b-picks' });
   const weaponBox = h('div', { class: 'b-picks' });
   const targetBox = h('div', { class: 'b-picks' });
@@ -164,6 +165,7 @@ export async function initBuilder(panel) {
       h('p', { class: 'b-note' }, `Mutapan curiosities cost more the farther they travel from ${book.items.find(i => i.prices)?.prices.home}, where they’re made.`)),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
     section('Starting equipment', h('p', { class: 'b-note' }, 'Each kit, or its gold to spend instead. The builder buys armor with what’s left.'), packageBox),
+    section('Gear', h('p', { class: 'b-note' }, 'What the character carries: take out what it doesn’t, buy with its money, or add what the DM gives.'), gearBox, problemSlot('inventory'), problemSlot('wear')),
     section('Languages', tongueList, languageBox, languageAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
     section('Hit points', h('p', { class: 'b-note' }, 'Level 1 takes the Hit Die’s highest. Each level after, take the fixed value or roll the die and enter it.'), hpMethodGroup, rollBox),
@@ -438,6 +440,36 @@ export async function initBuilder(panel) {
       h('input', { type: 'number', min: 1, max: r.die, step: 1, value: r.roll ?? '', 'aria-describedby': idFor(`hp:${r.key}`),
         onchange: e => set(s => { s.hp = { ...s.hp, rolls: { ...s.hp?.rolls, [r.key]: e.target.value === '' ? undefined : Number(e.target.value) } }; }) }),
       problemSlot(`hp:${r.key}`))));
+  }
+  // The inventory as a tracker: what's carried, each with its Remove; what
+  // to buy or add, from the SRD's priced goods and, given only, the books'
+  // magic items; and the armor to wear. Rebuilt only when the gear changes.
+  function renderGear(result) {
+    const inv = result.inventory;
+    if (!fresh(gearBox, JSON.stringify([inv, result.equipment.magicItems.map(m => m.item?.name)]))) return;
+    const take = item => set(s => { s.inventory = { ...s.inventory, remove: [...(s.inventory?.remove ?? []), item] }; });
+    const unadd = k => set(s => { s.inventory = { ...s.inventory, add: (s.inventory?.add ?? []).filter((_, i) => i !== k) }; });
+    const putBack = k => set(s => { s.inventory = { ...s.inventory, remove: (s.inventory?.remove ?? []).filter((_, i) => i !== k) }; });
+    const row = (label, button) => h('li', {}, h('span', {}, label), ' ', button);
+    const remove = (what, onclick) => h('button', { type: 'button', class: 'b-button b-remove', 'aria-label': `Remove ${what}`, onclick }, 'Remove');
+    const pick = h('select', { 'aria-label': 'An item to buy or add' }, h('option', { value: '' }, 'Choose an item'),
+      [...new Set(book.catalog.map(c => c.kind))].map(kind => h('optgroup', { label: kind }, book.catalog.filter(c => c.kind === kind).map(c => h('option', { value: JSON.stringify({ name: c.name }) }, `${c.name}${c.bundle ? ` (${c.bundle})` : ''}, ${c.cost.toLocaleString('en')} GP`)))),
+      h('optgroup', { label: 'Magic items, as the DM gives them' }, book.items.filter(i => i.magical).flatMap(i => i.rarities.map(r => h('option', { value: JSON.stringify({ name: i.name, rarity: r.rarity, magic: true }) }, `${i.name}${i.rarities.length > 1 ? `, ${r.rarity}${r.bonus ? ` ${r.bonus}` : ''}` : ''}`)))));
+    const count = h('input', { type: 'number', min: 1, step: 1, value: 1, 'aria-label': 'How many' });
+    const chosen = () => (pick.value ? JSON.parse(pick.value) : null);
+    const buy = h('button', { type: 'button', class: 'b-button', disabled: true, onclick: () => { const c = chosen(); if (c && !c.magic) set(s => { s.inventory = { ...s.inventory, add: [...(s.inventory?.add ?? []), { name: c.name, count: Number(count.value) || 1, how: 'bought' }] }; }); } }, 'Buy');
+    const give = h('button', { type: 'button', class: 'b-button', disabled: true, onclick: () => { const c = chosen(); if (c) set(s => { s.inventory = { ...s.inventory, add: [...(s.inventory?.add ?? []), { name: c.name, ...(c.magic ? { rarity: c.rarity } : { count: Number(count.value) || 1 }), how: 'given' }] }; }); } }, 'Add, given');
+    pick.addEventListener('change', () => { const c = chosen(); buy.disabled = !c || Boolean(c.magic); give.disabled = !c; count.disabled = Boolean(c?.magic); });
+    const wear = h('select', { 'aria-describedby': idFor('wear'), onchange: e => set(s => { s.inventory = { ...s.inventory, wear: e.target.value }; }) },
+      options([{ value: 'auto', label: 'The builder’s pick' }, { value: 'none', label: 'No armor' }, ...inv.wearOptions.map(n => ({ value: n, label: n }))], inv.wear));
+    rebuild(gearBox,
+      h('ul', { class: 'b-gear-list' },
+        inv.kept.map(item => row(item, remove(item, () => take(item)))),
+        inv.goods.map(g => row(`${g.item}, ${g.how}${g.how === 'bought' ? ` for ${(g.cost * g.count).toLocaleString('en')} GP` : ''}`, remove(g.item, () => unadd(g.index)))),
+        result.equipment.magicItems.filter(m => m.item).map(m => row(`${m.item.name} (${m.rarity}${m.given ? ', given' : ''})`, remove(m.item.name, () => (m.given ? unadd(m.index) : take(m.item.name)))))),
+      inv.removed.length ? h('p', { class: 'b-note' }, 'Taken out: ', inv.removed.map((item, k) => [k ? ', ' : '', h('button', { type: 'button', class: 'b-link', 'aria-label': `Put back ${item}`, onclick: () => putBack(k) }, item)])) : null,
+      h('div', { class: 'b-gear-add' }, pick, count, buy, give),
+      inv.wearOptions.length ? h('label', { class: 'b-field' }, h('span', {}, 'Armor worn'), wear) : null);
   }
   function renderAbilities(result) {
     if (!fresh(abilityBox, JSON.stringify(result.abilityChoices))) return;
@@ -900,6 +932,8 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Armor'), h('dd', {}, `${result.armor?.name ?? 'None'}${result.armor?.madeFrom ? `, made from ${result.armor.madeFrom}` : ''}${result.shield ? ' and a Shield' : ''}${gear.bought ? `, the armor bought for ${gear.bought.cost.toLocaleString('en')} GP` : ''}`),
           h('dt', {}, 'Training'), h('dd', {}, result.training.length ? listed(result.training.map(t => (t === 'Shield' ? 'Shields' : `${t} armor`))) : 'None'),
           h('dt', {}, 'Weapons'), h('dd', {}, listed([...result.weaponTraining.categories.map(k => `${k} weapons`), ...result.weaponTraining.named]) || 'None'),
+          result.inventory.goods.length ? [h('dt', {}, 'Added'), h('dd', {}, result.inventory.goods.map(g => `${g.item} (${g.how})`).join(', '))] : null,
+          result.inventory.removed.length ? [h('dt', {}, 'Taken out'), h('dd', {}, result.inventory.removed.join(', '))] : null,
           gear.carried.length ? [h('dt', {}, 'From your features'), h('dd', {}, gear.carried.map(x => `${x.name} (${x.from})`).join(', '))] : null,
           gear.kits.map(k => [h('dt', {}, `${k.from}’s kit`), h('dd', {}, k.items.join(', ') || 'Nothing but the coin')]),
           h('dt', {}, 'Weight carried'), h('dd', {}, `${pounds(result.load.items + result.load.coins)}, ${pounds(result.load.coins)} of it coin, of the ${pounds(result.load.carry)} you can carry; you can drag, lift or push ${pounds(result.load.drag)}${result.load.unweighed.length ? `; the books give no weight for ${listed(result.load.unweighed)}` : ''}`),
@@ -985,6 +1019,7 @@ export async function initBuilder(panel) {
     renderKinds(result);
     renderPackages(result);
     renderAbilities(result);
+    renderGear(result);
     renderRolls(result);
     renderSaves(result);
     renderWeapons(result);
