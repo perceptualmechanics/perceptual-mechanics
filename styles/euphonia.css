@@ -127,7 +127,9 @@ body { background: var(--ground); font-family: var(--type); }
    and the buttons go above them, each kept whole. */
 .euphonia-bar { display: flex; flex-wrap: wrap-reverse; align-items: end; gap: 0.5rem 1rem; margin: 0.6rem 0 0.7rem; border-bottom: 1px solid var(--line); }
 .euphonia-aside { margin: 0 0 0.35rem auto; display: flex; flex-wrap: wrap; justify-content: end; gap: 0.5rem 1rem; align-items: center; font-size: 0.8rem; white-space: nowrap; }
-.euphonia-aside .home { color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; font-size: 0.7rem; }
+/* The links that leave the page (Patreon, Contact, the site) share one quiet
+   voice, apart from the buttons that work the page. */
+.euphonia-aside :is(.home, .elsewhere) { color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; font-size: 0.7rem; }
 .euphonia-aside button { font: inherit; color: var(--paper); background: var(--case); border: 1px solid var(--frame); padding: 0.15rem 0.6rem; cursor: pointer; }
 .euphonia-aside button:hover, .euphonia-aside button:focus-visible { border-color: var(--accent); }
 .euphonia-aside button[aria-pressed=true] { background: var(--surface-pressed); border-color: var(--signal); }
@@ -159,7 +161,7 @@ body { background: var(--ground); font-family: var(--type); }
 	}
 	.euphonia-bar.menu-open .euphonia-aside { display: flex; }
 	.euphonia-bar.has-menu .euphonia-aside button { padding: 0.45rem 0.9rem; }
-	.euphonia-bar.has-menu .euphonia-aside .home { padding-block: 0.7rem; }
+	.euphonia-bar.has-menu .euphonia-aside :is(.home, .elsewhere) { padding-block: 0.7rem; }
 	.euphonia-bar.has-menu .theme-pick select { padding-block: 0.45rem; }
 	.euphonia-tabs [role=tab] { font-size: 0.72rem; letter-spacing: 0.1em; padding: 0.45rem 0.8rem 0.4rem; }
 	.tab-long { display: none; }
