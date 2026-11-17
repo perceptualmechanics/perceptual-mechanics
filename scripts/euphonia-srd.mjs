@@ -17,8 +17,11 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const OUT = new URL('../src/euphonia/euphonia.srd.json', import.meta.url);
-// The counts the SRD spells out in words ("two beams at level 5").
-const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five'];
+// A count the SRD spells out in words ("two beams at level 5", "fifty
+// coins weigh a pound").
+const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+const TENS = ['', 'ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+const wordNumber = w => { const n = UNITS.includes(w) ? UNITS.indexOf(w) : TENS.includes(w) ? TENS.indexOf(w) * 10 : NaN; if (Number.isNaN(n)) throw new Error(`a number the exporter doesn't read: "${w}"`); return n; };
 const COLUMN_SPLIT = 300, FOOTER_Y = 740, INDENT = 8, LINE_TOLERANCE = 2.5;
 const [pdfPath, wordsPath] = process.argv.slice(2);
 if (!pdfPath || !wordsPath) throw new Error('usage: node scripts/euphonia-srd.mjs <SRD pdf> <srd-words.tsv>');
@@ -680,6 +683,17 @@ const gold = (text, where) => {
   if (!m) throw new Error(`${where}: a price the exporter doesn't read: "${text}"`);
   return +m[1].replace(/,/g, '');
 };
+// A weight in pounds as the tables set it ("8 lb.", "1½ lb.", "1/4 lb.",
+// "1,320 lb.", a Waterskin's "5 lb. (full)"); a dash is nothing worth weighing, and "Varies" no one
+// weight (null).
+const FRACTIONS = { '½': 0.5, '¼': 0.25, '¾': 0.75 };
+const pounds = (text, where) => {
+  if (text === '—') return 0;
+  if (text === 'Varies') return null;
+  const m = text.match(/^(?:([\d,]+)?([½¼¾])?|(\d+)\/(\d+)) lb\.(?: \(\w+\))?$/);
+  if (!m || !(m[1] || m[2] || m[3])) throw new Error(`${where}: a weight the exporter doesn't read: "${text}"`);
+  return m[3] ? m[3] / m[4] : +(m[1] ?? '0').replace(/,/g, '') + (FRACTIONS[m[2]] ?? 0);
+};
 function armor() {
   const t = lines.findIndex((l, k) => l.kind === 'title' && l.text === 'Armor' && lines[k + 1]?.kind === 'table');
   if (t < 0) throw new Error('the SRD has no Armor table');
@@ -695,7 +709,7 @@ function armor() {
       strength: +(r.Strength.match(/^Str (\d+)$/)?.[1] ?? 0) || null,
       stealth_disadvantage: r.Stealth === 'Disadvantage',
       // Its price in gold ("1,500 GP"), what a character buys it with.
-      cost: gold(r.Cost, `armor "${r.Armor}"`),
+      cost: gold(r.Cost, `armor "${r.Armor}"`), weight: pounds(r.Weight, `armor "${r.Armor}"`),
     });
   }
   return out;
@@ -710,7 +724,7 @@ function weapons() {
   return table(titled(t), ['Name', 'Damage', 'Properties', 'Mastery', 'Weight', 'Cost']).map(r => {
     const group = r.group?.match(/^(Simple|Martial) (Melee|Ranged) Weapons$/);
     if (!group) throw new Error(`weapon "${r.Name}" under no category ("${r.group}")`);
-    return { name: r.Name, category: group[1], range: group[2], damage: r.Damage, properties: r.Properties === '—' ? [] : r.Properties.split(/,\s*(?![^(]*\))/), mastery: r.Mastery };
+    return { name: r.Name, category: group[1], range: group[2], damage: r.Damage, properties: r.Properties === '—' ? [] : r.Properties.split(/,\s*(?![^(]*\))/), mastery: r.Mastery, weight: pounds(r.Weight, `weapon "${r.Name}"`) };
   });
 }
 
@@ -735,7 +749,8 @@ function tools() {
       const ability = entry('Ability');
       if (!ability) throw new Error(`the tool "${head[1]}" has no Ability`);
       const variants = entry('Variants')?.split(/,\s*(?![^(]*\))/).map(v => v.replace(/ \(.*\)$/, '').replace(/^\w/, c => c.toUpperCase()));
-      out.push({ name: head[1], category, ability, utilize: entry('Utilize'), craft: entry('Craft'), ...(variants ? { variants } : {}) });
+      const weight = entry('Weight');
+      out.push({ name: head[1], category, ability, weight: weight ? pounds(weight, `the tool "${head[1]}"`) : null, utilize: entry('Utilize'), craft: entry('Craft'), ...(variants ? { variants } : {}) });
     }
   }
   return out;
@@ -811,7 +826,7 @@ function spells() {
     const kind = growth && (/^The damage increases by /.test(growth[1]) ? 'dice' : /^The damage die changes$/.test(growth[1]) ? 'die' : /extra \w+ damage$/.test(growth[1]) ? 'extra' : /^The range doubles$/.test(growth[1]) ? 'range' : null);
     if (/Cantrip Upgrade\./.test(text) && !(kind || beams)) throw new Error(`the cantrip "${lines[i].text}" grows in a way the export can't read`);
     const upgrade = kind ? { kind, steps: [[+growth[2], growth[3]], [+growth[4], growth[5]], [+growth[6], growth[7]]] }
-      : beams ? { kind: 'beams', steps: [[+beams[2], NUMBER_WORDS.indexOf(beams[1])], [+beams[4], NUMBER_WORDS.indexOf(beams[3])], [+beams[6], NUMBER_WORDS.indexOf(beams[5])]] } : null;
+      : beams ? { kind: 'beams', steps: [[+beams[2], wordNumber(beams[1])], [+beams[4], wordNumber(beams[3])], [+beams[6], wordNumber(beams[5])]] } : null;
     out.push({ name: lines[i].text, level: head[1] ? +head[1] : 0, school: head[2] ?? head[3], classes: head[4].split(/,\s*/), casting, damage: DAMAGE.filter(d => dealt(d).test(text)),
       range, reach, attack, save, dice: hit ? { dice: hit[1], type: hit[2] ?? null } : null, upgrade });
   }
@@ -826,11 +841,18 @@ function spells() {
 // modifier added to damage, Finesse's choice and a thrown Melee weapon's
 // melee ability, the Unarmed Strike's bonus and damage, and the spell save
 // DC and attack modifier.
-function attackRules() {
-  // The whole text, paragraph by paragraph (joining it at once is slow), the
-  // sidebars blocks() counts as it goes counted once, by the classes.
-  const counted = asides, text = blocks(0, lines.length).filter(b => b.text).map(b => b.text).join(' ');
+// The whole text, paragraph by paragraph (joining it at once is slow), the
+// sidebars blocks() counts as it goes counted once, by the classes.
+let whole = null;
+function wholeText() {
+  if (whole) return whole;
+  const counted = asides;
+  whole = blocks(0, lines.length).filter(b => b.text).map(b => b.text).join(' ');
   asides = counted;
+  return whole;
+}
+function attackRules() {
+  const text = wholeText();
   const need = (re, what) => { const m = text.match(re); if (!m) throw new Error(`the SRD's ${what} didn't read`); return m; };
   const rows = titledTable('Attack Roll Abilities', ['Ability', 'Attack Type']);
   const by = re => { const r = rows.find(x => re.test(x['Attack Type'])); if (!r) throw new Error(`the Attack Roll Abilities table has no row for ${re}`); return r.Ability; };
@@ -978,6 +1000,22 @@ const data = {
     higher_level_equipment: titledTable('Starting Equipment at Higher Levels', ['Starting Level', 'Equipment and Money', 'Magic Items']),
     damage_types: titledTable('Damage Types', ['Type', 'Examples']),
   },
+  // What things weigh, and what a character can carry: the Adventuring Gear
+  // and Ammunition tables, and the Carrying Capacity table's multiples of the
+  // Strength score by size ("Small/Medium | Str. × 15 lb.").
+  gear: titledTable('Adventuring Gear', ['Item', 'Weight', 'Cost']).map(r => ({ name: r.Item, weight: pounds(r.Weight, `gear "${r.Item}"`) })),
+  // A focus or symbol's forms, each its own weight ("Arcane Focus (crystal)").
+  forms: Object.fromEntries([['Arcane Focus', 'Arcane Focuses', 'Focus'], ['Holy Symbol', 'Holy Symbols', 'Symbol'], ['Druidic Focus', 'Druidic Focuses', 'Focus']].map(([item, title, column]) =>
+    [item, titledTable(title, [column, 'Weight', 'Cost']).map(r => ({ name: r[column].replace(/ \(.*\)$/, ''), also: r[column].match(/\(also an? (.+?)\)$/)?.[1] ?? null, weight: pounds(r.Weight, `${item} "${r[column]}"`) }))])),
+  coins_per_pound: wordNumber(wholeText().match(/so (\w+) coins weigh a pound/)?.[1] ?? 'none'),
+  ammunition: titledTable('Ammunition', ['Type', 'Amount', 'Storage', 'Weight', 'Cost']).map(r => ({ name: r.Type, amount: +r.Amount, storage: r.Storage, weight: pounds(r.Weight, `ammunition "${r.Type}"`) })),
+  // What carrying more than the most means ("your Speed can be no more than
+  // 5 feet").
+  overloaded: wholeText().match(/While dragging, lifting, or pushing weight in ex?cess of the maximum weight you can carry, your Speed can be no more than (\d+) feet\./)?.[0] ?? (() => { throw new Error('the Carrying Capacity rule didn\'t read'); })(),
+  carrying: titledTable('Carrying Capacity', ['Creature Size', 'Carry', 'Drag/Lift/Push']).map(r => {
+    const times = t => +t.match(/^Str\. × ([\d.]+) lb\.$/)?.[1] || (() => { throw new Error(`Carrying Capacity: "${t}"`); })();
+    return { sizes: r['Creature Size'].split('/'), carry: times(r.Carry), drag: times(r['Drag/Lift/Push']) };
+  }),
   attacks: attackRules(),
 };
 writeFileSync(OUT, `${JSON.stringify(data, null, 1)}\n`);

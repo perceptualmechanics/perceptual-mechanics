@@ -696,6 +696,24 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const fighterC = srd.classes.find(c => c.name === 'Fighter').traits.find(t => t.trait === 'Starting Equipment').value.match(/\(C\) ([\d,]+) GP/)?.[1];
   if (!(gilded?.equipment.kits[0].items.length === 0 && gilded.packageChoices?.[0].chosen === 'C' && gilded.packageChoices[0].lines.C === `${fighterC} GP`)) fail(`a Fighter's package C: ${JSON.stringify(gilded?.packageChoices?.[0])}`);
 
+  // Hit points rolled, as the SRD says ("Roll that die, add your
+  // Constitution modifier to the roll, and add the total (minimum of 1)"),
+  // each level's roll asked for; and the weight of a Fighter's kits summed
+  // here from the SRD's own tables, against Strength times the Carrying
+  // Capacity table's multiple for its size.
+  const rolledFighter = run(someone([{ class: 'Fighter', level: 3, subclass: 'Champion' }], { hp: { method: 'Rolled', rolls: { 'Fighter 2': 10, 'Fighter 3': 1 } } }), 'Fighter 3 rolled');
+  const con = rolledFighter?.mod.Constitution, d10 = srd.hit_points.level_1.Fighter;
+  if (rolledFighter?.hp !== Math.max(1, d10 + con) + Math.max(1, 10 + con) + Math.max(1, 1 + con)) fail(`a Fighter 3's rolled hit points are ${rolledFighter?.hp}`);
+  if (!run(someone([{ class: 'Fighter', level: 2 }], { hp: { method: 'Rolled' } }), 'Fighter 2 unrolled')?.problems.some(p => p.field === 'hp:Fighter 2')) fail('a rolled level with no roll isn\'t asked for');
+  const lbOf = name => srd.armor.items.find(x => x.name === name)?.weight ?? srd.weapons.find(x => x.name === name)?.weight ?? srd.tools.find(x => x.name === name)?.weight ?? srd.gear.find(x => x.name === name)?.weight;
+  const kitWeight = lbOf('Chain Mail') + lbOf('Greatsword') + lbOf('Flail') + 8 * lbOf('Javelin') + lbOf('Dungeoneer’s Pack') + lbOf('Spear') + lbOf('Shortbow') + srd.ammunition.find(x => x.name === 'Arrows').weight + lbOf('Gaming Set') + lbOf('Healer’s Kit') + lbOf('Quiver') + lbOf('Clothes, Traveler’s');
+  const laden = run(someone([{ class: 'Fighter', level: 1 }]), 'Fighter 1')?.load;
+  const medium = srd.carrying.find(r => r.sizes.includes('Medium'));
+  if (!(laden?.items === kitWeight && laden.unweighed.length === 0 && laden.carry === run(someone([{ class: 'Fighter', level: 1 }]), 'Fighter 1').scores.Strength * medium.carry))
+    fail(`a Fighter's load: ${JSON.stringify(laden)}, not ${kitWeight} lb. of kit`);
+  const weak = run(someone([{ class: 'Fighter', level: 1 }], { base: { ...ABLE, Strength: 3 } }), 'Fighter 1, Strength 3')?.load;
+  if (!(laden.over === null && weak?.over === srd.overloaded)) fail(`carrying too much: ${weak?.over} at Strength 3, ${laden?.over} at ${ABLE.Strength}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

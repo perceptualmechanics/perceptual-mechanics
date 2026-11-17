@@ -19,6 +19,7 @@ const STORE_KEY = 'pm-euphonia-character';
 const PARAM = 'c';
 // A number the sheet can't know yet (no scores chosen, say) shows as a dash.
 const known = n => (Number.isFinite(n) ? String(n) : '—');
+const pounds = n => (Number.isFinite(n) ? `${n.toLocaleString('en', { maximumFractionDigits: 2 })} lb.` : '—');
 const signed = n => (!Number.isFinite(n) ? '—' : n >= 0 ? `+${n}` : `−${-n}`);
 const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, homeland: '', market: '', styles: {}, expertise: {}, options: {}, optionArts: {}, languages: {} });
 
@@ -136,6 +137,9 @@ export async function initBuilder(panel) {
   const methodGroup = h('div', { class: 'b-choice', role: 'radiogroup', 'aria-label': 'How to generate scores' },
     methods.map(([value, label]) => h('label', {}, h('input', { type: 'radio', name: 'method', value, checked: state.method === value }), ` ${label}`)));
   const scoreGrid = h('div', { class: 'b-scores', role: 'group', 'aria-label': 'Base scores', 'aria-describedby': idFor('base') });
+  const hpMethodGroup = h('div', { class: 'b-choice', role: 'radiogroup', 'aria-label': 'Hit points after level 1' },
+    ['Fixed', 'Rolled'].map(value => h('label', {}, h('input', { type: 'radio', name: 'hp-method', value, checked: (state.hp?.method ?? 'Fixed') === value }), ` ${value}`)));
+  const rollBox = h('div', { class: 'b-rolls' });
   const pointsLeft = h('p', { class: 'b-note', 'aria-live': 'polite' });
   const skillsBox = h('div', { class: 'b-skill-groups' });
   const featsBox = h('div', { class: 'b-feats' });
@@ -161,6 +165,7 @@ export async function initBuilder(panel) {
     section('Starting equipment', h('p', { class: 'b-note' }, 'Each kit, or its gold to spend instead. The builder buys armor with what’s left.'), packageBox),
     section('Languages', tongueList, languageBox, languageAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
+    section('Hit points', h('p', { class: 'b-note' }, 'Level 1 takes the Hit Die’s highest. Each level after, take the fixed value or roll the die and enter it.'), hpMethodGroup, rollBox),
     section('Skills', skillsBox, expertiseBox, skillNotes),
     section('Tools', toolsBox),
     section('Feats', styleBox, featureOriginBox, featsBox),
@@ -177,6 +182,7 @@ export async function initBuilder(panel) {
   homelandSelect.addEventListener('change', () => set(s => { s.homeland = homelandSelect.value; s.market = ''; }));
   marketSelect.addEventListener('change', () => set(s => { s.market = marketSelect.value; }));
   methodGroup.addEventListener('change', e => set(s => { s.method = e.target.value; s.base = {}; }));
+  hpMethodGroup.addEventListener('change', e => set(s => { s.hp = { ...s.hp, method: e.target.value }; }));
   addClass.addEventListener('click', () => {
     set(s => { s.classes.push({ class: '', level: 1, subclass: '' }); });
     classList.lastElementChild?.querySelector('select')?.focus();
@@ -423,6 +429,15 @@ export async function initBuilder(panel) {
       h('span', {}, h('strong', {}, x), line(x) ? h('span', { class: 'b-pick-text' }, line(x)) : null))),
     problemSlot(`${field}:${c.key}`));
   const fresh = (box, shape) => { if (box.dataset.for === shape) return false; box.dataset.for = shape; return true; };
+  // A box for each level's roll; rebuilt only when the levels change, so
+  // typing a roll doesn't lose its place.
+  function renderRolls(result) {
+    if (!fresh(rollBox, JSON.stringify(result.hpRolls.map(r => [r.key, r.die])))) return;
+    rebuild(rollBox, ...result.hpRolls.map(r => h('label', { class: 'b-field' }, h('span', {}, `${r.class} level ${r.level} (d${r.die})`),
+      h('input', { type: 'number', min: 1, max: r.die, step: 1, value: r.roll ?? '', 'aria-describedby': idFor(`hp:${r.key}`),
+        onchange: e => set(s => { s.hp = { ...s.hp, rolls: { ...s.hp?.rolls, [r.key]: e.target.value === '' ? undefined : Number(e.target.value) } }; }) }),
+      problemSlot(`hp:${r.key}`))));
+  }
   function renderPackages(result) {
     if (!fresh(packageBox, JSON.stringify(result.packageChoices))) return;
     rebuild(packageBox, ...result.packageChoices.map(c => oneOf(c, 'package', 'packages', c.label, x => c.lines[x])));
@@ -844,7 +859,7 @@ export async function initBuilder(panel) {
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-combat' },
         h('h3', { id: 'sheet-combat' }, 'In a fight'),
         h('dl', { class: 'sheet-facts' },
-          h('dt', {}, 'Hit points'), h('dd', {}, `${known(result.hp)}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${known(x.hp)} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count} d${d.die}`).join(' and ') || 'no'} Hit Dice`),
+          h('dt', {}, 'Hit points'), h('dd', {}, `${known(result.hp)}${result.hpMethod === 'Rolled' ? ' (rolled)' : ''}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${known(x.hp)} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count} d${d.die}`).join(' and ') || 'no'} Hit Dice`),
           h('dt', {}, 'Armor Class'), h('dd', {}, `${known(result.armorClass.ac)} (${result.armorClass.from})${result.armor ? '' : result.unarmored.length > 1 ? `; without armor, one at a time: ${result.unarmored.map(u => `${known(u.ac)} (${u.from})`).join(', ')}` : ''}`),
           h('dt', {}, 'Initiative'), h('dd', {}, signed(result.initiative)),
           h('dt', {}, 'Speed'), h('dd', {}, `${result.speed ? `${result.speed} feet` : '—'}${Object.entries(result.speeds).map(([k, v]) => `; ${k} ${v} feet`).join('')}`),
@@ -880,6 +895,8 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Weapons'), h('dd', {}, listed([...result.weaponTraining.categories.map(k => `${k} weapons`), ...result.weaponTraining.named]) || 'None'),
           gear.carried.length ? [h('dt', {}, 'From your features'), h('dd', {}, gear.carried.map(x => `${x.name} (${x.from})`).join(', '))] : null,
           gear.kits.map(k => [h('dt', {}, `${k.from}’s kit`), h('dd', {}, k.items.join(', ') || 'Nothing but the coin')]),
+          h('dt', {}, 'Weight carried'), h('dd', {}, `${pounds(result.load.items + result.load.coins)}, ${pounds(result.load.coins)} of it coin, of the ${pounds(result.load.carry)} you can carry; you can drag, lift or push ${pounds(result.load.drag)}${result.load.unweighed.length ? `; the books give no weight for ${listed(result.load.unweighed)}` : ''}`),
+          result.load.over ? h('dd', { class: 'sheet-warning' }, `More than you can carry. ${result.load.over}`) : null,
           h('dt', {}, 'Money'), h('dd', {}, `${gear.gold.toLocaleString('en')} GP${gear.levelGold ? `, with the ${gear.levelGold.toLocaleString('en')} GP a character starting at level ${result.level} has; roll ${gear.roll} more` : ''}`)),
         gear.magicItems.length ? [h('h4', {}, 'Magic items'),
           h('ul', { class: 'sheet-items' }, gear.magicItems.map((m, i) => h('li', {}, m.item
@@ -960,6 +977,7 @@ export async function initBuilder(panel) {
     renderNotes(result);
     renderKinds(result);
     renderPackages(result);
+    renderRolls(result);
     renderSaves(result);
     renderWeapons(result);
     renderTargets(result);

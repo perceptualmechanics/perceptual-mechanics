@@ -299,6 +299,11 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     standardArray: srd.ability_scores.standard_array,
     pointBudget: srd.ability_scores.point_budget,
     damageTypes: srd.tables.damage_types.map(r => r.Type),
+    // Hit points by Hit Point Die, from the SRD's tables (Level 1 Hit Points
+    // and Fixed Hit Points by Class), so a setting class with the same die
+    // takes the same: a d8's 8 at level 1, and 5 a level after.
+    hitPoints: Object.fromEntries(srd.classes.map(c => [number(c.traits.find(t => t.trait === 'Hit Point Die').value.match(/^D(\d+)/)[1]), { first: srd.hit_points.level_1[c.name], fixed: srd.hit_points.fixed[c.name] }])),
+    weights: { gear: srd.gear, ammunition: srd.ammunition, forms: srd.forms, coinsPerPound: srd.coins_per_pound, carrying: srd.carrying, overloaded: srd.overloaded },
     attacks: srd.attacks,
     backgroundIncreases: srd.ability_scores.background,
     species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
@@ -1071,10 +1076,24 @@ export function character(book, state) {
 
   // Hit points: the first class's die at level 1, then each level's fixed
   // half die plus one, each with the Constitution modifier, at least 1.
+  // Hit points: the first class's level 1 from the SRD's table, and each
+  // level after either the fixed value or, as the player chooses, the Hit
+  // Die rolled ("Roll that die, add your Constitution modifier to the roll,
+  // and add the total (minimum of 1)").
   let hp = 0;
-  const dice = {};
+  const dice = {}, rolled = state.hp?.method === 'Rolled', hpRolls = [];
   for (const [k, c] of known.entries()) {
-    for (let l = 1; l <= (c.level || 0); l++) hp += Math.max(1, (k === 0 && l === 1 ? c.rules.die : c.rules.die / 2 + 1) + mod.Constitution);
+    const table = book.hitPoints[c.rules.die];
+    if (!table) throw new Error(`${c.class}: a d${c.rules.die} the SRD's hit point tables don't give`);
+    for (let l = 1; l <= (c.level || 0); l++) {
+      if (k === 0 && l === 1) { hp += Math.max(1, table.first + mod.Constitution); continue; }
+      if (!rolled) { hp += Math.max(1, table.fixed + mod.Constitution); continue; }
+      const key = `${c.class} ${l}`, roll = Number(state.hp?.rolls?.[key]);
+      const fair = Number.isInteger(roll) && roll >= 1 && roll <= c.rules.die;
+      hpRolls.push({ key, class: c.class, level: l, die: c.rules.die, roll: fair ? roll : null });
+      if (fair) hp += Math.max(1, roll + mod.Constitution);
+      else { fail(`hp:${key}`, `Roll a d${c.rules.die} for ${c.class} level ${l}.`); hp = NaN; }
+    }
     dice[c.rules.die] = (dice[c.rules.die] ?? 0) + (c.level || 0);
   }
   // What a sentence adds: "Your Hit Point maximum increases by 3, and it
@@ -1620,6 +1639,30 @@ export function character(book, state) {
   // the feature is.
   const carried = features.filter(f => /(?:^|\.\s+)You carry an? /.test(f.text)).map(f => ({ name: f.name, from: `${f.subclass ?? f.class} ${f.level}` }));
   const equipment = { carried, buying: { place: market, places, chosen: places.includes(state.market) }, kits: kits.map(k => ({ from: k.from, items: k.items })), bought: gear.spent ? { name: worn.madeFrom ?? worn.name, cost: gear.spent } : null, gold: left, levelGold: higher?.gold ?? 0, roll: higher?.roll ?? null, magicItems, forSale };
+  // What it all weighs, by the SRD's tables: the gear (and its inverted
+  // names, "Clothes, Traveler's" for "Traveler's Clothes"), armor, weapons,
+  // tools, ammunition by its bundle ("20 Arrows" from "Arrows | 20 | … |
+  // 1 lb."), a focus's form ("Arcane Focus (crystal)", or a Quarterstaff for
+  // its staff), what a feature says its own item weighs (a spellbook "is a
+  // Tiny object that weighs 3 pounds"), and the coin, fifty to the pound;
+  // anything the books give no weight is named, not guessed.
+  // What the character can carry, and drag, lift or push: its Strength by
+  // the Carrying Capacity table's multiple for its size.
+  const W = book.weights, curly = x => x.replace(/'/g, '’').toLowerCase();
+  const weightOf = new Map();
+  const weighs = (name, weight) => { if (weight !== null && weight !== undefined) weightOf.set(curly(name), weight); };
+  for (const g of W.gear) { weighs(g.name, g.weight); const inverted = g.name.match(/^(.+?), (.+)$/); if (inverted) weighs(`${inverted[2]} ${inverted[1]}`, g.weight); }
+  for (const x of [...book.armor.items, ...(book.weapons ?? []), ...(book.tools ?? [])]) weighs(x.name, x.weight);
+  for (const f of features) for (const m of f.text.matchAll(/\*\*([\w ]+)\.\*\*[^*]*?\bIt is an? \w+ object that weighs (\d+) pounds/g)) weighs(m[1], +m[2]);
+  const weigh = item => item.split(/ and (?=\d)/).map(part => {
+    const m = part.match(/^(?:(\d+) )?(.+?)(?: \((.+)\))?$/), n = +(m[1] ?? 1), name = m[2], kind = m[3];
+    const ammo = W.ammunition.find(a => curly(a.name.split(',')[0]) === curly(name));
+    if (ammo) return { item: part, weight: (n / ammo.amount) * ammo.weight };
+    const form = kind && Object.entries(W.forms).find(([k]) => curly(k) === curly(name))?.[1].find(f => [f.name, f.also].filter(Boolean).map(curly).includes(curly(kind)));
+    if (form) return { item: part, weight: n * form.weight };
+    const known = [name, name.replace(/es$/, ''), name.replace(/s$/, '')].map(curly).find(x => weightOf.has(x));
+    return { item: part, weight: known ? n * weightOf.get(known) : null };
+  });
   // Attacks, as the SRD's Attack Roll Abilities table sets them (Strength
   // for a melee weapon or an Unarmed Strike, Dexterity for a ranged one,
   // Finesse either), the Proficiency Bonus with a weapon the character is
@@ -1848,6 +1891,16 @@ export function character(book, state) {
   const sizes = species?.size.match(/\b(Tiny|Small|Medium|Large)\b/g) ?? [];
   if (sizes.length > 1 && !sizes.includes(state.size)) fail('size', `Choose ${sizes.join(' or ')}.`);
   const size = sizes.length > 1 ? state.size : sizes[0];
+  const things = [...items.flatMap(weigh), ...(equipment.bought ? weigh(equipment.bought.name) : [])];
+  const unweighed = [...things.filter(x => x.weight === null).map(x => x.item), ...carried.map(x => x.name), ...magicItems.filter(m => m.item).map(m => m.item.name)];
+  const capacity = W.carrying.find(r => r.sizes.includes(size)) ?? null;
+  const load = {
+    items: things.filter(x => x.weight !== null).reduce((n, x) => n + x.weight, 0), coins: left / W.coinsPerPound, unweighed,
+    carry: capacity ? scores.Strength * capacity.carry : null, drag: capacity ? scores.Strength * capacity.drag : null,
+  };
+  // More than the character can carry is the rule's to say ("While dragging,
+  // … your Speed can be no more than 5 feet").
+  load.over = load.items + load.coins > load.carry ? W.overloaded : null;
 
   return {
     problems, notes, species, option: options?.names.includes(state.option) ? state.option : null, size, background, scores, base, mod, level: total, bonus,
@@ -1859,8 +1912,8 @@ export function character(book, state) {
       columns: Object.entries(c.rules.table.rows[c.level - 1]).filter(([k]) => ![c.rules.table.columns[0], 'Proficiency Bonus', 'Class Features', 'Cantrips', c.rules.spellsColumn, ...c.rules.slotLevels.map(String), ...(c.rules.pact ? ['Spell Slots', 'Slot Level'] : [])].includes(k)).map(([name, value]) => ({ name, value })) })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
     skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, packageChoices: packageChoices.map(({ kit, ...c }) => c), languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
-    hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
-    attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
+    hp, hpFrom, hpMethod: rolled ? 'Rolled' : 'Fixed', hpRolls, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
+    load, attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
     features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,
   };
