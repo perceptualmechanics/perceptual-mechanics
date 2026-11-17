@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e1c8841a3c6b46cea54636abb76b9fa53f8e1ada001a802a4d5a285edb5fa131",
-  "modified": "2026-11-17T11:43:35-05:00",
+  "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
+  "modified": "2026-11-17T15:55:12-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 32,
   "rules": {
@@ -40,7 +40,7 @@
   ],
   "building": "**Building on Euphonia.** Euphonia is an umbrella: what its books only sketch is open for anyone to build on. The brief for developers, with the Principles every Euphonia product follows, is Appendix F: Building on Euphonia.",
   "moment": {
-   "text": "**The lamp in the kitchen.** In Mutapa a lamp that lights itself is a household thing. In Vienna it's a duchess's toy, until she tires of it and it goes downstairs: Regina Mayrhofer, cook to a countess on the Herrengasse, works late under one now and swears by it. It dims a little every month, and the polite foreign tinker who comes to set it right asks a great many friendly questions about the house. What the ministries have just worked out about that lamp is the Mark of 1668 (The World in 1668, The Mark), and what the tinker does with his questions is in Characters (Backgrounds, Mutapan Agent).",
+   "text": "**The lamp in the kitchen.** In Mutapa a lamp that lights itself is a household thing. In Vienna it's a duchess's toy, until she tires of it and it goes downstairs: Regina Mayrhofer, cook to a countess on the Herrengasse, works late under one now and swears by it. It dims a little every month, and the polite foreign tinker who comes to set it right asks a great many friendly questions about the house. What the ministries have just worked out about that lamp is the Mark of 1668, and what the tinker does with his questions is in Characters (Backgrounds, Mutapan Agent).",
    "where": "The Setting, Life in 1668, The Day"
   },
   "where": "The Setting, Welcome to Euphonia"

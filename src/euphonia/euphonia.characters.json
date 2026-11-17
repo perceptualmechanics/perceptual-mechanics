@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e1c8841a3c6b46cea54636abb76b9fa53f8e1ada001a802a4d5a285edb5fa131",
-  "modified": "2026-11-17T11:43:35-05:00",
+  "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
+  "modified": "2026-11-17T15:55:12-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 32,
   "rules": {
@@ -41,7 +41,7 @@
     ],
     "tool": "Navigator's Tools",
     "equipment": "Choose A or B: (A) Navigator's Tools, Traveler's Clothes, Ink, Ink Pen, 10 sheets of Parchment, Lamp, Pouch, 11 GP; or (B) 50 GP",
-    "about": "You kept a company's books at a factory, as a trading post is called, and learned that a company is a state that happens to float: it makes treaties, builds forts and keeps an army. You've dealt with kings, sultans and pirates and dropped each when the books said so, and you know what a Mutapan lamp fetches in three currencies. Nobody in Europe buys more from Mutapa than a factor, or steals more of its secrets, which is why the spymaster's file exists (see the Chartered Companies, in Powers and Factions). Counsellors (the Factor), Rogues and Wizards on company contracts come from here.",
+    "about": "You kept a company's books at a factory, as a trading post is called, and learned that a company is a state that happens to float: it makes treaties, builds forts and keeps an army. You've dealt with kings, sultans and pirates and dropped each when the books said so, and you know what a Mutapan lamp fetches in three currencies. Nobody in Europe buys more from Mutapa than a factor, or steals more of its secrets, which is why the spymaster's file exists (see the Chartered Companies, in Powers and Factions). The house you kept books for may as easily have been a Gujarati one in Surat or a Swahili one in Mombasa as the VOC; a factory's books read the same in any script. Counsellors (the Factor), Rogues and Wizards on company contracts come from here.",
     "door": "Any company's factory or counting house in a port opens its books to you and finds you a bed.",
     "debt": "Your old employers want you back, and Mutapa's spymaster keeps a file on you."
    },
@@ -59,7 +59,7 @@
     ],
     "tool": "Gaming Set (playing cards)",
     "equipment": "Choose A or B: (A) Fine Clothes, Gaming Set (playing cards), Perfume, Signet Ring, Dagger, Sealing Wax, Ink, Ink Pen, 5 sheets of Parchment, 11 GP; or (B) 50 GP",
-    "about": "You grew up in a household that lived by a license: a court wizard's royal patent, or a minor noble's access. You carried the letters, sat at the gaming tables where posts are won and lost and learned who was about to fall before they did. You can read a room, forge a seal in a pinch and tell last year's lace from this year's. The house that raised you is your way into the courts, and whoever holds its license now owns a piece of you. The Children of the Emerald Tablet know your face; your court's spymaster knows your debts. Counsellors, Wizards and Eldritch Knights come out of these houses.",
+    "about": "You grew up in a household that lived by a license: a court wizard's royal patent, or a minor noble's place at court. You carried the letters, sat at the gaming tables where posts are won and lost and learned who was about to fall before they did. You can read a room, forge a seal in a pinch and tell last year's lace from this year's. The house that raised you is your way into the courts, and whoever holds its license now owns a piece of you. The Children of the Emerald Tablet know your face; your court's spymaster knows your debts. Counsellors, Wizards and Eldritch Knights (*Player's Handbook*) come out of these houses.",
     "door": "The house that raised you gets you into its court, and its servants still talk to you.",
     "debt": "Whoever holds that house's license now owns a piece of you, and your court's spymaster knows your debts."
    },
@@ -79,7 +79,7 @@
     "equipment": "Choose A or B: (A) Herbalism Kit, Healer's Kit, Quarterstaff, Book (charms and receipts), Traveler's Clothes, 10 Candles, Pouch, 12 GP; or (B) 50 GP",
     "about": "You healed, found lost things and charmed warts and cattle out of the back room of a family business, because somebody had to. Like most of your kind you read; in England the law has let unlicensed herb-knowers treat external complaints since 1542. Your magic is the same as Lanternhall's. You have none of its protection: when a healer tells a court her skill came from the fairies, the court writes down the Devil. Your network knows who's safe and who's informing, and your clients live at the edge, so you know the border too (the Hidden Domain, in *Life on the Border*). Druids, Clerics and Physicians who skipped the hospital come from here; the Physician's Hedge Witch is the model. See The Cunning Folk, in Powers and Factions.",
     "door": "Your network knows who's safe and who's informing in any district, and hides its own.",
-    "debt": "You're unlicensed, and someone knows it."
+    "debt": "You're unlicensed, and someone can prove it."
    },
    {
     "name": "Schooled",
@@ -101,9 +101,9 @@
     },
     "tool": "Calligrapher's Supplies",
     "equipment": "Choose A or B: (A) Calligrapher's Supplies, Book (your school's), 8 sheets of Parchment, Robe, Lamp, Oil, Quarterstaff, 12 GP; or (B) 50 GP",
-    "about": "Choose the institution. The Society of Jesus runs hundreds of colleges on one printed curriculum, the *Ratio Studiorum* of 1599. A seminary made you a priest's assistant who can argue a point. A madrasa in Bukhara, Cairo or Timbuktu taught you the science of letters alongside the law. A university or an academy made you a natural philosopher's apprentice, and the Children of the Emerald Tablet who taught you now count you an enemy. Whichever it was, you read three languages, dispute in one and write letters that get answered across a war. The Society of Jesus wants your loyalty, the Republic of Letters your correspondence (see Powers and Factions), and every court's spymaster reads the post. Wizards, Clerics, Natural Philosophers, Counsellors and Physicians are schooled this way.",
+    "about": "Choose the institution. The Society of Jesus runs hundreds of colleges on one printed curriculum, the *Ratio Studiorum* of 1599. A seminary made you a priest's assistant who can argue a point. A madrasa in Bukhara, Cairo or Timbuktu taught you the science of letters alongside the law. A university or an academy made you a natural philosopher's apprentice, and the Children of the Emerald Tablet who taught you now count you an enemy. Whichever it was, you read three languages, dispute in one and write letters that get answered across a war. Your school wants your loyalty, the Republic of Letters your correspondence (see Powers and Factions), and every court's spymaster reads the post. Wizards, Clerics, Natural Philosophers, Counsellors and Physicians are schooled this way.",
     "door": "Your letters get answered across a war, and any college of your order gives you a room and a library.",
-    "debt": "The Society of Jesus, or your school's masters, want your loyalty, and every spymaster reads your post."
+    "debt": "Your school's masters (the Society of Jesus, a bishop, a madrasa's teachers or a university's chair) want your loyalty, and every spymaster reads your post."
    },
    {
     "name": "Mutapan Agent",
@@ -119,7 +119,7 @@
     ],
     "tool": "Tinker's Tools",
     "equipment": "Choose A or B: (A) Tinker's Tools; or (B) 50 GP",
-    "about": "You work abroad for Mutapa, under the cover it gives its people: a Mhizha taught you to retune curiosities (see Mutapan Curiosities). Every Mutapan lamp in a Viennese drawing room drifts, so a quiet technician with Tinker's Tools can enter any great house in Europe and be thanked for it. What you carry home is what you saw. Mutapa's spymaster is brilliant and badly resourced, and her service runs on people like you. You may be a Shona clerk of the House of the Bird, Mutapa's bank, a Khoekhoe go-between from Hoerikwaggo or a foreigner recruited at Sofala; loyal, bought or both. Europe has just worked out what platinum is, and you're the one in the room (see Mutapa and the Indian Ocean, in The State of the World). Mhizha, Counsellors and Rogues come this way.",
+    "about": "You work abroad for Mutapa, under the cover it gives its people: a Mhizha taught you to retune curiosities (see Mutapan Curiosities). Every Mutapan lamp in a Viennese drawing room drifts, so a quiet technician with Tinker's Tools can enter any great house in Europe and be thanked for it. What you carry home is what you saw. Mutapa's spymaster is brilliant and badly resourced, and her service runs on people like you. You may be a Shona clerk of the House of the Bird, Mutapa's bank, a Khoekhoe go-between from Hoerikwaggo or a foreigner recruited at Sofala; loyal, bought or both. Europe has just worked out what platinum is, and you are in the rooms where it talks about it (see Mutapa and the Indian Ocean, in The State of the World). Mhizha, Counsellors and Rogues come this way.",
     "door": "Any house that owns a curiosity lets you in to retune it, and thanks you.",
     "debt": "Mutapa's spymaster expects a report."
    },
@@ -155,7 +155,7 @@
     ],
     "tool": "Carpenter's Tools",
     "equipment": "Choose A or B: (A) Spear, Shortsword, Carpenter's Tools, Leather Armor, Shovel, Healer's Kit, Traveler's Clothes, Bedroll, 11 GP; or (B) 50 GP",
-    "about": "You were in the Empire's war of 1618 to 1648, when every crown in Europe fought over German ground and the war fed on the villages it crossed: at Breitenfeld or Lützen, or a child the army took along, and the peace sent you home to find no home. Your trade is the one the war taught: drill by numbers, dig in, build the palisade, keep the men fed. If you're young for it, you learned it in Portugal's war or on Candia's walls. Every crown with a quarrel hires veterans; a mercenary colonel is as much your faction as any king, and the Agitators recruit veterans who have seen what crowns do to villages (see Powers and Factions). Fighters above all, Battle Masters in particular; Barbarians who found the rage in a breach; Clerics who buried too many; the Natural Philosopher who learned ballistics from a gunner.",
+    "about": "You were in the Empire's war of 1618 to 1648, when every crown in Europe fought over German ground and the war fed on the villages it crossed. You fought at Breitenfeld or Lützen, or were a child the army took along, and the peace sent you home to find no home. Your trade is the one the war taught: drill by numbers, dig in, build the palisade, keep the men fed. If you're young for it, you learned it in Portugal's war, on Candia's walls or on the Andean front, on either side of it. Every crown with a quarrel hires veterans; a mercenary colonel is as much your faction as any king, and the Agitators recruit veterans who have seen what crowns do to villages (see Powers and Factions). Fighters above all, Battle Masters (*Player's Handbook*) in particular; Barbarians who found the rage in a breach; Clerics who buried too many; the Natural Philosopher who learned ballistics from a gunner.",
     "door": "Any mercenary colonel's camp feeds you, and most will hire you.",
     "debt": "The Agitators think you owe the villages the war ate, and they've come to collect."
    },
@@ -173,7 +173,7 @@
     ],
     "tool": "Smith's Tools",
     "equipment": "Choose A or B: (A) Smith's Tools, Sling, 20 Sling Bullets, Dagger, Hunting Trap, 10 Iron Spikes, Hooded Lantern, Oil, Traveler's Clothes, Pouch of salt, 14 GP; or (B) 50 GP",
-    "about": "You grew up where the Hidden come over. The village ironed and salted its doors every night of the dark half; the smith was the most important person in it, and you were her hand. You know the tide by the moon, which fields nobody plows and why the fiddler who came home last spring is a hundred years out of date. Somebody you knew was taken, and somebody went to get them back, or didn't. You sleep light: you came back from the open night because you heard it coming. Your country's name for the Hidden is in The State of the World. A Border-Born may have grown up on either side of the border (*Euphonia: Life on the Border*). In the courts, you're the one who notices the iron is missing from the doorframe.",
+    "about": "You grew up where the Hidden come over. The village ironed and salted its doors every night of the dark half; the smith was the most important person in it, and you were her hand. You know the tide by the moon, which fields nobody plows and why the fiddler who came home last spring is a hundred years out of date. Somebody you knew was taken, and somebody went to get them back, or didn't. You sleep light: you were indoors before the last open night because you heard it coming. Your country's name for the Hidden is in The State of the World. A Border-Born may have grown up on either side of the border (*Euphonia: Life on the Border*). In the courts, you notice when the iron is missing from the doorframe.",
     "door": "Any border village takes you in and asks you to look at its doors.",
     "debt": "Somebody you knew was taken, and nobody has brought them back."
    },
@@ -190,8 +190,8 @@
      "Survival"
     ],
     "tool": "Choose one kind of Musical Instrument",
-    "equipment": "Choose A or B: (A) Musical Instrument (same as above), Traveler's Clothes, Bedroll, Tinderbox, Pouch, 16 GP; or (B) 50 GP",
-    "about": "The Hidden took you, and you came home. Maybe you were a child and they left something in your cradle; maybe you followed music into a hill on your way back from market. You remember a feast, a dance that lasted a night and a road that kept turning back, and none of it in order. Home had moved on without you: a week, a year or a hundred, and the people who mourned you are older, or dead, or sure you're not you. You came back with a tune nobody taught you, a knack for the hedge-magic every fairy doctor wishes she had and the habit of looking for the way out of every room. Whether you carry a piece of the Hidden is settled by your class: a Danae, a Bordermarch Barbarian, a Hidden Bard, a Mortal Hunter or the stand-in Dreamwarden does, and a Rogue taken as a child may simply be quick and strange (The Hidden's Classes, above). Your country's word for the taken is in The State of the World, and the road you came home by is open (Appendix F: Building on Euphonia).",
+    "equipment": "Choose A or B: (A) Musical Instrument (same as above), Traveler's Clothes, Bedroll, Tinderbox, Pouch, and the rest of 50 GP in coin (46 GP less the instrument's price); or (B) 50 GP",
+    "about": "The Hidden took you, and you came home. Maybe you were a child and they left something in your cradle; maybe you followed music into a hill on your way back from market. You remember a feast, a dance that lasted a night and a road that kept turning back, and none of it in order. Home had moved on without you: a week, a year or a hundred, and the people who mourned you are older, or dead, or sure you're not you. You came back with a tune nobody taught you, a knack for the hedge-magic every village go-between wishes she had and the habit of looking for the way out of every room. Whether you carry a piece of the Hidden is settled by your class: a Danae, a Bordermarch Barbarian, a Hidden Bard, a Mortal Hunter or a Dreamwarden does, and a Rogue taken as a child may simply be quick and strange (The Hidden's Classes, above). Your country's word for the taken is in The State of the World, and the road you came home by is open (Appendix F: Building on Euphonia).",
     "door": "The Hidden of one court know you by sight, and will parley with you where they'd raid anyone else.",
     "debt": "Something there still wants you back."
    }
@@ -234,7 +234,7 @@
     "species": [
      "Orc"
     ],
-    "line": "A people of the world's borders, as the core books have them, with their own gods and towns. Not Hidden, and not anyone's soldiers"
+    "line": "A people made by their own god, as the core books have them, with towns of their own in the hard high country between the empires; an orc in Venice or Delhi is a traveler from one of them. Not Hidden, and not anyone's soldiers"
    },
    {
     "species": [

@@ -626,9 +626,9 @@ export function character(book, state) {
     kindChoices.push({ key, class: f.class, label: `${f.name} (${f.class} ${f.level})`, noun, offered, chosen });
     reads(f);
     if (!chosen) { fail(`kind:${key}`, `Choose ${/^[aeiou]/.test(noun) ? 'an' : 'a'} ${noun} for ${f.name}.`); continue; }
-    const rows = f.text.split('\n').filter(l => new RegExp(`^\\| ${chosen} \\||^> \\*\\*${chosen}\\.\\*\\*|^- \\*${chosen} ${noun}\\.\\*`).test(l));
+    const rows = f.text.split('\n').filter(l => new RegExp(`^\\| ${chosen} \\||^> \\*\\*${chosen}\\.\\*\\*|^\\s*- \\*${chosen} ${noun}\\.\\*`).test(l));
     const head = rows[0]?.startsWith('|') ? f.text.split('\n').find(l => /^\| [A-Z]/.test(l)) : null;
-    features.push({ class: f.class, subclass: f.subclass, level: f.level, name: `${f.name}: ${chosen}`, kind: true, text: rows.length ? [head, head && head.replace(/[^|]+/g, '---'), ...rows].filter(Boolean).map(l => l.replace(/^> |^- /, '')).join('\n') : `${chosen}.` });
+    features.push({ class: f.class, subclass: f.subclass, level: f.level, name: `${f.name}: ${chosen}`, kind: true, text: rows.length ? [head, head && head.replace(/[^|]+/g, '---'), ...rows].filter(Boolean).map(l => l.replace(/^> |^\s*- /, '')).join('\n') : `${chosen}.` });
   }
 
   // The Revelations a class with a Cosmography knows: those its features
@@ -1504,16 +1504,29 @@ export function character(book, state) {
     return { unarmored, ac };
   };
   // Gear, as the rules set a character up at its level: the first class's
-  // starting kit and the background's (each one's package A, which carries
-  // the weapons, focus and tools the other packages leave the player to buy),
-  // and past level 1 the money the Starting Equipment at Higher Levels table
+  // starting kit and the background's, each the package the player chooses
+  // (A unless another is chosen: it carries the weapons, focus and tools the
+  // others leave the player to buy), its "tool you chose" and "Gaming Set
+  // (same as above)" the tools chosen for that class or background; and past
+  // level 1 the money the Starting Equipment at Higher Levels table
   // adds. The armour is the builder's, not the player's: without armour, in
   // a kit's, or in any the character is trained in, has the Strength for
   // (without it, Speed drops) and can buy with that money, the highest Armor
   // Class, then one that doesn't hinder Stealth, then the least spent. A
   // Shield only as a kit gives one, carried where it adds (not where it ends
   // Unarmored Defense).
-  const kits = [first && { from: first.name, ...first.packages[0] }, background && { from: background.name, ...background.packages[0] }].filter(Boolean);
+  const outfitters = [first && { from: first.name, packages: first.packages, tools: k => k === first.name || k.startsWith(`${first.name} `) },
+    background && { from: background.name, packages: background.packages, tools: k => k === `${background.name} tools` || k.startsWith(`${background.name} tools `) }].filter(Boolean);
+  const resolve = (item, chosen) => {
+    const same = item.match(/^(.+?) \(same as above\)$/), named = same ? chosen.filter(t => t.startsWith(same[1])) : /^the (?:\w+ )?(?:[\w’'] ?)*?(?:tools?|Tools|Supplies|Kit) you chose$/.test(item) ? chosen : null;
+    return named?.length ? named : [item];
+  };
+  const packageChoices = outfitters.map(src => {
+    const pack = src.packages.find(p => p.label === state.packages?.[src.from]) ?? src.packages[0], chosen = toolChoices.filter(t => src.tools(t.key)).flatMap(t => t.chosen);
+    return { key: src.from, label: `${src.from}’s starting equipment`, offered: src.packages.map(p => p.label), lines: Object.fromEntries(src.packages.map(p => [p.label, [...p.items, ...(p.gold ? [`${p.gold} GP`] : [])].join(', ')])), chosen: pack.label,
+      kit: { from: src.from, items: pack.items.flatMap(i => resolve(i, chosen)), gold: pack.gold } };
+  });
+  const kits = packageChoices.map(c => c.kit);
   const higher = book.higherLevelEquipment.find(r => total >= r.lo && total <= r.hi) ?? null;
   const items = kits.flatMap(k => k.items), money = kits.reduce((n, k) => n + k.gold, 0) + (higher?.gold ?? 0);
   const armorNamed = item => book.armor.items.find(a => a.name === item);
@@ -1744,7 +1757,7 @@ export function character(book, state) {
   // it (Unarmored Movement).
   const unchosen = f => {
     const k = kindChoices.find(c => c.key === (f.key ?? `${f.class} ${f.level} ${f.name}`));
-    return k ? f.text.split('\n').filter(l => !k.offered.some(o => l.startsWith(`- *${o} `) || l.startsWith(`> **${o}.`) || l.startsWith(`| ${o} |`))).join('\n') : f.text;
+    return k ? f.text.split('\n').filter(l => !k.offered.some(o => l.trimStart().startsWith(`- *${o} `) || l.startsWith(`> **${o}.`) || l.startsWith(`| ${o} |`))).join('\n') : f.text;
   };
   const holds = condition => !condition || (/^Heavy armor$/.test(condition) ? worn?.category !== 'Heavy' : /^armor or wielding a Shield$/.test(condition) ? !worn && !shield : false);
   // A clause for one option of a lasting choice ("*Infiltrator:* you have a
@@ -1765,7 +1778,7 @@ export function character(book, state) {
       let led = false;
       for (const line of par.split('\n')) {
         let framed = carried;
-        for (const x of line.replace(/^- /, '').split(/(?<=[.!])\s+/)) {
+        for (const x of line.replace(/^\s*- /, '').split(/(?<=[.!])\s+/)) {
           const bare = x.replace(/^\*{1,3}[^*]+?\*{1,3}\s*/, '');
           if (FRAME.test(bare) && !(/^While you wear (?:the|your) suit\b/.test(bare) && worn?.madeFrom)) framed = true;
           else if (!framed) kept.push(x);
@@ -1845,7 +1858,7 @@ export function character(book, state) {
     classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null,
       columns: Object.entries(c.rules.table.rows[c.level - 1]).filter(([k]) => ![c.rules.table.columns[0], 'Proficiency Bonus', 'Class Features', 'Cantrips', c.rules.spellsColumn, ...c.rules.slotLevels.map(String), ...(c.rules.pact ? ['Spell Slots', 'Slot Level'] : [])].includes(k)).map(([name, value]) => ({ name, value })) })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
-    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
+    skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, packageChoices: packageChoices.map(({ kit, ...c }) => c), languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
     attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
     features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,

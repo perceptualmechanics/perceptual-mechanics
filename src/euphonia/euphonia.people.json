@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e1c8841a3c6b46cea54636abb76b9fa53f8e1ada001a802a4d5a285edb5fa131",
-  "modified": "2026-11-17T11:43:35-05:00",
+  "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
+  "modified": "2026-11-17T15:55:12-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 32,
   "rules": {
@@ -29,11 +29,11 @@
   "regions": [
    {
     "region": "Europe",
-    "intro": "The setting's own people here: where a party meets them, what they want and how a table uses them. Each has a pregen sheet, except the last three.",
+    "intro": "The setting's own people here: where a party meets them, what they want and how a table uses them. Each has a pregen sheet except Máhte Ingá, Dorka Lakatos, Zofia Lipska and Don Gaspar de Rojas.",
     "people": [
      {
       "name": "Ser Marin Zorzi",
-      "text": "One of Venice's three State Inquisitors, a tiefling of an old patrician house who has worn a plain white mask in court since his horns came in. You meet him only in the Ten's windowless court room, or by posting a denunciation in a lion's mouth: he reads them himself at night and can tell spite from fear by the handwriting. He wants, once, to see the face of the halfling whose file he has read more often than his breviary. The Venice Job's villain, or its most dangerous patron; the brass figure at his elbow turns its head when you lie.",
+      "text": "One of Venice's three State Inquisitors, a tiefling of an old patrician house who has worn a plain white mask in court since his horns came in. You meet him only in the Ten's windowless court room, or by posting a denunciation in a lion's mouth: he reads them himself at night and can tell spite from fear by the handwriting. He wants to see the face of the halfling whose file he has read more often than his breviary. The Venice Job's villain, or its most dangerous patron; the brass figure at his elbow turns its head when you lie.",
       "at": {
        "name": "Venice",
        "modern": "Venice",
@@ -60,7 +60,7 @@
      },
      {
       "name": "Matthias Kessler",
-      "text": "A taster and apothecary's man at the Habsburg court in Vienna, paid to keep his masters alive, and by some of them for the other thing. Find him in the kitchens under the Hofburg at the dinner hour, gloves folded beside the dishes he has just tasted; the scullery boys love him, and witnesses afterward can't describe his face. He is a Hollowed Counsellor, a poisoner who computes and feels nothing. He wants to keep the one thing he kept from before, and to keep anyone from knowing what it is. A villain or a contact for a Great Game in Vienna. Agree at the table how much poisoning and coldness is shown before he appears.",
+      "text": "A taster and apothecary's man at the Habsburg court in Vienna, paid to keep his masters alive, and by some of them for the other thing. He works the kitchens under the Hofburg at the dinner hour, gloves folded beside the dishes he has just tasted; the scullery boys love him, and witnesses afterward can't describe his face. He is a Hollowed Counsellor, a poisoner who computes and feels nothing. He wants to keep the one thing he kept from before, and to keep anyone from knowing what it is. A villain or a contact for a Great Game in Vienna. Agree at the table how much poisoning and coldness is shown before he appears.",
       "at": {
        "name": "Vienna",
        "modern": "Vienna",
@@ -87,7 +87,7 @@
      },
      {
       "name": "Ilyanor Sael",
-      "text": "Lanternhall's elf, Attending Physician and Chair of Vital Studies (see Running Euphonia, Notable People). Find him on rounds on the Long Ward at the sixth bell, or in his office above the Library of Cases at any hour; he doesn't leave the Hall. He wants his graduates licensed in the countries they go home to, which makes him a patron for any Physician party and a problem for every licensing office in Europe.",
+      "text": "Lanternhall's elf, Attending Physician and Chair of Vital Studies (see Running Euphonia, Notable People). He is on rounds on the Long Ward at the sixth bell, or in his office above the Library of Cases at any hour; he doesn't leave the Hall. He wants his graduates licensed in the countries they go home to, which makes him a patron for any Physician party and a problem for every licensing office in Europe.",
       "at": {
        "name": "Lanternhall",
        "modern": "Basel",
@@ -96,7 +96,7 @@
      },
      {
       "name": "Sister Ondine",
-      "text": "The senior night sister on Lanternhall's Long Ward, who can't cast a spell and is the one person in the Hall every Physician obeys. Find her on the night watch, or in the corridor outside Ilyanor Sael's office with a teapot; she has threatened him with a blanket, and wants to see him sleep in a bed, once, with his eyes shut. She knows which patients will die by the way they ask for water. The ward's conscience and its comedy, and the one who sends an exhausted student to bed.",
+      "text": "The senior night sister on Lanternhall's Long Ward, who can't cast a spell and is the one person in the Hall every Physician obeys. She keeps the night watch, or waits in the corridor outside Ilyanor Sael's office with a teapot; she has threatened him with a blanket, and wants to see him sleep in a bed, once, with his eyes shut. She knows which patients will die by the way they ask for water. The ward's conscience and its comedy, and the one who sends an exhausted student to bed.",
       "at": {
        "name": "Lanternhall",
        "modern": "Basel",
@@ -132,7 +132,7 @@
      },
      {
       "name": "Étaín of the Ford",
-      "text": "A wild elf of the Bordermarches who has ridden with the Wild Hunt since before the parish churches were built. A village meets her at the ford below it on the first dark night after Samhain, hounds ahead of her, her body turned in its skin by the ríastrad; between Beltane and Samhain she hardly thinks of villages at all. She has never been able to throw away a child's wooden horse from a raid three hundred years ago, and wants to know whose it was. A villain for a game on the Border, or a foil someone patient could talk to in the light half.",
+      "text": "A wild elf of the Bordermarches, the shifting country where the Hidden Realm and the world overlap, who has ridden with the Wild Hunt since before the parish churches were built. A village meets her at the ford below it on the first dark night after Samhain, hounds ahead of her, her body turned in its skin by the ríastrad; between Beltane and Samhain she hardly thinks of villages at all. She has never been able to throw away a child's wooden horse from a raid three hundred years ago, and wants to know whose it was. A villain for a game on the Border (a village against the Hidden, the game of *Life on the Border*), or a foil someone patient could talk to in the light half.",
       "at": {
        "name": "the ford",
        "modern": "Chester",
@@ -185,6 +185,15 @@
       }
      },
      {
+      "name": "Don Gaspar de Rojas",
+      "text": "A canon of Toledo's cathedral and keeper of the chapter's archive, who holds the list of keys to the vaults under the city and has never been told what lies at the bottom of the deepest one. He works in the archive off the cloister from the morning office to noon, and walks the Zocodover in the evening, where every court's agent in Toledo has tried to buy him a drink. Since the winter the Archbishop's guards have taken a lantern down past his last door every Friday, and he wants to know why; he is a scholar, and not knowing is the one thing he can't bear. The Great Game's way into Toledo, or the man a rival court tries to buy.",
+      "at": {
+       "name": "Toledo",
+       "modern": "Toledo",
+       "country": "Spain"
+      }
+     },
+     {
       "name": "Máhte Ingá",
       "text": "A noaidi of the Lule Sámi: Ingá, Máhtte's daughter. She reads the drum for three *siidas*, the herding communities of her district, and keeps it in a different place each season. A party meets her at the winter market at Jokkmokk, where the crown's bailiff takes the tax and the priest counts who came to church, or on the reindeer road to the silver works at Kvikkjokk, where her people are made to haul the ore. A priest took her uncle's drum, and it sits in a cabinet in Stockholm. She will read the drum for a party's road in exchange for word of where that drum is now. A guide and an ally in the north; to the hunts, what she does is unlicensed magic.",
       "at": {
@@ -215,7 +224,7 @@
    },
    {
     "region": "Mutapa and the Indian Ocean",
-    "intro": "The setting's own people here. Simbarashe Moyo, Tonderai Shumba, Tsitsi, Rashid bin Khamis al-Ghafiri, Nyarai Soko and Fadzai Shoko have pregen sheets.",
+    "intro": "The setting's own people here. Each has a pregen sheet.",
     "people": [
      {
       "name": "Simbarashe Moyo",
@@ -255,7 +264,7 @@
      },
      {
       "name": "Rashid bin Khamis al-Ghafiri",
-      "text": "A Muscat dhow captain with the storm in his blood, an air elemental-blood since lightning climbed down the mast to him as a young deckhand. When the northeast monsoon brings the dhows in, he works every quay from Pate to Kilwa, selling fair winds by the knot to captains who swear they don't need them. A knot is a length of cord he has tied a wind into; untied aboard, it gives the ship a fair wind until he next sleeps. He wants to keep carrying dates and Gulf horses instead of guns for as long as the imam, Sultan bin Saif, lets him, and the imam's officers have started asking about his hold. A patron or rival on the Monsoon Road.",
+      "text": "A Muscat dhow captain with the storm in his blood, an air elemental-blood (descended from an elemental that took a human shape and forgot) on his mother's side, who learned to tie winds into cord from her father on the Batinah coast. When the northeast monsoon brings the dhows in, he works every quay from Pate to Kilwa, selling fair winds by the knot to captains who swear they don't need them. A knot is a length of cord he has tied a wind into; untied aboard, it gives the ship a fair wind until he next sleeps. He wants to keep carrying dates and Gulf horses instead of guns for as long as the imam, Sultan bin Saif, lets him, and the imam's officers have started asking about his hold. A patron or rival on the Monsoon Road.",
       "at": {
        "name": "Muscat",
        "modern": "Muscat",
@@ -264,7 +273,7 @@
      },
      {
       "name": "Ambuya Rudo Gumbo",
-      "text": "The senior royal medium, through whom a king two centuries dead speaks on rain and war, and who has lately said things about the shewstones the living king didn't want to hear. Find her at court on the plateau on the day the royal spirit is asked a question, seated on a mat and already somewhere else, or at home the next day shelling groundnuts, cross about it. She remembers nothing of what he says, returns the shewstone house's gifts unopened, and wants to be spoken to for an afternoon as herself. A patron or ally on the mediums' side of the question of who governs.",
+      "text": "The senior royal medium, through whom a king two centuries dead speaks on rain and war, and who has lately said things about the shewstones the living king didn't want to hear. A party meets her at court on the plateau on the day the royal spirit is asked a question, seated on a mat and already somewhere else, or at home the next day shelling groundnuts, cross about it. She remembers nothing of what he says, returns the shewstone house's gifts unopened, and wants to be spoken to for an afternoon as herself. A patron or ally on the mediums' side of the question of who governs.",
       "at": {
        "name": "the court on the plateau",
        "modern": "Mazowe",
@@ -273,7 +282,7 @@
      },
      {
       "name": "Munyaradzi Shava",
-      "text": "Master of the Shava house, the merchant house that carries the king's shewstones abroad and now stands half a step behind the king's left shoulder. Find him in his counting room in Sofala's new quarter, or at court, listening without blinking and remembering the exact weight of everything you say; it was his men who went to the great artificer's workshop at night. He came back from a lowland fever at twenty-two without whatever makes a man flinch, and wants a shewstone in every court on earth before the mediums or the old man can stop it. The Great Game's villain on Mutapa's side, or its best-paying patron.",
+      "text": "Master of the Shava house, the merchant house that carries the king's shewstones abroad and now stands half a step behind the king's left shoulder. He keeps a counting room in Sofala's new quarter and a place at court, where he listens without blinking and remembers the exact weight of everything you say; it was his men who went to the great artificer's workshop at night. He was made what he is at twenty-two, in the season a lowland fever took his father and both his brothers and left him the house. He remembers loving them the way you remember a country you once visited, and keeps their three stools against the counting-room wall, where nobody else may sit. He wants a shewstone in every court on earth before the mediums or the old man can stop it, and the house safe for his daughter Rufaro, who is nine. The Great Game's villain on Mutapa's side, or its best-paying patron.",
       "at": {
        "name": "Sofala",
        "modern": "Beira",
@@ -282,7 +291,7 @@
      },
      {
       "name": "Nyarai Soko",
-      "text": "Master of the Mhizha Guild, who swept the great artificer's floor at fourteen and wrote down how he did things so that others could, which he has never quite forgiven. Find her at the guild hall in Sofala on entry day, reading each new journeyman's name aloud twice, with a vial from every batch of the week lined up at her elbow. She wants the guild's method written down so completely that it no longer needs Simbarashe, and she wants him to say she was right. A patron or foil, and the guild's stamp in person.",
+      "text": "Master of the Mhizha Guild, who swept the great artificer's floor at fourteen and wrote down how he did things so that others could, which he has never quite forgiven. Find her at the guild hall in Sofala on entry day, reading each new journeyman's name aloud twice, with a vial from every batch of the week lined up at her elbow. She wants the guild's method written down so completely that it no longer needs Simbarashe, and she wants him to say she was right. A patron or foil, whose stamp is on every piece the guild sells.",
       "at": {
        "name": "Sofala",
        "modern": "Beira",
@@ -291,7 +300,7 @@
      },
      {
       "name": "Fadzai Shoko",
-      "text": "One of Mutapa's two healers at Hoerikwaggo, a Vitalist who treats the town under the mountain as one patient and the mountain as part of it. Find her at the fever house on the slope with every shutter open at noon, or on the road to a Khoekhoe camp with a bag of bark and a tally of who has had the pox. When the sickness comes there will be more patients than she can reach, and she wants to talk over whom to treat first with someone who doesn't work for anyone. An ally or contact for the ship with the fever (see Hooks).",
+      "text": "One of Mutapa's two healers at Hoerikwaggo, a Vitalist who treats the town under the mountain as one patient and the mountain as part of it. She runs the fever house on the slope with every shutter open at noon, or walks the road to a Khoekhoe camp with a bag of bark and a tally of who has had the pox. When the sickness comes there will be more patients than she can reach, and she wants to talk over whom to treat first with someone who doesn't work for anyone. An ally or contact for the ship with the fever (see Hooks).",
       "at": {
        "name": "Hoerikwaggo",
        "modern": "Cape Town",
@@ -309,7 +318,7 @@
      },
      {
       "name": "Mwalimu Bakari Shee",
-      "text": "A Bajuni pilot of Faza, a water elemental-blood who went over the side in a squall at fourteen and came up three days later a mile out, breathing easily, with a promise to someone in the deep that he still keeps. Find him sitting on an upturned hull on the beach at Faza or the Lamu waterfront when a captain needs a pilot for deep water. He knows which waters take a toll, leaves a gift over certain soundings without explaining, and wants to be released from the promise, which he has never dared ask. An ally or contact, and a Dreamlord Warlock of the deep in person.",
+      "text": "A Bajuni pilot of Faza, a water elemental-blood, like his grandmother, who went over the side in a squall at fourteen and came up three days later a mile out, breathing easily, with a promise to someone in the deep that he still keeps. Find him sitting on an upturned hull on the beach at Faza or the Lamu waterfront when a captain needs a pilot for deep water. He knows which waters take a toll, leaves a gift over certain soundings without explaining, and wants to be released from the promise, which he has never dared ask. An ally or contact; his pact is a Dreamlord's, with something in the deep.",
       "at": {
        "name": "Faza",
        "modern": "Lamu",
@@ -318,7 +327,7 @@
      },
      {
       "name": "Tapiwa Marufu",
-      "text": "An mbira player who plays every bira in Sofala's new quarter from dusk to dawn, and by day tunes the guild's singing birds to mbira songs the guild says it never taught him. He has a welcome in every household in the quarter and hears what each one is praying for.",
+      "text": "An mbira player who plays every bira in Sofala's new quarter from dusk to dawn, and by day tunes the guild's singing birds to mbira songs the guild says it never taught him. He has a welcome in every household in the quarter and hears what each one is praying for. He wants to know who taught the birds his songs, since nobody living did.",
       "at": {
        "name": "Sofala",
        "modern": "Beira",
@@ -327,7 +336,7 @@
      },
      {
       "name": "Amai Rutendo Chigumba",
-      "text": "Keeper of the king's granary at Sofala, who decides who eats from it and has never once asked anyone's business. Find her at the granary door at dusk with a ladle, a pot of sadza and the name of every newcomer that month; half the guild's journeymen ate from her pot in their first month in the city, and they still bring her the first of their wages. She wants the new granary's walls up before the rains and the sickness, and puts anyone who offers to help on the end of a hod. The best-loved person in Sofala.",
+      "text": "Keeper of the king's granary at Sofala, who decides who eats from it and has never once asked anyone's business. At dusk she stands at the granary door with a ladle, a pot of sadza and the name of every newcomer that month; half the guild's journeymen ate from her pot in their first month in the city, and they still bring her the first of their wages. She wants the new granary's walls up before the rains and the sickness, and puts anyone who offers to help on the end of a hod. The best-loved person in Sofala.",
       "at": {
        "name": "Sofala",
        "modern": "Beira",
@@ -338,7 +347,7 @@
    },
    {
     "region": "The Ottomans, Persia and the Horn",
-    "intro": "The setting's own people here. The Isfahan entries (Farrokh, Golnar, Shushan Ghukasian, Khodadad, Khadijeh Khatun and Abbas-qoli) are one cast and can be run as one adventure. Mustafa Remzi Efendi, Yusuf Rais, Wäldä Mika'el, Farrokh of Isfahan, Golnar and Nafisa al-Qalyubiyya have pregen sheets.",
+    "intro": "The setting's own people here. The Isfahan entries (Farrokh, Golnar, Shushan Ghukasian, Khodadad, Khadijeh Khatun and Abbas-qoli) are one cast and can be run as one adventure. Each has a pregen sheet.",
     "people": [
      {
       "name": "Mustafa Remzi Efendi",
@@ -369,7 +378,7 @@
      },
      {
       "name": "Farrokh of Isfahan",
-      "text": "The pari-touched elf (see The Hidden Here), who went to a pari wedding at Nowruz, ate at the feast and came back three years later in the wedding robe, green silk gone sea-gray at the hems. Find him in the corner of a coffeehouse off the Maidan after the evening prayer, letting a water pipe bubble that he doesn't inhale. He wants the way back in and can't leave it alone. He can tell by looking who else has been to the wedding and come back, so the families of the taken find him: an ally or contact for the pari wedding (see Hooks).",
+      "text": "The pari-touched elf (see The Hidden Here), who went to a pari wedding at Nowruz, ate at the feast and came back three years later in the wedding robe, green silk gone sea-gray at the hems. After the evening prayer he sits in the corner of a coffeehouse off the Maidan, letting a water pipe bubble that he doesn't inhale. He wants the way back in and can't leave it alone. He can tell by looking who else has been to the wedding and come back, so the families of the taken find him: an ally or contact for the pari wedding (see Hooks).",
       "at": {
        "name": "Isfahan",
        "modern": "Isfahan",
@@ -414,7 +423,7 @@
      },
      {
       "name": "Hafız Ömer",
-      "text": "A young Kadızadeli preacher in Istanbul, honest, learned and certain that the lodges, the coffee and the talisman-makers are innovations the Prophet never knew. Find him in a neighborhood pulpit at Friday prayer, or at the gate of a shuttered Sufi lodge with fifty listeners behind him. His prayers are answered, and so are the dervishes', which he doesn't discuss; he would close the lodges and carry a dervish's shopping home on the way, and his followers don't always wait for the court. A foil or rival, who wants the lodges shut by law before his followers shut them with torches.",
+      "text": "A young Kadızadeli preacher in Istanbul, honest, learned and certain that the lodges, the coffee and the talisman-makers are innovations the Prophet never knew. He preaches from a neighborhood pulpit at Friday prayer, or at the gate of a shuttered Sufi lodge with fifty listeners behind him. His prayers are answered, and so are the dervishes', which he doesn't discuss; he would close the lodges and carry a dervish's shopping home on the way, and his followers don't always wait for the court. A foil or rival, who wants the lodges shut by law before his followers shut them with torches.",
       "at": {
        "name": "Istanbul",
        "modern": "Istanbul",
@@ -432,7 +441,7 @@
      },
      {
       "name": "Nane Gulbahar",
-      "text": "A Tabriz midwife who keeps the forty days after a birth against the Āl, and has never lost a mother to her. Find her on a stool across a new mother's doorway through the night, an iron sickle on her knees and onions and garlic over the lintel; when something thin with a clay nose looks round the gate, she says its name without getting up. She says the trick isn't courage but staying awake, and wants an apprentice with younger knees who isn't afraid of the dark. A mentor or ally, and a Hidden Killer by another name.",
+      "text": "A Tabriz midwife who keeps the forty days after a birth against the Āl, and has never lost a mother to her. She sits through the night on a stool across a new mother's doorway, an iron sickle on her knees and onions and garlic over the lintel; when something thin with a clay nose looks round the gate, she says its name without getting up. She says the trick isn't courage but staying awake, and wants an apprentice with younger knees who isn't afraid of the dark. A mentor or ally, and a Hidden Killer by another name.",
       "at": {
        "name": "Tabriz",
        "modern": "Tabriz",
@@ -441,7 +450,7 @@
      },
      {
       "name": "Abbas-qoli the Teller",
-      "text": "A naqqal of Isfahan, who tells the *Shahnameh* in a coffeehouse off the Maidan with a stick for a sword and can make a room of grown men cry over Sohrab. Find him on his stool after the evening prayer, two tables from Farrokh of Isfahan, collecting coppers in a cloth cap and refusing to say what happens tomorrow. His daughter Parvaneh tells it better than he does, to the women of the quarter on the roofs on summer nights, and what he wants is one hall where they can both tell it. A contact who hears everything a coffeehouse says, and the best way to spend an evening in Isfahan.",
+      "text": "A naqqal of Isfahan, who tells the *Shahnameh* in a coffeehouse off the Maidan with a stick for a sword and can make a room of grown men cry over Sohrab. After the evening prayer he is on his stool, two tables from Farrokh of Isfahan, collecting coppers in a cloth cap and refusing to say what happens tomorrow. His daughter Parvaneh tells it better than he does, to the women of the quarter on the roofs on summer nights, and what he wants is one hall where they can both tell it. A contact who hears everything a coffeehouse says, and the best way to spend an evening in Isfahan.",
       "at": {
        "name": "Isfahan",
        "modern": "Isfahan",
@@ -450,7 +459,7 @@
      },
      {
       "name": "Saliha Hatun",
-      "text": "A widow of Üsküdar who left her husband's fortune to a waqf that dresses poor brides and keeps her street's fountain cold in summer. Her nephew is the waqf's trustee and has started to borrow from it. A patron for anyone who can get the money back without shaming the family.",
+      "text": "A widow of Üsküdar who left her husband's fortune to a waqf that dresses poor brides and keeps her street's fountain cold in summer. She receives after the afternoon prayer in her house by the fountain, behind a screen, with the waqf's deed on a cushion beside her. Her nephew is the waqf's trustee and has started to borrow from it. A patron for anyone who can get the money back without shaming the family.",
       "at": {
        "name": "Üsküdar",
        "modern": "Istanbul",
@@ -479,11 +488,11 @@
    },
    {
     "region": "West and Central Africa",
-    "intro": "The setting's own people here. Akinwale, Dom Garcia Nsaku and Buatu Makaya have pregen sheets.",
+    "intro": "The setting's own people here. Each has a pregen sheet.",
     "people": [
      {
       "name": "Akinwale",
-      "text": "A front-rank horseman of Oyo's cavalry who is ridden by his orisha in battle and remembers none of it. Find him in the horse lines outside Oyo Ile in the dry season, rubbing down a Nupe war-horse that cost more than his house and arguing with its fodder; he looks at your horse's eyes before he looks at yours. He wants that horse alive through one more rainy season, and to hear from someone who saw it what he was laughing at in the ford. An ally or contact, and the man to ask about the master of horse's job (see Hooks).",
+      "text": "A front-rank horseman of Oyo's cavalry who is ridden by his orisha in battle and remembers none of it. In the dry season he is in the horse lines outside Oyo Ile, rubbing down a Nupe war-horse that cost more than his house and arguing with its fodder; he looks at your horse's eyes before he looks at yours. He wants that horse alive through one more rainy season, and to hear from someone who saw it what he was laughing at in the ford. An ally or contact, and the man to ask about the master of horse's job (see Hooks).",
       "at": {
        "name": "Oyo Ile",
        "modern": "Ilorin",
@@ -510,7 +519,7 @@
      },
      {
       "name": "Ayoka",
-      "text": "A chanter of *oríkì*, the praise poetry of Oyo's families, who knows every lineage's glories and the parts it leaves out. She greets a stranger with a line of praise for his grandfather, made up on the spot, and trades what she knows for a story she hasn't heard.",
+      "text": "A chanter of *oríkì*, the praise poetry of Oyo's families, who knows every lineage's glories and the parts it leaves out. She greets a stranger with a line of praise for their grandfather, made up on the spot, and trades what she knows for a story she hasn't heard. She wants the oríkì of a family nobody in Oyo has heard of, and to be the first to chant it.",
       "at": {
        "name": "Oyo Ile",
        "modern": "Ilorin",
@@ -519,7 +528,7 @@
      },
      {
       "name": "Buatu Makaya",
-      "text": "A Vili merchant of Loango who carries copper and cloth to Malebo Pool and speaks the language of every valley on the road, including some no one taught him. In the dry season he's at the Tio markets, unloading his porters, already on his third language of the morning. He climbed the hill behind his village on a dare at twelve and came down a week later speaking Teke, and he wants to find the valley whose language he has dreamed in ever since. A contact, and the best guide on the copper road for a party that wants to arrive with its manners intact.",
+      "text": "A Vili merchant of Loango who carries copper and cloth to Malebo Pool and speaks the language of every valley on the road, including some no one taught him. In the dry season he's at the Tio markets, unloading his porters, already on his third language of the morning. He learned the road from his mother's brother, who carried copper for the Maloango, and picks up a language the way other children pick up stones; one of the languages he dreams in belongs to no valley he has found, and he wants to find it. A contact, and the best guide on the copper road for a party that wants to arrive with its manners intact.",
       "at": {
        "name": "Loango",
        "modern": "Pointe-Noire",
@@ -528,7 +537,7 @@
      },
      {
       "name": "Ndona Nsimba",
-      "text": "A nganga of Soyo who heals, divines, guards against the ndoki and makes the oath minkisi that seal the count's treaties. Find her at her compound on the edge of the sacred wood of Nfinda Ngula at dusk, binding an oath bundle in cloth and cord, or haggling with a Dutch trader over a fever cure. She and the Capuchin heal the same fevers in the same streets under an arrangement neither admits to, and she wants him to stop burning her work and start asking what it's for. An ally or teacher; lords who break an oath sworn on one of her bundles have been known to sicken.",
+      "text": "A nganga of Soyo who heals, divines, guards against the ndoki and makes the oath minkisi that seal the count's treaties. At dusk she is at her compound on the edge of the sacred wood of Nfinda Ngula, binding an oath bundle in cloth and cord, or haggling with a Dutch trader over a fever cure. She and the Capuchin heal the same fevers in the same streets under an arrangement neither admits to, and she wants him to stop burning her work and start asking what it's for. An ally or teacher; lords who break an oath sworn on one of her bundles have been known to sicken.",
       "at": {
        "name": "Nfinda Ngula",
        "modern": "Soyo",
@@ -537,7 +546,7 @@
      },
      {
       "name": "Dona Leonor Mvemba",
-      "text": "A Kongo noblewoman widowed at Mbwila, who swore over her husband's body to bring the king's crown and scepter home from Lisbon, and the oath took. Find her in a borrowed house in Mbanza Soyo, in her late husband's best cloak, receiving visitors as if the kingdom were still whole, a Portuguese grammar and a list of Lisbon-bound ships on the table. She needs a crew that can pass in Lisbon, and is honest that what her house does with the crown afterward is her house's business. The patron of the crown in Lisbon (see Hooks).",
+      "text": "A Kongo noblewoman widowed at Mbwila, who swore over her husband's body to bring the king's crown and scepter home from Lisbon, and the oath took. She lives in a borrowed house in Mbanza Soyo and receives visitors in her late husband's best cloak as if the kingdom were still whole, a Portuguese grammar and a list of Lisbon-bound ships on the table. She needs a crew that can pass in Lisbon, and is honest that what her house does with the crown afterward is her house's business. The patron of the crown in Lisbon (see Hooks).",
       "at": {
        "name": "Mbanza Soyo",
        "modern": "Soyo",
@@ -573,7 +582,7 @@
      },
      {
       "name": "Sossi",
-      "text": "A market woman of Allada who has sold everything she can sell and walked to the beach at Offra to buy her brother back before the company ship sails. Find her beside a company lodge, counting cowries on a mat in her best cloth and never once looking at the ship. The factor's price went up when he saw she could pay it, and she needs someone who can talk to the captain, the king's man who sold her brother, or anyone. The patron of the roads at Offra (see Hooks), who will owe a party for the rest of her life and pay it.",
+      "text": "A market woman of Allada who has sold everything she can sell and walked to the beach at Offra to buy her brother back before the company ship sails. She sits beside a company lodge, counting cowries on a mat in her best cloth and never once looking at the ship. The factor's price went up when he saw she could pay it, and she needs someone who can talk to the captain, the king's man who sold her brother, or anyone. The patron of the roads at Offra (see Hooks), who will owe a party for the rest of her life and pay it.",
       "at": {
        "name": "Offra",
        "modern": "Cotonou",
@@ -582,7 +591,7 @@
      },
      {
       "name": "Iya Adunni",
-      "text": "The mother of the palace market at Oyo Ile, who settles every quarrel in it before sundown from a stool where the cloth row crosses the pepper row. The palace doesn't overturn her verdicts. She wants a second Mutapan lamp, for the night market, and will trade a great deal of what she knows for it.",
+      "text": "The mother of the palace market at Oyo Ile, who settles every quarrel in it before sundown from a stool where the cloth row crosses the pepper row. The palace doesn't overturn her verdicts. She wants a Mutapan singing bird for the night market, one of the kind that sings when a hand goes into the wrong basket, and will trade a great deal of what she knows for it.",
       "at": {
        "name": "Oyo Ile",
        "modern": "Ilorin",
@@ -602,11 +611,11 @@
    },
    {
     "region": "India",
-    "intro": "The setting's own people here. Kesavan Vaidyan, Amritnath and Rakhmabai Deshmukh have pregen sheets.",
+    "intro": "The setting's own people here. Each has a pregen sheet.",
     "people": [
      {
       "name": "Kesavan Vaidyan",
-      "text": "A Malabar surgeon whose family craft is the nose rebuilt from the patient's own skin, and whose knife floats while his hands stay folded in his lap. Find him on his veranda in the monsoon months, when the roads are mud and the patients come anyway, from both sides of the nose-cutting wars between Mysore and Madurai, passing each other on his road without speaking. He charges the poor in rice and the poligars in gold and gives both the same attention, and he wants to see a nose he rebuilt twenty years ago and know that it held. A mentor or ally for any Physician.",
+      "text": "A Malabar surgeon whose family craft is the nose rebuilt from the patient's own skin, and whose knife floats while his hands stay folded in his lap. He sees patients on his veranda through the monsoon, when the roads are mud and they come anyway, from both sides of the nose-cutting wars between Mysore and Madurai, passing each other on his road without speaking. He charges the poor in rice and the poligars in gold and gives both the same attention, and he wants to see a nose he rebuilt twenty years ago and know that it held. A mentor or ally for any Physician.",
       "at": {
        "name": "Malabar",
        "modern": "Kozhikode",
@@ -615,7 +624,7 @@
      },
      {
       "name": "Amritnath",
-      "text": "A Nath yogi who has stopped aging and no longer needs food, water or air, and takes all three out of courtesy. Find him at dawn at his *dhuni* on the pilgrim road above the Ganges plain, with a raja's men already waiting to ask how to live forever; he lets them wait until noon. He gives the old inoculation against smallpox to anyone who sits still, and wants the last *siddhi*, the deathless body. A mentor, or a foil to Lanternhall's Ilyanor Sael, who stopped reaching for the same thing.",
+      "text": "A Nath yogi who has stopped aging and no longer needs food, water or air, and takes all three out of courtesy. At dawn he sits at his *dhuni* on the pilgrim road above the Ganges plain, with a raja's men already waiting to ask how to live forever; he lets them wait until noon. He gives the old inoculation against smallpox to anyone who sits still, and wants the last *siddhi*, the deathless body. A mentor, or a foil to Lanternhall's Ilyanor Sael, who stopped reaching for the same thing.",
       "at": {
        "name": "the pilgrim road",
        "modern": "Dehra Dun",
@@ -660,7 +669,7 @@
      },
      {
       "name": "Kunwar Ratan Singh",
-      "text": "A younger prince of a minor Hada Rajput house, serving in the Mughal army of the Deccan, who fences like water and has never lost his temper in public. Find him on the practice ground of the viceroy's camp at Aurangabad at first light, or wherever a Maratha envoy is being entertained. Rakhmabai Deshmukh has beaten him at chess twice across a truce table and he would like a third game; what he wants most is a deed to land of his own rather than his elder brother's. A rival, a love interest or a gracious enemy.",
+      "text": "A younger prince of a minor Hada Rajput house, serving in the Mughal army of the Deccan, who fences like water and has never lost his temper in public. He is on the practice ground of the viceroy's camp at Aurangabad at first light, or wherever a Maratha envoy is being entertained. Rakhmabai Deshmukh has beaten him at chess twice across a truce table and he would like a third game; what he wants most is a deed to land of his own rather than his elder brother's. A rival, a love interest or a gracious enemy.",
       "at": {
        "name": "Aurangabad",
        "modern": "Aurangabad",
@@ -679,7 +688,7 @@
      },
      {
       "name": "Ponni",
-      "text": "A potter-priest's daughter of seventeen in a village near Madurai, who helps make Ayyanar's terracotta horses and has started riding out behind them at the boundary. Find her at the Ayyanar shrine among the clay horses on a dark-half night, walking the boundary with a sickle and a clay lamp. She has better hands for clay than either brother and a better seat on a horse that isn't there, and wants her father to let her make one horse that is hers alone. Quietly furious about almost everything, and a Hidden Killer just starting out.",
+      "text": "A potter-priest's daughter of seventeen in a village near Madurai, who helps make Ayyanar's terracotta horses and has started riding out behind them at the boundary. On dark-half nights she walks the boundary from the Ayyanar shrine among the clay horses, with a sickle and a clay lamp. She has better hands for clay than either brother and a better seat on a horse that isn't there, and wants her father to let her make one horse that is hers alone. Quietly furious about almost everything, and a Hidden Killer just starting out.",
       "at": {
        "name": "the Ayyanar shrine",
        "modern": "Madurai",
@@ -706,7 +715,7 @@
      },
      {
       "name": "Mai Raji",
-      "text": "The cook of the langar at the Sikh sangat in Dhaka, who has fed Mughal soldiers, Bengali boatmen, Portuguese deserters and an Armenian merchant at one sitting, in one line. Find her at the iron griddle at dusk, slapping out flatbread and setting whoever is nearest to wash the pots. She wants news of the ninth Guru's party on the road to Assam, where her nephew rides as a cook, and whoever brings it eats free for a month. A host, and the safest table in Bengal.",
+      "text": "The cook of the langar at the Sikh sangat in Dhaka, who has fed Mughal soldiers, Bengali boatmen, Portuguese deserters and an Armenian merchant at one sitting, in one line. At dusk she is at the iron griddle, slapping out flatbread and setting whoever is nearest to wash the pots. She wants news of the ninth Guru's party on the road to Assam, where her nephew rides as a cook, and whoever brings it eats free for a month. A host, and the safest table in Bengal.",
       "at": {
        "name": "Dhaka",
        "modern": "Dhaka",
@@ -717,11 +726,11 @@
    },
    {
     "region": "East and Southeast Asia",
-    "intro": "The setting's own people here. Lu Qingxu, Gu Wenyuan, Shen Xuanji and Hu Lanxin are the cast of the Tomb Road, the tomb-robbing game in Adventures and Hooks. Lu Qingxu, Shi Yuanjing, Tachibana Chiyo, Daeng Calla, Hu Lanxin and Brother Joris Vanhove have pregen sheets.",
+    "intro": "The setting's own people here. Lu Qingxu, Gu Wenyuan, Shen Xuanji and Hu Lanxin are the cast of the Tomb Road, the tomb-robbing game in Adventures and Hooks. Each has a pregen sheet except Nang Bua.",
     "people": [
      {
       "name": "Lu Qingxu",
-      "text": "The last of a line of Ming court alchemists, one of the Qiu Xian Zhe (see Powers and Factions, Seekers of Immortality), in Daoist dress that keeps the queue off his head and the questions off his past. Find him at a hill hermitage with a luopan on the table and the Bureau's old sealing calendar open beside it, or at the last door of a tomb by lamplight. He carries a red pill from the batch his teacher died of, and wants to learn whether the batch was wrong, or the teacher. An ally or mentor who digs where the sealing dates don't add up: the Tomb Road's fallen alchemist, ready to go.",
+      "text": "The last of a line of Ming court alchemists, one of the Qiu Xian Zhe (see Powers and Factions, Seekers of Immortality), in Daoist dress that keeps the queue off his head and the questions off his past. Find him at a hill hermitage with a luopan on the table and the Bureau's old sealing calendar open beside it, or at the last door of a tomb by lamplight. He carries a red pill from the batch his teacher died of, and wants to learn whether the batch was wrong, or the teacher. An ally or mentor who digs where the sealing dates don't add up: the Tomb Road's fallen alchemist.",
       "at": {
        "name": "the hill hermitage",
        "modern": "Beijing",
@@ -739,7 +748,7 @@
      },
      {
       "name": "Tachibana Chiyo",
-      "text": "An aasimar shrine priestess in a mountain province of Japan, born with the light in her, who is sent for when a child is lost at dusk (see The Hidden Here). Find her at the shrine at dusk, sandals by the lantern, when someone comes running. She has never seen a foreigner and doesn't expect to, and wants the province to send a second priestess before a child is lost on a night when she is already out. An ally for a child hidden by the kami, or by something that isn't one.",
+      "text": "An aasimar shrine priestess in a mountain province of Japan, born with the light in her, who is sent for when a child is lost at dusk (see The Hidden Here). She is at the shrine at dusk, sandals by the lantern, when someone comes running. She has never seen a foreigner and doesn't expect to, and wants the province to send a second priestess before a child is lost on a night when she is already out. An ally for a child hidden by the kami, or by something that isn't one.",
       "at": {
        "name": "the mountain shrine",
        "modern": "Tsuruoka",
@@ -748,7 +757,7 @@
      },
      {
       "name": "Daeng Calla",
-      "text": "A Makassarese halfling smuggler with a share in a padewakang, who moves Mutapan curiosities without a ministry stamp and carries letters out through the lines at Somba Opu. Find her in the hold off Makassar after dark with her own lamp switched off, or smiling at a Dutch boarding officer and telling him the long crate is rattan. Her lamps drift every month, and she wants someone with Mutapan training aboard. An ally or contact for the last sortie (see Hooks); her grandmother says the family came from the orang bunian, and she says that explains the hiding and nothing else.",
+      "text": "A Makassarese halfling smuggler with a share in a padewakang, who moves Mutapan curiosities without a ministry stamp and carries letters out through the lines at Somba Opu. After dark she is in the hold off Makassar with her own lamp switched off, or smiling at a Dutch boarding officer and telling him the long crate is rattan. Her lamps drift every month, and she wants someone with Mutapan training aboard. An ally or contact for the last sortie (see Hooks); her grandmother says the family came from the orang bunian, and she says that explains the hiding and nothing else.",
       "at": {
        "name": "Makassar",
        "modern": "Makassar",
@@ -757,7 +766,7 @@
      },
      {
       "name": "Gu Wenyuan",
-      "text": "A dragonborn calendar clerk of Yang Guangxian's Astronomical Bureau, who will be out of work the day the shadow falls the Jesuits' way and has found a Ming prince's sealing date that doesn't add up. Find him at the observatory on the city wall at night, or in a teahouse nearby doing long division on a tea bill with his sleeve pulled down over the scales on his wrist. He wants to prove the arithmetic wrong before anyone burns the records, mostly so someone will know he was right. The clerk (see Hooks) who opens the Tomb Road: a patron or a fellow delver.",
+      "text": "A dragonborn calendar clerk of Yang Guangxian's Astronomical Bureau, who will be out of work the day the shadow falls the Jesuits' way and has found a Ming prince's sealing date that doesn't add up. At night he is at the observatory on the city wall, or in a teahouse nearby doing long division on a tea bill with his sleeve pulled down over the scales on his wrist. He wants to prove the arithmetic wrong before anyone burns the records, mostly so someone will know he was right. The clerk (see Hooks) who opens the Tomb Road: a patron or a fellow delver.",
       "at": {
        "name": "the observatory",
        "modern": "Beijing",
@@ -766,7 +775,7 @@
      },
      {
       "name": "Shen Xuanji",
-      "text": "A fallen court alchemist, seventy-four and looking forty-five, who compounds mineral elixirs for rich men in Beijing. Find him by introduction only, after dark, in the back room of a medicine shop near the Drum Tower that smells of mercury. His illusions are first-rate and his elixirs are mercury; he has decided Lu Qingxu's teacher found something real, and he wants to be young, actually. The Tomb Road's villain, always one tomb ahead.",
+      "text": "A fallen court alchemist, seventy-four and looking forty-five, who compounds mineral elixirs for rich men in Beijing. He sees visitors by introduction only, after dark, in the back room of a medicine shop near the Drum Tower that smells of mercury. His illusions are first-rate and his elixirs are mercury; he has decided Lu Qingxu's teacher found something real, and he wants to be young, actually. The Tomb Road's villain, always one tomb ahead.",
       "at": {
        "name": "Beijing",
        "modern": "Beijing",
@@ -811,11 +820,16 @@
      },
      {
       "name": "Nang Bua",
-      "text": "A river pilot of Ayutthaya, who takes foreign ships from the bar up the Chao Phraya to the city and tells each captain which of King Narai's ministers to visit first, and with what gift. The captains pay her, and so do two of the ministers and the Japanese quarter, and each gets exactly what was paid for. The way into Narai's court for a party that arrives by sea."
+      "text": "A river pilot of Ayutthaya, who takes foreign ships from the bar up the Chao Phraya to the city and tells each captain which of King Narai's ministers to visit first, and with what gift. The captains pay her, and so do two of the ministers and the Japanese quarter, and each gets exactly what was paid for. She waits at the bar of the river mouth when the tide serves, in a narrow boat with a red awning. She wants a boat of her own for her daughter before the ministers' quarrel sinks them all. The way into Narai's court for a party that arrives by sea.",
+      "at": {
+       "name": "Ayutthaya",
+       "modern": "Ayutthaya",
+       "country": "Thailand"
+      }
      },
      {
       "name": "Chea Sok",
-      "text": "A Khmer former monk called by spirit illness at Angkor, who sees the temple as the world-mountain it was built to be and guides pilgrims through it by night. Find him keeping vigil with a clay lamp in the gallery of the Thousand Buddhas at Angkor Wat, describing with complete calm the five peaks above the central tower that nobody else can see. He left the monastery with his abbot's blessing, and wants to know why the mountain answered a Japanese pilgrim who thought he was somewhere else. A mentor or contact for any game at Angkor (see Angkor).",
+      "text": "A Khmer former monk called by spirit illness at Angkor, who sees the temple as the world-mountain it was built to be and guides pilgrims through it by night. He keeps vigil with a clay lamp in the gallery of the Thousand Buddhas at Angkor Wat, describing with complete calm the five peaks above the central tower that nobody else can see. He left the monastery with his abbot's blessing, and wants to know why the mountain answered a Japanese pilgrim who thought he was somewhere else. A mentor or contact for any game at Angkor (see Angkor).",
       "at": {
        "name": "Angkor",
        "modern": "Siem Reap",
@@ -824,7 +838,7 @@
      },
      {
       "name": "Wang Yuezhen",
-      "text": "A Suzhou *tanci* singer who has told the same love story in a teahouse by the Chang Gate every afternoon for eleven weeks, stopping each day on the best line. Everyone talks under the music, so she knows the city's business. A contact for anything in Suzhou, and the voice for the last song on Tiger Hill (see Life Here).",
+      "text": "A Suzhou *tanci* singer who has told the same love story in a teahouse by the Chang Gate every afternoon for eleven weeks, stopping each day on the best line. Everyone talks under the music, so she knows the city's business. A contact for anything in Suzhou, and the singer asked to stand in for the last song on Tiger Hill, if the fox allows it (see Life Here).",
       "at": {
        "name": "the Chang Gate",
        "modern": "Suzhou",
@@ -843,7 +857,7 @@
      },
      {
       "name": "Đào Thị Lựu",
-      "text": "The head of a water-puppet guild in a village outside Thang Long, the first woman to keep the guild's book and swear its oath, which forbids teaching the tricks to anyone who might marry out of the village. She taught them to her daughters anyway and dared the elders to say so. Find her waist-deep in the village pond behind a split-bamboo screen, working a dragon on a long pole while the whole village eats on the bank; she wants her troupe to play for the Trịnh lord's court at New Year, and a Mutapan lamp to light the water. A host, a contact and a way into court.",
+      "text": "The head of a water-puppet guild in a village outside Thang Long, the first woman to keep the guild's book and swear its oath, which forbids teaching the tricks to anyone who might marry out of the village. She taught them to her daughters anyway and dared the elders to say so. She works waist-deep in the village pond behind a split-bamboo screen, a dragon on a long pole, while the whole village eats on the bank; she wants her troupe to play for the Trịnh lord's court at New Year. A host, a contact and a way into court.",
       "at": {
        "name": "Thang Long",
        "modern": "Hanoi",
@@ -852,7 +866,7 @@
      },
      {
       "name": "Kichibei",
-      "text": "A tempura seller at the foot of Nihonbashi in Edo, a century before the city takes to the dish; his batter came from a Nagasaki cook who learned it in a Portuguese kitchen before the ban. Porters and samurai eat off his skewers side by side. Since spring he has been losing customers to a second stall across the bridge, whose fish is never out of season and whose owner nobody has seen in daylight. A source of every rumor on the Tōkaidō.",
+      "text": "A tempura seller at the foot of Nihonbashi in Edo, a century before the city takes to the dish; his batter came from a Nagasaki cook who learned it in a Portuguese kitchen before the ban. Porters and samurai eat off his skewers side by side. Since spring he has been losing customers to a second stall across the bridge, whose fish is never out of season and whose owner nobody has seen in daylight. He wants to know what is frying across the bridge before it takes the stall. A source of every rumor on the Tōkaidō.",
       "at": {
        "name": "Edo",
        "modern": "Tokyo",
@@ -863,7 +877,7 @@
    },
    {
     "region": "The Americas",
-    "intro": "The setting's own people here. Waman Illa, Čhaŋté Wašté Wiŋ, Willka Mamani and Doña Isabel Cuauhtzin have pregen sheets.",
+    "intro": "The setting's own people here. Each has a pregen sheet.",
     "people": [
      {
       "name": "Waman Illa",
@@ -903,7 +917,7 @@
      },
      {
       "name": "Licenciado Diego Ruiz de Lezcano",
-      "text": "A visitor-general of idolatries for the Archbishop of Lima, who burns the mummified dead and the stones that speak, and whose prayers work, which he takes as proof. Find him at a table in a highland plaza with a notary, soldiers and a bonfire laid but not yet lit, calling the village's ancestors by name in a gentle voice and writing down who doesn't answer. He is sincere, learned and kind to children, and wants one village where the stone stays silent after he has prayed over it. A villain for the visitations (see Trouble Brewing), and a frightened man.",
+      "text": "A visitor-general of idolatries for the Archbishop of Lima, who burns the mummified dead and the stones that speak, and whose prayers work, which he takes as proof. He sets up at a table in a highland plaza with a notary, soldiers and a bonfire laid but not yet lit, calling the village's ancestors by name in a gentle voice and writing down who doesn't answer. He is sincere, learned and kind to children, and wants one village where the stone stays silent after he has prayed over it. A villain for the visitations (see Trouble Brewing), and a frightened man.",
       "at": {
        "name": "Lima",
        "modern": "Lima",
@@ -939,7 +953,7 @@
      },
      {
       "name": "Ana Kitumba",
-      "text": "A captain of Palmares, born free behind the palisade at Macaco after her mother came up from a Pernambuco sugar mill with a baby and nothing else. Find her walking the palisade at dusk with a spear and a Portuguese musket, greeting every sentry by name, or at council in the king's house. Her oath is to the people who got free and to the ones still coming, and it has never once failed her; she wants a child of hers to grow old in Palmares without having to fight for it. An ally or patron.",
+      "text": "A captain of Palmares, born free behind the palisade at Macaco after her mother came up from a Pernambuco sugar mill with a baby and nothing else. At dusk she walks the palisade with a spear and a Portuguese musket, greeting every sentry by name; by day she sits at council in the king's house. Her oath is to the people who got free and to the ones still coming, and it has never once failed her; she wants a child of hers to grow old in Palmares without having to fight for it. An ally or patron.",
       "at": {
        "name": "Palmares",
        "modern": "Rio Largo",
@@ -957,7 +971,7 @@
      },
      {
       "name": "Doña Isabel Cuauhtzin",
-      "text": "A Nahua cacica of a noble Xochimilco family who paints portrait miniatures for the viceroy's court in Mexico City, and so holds the likeness of everyone worth scrying in New Spain. Find her at a palace window with a vellum oval no bigger than her palm, catching a marquis's exact expression while he thinks she's painting his sleeve. She keeps her family's records in Nahuatl and its lawsuit over their Xochimilco lands in Spanish, and has started, very quietly, painting her likenesses slightly wrong. A contact for a Great Game in New Spain; three services want her sketchbooks.",
+      "text": "A Nahua cacica of a noble Xochimilco family who paints portrait miniatures for the viceroy's court in Mexico City, and so holds the likeness of everyone worth scrying in New Spain. She works at a palace window with a vellum oval no bigger than her palm, catching a marquis's exact expression while he thinks she's painting his sleeve. She keeps her family's records in Nahuatl and its lawsuit over their Xochimilco lands in Spanish, and has started, very quietly, painting her likenesses slightly wrong. A contact for a Great Game in New Spain; three services want her sketchbooks.",
       "at": {
        "name": "Mexico City",
        "modern": "Mexico City",
@@ -966,7 +980,7 @@
      },
      {
       "name": "Kawennanoron",
-      "text": "A Mohawk matron of the Wolf Clan, of the Keepers of the Eastern Door, whose longhouse stands nearest the trail from Albany, so every traveler eats her corn soup before anyone else's. She decides which guest gets which bowl, and what the council hears about each. A host, and the gate into the Confederacy from the east.",
+      "text": "A Mohawk matron of the Wolf Clan, of the Keepers of the Eastern Door, whose longhouse stands nearest the trail from Albany, so every traveler eats her corn soup before anyone else's. She decides which guest gets which bowl, and what the council hears about each, and she wants the Albany traders to stop carrying rum up the trail before the next council. A host, and the gate into the Confederacy from the east.",
       "at": {
        "name": "the Eastern Door",
        "modern": "Schenectady",
@@ -984,7 +998,7 @@
      },
      {
       "name": "Domingas da Costa",
-      "text": "A free woman from Angola who sells cooked food from a tray in Salvador's lower city and keeps the key to the Rosary brotherhood's chest. Find her on the steps of the Rosary church after Mass with the brotherhood's book open on her knees, counting coins twice so everyone can follow. She bought her own freedom a coin at a time and has helped buy six others since; she wants the seventh free by October: Luzia, the sister whose price was raised (see Life Here). A patron of the brotherhood's chest (see Life Here), who pays in food, favors and a welcome in every Black brotherhood on the coast.",
+      "text": "A free woman from Angola who sells cooked food from a tray in Salvador's lower city and keeps the key to the Rosary brotherhood's chest. After Mass she sits on the steps of the Rosary church with the brotherhood's book open on her knees, counting coins twice so everyone can follow. She bought her own freedom a coin at a time and has helped buy six others since; she wants the seventh free by October: Luzia, the sister whose price was raised (see Life Here). A patron of the brotherhood's chest, who pays in food, favors and a welcome in every Black brotherhood on the coast.",
       "at": {
        "name": "Salvador",
        "modern": "Salvador",
@@ -995,7 +1009,7 @@
    },
    {
     "region": "Oceania",
-    "intro": "The setting's own people here. Sehpin, Kilimoar, Lihpahnu and Tinashe Gumbo are one cast on Pohnpei. Sehpin, Kilimoar and Kaiawa have pregen sheets.",
+    "intro": "The setting's own people here. Sehpin, Kilimoar, Lihpahnu and Tinashe Gumbo are one cast on Pohnpei. Each has a pregen sheet.",
     "people": [
      {
       "name": "Sehpin",
@@ -1008,7 +1022,7 @@
      },
      {
       "name": "Kilimoar",
-      "text": "A *samworo*, a priest of Pohnpei, who made Sehpin listen to the basalt for a year before letting them touch it. Find him among the old teachers' stones at Salapwuk, or at Nan Madol at night, laying offerings on a *pei* the chiefs have forgotten. He wants the rites kept by someone after him, and not sold, and would rather Sehpin kept them than built sea walls for a chief. A mentor or rival; when a Monsoon Road trader asked to buy the method, he laughed so long the trader left.",
+      "text": "A *samworo*, a priest of Pohnpei, who made Sehpin listen to the basalt for a year before letting them touch it. He keeps to the old teachers' stones at Salapwuk, or goes to Nan Madol at night to lay offerings on a *pei* the chiefs have forgotten. He wants the rites kept by someone after him, and not sold, and would rather Sehpin kept them than built sea walls for a chief. A mentor or rival; when a Monsoon Road trader asked to buy the method, he laughed so long the trader left.",
       "at": {
        "name": "Salapwuk",
        "modern": "Palikir",
@@ -1026,7 +1040,7 @@
      },
      {
       "name": "Tinashe Gumbo",
-      "text": "A Mutapan Mhizha, grandson of the royal medium Ambuya Rudo Gumbo, who came out along the Monsoon Road to learn how Pohnpei's stones were raised, and whether the method can be bought. Find him at the edge of a Nahnmwarki's feast house waiting for leave to see Nan Madol at night, his construct holding a sunshade over him while he asks every passing child the Pohnpeian word for something. He has watched Sehpin talk a column into a wall and is no longer sure what he came to buy. A rival or contact, and the trader of the stones (see Hooks).",
+      "text": "A Mutapan Mhizha, grandson of the royal medium Ambuya Rudo Gumbo, who came out along the Monsoon Road to learn how Pohnpei's stones were raised, and whether the method can be bought. He waits at the edge of a Nahnmwarki's feast house for leave to see Nan Madol at night, his construct holding a sunshade over him while he asks every passing child the Pohnpeian word for something. He has watched Sehpin talk a column into a wall and is no longer sure what he came to buy. A rival or contact, and the trader of the stones (see Hooks).",
       "at": {
        "name": "Pohnpei",
        "modern": "Palikir",
@@ -1035,7 +1049,7 @@
      },
      {
       "name": "Sarongelug",
-      "text": "A *palu*, a master navigator of the Carolinian wayfinding schools on Polowat, who holds the star compass and the swells in his head. Find him on the beach beside a voyaging canoe, or in a canoe house on Pohnpei waiting out the wrong wind. A Dutch captain offered him a year's silver for a passage no chart shows, and he told the captain, kindly, that the school doesn't sell and the captain couldn't pay. A mentor or contact for a navigator for hire (see Hooks), who wants one more voyage to Guam before the Spanish change it.",
+      "text": "A *palu*, a master navigator of the Carolinian wayfinding schools on Polowat, who holds the star compass and the swells in his head. He is on the beach beside a voyaging canoe, or in a canoe house on Pohnpei waiting out the wrong wind. A Dutch captain offered him a year's silver for a passage no chart shows, and he told the captain, kindly, that the school doesn't sell and the captain couldn't pay. A mentor or contact for a navigator for hire (see Hooks), who wants one more voyage to Guam before the Spanish change it.",
       "at": {
        "name": "Pohnpei",
        "modern": "Palikir",
@@ -1053,7 +1067,7 @@
      },
      {
       "name": "Tetua",
-      "text": "A young ʻarioi of ʻOro's society from Raʻiātea, whose troupe mocks the chiefs in dance and verse and is fed handsomely for it. She can imitate a chief's walk so exactly that his own sons can't breathe. A contact who hears what chiefs say when they think the performers are only performing.",
+      "text": "A young ʻarioi of ʻOro's society from Raʻiātea, whose troupe mocks the chiefs in dance and verse and is fed handsomely for it. She can imitate a chief's walk so exactly that his own sons can't breathe, and she wants the next grade of the society, and its leg tattoos, before the troupe sails for the other islands. A contact who hears what chiefs say when they think the performers are only performing.",
       "at": {
        "name": "Tahiti",
        "modern": "Papeete",
@@ -1071,7 +1085,7 @@
      },
      {
       "name": "Fusipala",
-      "text": "A woman of a chiefly house at Lapaha on Tongatapu who keeps the order of the *ʻinasi*, the first-fruits presentation to the Tuʻi Tonga: whose yams, mats and kava go where, from which island, and what it means when a chief sends less. Find her on a fine mat at the edge of the green in the weeks before, a knotted cord in her lap, telling a young chief gently which of his uncles he has just insulted. The Tuʻi Tonga is sacred and doesn't count things, so she counts them for him, and wants to know which chief is sending short on purpose this year before the Tuʻi Tonga's people notice. A patron who hires strangers when a canoe goes missing on the way, because a stranger can ask what a chief can't.",
+      "text": "A woman of a chiefly house at Lapaha on Tongatapu who keeps the order of the *ʻinasi*, the first-fruits presentation to the Tuʻi Tonga: whose yams, mats and kava go where, from which island, and what it means when a chief sends less. In the weeks before, she sits on a fine mat at the edge of the green, a knotted cord in her lap, telling a young chief gently which of his uncles he has just insulted. The Tuʻi Tonga is sacred and doesn't count things, so she counts them for him, and wants to know which chief is sending short on purpose this year before the Tuʻi Tonga's people notice. A patron who hires strangers when a canoe goes missing on the way, because a stranger can ask what a chief can't.",
       "at": {
        "name": "Lapaha",
        "modern": "Nukualofa",
@@ -1109,11 +1123,11 @@
    },
    {
     "region": "The Steppe and the North",
-    "intro": "The setting's own people here. Aisulu, Kenzhe, Zhamal-apa and Gaukhar share one Kazakh camp. Nurbibi has a pregen sheet.",
+    "intro": "The setting's own people here. Aisulu, Kenzhe, Zhamal-apa and Gaukhar share one Kazakh camp. Each has a pregen sheet.",
     "people": [
      {
       "name": "Nurbibi",
-      "text": "A steppe gnome, the first to study the griffins' kin as animals rather than legends. Find her in a felt blind on a ridge of red sandstone on the ninth day, and don't disturb her; she has watched one brood its eggs on warm quartz and written \"a mother\" in a careful hand, with the date. Buyers in Bukhara, Moscow and London court her notebooks, and she wants the little monsters described properly, by someone who watched them, before a cabinet gives them a Latin name and the wrong diet. A contact or ally, and the naturalist of the specimen hook, if the table likes.",
+      "text": "A steppe gnome, the first to study the griffins' kin as animals rather than legends. She sits in a felt blind on a ridge of red sandstone, nine days into her watch, and wants no one to disturb her; she has watched one brood its eggs on warm quartz and written \"a mother\" in a careful hand, with the date. Buyers in Bukhara, Moscow and London court her notebooks, and she wants the little monsters described properly, by someone who watched them, before a cabinet gives them a Latin name and the wrong diet. A contact or ally, and the naturalist of the specimen hook, if the table likes.",
       "at": {
        "name": "the red sandstone ridge",
        "modern": "Dalandzadgad",
@@ -1131,7 +1145,7 @@
      },
      {
       "name": "Kenzhe",
-      "text": "Aisulu's brother, a Kazakh rider taken by the pari three winters ago, who came back riding ahead of the Wild Hunt and takes people rather than killing them. Find him just past a camp's watch fires in the dark half, smiling his old smile and calling the watch by their childhood names. He isn't cruel: he takes people the way you'd carry a friend out of a burning yurt, and he wants to bring his sister across because he truly believes she'd be happier there. A villain or foil; the camp still sets a bowl for him at feasts, and something empties it.",
+      "text": "Aisulu's brother, a Kazakh rider taken by the pari three winters ago, who came back riding ahead of the Wild Hunt and takes people rather than killing them. In the dark half he waits just past a camp's watch fires, smiling his old smile and calling the watch by their childhood names. He isn't cruel: he takes people the way you'd carry a friend out of a burning yurt, and he wants to bring his sister across because he truly believes she'd be happier there. A villain or foil; the camp still sets a bowl for him at feasts, and something empties it.",
       "at": {
        "name": "the camp",
        "modern": "Taldyqorghan",
@@ -1140,7 +1154,7 @@
      },
      {
       "name": "Zhamal-apa",
-      "text": "A Kazakh midwife of the same camp, a Hedge Witch who drives the albasty off birthing mothers by announcing that a hero has arrived, and pays for each healing out of her own body when there is nothing else to take it from (the Hedge Witch's way; *The Classes*, Physician). Find her in a yurt at night with a whip by the threshold and every knot in the tent untied, shouting \"The hero has come!\" so convincingly that the hero, Aisulu, ducks in looking embarrassed. The camp's mullah calls it superstition; she says the mullah has never had a baby. A mentor or ally, who wants the camp to winter where a midwife can be reached and says so at every council.",
+      "text": "A Kazakh midwife of the same camp, a Hedge Witch who drives the albasty off birthing mothers by announcing that a hero has arrived, and pays for each healing out of her own body when there is nothing else to take it from (the Hedge Witch's way; *The Classes*, Physician). At night she is in a yurt with a whip by the threshold and every knot in the tent untied, shouting \"The hero has come!\" so convincingly that the hero, Aisulu, ducks in looking embarrassed. The camp's mullah calls it superstition; she says the mullah has never had a baby. A mentor or ally, who wants the camp to winter where a midwife can be reached and says so at every council.",
       "at": {
        "name": "the camp",
        "modern": "Taldyqorghan",
@@ -1149,7 +1163,7 @@
      },
      {
       "name": "Bibi Oysha",
-      "text": "A Bukharan *otin*, a woman teacher, who writes the protective talismans for her father's Naqshbandi lodge and teaches the science of letters to girls the madrasas won't take. Find her in the lodge courtyard drawing a square of letters on a doorframe in saffron ink, a whole courtyard of girls reciting it back. She has outlived half the scholars who said a woman couldn't do it, and wants one of her girls admitted to read in a madrasa library, once, with the door open. A mentor or patron, and the reason the lodge's shelter holds.",
+      "text": "A Bukharan *otin*, a woman teacher, who writes the protective talismans for her father's Naqshbandi lodge and teaches the science of letters to girls the madrasas won't take. She teaches in the lodge courtyard, drawing a square of letters on a doorframe in saffron ink, a whole courtyard of girls reciting it back. She has outlived half the scholars who said a woman couldn't do it, and wants one of her girls admitted to read in a madrasa library with the door open. A mentor or patron, and the reason the lodge's shelter holds.",
       "at": {
        "name": "Bukhara",
        "modern": "Bukhara",
@@ -1158,7 +1172,7 @@
      },
      {
       "name": "Lala Sukhdev",
-      "text": "A Multani moneylender, one of some five hundred Indian bankers in Bukhara's caravanserais, who lends to herders, khans and madrasa students. He sits on a carpet in an upper room of the Indian caravanserai with his ledgers and a pot of tea, weighing a herder's silver on a hand scale and turning the beam so the herder can read it. He'll advance a party anything against a bill on Surat, and the Bukhara buyer who wants Nurbibi's live beast writes his offers through him. A patron or contact, who wants to go home to Multan rich enough to stay and can't leave while his cousin is waiting for his clients.",
+      "text": "A Multani moneylender, one of some five hundred Indian bankers in Bukhara's caravanserais, who lends to herders, khans and madrasa students. He sits on a carpet in an upper room of the Indian caravanserai with his ledgers and a pot of tea, weighing a herder's silver on a hand scale and turning the beam so the herder can read it. He'll advance a party anything against a bill on Surat, and the Bukhara buyer who wants Nurbibi's live beast writes his offers through him. A patron or contact, who wants to go home to Multan rich enough to stay and can't leave until a cousin comes from Multan to take over his clients, and the cousin keeps not coming.",
       "at": {
        "name": "Bukhara",
        "modern": "Bukhara",
@@ -1167,7 +1181,7 @@
      },
      {
       "name": "Tseren Dorji",
-      "text": "A *zaisang*, a Dzungar noble official, who has watched Sengge's half-brothers count their men and wants Sengge's brother home from Tibet before they move. Find him in the khan's tent in the Ili valley, hand never far from his saber, counting the men by the door during a half-brother's toast. He needs someone to carry a letter, and an argument, to teachers in Tibet who can't be ordered, and pays in good Dzungar guns. The patron of the vow (see Hooks), who wants the monk home and the khan alive, in that order if it can't be both.",
+      "text": "A *zaisang*, a Dzungar noble official, who has watched Sengge's half-brothers count their men and wants Sengge's brother home from Tibet before they move. He sits in the khan's tent in the Ili valley, hand never far from his saber, counting the men by the door during a half-brother's toast. He needs someone to carry a letter, and an argument, to teachers in Tibet who can't be ordered, and pays in good Dzungar guns. The patron of the vow (see Hooks), who wants the monk home and the khan alive, in that order if it can't be both.",
       "at": {
        "name": "the Ili valley",
        "modern": "Yining",
@@ -1176,7 +1190,7 @@
      },
      {
       "name": "Gelong Tsereng",
-      "text": "A Khalkha Buddhist monk of Erdene Zuu who heals the sick on the herding round and burns the shamans' *ongon* because the law says to. He has done it for thirty years, stopped arguing long ago about what the images hold, and is tired. Find him by the courtyard brazier, setting a felt ongon on the coals, then bandaging the hand of the woman who made it. He keeps one ongon he couldn't burn in a box under his bed. A foil or ally, who has asked twice for a younger monk to take over the round and been refused.",
+      "text": "A Khalkha Buddhist monk of Erdene Zuu who heals the sick on the herding round and burns the shamans' *ongon* because the law says to. He has done it for thirty years, stopped arguing long ago about what the images hold, and is tired. At the courtyard brazier he sets a felt ongon on the coals, then bandages the hand of the woman who made it. He keeps one ongon he couldn't burn in a box under his bed. A foil or ally, who has asked twice for a younger monk to take over the round and been refused.",
       "at": {
        "name": "Erdene Zuu",
        "modern": "Arvaikheer",
@@ -1185,7 +1199,7 @@
      },
      {
       "name": "Iliqa",
-      "text": "An Evenki shaman of the upper Lena, chosen by a dead shaman's spirit through an illness that lasted three winters, who walks the Tree's three worlds for her clan. Find her drumming in a dark tent at the winter camp until the drum's rim frosts over, or at the Yakutsk fort's gate on tribute day, asking to see the hostage house, where her nephew is held. The fort wants fur, not licenses, and she gives it exactly as many sables as the forest can spare, which is never enough. An ally or mentor for the hostage (see Hooks).",
+      "text": "An Evenki shaman of the upper Lena, chosen by a dead shaman's spirit through an illness that lasted three winters, who walks the Tree's three worlds for her clan. Find her drumming in a dark tent at the winter camp until the drum's rim frosts over, or at the Yakutsk fort's gate on tribute day, asking to see the hostage house, where her nephew is held. The fort wants fur, and she gives it exactly as many sables as the forest can spare, which is never enough. An ally or mentor for the hostage (see Hooks).",
       "at": {
        "name": "the upper Lena",
        "modern": "Kirensk",
@@ -1203,7 +1217,7 @@
      },
      {
       "name": "Avetik of Julfa",
-      "text": "A New Julfa merchant's younger son sent to Astrakhan to learn the silk trade, who learned nard instead and wins more from Kalmyk princes than his father makes on silk. Comic relief or a rival; his father's letters get shorter every season.",
+      "text": "A New Julfa merchant's younger son sent to Astrakhan to learn the silk trade, who learned nard, the Persian backgammon, instead and wins more from Kalmyk princes than his father makes on silk. He keeps a board in the Armenian merchants' yard in Astrakhan and plays in the Kalmyk camps across the Volga in summer, and he wants enough winnings to buy a ship of his own before his father stops writing. Comic relief or a rival; his father's letters get shorter every season.",
       "at": {
        "name": "Astrakhan",
        "modern": "Astrakhan",
@@ -1240,14 +1254,14 @@
     },
     {
      "kind": "paragraph",
-     "text": "**The setting's own people** are the figures on the cover. Four are written here as NPCs: give each a scene and keep the speeches short. At home a table may play anyone, these four included; the reservation in the Contributors and License appendix governs publishing, not play."
+     "text": "**The setting's own people** are the characters the book invents. Four of them appear on the book's cover, listed here; Simbarashe Moyo and Simon Horowitz have entries below, with Mutapa's spymaster Shiri, the Sharper and the Wit, and Gottlieb von Schleich. Give each a scene and keep the speeches short. At home a table may play anyone, these four included; the reservation in the Contributors and License appendix governs publishing, not play."
     },
     {
      "kind": "list",
      "items": [
       "**Simbarashe Moyo**, Mutapa's great artificer, who showed that lightning is magic's purest force, fought selling the devices abroad and lost. He faces a choice between his nation and his science, and a party can be what forces it. He and Mutapa's spymaster, Shiri, have entries of their own below.",
-      "**Ilyanor Sael**, Lanternhall's elf: one of the high Hidden holding a shape in a Basel teaching hospital, who crossed with something of the Hidden still in the soul, and so remembers. A teacher, a licensing problem for every Church and a reason for a Physician party to exist.",
-      "**Anselme Lafrenaye**, the Gamester of the French court, a graying French halfling with his own chair at the king's high play at Saint-Germain, and at Versailles when the king takes the court to his pleasure house there. He knows the odds on everything and a few of the corridors anyway. A Counsellor's patron, rival or model.",
+      "**Ilyanor Sael**, Lanternhall's elf: one of the high Hidden holding a shape in a Basel teaching hospital, who crossed with something of the Hidden still in the soul, and so remembers. A teacher, a licensing problem for every Church and a reason for a Physician party to exist. *Hooks:* a Lanternhall graduate hanged at Lyon left a letter saying Ilyanor taught her everything she did; a canon of Basel's cathedral wants proof that the Chair of Vital Studies remembers being Hidden, and has hired someone to get it.",
+      "**Anselme Lafrenaye**, the Gamester of the French court, a graying French halfling with his own chair at the king's high play at Saint-Germain, and at Versailles when the king takes the court to his pleasure house there. He knows the odds on everything and a few of the corridors anyway. A Counsellor's patron, rival or model. *Hooks:* he wants the man who beat him at a hand he couldn't lose found and brought to the table again; a general who lost a dispatch to him at lansquenet wants it won back before the king hears it was staked.",
       "**Simon Horowitz**, a Kabbalist of Venice's ghetto given a book by the angel Raziel to decipher, trusting no one who promises anything two years after Sabbatai Zevi. The Envoy's example, and the Venice Job's way into the ghetto. He has an entry of his own below."
      ]
     },
@@ -1258,11 +1272,11 @@
     },
     {
      "kind": "paragraph",
-     "text": "A Mhizha, about eighty, and the great artificer: the man who showed that lightning is electricity, that electricity is its own force and that lightning is the purest form magical force takes in matter. Everything Mutapa makes runs on something he found. He is on the cover of this book, and a table that wants to play him has his sheet among the pregens."
+     "text": "A Mhizha, about eighty, and the great artificer: the man who showed that lightning is electricity, that electricity is its own force and that lightning is the purest form magical force takes in matter. Everything Mutapa makes runs on something he found. A table that wants to play him has his sheet among the pregens."
     },
     {
      "kind": "paragraph",
-     "text": "He was a smith's son from the plateau, of the Moyo clan, whose totem is the heart. In his twenties he was one of the men in the sheds on the Dyke trying to make the white grains melt, and he watched the first masters die of the sorting before the healers learned to ward the workshop. In the 1630s he built a rod to call the lightning down safely, then turned the same rod sideways and had the first Arc Gun. Then he turned his lightning into a forge, and platinum became a metal. Then he noticed that the metal which makes one lamp behave like the next would make a piece of the Hidden behave at all, and he began building rooms inside the Hidden, one at a time, for the crafters who would come after him (Possible Futures, Basa Remhizha, below)."
+     "text": "He was a smith's son from the plateau, of the Moyo clan, whose totem is the heart. In his twenties he was one of the men in the sheds on the Dyke trying to make the white grains melt, and he watched the first masters die of the sorting, the arsenic work of freeing the metal from its ore, before the healers learned to ward the workshop. In the 1630s he built a rod to call the lightning down safely, then turned the same rod sideways and had the first Arc Gun. Then he turned his lightning into a forge, and platinum became a metal. Then he noticed that the metal which makes one lamp behave like the next would make a piece of the Hidden behave at all, and he began building rooms inside the Hidden, one at a time, for the crafters who would come after him (Possible Futures, Basa Remhizha, below)."
     },
     {
      "kind": "paragraph",
@@ -1278,11 +1292,11 @@
     },
     {
      "kind": "paragraph",
-     "text": "**His choice.** He has asked the court for passage abroad and hasn't said why. The book doesn't say what he chooses or when; it is the fifth turning point in Possible Futures, and it belongs to the table. It can take many shapes: he stays and keeps fighting at court; he sails and gives the lightning to the world's natural philosophers as a science anyone can learn, which by his own rule it is; or he goes into the Hidden and closes the door behind him. Whichever it is, someone will try to stop him. The Shava house's men have already been to his workshop at night, the spymaster keeps a file on him, and the guild would rather he stayed where it can see him."
+     "text": "**His choice.** He has asked the court for passage abroad and hasn't said why. The book doesn't say what he chooses or when; it is the fifth turning point in Possible Futures, and it belongs to the table. By default he stays and keeps fighting at court until something forces his hand; the hooks below are the somethings. It can take many shapes: he stays and keeps fighting at court; he sails and gives the lightning to the world's natural philosophers as a science anyone can learn, which by his own rule it is; or he goes into the Hidden and closes the door behind him. Whichever it is, someone will try to stop him. The Shava house, the merchant house that carries the shewstones abroad, has already sent men to his workshop at night, the spymaster keeps a file on him, and the guild would rather he stayed where it can see him."
     },
     {
      "kind": "paragraph",
-     "text": "**At the table.** He gives a party a scene. As a mentor he asks more than he answers, and what he teaches stays taught. As a patron he is the most dangerous commission in the setting (Powers and Factions, Mutapa's Institutions, At the Table): he pays in a retuned curiosity, a letter to the guild with his name on it, or an honest answer, and he will build no weapon for anyone. To a crown's crew he is the prize every ministry in Europe would most like to bring home, and he knows it."
+     "text": "**At the table.** He gives a party a scene. As a mentor he asks more than he answers, and what he teaches stays taught. As a patron he is the most dangerous commission in the setting: he pays in a retuned curiosity, a letter to the guild with his name on it, or an honest answer, and he has built no weapon for anyone since the first Arc Gun. To a crown's crew he is the prize every ministry in Europe would most like to bring home."
     },
     {
      "kind": "heading",
@@ -1305,7 +1319,7 @@
     },
     {
      "kind": "paragraph",
-     "text": "A Counsellor (Spymaster), about forty-five, and Mutapa's foreign intelligence. Her agents call her Shiri, \"bird\" in Shona, after the soapstone bird on her seal, and she has never corrected them. Her own name is in the House of the Bird's ledgers and nowhere else."
+     "text": "A Counsellor (Spymaster), about forty-five, and Mutapa's foreign intelligence. Her agents call her Shiri, \"bird\" in Shona, after the soapstone bird on her seal, and she has never corrected them. Her own name is in the ledgers of the House of the Bird, Mutapa's bank, and nowhere else."
     },
     {
      "kind": "paragraph",
@@ -1317,7 +1331,7 @@
     },
     {
      "kind": "paragraph",
-     "text": "She belongs to the Spymaster's Club, as every court's spymaster does (Powers and Factions, The Crowns and the Churches), and she is the only member whose king makes the stones. She buys from the Club's London chair like everyone else. The others assume she can hear through the shewstones; she lets them assume it, and nobody knows whether she can."
+     "text": "She belongs to the Spymaster's Club, as every court's spymaster does, and she is the only member whose king makes the stones. She buys introductions and the use of the Club's stones from its London chair like everyone else. The others assume she can hear through the shewstones; she lets them assume it, and nobody knows whether she can."
     },
     {
      "kind": "paragraph",
@@ -1325,7 +1339,7 @@
     },
     {
      "kind": "paragraph",
-     "text": "**At the table.** A party meets her factor first, and gets its orders by letter under the bird seal. A crew that does three jobs well is asked up the stairs, once, to the bench in the room above the bank. As a patron she pays in gold by the *mithqal* and in credit on the Bird, and she never asks a party to do what it can't. As an opponent she seldom kills. She ruins credit: a factor stops honoring your paper, a harbor master finds your papers wanting, and a European crew discovers that nobody in any port will lend to it. As a mirror for a party's own spymaster, she is what the job looks like with a tenth of the money."
+     "text": "**At the table.** A party meets her factor first, and gets its orders by letter under the bird seal. A crew that does three jobs well is asked up the stairs, once, to the bench in the room above the bank. As a patron she pays in gold by the *mithqal* and in credit on the Bird, and she never asks a party to do what it can't. As an opponent she seldom kills. She ruins credit: a factor stops honoring your paper, a harbor master finds your papers wanting, and a European crew discovers that nobody in any port will lend to it. As a mirror for a party's own spymaster, she is what the job looks like with a tenth of the money. On the fair's rest day she plays tsoro in the market at Sofala with whoever sits down, and loses on purpose to children."
     },
     {
      "kind": "heading",
@@ -1336,7 +1350,7 @@
      "kind": "list",
      "items": [
       "Her factor in Venice has stopped answering. She wants to know whether he is dead, turned or in love, and she wants the answer before the Sensa.",
-      "She asks the party to deliver a letter of credit to the Spymaster's Club's chair in London by hand, and to watch his face when he reads the amount.",
+      "A Mutapan factor in Lisbon has been seen going in at the Holy Office's side door. She wants him followed for a week, and stopped only if he goes in a second time.",
       "One of her Mhizha abroad has started writing home in a cipher she never gave him.",
       "She wants to know who is paying for the great artificer's passage. She doesn't say what she will do with the answer."
      ]
@@ -1348,7 +1362,7 @@
     },
     {
      "kind": "paragraph",
-     "text": "A Warlock (Envoy), about thirty-five, and the Kabbalist of Venice's ghetto. He is on the cover of this book, and he is the Venice Job's contact."
+     "text": "A Warlock (Envoy), about thirty-five, and the Kabbalist of Venice's ghetto. He is the Venice Job's contact."
     },
     {
      "kind": "paragraph",
@@ -1360,7 +1374,7 @@
     },
     {
      "kind": "paragraph",
-     "text": "**The book.** An angel gave Simon a book and told him to read it. By default the angel is Raziel, the keeper of secrets, who in Kabbalist tradition gave a book to the first man; that is why the gift came as a book. Simon can read the script and can't yet read the language. Each page gives way after weeks of work, and each page he reads is something he can then do, which is how he comes by an Envoy's powers (*The Classes*, Warlock, Envoy). He is eleven pages in. What the book is for belongs to the table."
+     "text": "**The book.** An angel gave Simon a book and told him to read it. By default the angel is Raziel, the keeper of secrets, who in Kabbalist tradition gave a book to the first man; that is why the gift came as a book. Simon can read the script and can't yet read the language. Each page gives way after weeks of work, and each page he reads is something he can then do, which is how he comes by an Envoy's powers (*The Classes*, Warlock, Envoy). He is eleven pages in. What the book is for belongs to the table; by default it is the book Raziel gave the first man, and its last page opens a door the angel wants opened."
     },
     {
      "kind": "paragraph",
@@ -1391,7 +1405,7 @@
     },
     {
      "kind": "paragraph",
-     "text": "Two more, not on the cover: a Gamester and a Courtier, a couple who work as a pair, written as player characters a table can take as they are, or meet as rivals across a gaming table. They're English, in their twenties, and banned from more houses than most people have visited. Louche, loud, very funny about the English, and much better brought up than they let on."
+     "text": "Two more: a Gamester and a Courtier, a couple who work as a pair, written as player characters a table can take as they are, or meet as rivals across a gaming table. They're English, in their twenties, and banned from more houses than most people have visited. Louche, loud, very funny about the English, and much better brought up than they let on."
     },
     {
      "kind": "paragraph",

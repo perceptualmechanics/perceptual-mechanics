@@ -686,6 +686,16 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (!(barbarianColumns?.find(x => x.name === 'Rages')?.value === barbarianRow.Rages && barbarianColumns.find(x => x.name === 'Rage Damage')?.value === barbarianRow['Rage Damage'] && wizardColumns?.length === 0))
     fail(`class columns: a Barbarian 5 ${JSON.stringify(barbarianColumns)}; a Wizard 5 ${JSON.stringify(wizardColumns)}`);
 
+  // Starting equipment as chosen: the kit's "Gaming Set (same as above)"
+  // the set chosen, a Rogue's Shortsword (its soft hyphen gone) an attack,
+  // and a package of gold a kit of nothing but its coin.
+  const soldierKit = run(someone([{ class: 'Fighter', level: 1 }]), 'Soldier')?.equipment.kits.find(k => k.from === 'Soldier')?.items ?? [];
+  if (!soldierKit.includes('Gaming Set (Dice)') || soldierKit.some(i => /same as above/.test(i))) fail(`the Soldier's kit: ${soldierKit.join(', ')}`);
+  if (!hitOf(run(someone([{ class: 'Rogue', level: 1 }]), 'Rogue 1'), 'Shortsword')) fail('a Rogue\'s Shortsword isn\'t among its attacks');
+  const gilded = run(someone([{ class: 'Fighter', level: 1 }], { packages: { Fighter: 'C' } }), 'Fighter C');
+  const fighterC = srd.classes.find(c => c.name === 'Fighter').traits.find(t => t.trait === 'Starting Equipment').value.match(/\(C\) ([\d,]+) GP/)?.[1];
+  if (!(gilded?.equipment.kits[0].items.length === 0 && gilded.packageChoices?.[0].chosen === 'C' && gilded.packageChoices[0].lines.C === `${fighterC} GP`)) fail(`a Fighter's package C: ${JSON.stringify(gilded?.packageChoices?.[0])}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

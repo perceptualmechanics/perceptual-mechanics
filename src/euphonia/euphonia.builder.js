@@ -114,6 +114,7 @@ export async function initBuilder(panel) {
   const revelationBox = h('div', { class: 'b-picks' });
   const spellSetBox = h('div', { class: 'b-picks' });
   const kindBox = h('div', { class: 'b-picks' });
+  const packageBox = h('div', { class: 'b-picks' });
   const saveBox = h('div', { class: 'b-picks' });
   const weaponBox = h('div', { class: 'b-picks' });
   const targetBox = h('div', { class: 'b-picks' });
@@ -157,6 +158,7 @@ export async function initBuilder(panel) {
       h('label', { class: 'b-field' }, h('span', {}, 'Buying in'), marketSelect),
       h('p', { class: 'b-note' }, `Mutapan curiosities cost more the farther they travel from ${book.items.find(i => i.prices)?.prices.home}, where they’re made.`)),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
+    section('Starting equipment', h('p', { class: 'b-note' }, 'Each kit, or its gold to spend instead. The builder buys armor with what’s left.'), packageBox),
     section('Languages', tongueList, languageBox, languageAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
     section('Skills', skillsBox, expertiseBox, skillNotes),
@@ -421,6 +423,10 @@ export async function initBuilder(panel) {
       h('span', {}, h('strong', {}, x), line(x) ? h('span', { class: 'b-pick-text' }, line(x)) : null))),
     problemSlot(`${field}:${c.key}`));
   const fresh = (box, shape) => { if (box.dataset.for === shape) return false; box.dataset.for = shape; return true; };
+  function renderPackages(result) {
+    if (!fresh(packageBox, JSON.stringify(result.packageChoices))) return;
+    rebuild(packageBox, ...result.packageChoices.map(c => oneOf(c, 'package', 'packages', c.label, x => c.lines[x])));
+  }
   function renderKinds(result) {
     if (!fresh(kindBox, JSON.stringify(result.kindChoices))) return;
     rebuild(kindBox, ...result.kindChoices.map(c => oneOf(c, 'kind', 'kinds', `${c.label}: your ${c.noun}`)));
@@ -953,6 +959,7 @@ export async function initBuilder(panel) {
     renderWalked(result);
     renderNotes(result);
     renderKinds(result);
+    renderPackages(result);
     renderSaves(result);
     renderWeapons(result);
     renderTargets(result);

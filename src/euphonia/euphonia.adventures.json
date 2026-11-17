@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e1c8841a3c6b46cea54636abb76b9fa53f8e1ada001a802a4d5a285edb5fa131",
-  "modified": "2026-11-17T11:43:35-05:00",
+  "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
+  "modified": "2026-11-17T15:55:12-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 32,
   "rules": {
@@ -40,7 +40,7 @@
     "An Agitator cell inside the Invisible College has a scheme for the Grand Divertissement; a natural philosopher among them has doubts.",
     "A Mutapan lamp in a minister's study has been opened and closed again, and the guild's mark on its base is now upside down.",
     "Mutapa's spymaster wants to know who told Spain what its platina was: the letter came from Lisbon, in excellent Portuguese.",
-    "Anselme Lafrenaye, the Gamester of the French court (Running Euphonia, Notable People), has lost a hand he couldn't have lost, to a man who shouldn't have known the odds."
+    "Anselme Lafrenaye, the Gamester of the French court, has lost a hand he couldn't have lost, to a man who shouldn't have known the odds."
    ],
    "regions": [
     "Europe",
@@ -52,7 +52,7 @@
    "kind": "Heist, and a delve",
    "where": "Venice, then Toledo",
    "read_with": "Europe",
-   "summary": "**The pitch.** The Republic of Venice is about to sell the most wanted document in Europe, and a crew can be paid to take it before the sale. Venice is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
+   "summary": "**The pitch.** The Republic of Venice is about to sell the most wanted document in Europe, and a crew can be paid to take it before the sale. Venice is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. Its roof-runner is Zanetta Bon, a Danae of the Crossing, who folds space to cross a canal at a step (Europe, People, in The State of the World).",
    "ready": "**Ready to run.** *The Venice Job: The First Night* is the heist's opening night as a one-shot, with five 3rd-level characters ready to play.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts and bravos; the Spanish one hires a crew.",
@@ -90,7 +90,11 @@
    "read_with": "East and Southeast Asia",
    "summary": "A campaign of delves through China's royal dead. A party starts in a minor Ming prince's sealed tomb, in a valley the Qing ignore, and years later ends in the First Emperor's, with its rivers of mercury and its crossbows set for intruders. Between lie the tombs the DM builds: the Han and Tang dead with their tomb-quelling beasts, the alchemists' graves full of cinnabar.",
    "ready": "",
-   "hooks": [],
+   "hooks": [
+    "A county magistrate has found a sealed door in a quarry and wants it opened, inventoried and closed again before his superior hears of it.",
+    "A loyalist society in Suzhou will pay for a prince's jade seal, and won't say which prince.",
+    "The tomb robbers of a Henan village went into a hill a month ago and haven't come out, and their families want them, or their shares, back."
+   ],
    "regions": [
     "East and Southeast Asia"
    ]
@@ -100,7 +104,7 @@
    "kind": "War",
    "where": "The Andes and the Chocó",
    "read_with": "The Americas",
-   "summary": "**The pitch.** The conquest never finished. A century after the huacas rose, the Sapa Inca rules from Cusco again, Spain holds the coast and the silver mountain, and the line between them runs across the roof of the world. This is the war the rest of the world is about to join: whoever breaks the Andean siege, or robs Spain while it's pinned, decides who gets the metals that are turning the balance of magic. A three-sided war: the Inca, the Spanish and the people profiting off both. At stake: silver, mercury, guano, cinchona, the platina in the Chocó's rivers and the huacas that rose. It's the book's grittiest setting: Andeans defending their home, or amoral soldiers of fortune in the *Wages of Fear* vein. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
+   "summary": "**The pitch.** The conquest never finished. A century after the huacas, the Andes' holy beings, rose, the Sapa Inca rules from Cusco again, Spain holds the coast and the silver mountain, and the line between them runs across the roof of the world. This is the war the rest of the world is about to join: whoever breaks the Andean siege, or robs Spain while it's pinned, decides who gets the metals that are turning the balance of magic. A three-sided war: the Inca, the Spanish and the people profiting off both. At stake: silver, mercury, guano, cinchona, the platina in the Chocó's rivers and the huacas that rose. It's the book's grittiest setting: Andeans defending their home, or amoral soldiers of fortune in the *Wages of Fear* vein. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
    "ready": "",
    "hooks": [
     "The keepers of Pariacaca say the mountain will close the pass to Spain for a season, if someone brings back what the extirpators carried off to Lima.",
@@ -109,7 +113,7 @@
     "A Spanish officer wants guides over the pass; the guide he hires has already been paid by the Sapa Inca to lose him.",
     "In Lima, the countess's confessor is passing letters to someone on the high ground, and the letters are written in Quechua.",
     "An English captain at Port Royal has a commission, a chart of the Atrato and no idea who drew the chart.",
-    "A Mutapan factor in Buenos Aires is buying cinchona bark at any price, and nobody knows what Mutapa needs it for."
+    "A Mutapan factor in Buenos Aires is buying cinchona bark at any price, more than every fever on the Zambezi could use, and nobody knows why."
    ],
    "regions": [
     "The Americas"

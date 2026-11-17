@@ -25,7 +25,8 @@ if (!pdfPath || !wordsPath) throw new Error('usage: node scripts/euphonia-srd.mj
 
 const words = readFileSync(wordsPath, 'utf8').trim().split('\n').map(l => {
   const [page, x, y, width, size, font, text] = l.split('\t');
-  return { page: +page, x: +x, y: +y, width: +width, size: +size, font, text };
+  // A soft hyphen ("Short\u00adsword") is the typesetter's hint, not a letter.
+  return { page: +page, x: +x, y: +y, width: +width, size: +size, font, text: text.replace(/\u00ad/g, '') };
 }).filter(w => w.y < FOOTER_Y);
 
 // Body text, table text and heading text: SemiBold Gill Sans is a heading,
