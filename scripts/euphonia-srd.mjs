@@ -58,6 +58,14 @@ for (const w of words) {
   }
   line.words.push(w);
 }
+// A bullet the PDF sets apart from its line (Guards and Wards' list, its
+// glyphs ahead of their text in the page's order) joins the line beside it.
+for (const [k, l] of lines.entries()) {
+  if (l.words.length !== 1 || l.words[0].text !== '•') continue;
+  const beside = lines.find(o => o && o !== l && o.page === l.page && o.right === l.right && Math.abs(o.y - l.y) <= LINE_TOLERANCE && o.words[0].x > l.words[0].x);
+  if (beside) { beside.words.unshift(l.words[0]); lines[k] = null; }
+}
+lines.splice(0, lines.length, ...lines.filter(Boolean));
 for (const l of lines) {
   const first = l.words[0];
   l.text = l.words.map(w => w.text).join(' ');
@@ -70,6 +78,16 @@ for (const l of lines) {
           : first.size <= ASIDE_PT || (l.family === 'body' && first.size >= ASIDE_TITLE_PT) ? 'aside'
             : /Gill/.test(first.font) ? 'table' : 'body';
   l.indented = l.kind === 'body' && Math.abs(l.x - (l.margin + INDENT)) < 1.5;
+}
+// One spell's heading is set in the body face at a heading's size, its
+// capitals mis-set ("Acid SplASh"): a line like that directly over a spell's
+// level and school ("Evocation Cantrip (Sorcerer, Wizard)") is that spell's
+// heading, not a sidebar's title.
+for (const [k, l] of lines.entries()) {
+  if (l.kind === 'aside' && l.size >= 11.5 && /^(?:Level \d \w+|\w+ Cantrip) \(/.test(lines[k + 1]?.text ?? '')) {
+    l.kind = 'item';
+    l.text = l.text.replace(/\B[A-Z]+\B/g, m => m.toLowerCase());
+  }
 }
 
 // ---------- words the SRD itself uses, and how often, to rejoin words broken
@@ -489,6 +507,20 @@ function prose(from, to, skip) {
   }
   return out.join('\n\n').replace(/^(- .*)\n\n(?=- )/gm, '$1\n');
 }
+// Rules text whose table won't read as one: its paragraphs as prose(), and
+// the table's lines each a paragraph of its own, as set.
+const tablesAsLines = [];
+function lineByLine(from, to) {
+  const out = [];
+  for (let k = from; k < to; k++) {
+    const l = lines[k];
+    if (l.kind === 'aside') continue;
+    if (l.text.startsWith('• ')) out.push(`- ${l.text.slice(2)}`);
+    else if (l.kind !== 'body' || l.indented || !out.length || lines[k - 1].kind !== 'body') out.push(l.text);
+    else out[out.length - 1] = join([out.at(-1), l.text]);
+  }
+  return out.join('\n\n');
+}
 // A feature list: each "Level N: Name" item and its text, to the next item.
 function levelFeatures(from, to, skip) {
   const out = [];
@@ -820,6 +852,25 @@ function spells() {
     if (!head) continue;
     const end = nextOf(i, ['item', 'section']);
     const text = join(lines.slice(k + 1, end).map(l => l.text));
+    // Its header (Casting Time, Range, Components, Duration), each line led
+    // by its label (most set as a table's lines, Chill Touch's as body text),
+    // a long value running on in a table's line; then its description, as
+    // rules text, or, where its table won't read as one (Scrying's, Teleport's
+    // "51–00—"), with each of the table's lines as its own.
+    let body = k + 1, label = null;
+    const fields = {};
+    for (; body < end; body++) {
+      const m = lines[body].text.match(/^(Casting Time|Range|Components?|Duration): (.*)$/);
+      if (m) fields[label = m[1].replace(/s$/, '')] = m[2];
+      else if (label && lines[body].kind === 'table' && label !== 'Duration') fields[label] = join([fields[label], lines[body].text]);
+      else break;
+    }
+    if (!fields.Component || !fields.Duration) throw new Error(`the spell "${lines[i].text}" has no Components or Duration`);
+    let description;
+    try { description = prose(body, end); } catch {
+      description = lineByLine(body, end);
+      tablesAsLines.push(lines[i].text);
+    }
     const casting = text.match(/Casting Time: (.+?) Range:/)?.[1];
     if (!casting) throw new Error(`the spell "${lines[i].text}" has no Casting Time`);
     // What a sheet needs to list it as an attack: its range, the spell
@@ -849,6 +900,7 @@ function spells() {
     const upgrade = kind ? { kind, steps: [[+growth[2], growth[3]], [+growth[4], growth[5]], [+growth[6], growth[7]]] }
       : beams ? { kind: 'beams', steps: [[+beams[2], wordNumber(beams[1])], [+beams[4], wordNumber(beams[3])], [+beams[6], wordNumber(beams[5])]] } : null;
     out.push({ name: lines[i].text, level: head[1] ? +head[1] : 0, school: head[2] ?? head[3], classes: head[4].split(/,\s*/), casting, damage: DAMAGE.filter(d => dealt(d).test(text)),
+      components: fields.Component, duration: fields.Duration, text: description,
       range, reach, area, higher, attack, save, dice: hit ? { dice: hit[1], type: hit[2] ?? null } : null, upgrade });
   }
   if (!out.length) throw new Error('the SRD has no spells');
@@ -1004,8 +1056,17 @@ const data = {
     const changes = [];
     const read = { backgrounds: backgrounds(), species: species(), feats: feats(), classes: coreClasses(), spells: spells() };
     holdsToSource(read);
+    // A spell's text that names what Euphonia never publishes (the site's
+    // banned words: someone else's planes, "the Feywild", "the Shadowfell") is
+    // held back, the spell still offered, and the record says why.
+    const banned = RULES.banned.map(w => [w, new RegExp(`(?<!\\w)${w.replace(/[.*+?^${}()|[\]\\&]/g, '\\$&')}(?!\\w)`, 'i')]);
+    const textWithheld = [];
+    for (const sp of read.spells) {
+      const names = banned.filter(([, re]) => re.test(sp.text)).map(([w]) => w);
+      if (names.length) { textWithheld.push({ spell: sp.name, names }); sp.text = null; }
+    }
     const content = adapt(read, '', changes);
-    return { adapted: { rule: 'euphonia.rules.json fey_type', changes }, ...content };
+    return { adapted: { rule: 'euphonia.rules.json fey_type', changes }, spell_text_withheld: textWithheld, ...content };
   })(),
   ability_scores: { ...scoreMethods(), background: backgroundIncreases() },
   armor: { items: armor(), strength_speed_penalty: armorStrengthPenalty() },
@@ -1044,4 +1105,5 @@ const data = {
   attacks: attackRules(),
 };
 writeFileSync(OUT, `${JSON.stringify(data, null, 1)}\n`);
+if (tablesAsLines.length) console.log(`spells whose table is kept line by line: ${tablesAsLines.join(', ')}`);
 console.log(`euphonia.srd.json: ${data.classes.length} classes (${data.classes.reduce((n, c) => n + c.features.length, 0)} features), ${data.backgrounds.length} backgrounds, ${data.species.length} species (${data.species.reduce((n, s) => n + s.traits.length, 0)} traits), ${data.feats.length} feats`);

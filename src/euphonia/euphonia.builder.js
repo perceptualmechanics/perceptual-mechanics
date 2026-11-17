@@ -856,6 +856,7 @@ export async function initBuilder(panel) {
   function renderSheet(result) {
     for (const d of sheet.querySelectorAll('details[data-key]')) if (d.open) open.add(d.dataset.key); else open.delete(d.dataset.key);
     const det = (key, summary, ...body) => h('details', { 'data-key': key, open: open.has(key) }, h('summary', {}, summary), ...body);
+    const withheldText = new Map((srd.spell_text_withheld ?? []).map(w => [w.spell, w.names]));
     const gear = result.equipment;
     const classLine = result.classes.map(c => `${c.class} ${c.level}${c.subclass ? ` (${c.subclass})` : ''}`).join(' / ');
     const homeland = places.regions.find(r => r.name === state.homeland);
@@ -872,7 +873,11 @@ export async function initBuilder(panel) {
     const chosenSpells = result.spellChoices.filter(c => c.chosen.length || c.given.length || c.always.length).map(c => h('div', { class: 'sheet-spell-list' },
       h('h4', {}, c.label),
       h('ul', {}, [...c.given.map(sp => ({ ...sp, kept: 'always known' })), ...c.always.map(sp => ({ ...sp, kept: `always prepared, from ${sp.from}` })), ...c.chosen].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(sp => h('li', {},
-        `${sp.level ? `Level ${sp.level}` : 'Cantrip'}: ${sp.name}${sp.school ? `, ${sp.school}` : ''}${sp.special && !/^[—–]$/.test(sp.special) ? ` (${sp.special})` : ''}${sp.kept ? `, ${sp.kept}` : ''}`)))));
+        // Each spell opens to its header and text, as the books write them;
+        // one the site holds back says why.
+        (facts => det(`spell-${c.key}-${sp.name}`, `${sp.level ? `Level ${sp.level}` : 'Cantrip'}: ${sp.name}${sp.school ? `, ${sp.school}` : ''}${sp.special && !/^[—–]$/.test(sp.special) ? ` (${sp.special})` : ''}${sp.kept ? `, ${sp.kept}` : ''}`,
+          facts ? h('p', { class: 'sheet-spell-head' }, `${facts.casting} · ${facts.range}${facts.area ? `, a ${facts.area}` : ''} · ${facts.components} · ${facts.duration}`) : null,
+          facts?.text ? h('div', { html: blocks(facts.text) }) : h('p', { class: 'sheet-note' }, withheldText.has(sp.name) ? `The SRD's text names ${listed(withheldText.get(sp.name))}, which Euphonia doesn't publish; read it in SRD 5.2.1.` : 'Its text isn’t in the books’ export.')))(book.spellFacts.get(sp.name)))))));
     rebuild(sheet,
       h('header', { class: 'sheet-head' },
         h('h2', { id: 'sheet-title' }, state.name.trim() || 'Your character'),

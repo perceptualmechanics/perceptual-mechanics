@@ -5,7 +5,7 @@
   "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
   "modified": "2026-11-17T15:55:12-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 32,
+  "exporter_version": 33,
   "rules": {
    "banned": [
     "eladrin",
@@ -4699,7 +4699,18 @@
       "Physician"
      ],
      "casting": "Action",
-     "damage": []
+     "damage": [],
+     "range": "60 feet",
+     "reach": null,
+     "area": null,
+     "higher": "You can move one additional creature for each spell slot level above 2.",
+     "attack": null,
+     "save": "Strength",
+     "dice": null,
+     "upgrade": null,
+     "components": "V, S",
+     "duration": "Instantaneous",
+     "text": "You take hold of a body that can't move itself and bring it out.\n\nChoose one creature you can see within range that is willing or has the Incapacitated condition. An unwilling creature can make a Strength saving throw; on a success, the spell has no effect on it. Otherwise, the creature glides through the air to an unoccupied space you can see within range, up to 60 feet from where it started, on a surface that can bear its weight. This movement doesn't provoke Opportunity Attacks, and the creature takes no damage from falling during it. If the creature has 0 Hit Points when the movement ends, it becomes Stable.\n\n**Using a Higher-Level Spell Slot.** You can move one additional creature for each spell slot level above 2."
     },
     {
      "name": "Anaesthesia",
@@ -4709,7 +4720,18 @@
       "Physician"
      ],
      "casting": "Action",
-     "damage": []
+     "damage": [],
+     "range": "Touch",
+     "reach": null,
+     "area": null,
+     "higher": null,
+     "attack": null,
+     "save": null,
+     "dice": null,
+     "upgrade": null,
+     "components": "V, S, M (a soaked cloth)",
+     "duration": "Concentration, up to 1 hour",
+     "text": "You touch a willing creature and put it under.\n\nThe creature has the Unconscious condition for the duration. While the spell lasts it can't be woken by damage or by any other means, except by your touch (no action required) or by *Dispel Magic* or comparable magic. You have Advantage on Intelligence (Medicine) checks made to treat it while it is under, and it is unaware of its surroundings and remembers nothing of what is done to it."
     },
     {
      "name": "Convulsion",
@@ -4721,7 +4743,21 @@
      "casting": "Action",
      "damage": [
       "Lightning"
-     ]
+     ],
+     "range": "60 feet",
+     "reach": null,
+     "area": null,
+     "higher": "The damage increases by 1d8 for each spell slot level above 2.",
+     "attack": null,
+     "save": "Constitution",
+     "dice": {
+      "dice": "3d8",
+      "type": "Lightning"
+     },
+     "upgrade": null,
+     "components": "V, S",
+     "duration": "Instantaneous",
+     "text": "You send a current through a creature's nerves and turn its own muscles against it.\n\nChoose a creature you can see within range. It must make a Constitution saving throw, taking 3d8 Lightning damage on a failed save, or half as much damage on a successful one. On a failed save, the creature also drops one object it is holding, and it can't take Reactions until the end of its next turn.\n\nA Construct or an Ooze automatically succeeds on this saving throw.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d8 for each spell slot level above 2."
     },
     {
      "name": "Cold Storage",
@@ -4733,7 +4769,21 @@
      "casting": "Action",
      "damage": [
       "Cold"
-     ]
+     ],
+     "range": "Touch",
+     "reach": null,
+     "area": null,
+     "higher": "The damage increases by 1d8 for each spell slot level above 3.",
+     "attack": null,
+     "save": "Constitution",
+     "dice": {
+      "dice": "5d8",
+      "type": "Cold"
+     },
+     "upgrade": null,
+     "components": "V, S, M (a pinch of frost)",
+     "duration": "24 hours",
+     "text": "You take a body down to the cold that stops it, whether or not it agreed to go.\n\nChoose a creature within your reach.\n\n- **Willing, or Incapacitated and not hostile to you.** The creature has the Unconscious condition and enters stasis. For the duration it doesn't need air, food, or water; it can't be woken; it doesn't age; and its condition doesn't change. Every disease, poison, curse, and other ongoing effect on it is suspended, and time spent in stasis doesn't count against their durations. If the creature has 0 Hit Points, it is Stable and makes no Death Saving Throws while the spell lasts. The stasis ends if you touch the creature and end it (no action required), or if the creature takes damage.\n- **Unwilling.** The creature must make a Constitution saving throw, taking 5d8 Cold damage on a failed save, or half as much damage on a successful one. A creature reduced to 0 Hit Points by this damage doesn't die or make Death Saving Throws; it enters stasis as above until the spell ends.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d8 for each spell slot level above 3."
     },
     {
      "name": "Fugue",
@@ -4745,7 +4795,18 @@
      "casting": "Action",
      "damage": [
       "Psychic"
-     ]
+     ],
+     "range": "60 feet",
+     "reach": null,
+     "area": null,
+     "higher": "The damage increases by 5 for each spell slot level above 3.",
+     "attack": null,
+     "save": "Wisdom",
+     "dice": null,
+     "upgrade": null,
+     "components": "V, S",
+     "duration": "Concentration, up to 1 minute",
+     "text": "You make a body feel everything that has already been done to it, all at once, and then leave it there.\n\nChoose a creature you can see within range. It must make a Wisdom saving throw. On a failed save, it takes 10 Psychic damage, or 15 if it is Bloodied, and it is **vacant** for the duration. On a successful save, it takes half as much damage and is not vacant.\n\nA vacant creature is elsewhere. While it is vacant:\n\n- It can't see or hear anything more than 10 feet away from it.\n- It can't take Bonus Actions or Reactions, and on its turn it can move or take an action, but not both.\n- It has Disadvantage on saving throws against the Charmed and Frightened conditions.\n\nAt the end of each of its turns, a vacant creature can repeat the saving throw, ending the effect on itself on a success.\n\nA creature that can't feel pain (a Construct, an Ooze, or an Undead) is unaffected by this spell; there is no record in it to read.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 5 for each spell slot level above 3."
     },
     {
      "name": "Defibrillation",
@@ -4757,7 +4818,21 @@
      "casting": "Action",
      "damage": [
       "Lightning"
-     ]
+     ],
+     "range": "60 feet",
+     "reach": null,
+     "area": null,
+     "higher": "Both the damage and the healing increase by 1d8 for each spell slot level above 5.",
+     "attack": null,
+     "save": "Constitution",
+     "dice": {
+      "dice": "5d8",
+      "type": "Lightning"
+     },
+     "upgrade": null,
+     "components": "V, S, M (two rods of copper, and diamonds worth 300+ GP, which the spell consumes if it returns a creature to life)",
+     "duration": "Instantaneous",
+     "text": "You send a single charge through several creatures at once, choosing what it does to each of them.\n\nChoose up to five creatures you can see within range, no two of which are more than 30 feet apart. For each of them, choose one of the following effects:\n\n- **Stop.** The creature must make a Constitution saving throw, taking 5d8 Lightning damage on a failed save, or half as much damage on a successful one.\n- **Start.** If the creature has 0 Hit Points, or has died within the last minute and its body is not missing any vital parts, it regains 3d8 Hit Points. A creature that had died returns to life; no more than one creature can return to life from a single casting.\n\n**Using a Higher-Level Spell Slot.** Both the damage and the healing increase by 1d8 for each spell slot level above 5."
     },
     {
      "name": "Second Breath",
@@ -4767,7 +4842,18 @@
       "Physician"
      ],
      "casting": "Action",
-     "damage": []
+     "damage": [],
+     "range": "Self (30-foot Emanation)",
+     "reach": null,
+     "area": null,
+     "higher": "When you cast this spell using a level 9 spell slot, the healing increases to 3d8 plus your spellcasting ability modifier.",
+     "attack": null,
+     "save": null,
+     "dice": null,
+     "upgrade": null,
+     "components": "V, S, M (diamonds worth 300+ GP for each creature the spell returns to life, which the spell consumes)",
+     "duration": "Concentration, up to 1 minute",
+     "text": "You breathe for everyone around you, and they breathe again.\n\nWhen you cast this spell, each creature of your choice in the Emanation regains Hit Points equal to 2d8 plus your spellcasting ability modifier. At the start of each of your turns for the duration, each creature of your choice in the Emanation that is Bloodied or has 0 Hit Points regains Hit Points equal to 2d8 plus your spellcasting ability modifier.\n\nWhen you cast it, each creature of your choice in the Emanation that died since the start of your last turn returns to life, provided its body isn't missing any vital parts, and regains the Hit Points above. Each creature of your choice in the Emanation that has the Prone condition can stand up without spending any movement, and the Blinded, Charmed, Deafened, Frightened, Paralyzed, Poisoned, and Stunned conditions end on each creature of your choice in the Emanation.\n\nFor the duration, each creature of your choice in the Emanation has Advantage on saving throws against the Charmed, Frightened, Paralyzed, and Stunned conditions.\n\n**Using a Higher-Level Spell Slot.** When you cast this spell using a level 9 spell slot, the healing increases to 3d8 plus your spellcasting ability modifier."
     },
     {
      "name": "Arc",
@@ -4780,7 +4866,21 @@
      "casting": "Bonus Action",
      "damage": [
       "Lightning"
-     ]
+     ],
+     "range": "Self",
+     "reach": null,
+     "area": null,
+     "higher": "The damage increases by 1d8 for each spell slot level above 3.",
+     "attack": null,
+     "save": "Dexterity",
+     "dice": {
+      "dice": "2d8",
+      "type": "Lightning"
+     },
+     "upgrade": null,
+     "components": "V",
+     "duration": "Instantaneous",
+     "text": "You become the signal for an instant, and arrive.\n\nChoose an unoccupied space you can see within 60 feet of yourself. You teleport to that space, traveling as a line of current between the two points. Each creature in a Line 5 feet wide between the space you left and the space you arrive in must make a Dexterity saving throw, taking 2d8 Lightning damage on a failed save, or half as much damage on a successful one.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d8 for each spell slot level above 3."
     }
    ]
   },
@@ -8230,7 +8330,21 @@
      "casting": "Action",
      "damage": [
       "Psychic"
-     ]
+     ],
+     "range": "120 feet",
+     "reach": null,
+     "area": null,
+     "higher": null,
+     "attack": null,
+     "save": "Intelligence",
+     "dice": {
+      "dice": "8d6",
+      "type": "Psychic"
+     },
+     "upgrade": null,
+     "components": "V, S",
+     "duration": "Instantaneous",
+     "text": "You turn the Hidden's regard on a place. Each creature in a 20-foot-radius Sphere centered on a point you choose within range makes an Intelligence saving throw. On a failed save, a creature takes 8d6 Psychic damage and is in a daze for 1 minute: it subtracts 1d6 from each attack roll it makes. On a successful save, it takes half as much damage and isn't in a daze."
     }
    ]
   }

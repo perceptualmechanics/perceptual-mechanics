@@ -5,7 +5,7 @@
   "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
   "modified": "2026-11-17T15:55:12-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 32,
+  "exporter_version": 33,
   "rules": {
    "banned": [
     "eladrin",

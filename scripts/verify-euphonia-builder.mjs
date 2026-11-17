@@ -830,6 +830,12 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const tableItem = champion11?.equipment.magicItems.find(m => m.item)?.item.name;
   if (run(someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }], { inventory: { remove: [tableItem] } }), 'Fighter 11 without')?.equipment.magicItems.some(m => m.item?.name === tableItem)) fail(`${tableItem}, taken out, is still given`);
 
+  // Acid Splash, whose heading the SRD sets in the body face, is a Wizard's
+  // cantrip again, a Dexterity save; and every Euphonia spell has its text.
+  const splashing = run(someone([{ class: 'Wizard', level: 1 }], { spells: { Wizard: ['Acid Splash'] } }), 'Wizard 1, Acid Splash');
+  if (hitOf(splashing, 'Acid Splash')?.save?.ability !== 'Dexterity') fail(`Acid Splash: ${JSON.stringify(hitOf(splashing, 'Acid Splash'))}`);
+  for (const c of euphonia.data) for (const sp of c.new_spells ?? []) if (!sp.text || !sp.components || !sp.duration) fail(`${c.name}'s ${sp.name} lacks its text, components or duration`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

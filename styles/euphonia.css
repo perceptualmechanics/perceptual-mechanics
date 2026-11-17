@@ -608,6 +608,8 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .sheet-bonus { font-variant-numeric: tabular-nums; }
 .sheet-mark { color: var(--sheet-mark); font-size: 0.85rem; font-style: italic; font-weight: 400; }
 .sheet-warning { color: var(--sheet-mark); font-style: italic; }
+.sheet-spell-head { color: var(--sheet-muted); font-size: 0.85rem; margin: 0.2rem 0 0.4rem; }
+.sheet-note { color: var(--sheet-muted); font-style: italic; margin: 0.2rem 0 0.4rem; }
 .sheet details { border-top: 1px solid var(--sheet-rule); padding: 0.3rem 0; }
 .sheet details > div { padding: 0.3rem 0 0.2rem; }
 .sheet summary { color: var(--ink); }

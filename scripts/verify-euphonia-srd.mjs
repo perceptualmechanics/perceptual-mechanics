@@ -41,7 +41,13 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
 
   // The site's rules, over everything shown and the record of what changed.
   let checked = 0;
-  for (const [path, s] of strings({ backgrounds: srd.backgrounds, species: srd.species, feats: srd.feats, classes: srd.classes, tables: srd.tables, adapted: srd.adapted })) {
+  // Spells too, now each carries its text; one held back is held back for a
+  // word the rules ban.
+  // Each spell whole for the sheet: its components, its duration, and its
+  // text, or a reason it's held back.
+  for (const sp of srd.spells ?? []) if (!sp.components || !sp.duration || (!sp.text && !(srd.spell_text_withheld ?? []).some(w => w.spell === sp.name))) fail(`spells: ${sp.name} lacks its components, duration or text`);
+  for (const w of srd.spell_text_withheld ?? []) if (srd.spells.find(x => x.name === w.spell)?.text !== null || !w.names.every(n => rules.banned.includes(n))) fail(`spell_text_withheld: ${w.spell} isn't held back for a banned word`);
+  for (const [path, s] of strings({ backgrounds: srd.backgrounds, species: srd.species, feats: srd.feats, classes: srd.classes, tables: srd.tables, spells: srd.spells, adapted: srd.adapted })) {
     checked++;
     const why = ruleProblems(s, rules);
     if (why.length) fail(`${path}: ${why.join(', ')} in "${s.slice(0, 60)}"`);
