@@ -24,14 +24,7 @@
    "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November). So does a list of creature types: \"any Undead, Fey, or Elemental\"."
   }
  },
- "withheld": [
-  {
-   "where": "Kaiawa · character sheet",
-   "reasons": [
-    "bracket"
-   ]
-  }
- ],
+ "withheld": [],
  "data": [
   {
    "name": "Ser Marin Zorzi",
@@ -278,6 +271,12 @@
    "title": "Rakhmabai Deshmukh (Counsellor 10, Marshal)",
    "line": "Counsellor 10, Marshal",
    "file": "show_marshal.html"
+  },
+  {
+   "name": "Kaiawa",
+   "title": "Kaiawa (Revelator 9, the River of Life)",
+   "line": "Revelator 9, the River of Life",
+   "file": "show_oceanus.html"
   },
   {
    "name": "Buatu Makaya",
