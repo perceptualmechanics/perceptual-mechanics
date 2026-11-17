@@ -1839,7 +1839,11 @@ export function character(book, state) {
   return {
     problems, notes, species, option: options?.names.includes(state.option) ? state.option : null, size, background, scores, base, mod, level: total, bonus,
     xp: advancement.xp, nextXp: book.advancement[total]?.xp ?? null,
-    classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null })),
+    // Each class's own columns at its level (Rages, Rage Damage, Focus
+    // Points, Favors), those the sheet shows elsewhere left out: the
+    // features, the cantrips, the spells and the slots.
+    classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source, subclassBook: c.rules.subclasses.find(s => s.name === c.subclass)?.book ?? null,
+      columns: Object.entries(c.rules.table.rows[c.level - 1]).filter(([k]) => ![c.rules.table.columns[0], 'Proficiency Bonus', 'Class Features', 'Cantrips', c.rules.spellsColumn, ...c.rules.slotLevels.map(String), ...(c.rules.pact ? ['Spell Slots', 'Slot Level'] : [])].includes(k)).map(([name, value]) => ({ name, value })) })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
     skills, choices, saveChoices, weaponChoices, cantripTargets, tools, toolChoices, toolExpertise, optionalRules, originChoices, styleChoices, expertiseChoices, optionChoices, pickChoices, kindChoices, swapChoices, noteChoices, revelationChoices, revelationsKnown, walkedChoices, formChoices, spellSetChoices, spellbooks, masteryChoices, proficientWeapons, weaponTraining, languageChoices, stealthDisadvantage: Boolean(worn?.stealth_disadvantage), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),

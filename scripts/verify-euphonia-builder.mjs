@@ -677,6 +677,15 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const finesseMartial = srd.weapons.filter(w => w.category === 'Martial' && w.properties.some(p => /^(?:Finesse|Light)\b/.test(p))).map(w => w.name);
   if (!(rogueWeapons?.categories.join() === 'Simple' && rogueWeapons.named.join() === finesseMartial.join())) fail(`a Rogue's weapons: ${JSON.stringify(rogueWeapons)}`);
 
+  // A class's own columns at its level, as its table gives them (a
+  // Barbarian 5's Rages and Rage Damage), and none the sheet shows
+  // elsewhere (a Wizard's cantrips and spells).
+  const barbarianRow = srd.classes.find(c => c.name === 'Barbarian').table.rows[4];
+  const barbarianColumns = run(someone([{ class: 'Barbarian', level: 5, subclass: 'Path of the Berserker' }]), 'Barbarian 5')?.classes[0].columns;
+  const wizardColumns = run(someone([{ class: 'Wizard', level: 5, subclass: 'Evoker' }]), 'Wizard 5')?.classes[0].columns;
+  if (!(barbarianColumns?.find(x => x.name === 'Rages')?.value === barbarianRow.Rages && barbarianColumns.find(x => x.name === 'Rage Damage')?.value === barbarianRow['Rage Damage'] && wizardColumns?.length === 0))
+    fail(`class columns: a Barbarian 5 ${JSON.stringify(barbarianColumns)}; a Wizard 5 ${JSON.stringify(wizardColumns)}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);

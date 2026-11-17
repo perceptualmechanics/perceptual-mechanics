@@ -931,6 +931,7 @@ export async function initBuilder(panel) {
         h('h3', { id: 'sheet-features' }, 'Class features'),
         result.classes.map(c => h('div', { class: 'sheet-class' },
           h('h4', {}, `${c.class} ${c.level}${c.subclass ? `, ${c.subclass}` : ''}`, h('span', { class: 'sheet-source' }, ` · ${c.source}${c.subclassBook ? `; ${c.subclass} from ${c.subclassBook}` : ''}`)),
+          c.columns.length ? h('p', { class: 'sheet-columns' }, c.columns.map(x => `${x.name} ${x.value}`).join(' · ')) : null,
           result.features.filter(f => f.class === c.class && !f.option && !(f.name === 'Ability Score Improvement' || f.name === 'Epic Boon'))
             .map(f => det(`feature-${c.class}-${f.level}-${f.name}`, `Level ${f.level}: ${f.name}${f.subclass ? ` (${f.subclass})` : ''}`, h('div', { html: blocks(f.text) })))))) : null,
       h('footer', { class: 'sheet-credit' },
