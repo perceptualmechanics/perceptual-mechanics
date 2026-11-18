@@ -1,9 +1,9 @@
-// The tabs over /euphonia/: the map and the character builder. The address
-// says which is open (#builder; any other address is the map's, a region's
-// chapter included), so a link to either opens it. The builder's code and
-// rules load the first time its tab opens.
+// The tabs over /euphonia/: the map, the character builder and, once the book
+// exports it, the Reading. The address says which is open (#builder; #reading
+// and its steps; any other address is the map's, a region's chapter included),
+// so a link to any of them opens it. Their code loads when the tab first opens.
 
-const BUILDER_HASH = '#builder';
+const BUILDER_HASH = '#builder', READING_HASH = '#reading';
 
 function initTabs(list) {
   const tabs = [...list.querySelectorAll('[role=tab]')];
@@ -16,21 +16,23 @@ function initTabs(list) {
   map.removeAttribute('aria-label');
   map.setAttribute('aria-labelledby', tabs[0].id);
 
-  const builderTab = tabs.findIndex(t => t.id === 'tab-builder');
-  let builder = null;
+  const builderTab = tabs.findIndex(t => t.id === 'tab-builder'), readingTab = tabs.findIndex(t => t.id === 'tab-reading');
+  const fromAddress = () => (location.hash === BUILDER_HASH ? builderTab : readingTab >= 0 && location.hash.startsWith(READING_HASH) ? readingTab : 0);
+  let builder = null, reading = null;
   function select(i, { focus = false, record = true } = {}) {
     tabs.forEach((t, k) => {
       t.setAttribute('aria-selected', String(k === i));
       t.tabIndex = k === i ? 0 : -1;
       panels[k].hidden = k !== i;
     });
-    const isBuilder = i === builderTab;
-    top.classList.toggle('is-builder', isBuilder);
+    const isBuilder = i === builderTab, isReading = i === readingTab;
+    top.classList.toggle('is-builder', i !== 0);
     // The sheet is what prints while the builder is open.
-    document.documentElement.dataset.tab = isBuilder ? 'builder' : 'map';
+    document.documentElement.dataset.tab = isBuilder ? 'builder' : isReading ? 'reading' : 'map';
     if (focus) tabs[i].focus();
-    if (record) history.replaceState(history.state, '', `${location.pathname}${location.search}${isBuilder ? BUILDER_HASH : ''}`);
+    if (record) history.replaceState(history.state, '', `${location.pathname}${location.search}${isBuilder ? BUILDER_HASH : isReading ? (location.hash.startsWith(READING_HASH) ? location.hash : READING_HASH) : ''}`);
     if (isBuilder && !builder) builder = import('./euphonia.builder.js').then(m => m.initBuilder(panels[i]));
+    if (isReading && !reading) reading = import('./euphonia.reading.ui.js').then(m => m.initReading(panels[i]));
   }
 
   list.addEventListener('click', e => {
@@ -45,10 +47,10 @@ function initTabs(list) {
     select((to + tabs.length) % tabs.length, { focus: true });
   });
   // A link within the page to the builder, or back to the map's chapters.
-  addEventListener('hashchange', () => select(location.hash === BUILDER_HASH ? builderTab : 0, { record: false }));
+  addEventListener('hashchange', () => select(fromAddress(), { record: false }));
 
   list.hidden = false;
-  select(location.hash === BUILDER_HASH ? builderTab : 0, { record: false });
+  select(fromAddress(), { record: false });
 }
 
 const list = document.querySelector('.euphonia-tabs');

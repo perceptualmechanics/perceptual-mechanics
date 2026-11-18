@@ -585,6 +585,105 @@ fieldset[data-touched] .b-problem, .b-problem.is-broken { color: var(--signal-te
 .b-facts dt, .sheet-facts dt { grid-column: 1; }
 .b-facts dd, .sheet-facts dd { grid-column: 2; margin: 0; }
 
+/* The saved characters, beside the builder's tools. */
+.b-saved { display: flex; flex-wrap: wrap; gap: 0.5rem 0.7rem; align-items: center; }
+.b-saved-pick { display: inline-flex; gap: 0.4rem; align-items: center; font-size: 0.9rem; }
+
+/* The Reading: a road at dusk in the theme's own colours. Its questions stand
+   in the page's ground, its controls are the builder's wood and brass, its map
+   the globe's, and the people it finds are on the sheet's paper in its frame,
+   under the theme's band. */
+.reading { width: 100%; max-width: 72rem; min-height: calc(100svh - 8rem); margin: 0 auto; padding: 0.7rem 0 3rem; }
+.reading[hidden] { display: none; }
+.reading:focus { outline: none; }
+.r-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 1.2rem; padding-bottom: 0.55rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
+.r-act { color: var(--paper); font-weight: 600; letter-spacing: 0.06em; font-variant-caps: small-caps; }
+.r-road { display: flex; flex: 1 1 8rem; align-items: center; gap: 0; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.r-road li { flex: 1; height: 1px; background: var(--line); position: relative; }
+.r-road li::after { content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--ground); border: 1px solid var(--line-accent); box-sizing: border-box; }
+.r-road li.is-past { background: var(--frame); }
+.r-road li.is-past::after { background: var(--frame); border-color: var(--frame); }
+.r-road li.is-here::after { background: var(--signal); border-color: var(--signal); }
+.r-stage { display: grid; gap: 1.1rem; justify-items: start; }
+.r-stage > * { max-width: 100%; }
+.r-stage.is-question { min-height: calc(100svh - 15rem); align-content: center; }
+.r-stage > h2 { max-width: 44rem; margin: 0; color: var(--text); font-size: clamp(1.65rem, 4.4vw, 2.6rem); line-height: 1.16; font-weight: 400; text-wrap: balance; }
+.r-stage h2:focus { outline: none; }
+.r-open { justify-self: stretch; display: block; line-height: 0; border: 1px solid var(--frame-edge); box-shadow: 0 0 0 1px var(--case-edge); }
+.r-open svg { display: block; width: 100%; height: clamp(11rem, 34vh, 21rem); }
+.r-sky-top { stop-color: var(--ground); }
+.r-sky-low { stop-color: var(--case); }
+.r-glow-in { stop-color: var(--accent); stop-opacity: 0.55; }
+.r-glow-out { stop-color: var(--accent); stop-opacity: 0; }
+.r-sky { fill: url(#r-sky); }
+.r-glow { fill: url(#r-glow); }
+.r-sun { fill: var(--signal); }
+.r-earth { fill: var(--map-land); }
+.r-way { fill: var(--line-accent); }
+.r-star { fill: var(--paper); }
+.r-figure { fill: var(--case-edge); }
+.r-flame { fill: var(--accent); }
+.r-lede { margin: 0; max-width: 40rem; color: var(--text-muted); font-size: 1.12rem; }
+.r-count, .r-label { margin: 0; color: var(--accent); font-size: 0.9rem; letter-spacing: 0.07em; font-variant-caps: small-caps; }
+.r-label { display: block; }
+.r-row { display: flex; flex-wrap: wrap; gap: 0.6rem 0.9rem; align-items: center; }
+.r-go { color: var(--case); background: var(--paper); border-color: var(--frame); font-weight: 600; padding: 0.42rem 1.05rem; }
+.r-symbols { justify-self: stretch; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(0.5rem, 2vw, 1.3rem); max-width: 56rem; }
+.r-symbol { aspect-ratio: 1; display: grid; place-items: center; padding: 23%; border-radius: 50%; color: var(--paper); background: var(--case); border: 1px solid var(--frame); box-shadow: inset 0 0 0 0.28rem var(--case), inset 0 0 0 calc(0.28rem + 1px) var(--frame-edge), 0 0 0 1px var(--case-edge); cursor: pointer; }
+.r-symbol svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.r-symbol:hover, .r-symbol:focus-visible { color: var(--accent); border-color: var(--accent); }
+.r-picks { justify-self: stretch; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; max-width: 52rem; }
+.r-pick { min-height: 7rem; padding: 1rem 1.15rem; font: inherit; font-size: 1.14rem; text-align: left; color: var(--paper); background: var(--case); border: 1px solid var(--frame); box-shadow: 0 0 0 1px var(--case-edge); cursor: pointer; }
+.r-pick:hover, .r-pick:focus-visible { border-color: var(--accent); color: var(--accent); }
+.r-symbol:focus-visible, .r-pick:focus-visible, .r-regions button:focus-visible, .r-acts button:focus-visible, .r-map:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.r-map { justify-self: stretch; display: block; line-height: 0; border: 0.3rem solid var(--case); box-shadow: inset 0 0 0 1px var(--frame), 0 0 0 1px var(--case-edge); }
+.r-map svg { display: block; width: 100%; height: auto; background: var(--map-sea); }
+.r-map .land { fill: var(--map-land); fill-rule: evenodd; stroke: var(--map-coast); stroke-width: 0.7; }
+.r-map .grid { fill: none; stroke: var(--map-graticule); stroke-width: 0.6; }
+.r-map circle { fill: var(--map-sea); stroke: var(--map-historic); stroke-width: 2.4; cursor: pointer; }
+.r-map circle:hover, .r-map circle.is-here { fill: var(--map-historic); }
+.r-mapname { min-height: 1.5em; margin: -0.5rem 0 0; color: var(--accent); }
+.r-regions { justify-self: stretch; display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0 1.2rem; }
+.r-regions button { padding: 0.42rem 0; font: inherit; text-align: left; color: var(--text); background: none; border: 0; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.r-regions button:hover { color: var(--accent); }
+.r-cards { justify-self: stretch; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem; }
+.r-card, .r-sheet { color: var(--ink); background: var(--paper); border: 0.4rem solid var(--case); box-shadow: inset 0 0 0 1px var(--frame), 0 0 0 1px var(--case-edge); padding: 1.1rem 1.25rem 1.25rem; min-width: 0; }
+:root[data-ornament] :is(.r-card, .r-sheet)::before { content: ''; display: block; height: var(--ornament-band-height); margin: -1.1rem -1.25rem 0.9rem; background: var(--ornament-band) 0 0 / auto 100% repeat-x; }
+.r-card { display: flex; flex-direction: column; gap: 0.6rem; }
+.r-head { display: flex; gap: 0.75rem; align-items: center; }
+.r-card h3, .r-sheet h2 { margin: 0; color: var(--case); font-weight: 600; font-variant-caps: small-caps; letter-spacing: 0.03em; line-height: 1.1; }
+.r-card h3 { font-size: 1.5rem; }
+.r-sheet h2 { font-size: clamp(1.6rem, 4vw, 2.1rem); }
+:root[data-caps=none] :is(.r-card h3, .r-sheet h2, .r-act) { font-variant-caps: normal; }
+.r-card p, .r-sheet p { margin: 0; }
+.r-scene { padding-left: 0.75rem; border-left: 2px solid var(--sheet-mark); font-style: italic; }
+.r-from { color: var(--text-muted); font-size: 0.93rem; }
+:is(.r-card, .r-sheet) .r-from { color: var(--sheet-muted); }
+:is(.r-card, .r-sheet) a { color: var(--sheet-mark); }
+:is(.r-card, .r-sheet) .r-label { color: var(--sheet-mark); font-weight: 600; }
+.r-card .r-row { margin-top: auto; padding-top: 0.45rem; }
+.r-card .r-go, .r-sheet .r-go { color: var(--paper); background: var(--case); }
+.r-sigil { display: block; width: 4.4rem; height: 4.4rem; flex: none; color: var(--sheet-mark); }
+.r-sigil svg { display: block; width: 100%; height: 100%; }
+.r-sheet { justify-self: stretch; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 1.1rem 2rem; max-width: 62rem; }
+:root[data-ornament] .r-sheet::before { grid-column: 1 / -1; margin-bottom: 0; }
+.r-side { display: grid; gap: 1rem; align-content: start; min-width: 0; }
+.r-sheet > details, .r-sheet > .r-from { grid-column: 1 / -1; }
+.r-top { display: flex; gap: 0.85rem; align-items: center; }
+.r-hp { display: flex; flex-wrap: wrap; gap: 0.5rem 0.7rem; align-items: center; margin-top: 0.2rem; }
+.r-hp output { min-width: 5.6rem; color: var(--case); font-size: 2.3rem; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; }
+.r-acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.25rem; }
+.r-acts button { padding: 0.55rem 0.7rem; font: inherit; text-align: left; color: var(--paper); background: var(--case); border: 1px solid var(--frame); cursor: pointer; }
+.r-acts button:hover { border-color: var(--paper); }
+.r-acts button:disabled { opacity: 0.6; cursor: default; }
+.r-acts small { display: block; font-size: 0.86rem; }
+.r-result { min-height: 5rem; padding-top: 0.65rem; border-top: 1px solid var(--sheet-rule); }
+.r-result strong { color: var(--case); font-size: 1.65rem; font-weight: 600; }
+.r-sheet details { padding-top: 0.5rem; border-top: 1px solid var(--sheet-rule); }
+@media (prefers-reduced-motion: no-preference) { .r-stage > * { animation: r-in 0.26s ease-out both; } @keyframes r-in { from { opacity: 0; transform: translateY(0.3rem); } } }
+@media (max-width: 900px) { .r-cards, .r-sheet { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .r-symbols { grid-template-columns: repeat(3, minmax(0, 1fr)); } .r-picks { grid-template-columns: minmax(0, 1fr); } .r-pick { min-height: 0; } .r-road { flex-basis: 100%; order: 3; } }
+
 /* The sheet: what the choices make, printed on the theme's paper in its
    ink, in a frame of its wood lined with the ring's brass; its
    headings in small capitals, like the Wheel's planes. The ink's three

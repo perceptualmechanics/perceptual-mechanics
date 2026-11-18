@@ -20,6 +20,8 @@ import { verifyEuphoniaThemes } from './scripts/verify-euphonia-themes.mjs';
 import { verifyEuphoniaMap, placesData } from './scripts/verify-euphonia-map.mjs';
 import { verifyEuphoniaSrd } from './scripts/verify-euphonia-srd.mjs';
 import { verifyEuphoniaBuilder } from './scripts/verify-euphonia-builder.mjs';
+import { verifyEuphoniaReading } from './scripts/verify-euphonia-reading.mjs';
+import { readingMap } from './scripts/euphonia-reading-map.mjs';
 import { verifyEuphoniaTongues, verifyTongueRibbons } from './scripts/verify-euphonia-tongues.mjs';
 import { injectEuphonia, euphoniaFooter } from './scripts/euphonia-page.js';
 
@@ -348,6 +350,26 @@ function verifyEuphoniaSrdPlugin() {
   };
 }
 
+const READING_MAP_ID = 'virtual:euphonia-reading-map';
+function euphoniaReadingMapPlugin() {
+  return {
+    name: 'pm-euphonia-reading-map',
+    resolveId: id => (id === READING_MAP_ID ? `\0${READING_MAP_ID}` : null),
+    load(id) { return id === `\0${READING_MAP_ID}` ? `export default ${JSON.stringify(readingMap(placesData().regions))};` : null; },
+  };
+}
+function verifyEuphoniaReadingPlugin() {
+  return {
+    name: 'pm-verify-euphonia-reading',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyEuphoniaReading();
+      log.forEach(line => console.log(line));
+      if (!ok) this.error(`verify-euphonia-reading: ${failures} problem(s) — see above.`);
+    },
+  };
+}
+
 function verifyEuphoniaBuilderPlugin() {
   return {
     name: 'pm-verify-euphonia-builder',
@@ -477,7 +499,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaWheelPlugin(), euphoniaThemesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), euphoniaSheetsPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), verifyEuphoniaThemesPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaReadingMapPlugin(), verifyEuphoniaReadingPlugin(), euphoniaWheelPlugin(), euphoniaThemesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), euphoniaSheetsPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), verifyEuphoniaThemesPlugin(), prerenderTextPages()],
   build: {
     assetsInlineLimit: inlineUnderPolicy,
     cssMinify: 'esbuild',

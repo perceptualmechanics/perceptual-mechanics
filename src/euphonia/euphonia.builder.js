@@ -2,52 +2,20 @@
 // other. Every number on the sheet is the engine's (euphonia.character.js);
 // this file only asks and shows. The character lives in the address (?c=),
 // so a link is the character, and this browser remembers the last one.
-import srdUrl from './euphonia.srd.json?url';
-import classesUrl from './euphonia.classes.json?url';
-import subclassesUrl from './euphonia.subclasses.json?url';
-import itemsUrl from './euphonia.items.json?url';
-import legalUrl from './euphonia.legal.json?url';
-import charactersUrl from './euphonia.characters.json?url';
-import languagesUrl from './euphonia.languages.json?url';
-import tonguesUrl from './euphonia.tongues.json?url';
+import { loadBook } from './euphonia.book.js';
+import { h, present } from './euphonia.dom.js';
+import { PARAM, blank, encode, decode } from './euphonia.build.js';
+import { openSaves } from './euphonia.saves.js';
 import places from 'virtual:euphonia-places';
-import { ABILITIES, MAX_LEVEL, languageNotes, rulebook, character, speciesOptions, featsAllowed, featIncrease, qualifies } from './euphonia.character.js';
+import { ABILITIES, MAX_LEVEL, languageNotes, character, speciesOptions, featsAllowed, featIncrease, qualifies } from './euphonia.character.js';
 import { inline, blocks } from './euphonia.markdown.js';
 import { khipu } from './euphonia.ornament.js';
 
-const STORE_KEY = 'pm-euphonia-character';
-const PARAM = 'c';
 // A number the sheet can't know yet (no scores chosen, say) shows as a dash.
 const known = n => (Number.isFinite(n) ? String(n) : '—');
 const pounds = n => (Number.isFinite(n) ? `${n.toLocaleString('en', { maximumFractionDigits: 2 })} lb.` : '—');
 const signed = n => (!Number.isFinite(n) ? '—' : n >= 0 ? `+${n}` : `−${-n}`);
-const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, homeland: '', market: '', styles: {}, expertise: {}, options: {}, optionArts: {}, languages: {} });
 
-// The character in the address: its choices as JSON, base64url.
-const encode = state => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(state)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-function decode(code) {
-  try {
-    const bin = atob(code.replace(/-/g, '+').replace(/_/g, '/'));
-    const state = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
-    return state && typeof state === 'object' && Array.isArray(state.classes) ? { ...blank(), ...state } : null;
-  } catch { return null; }
-}
-
-// A small element builder: h('p', { class: 'x' }, 'text', child).
-// A part of the page comes as nodes, lists of them nested however deep the
-// sheet builds them, and nulls where it leaves something out.
-const present = children => children.flat(Infinity).filter(c => c !== null && c !== undefined && c !== false);
-function h(tag, attrs = {}, ...children) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === false || v === null || v === undefined) continue;
-    if (k === 'html') el.innerHTML = v;
-    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v === true ? '' : v);
-  }
-  el.append(...present(children));
-  return el;
-}
 const options = (values, chosen, prompt) => [
   ...(prompt ? [h('option', { value: '' }, prompt)] : []),
   ...values.map(v => (typeof v === 'string' ? h('option', { value: v, selected: v === chosen }, v) : h('option', { value: v.value, selected: v.value === chosen, disabled: v.disabled }, v.label))),
@@ -69,19 +37,22 @@ export async function initBuilder(panel) {
   const status = form.querySelector('.builder-status');
   let book, srd, languages, tongueNames, legal;
   try {
-    const [s, e, c, l, t, a, g, f] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl, subclassesUrl, itemsUrl, legalUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
-    srd = s; book = rulebook(s, e, c, a, g.data); languages = l.data; legal = f.data;
+    const rules = await loadBook();
+    ({ srd, book, languages, legal } = rules);
     // What a language field suggests: the real tongues of the cultures the
     // book names (the ribbons' list), then the rules' own languages.
-    tongueNames = [...new Set([...t.tongues.map(x => x.language), ...book.languages.standard, ...book.languages.rare])];
+    tongueNames = [...new Set([...rules.tongues.tongues.map(x => x.language), ...book.languages.standard, ...book.languages.rare])];
   } catch (err) {
     status.textContent = `The rules didn't load (${err.message}); reload the page to try again.`;
     return;
   }
 
-  let state = decode(new URLSearchParams(location.search).get(PARAM) ?? '');
-  if (!state) { try { state = decode(localStorage.getItem(STORE_KEY) ?? ''); } catch { /* storage unavailable */ } }
-  state ??= blank();
+  // A link opens its character without touching the saved ones; it joins them
+  // only once the player changes it.
+  const saved = openSaves();
+  let state = decode(new URLSearchParams(location.search).get(PARAM) ?? '') ?? decode(saved.current()?.code ?? '') ?? blank();
+  let savedCode = encode(state), savedId = saved.list().find(c => c.code === savedCode)?.id ?? null, edited = false;
+  if (savedId) saved.select(savedId);
 
   // ---------- the controls, built once; the parts whose shape depends on
   // earlier choices are rebuilt only when that shape changes.
@@ -177,7 +148,7 @@ export async function initBuilder(panel) {
   );
 
   // ---------- reading the controls into the state
-  const set = (mutate) => { mutate(state); update(); };
+  const set = (mutate) => { mutate(state); edited = true; update(); };
   // What's left to choose reads as a note until the player works in its
   // section, on a new character or one brought back. Capturing, so the mark
   // is down before the render.
@@ -1064,15 +1035,19 @@ export async function initBuilder(panel) {
     renderSpells(result);
     renderProblems(result);
     renderSheet(result);
-    const url = new URL(location.href);
-    url.searchParams.set(PARAM, encode(state));
+    const url = new URL(location.href), code = encode(state);
+    url.searchParams.set(PARAM, code);
     history.replaceState(history.state, '', url);
-    try { localStorage.setItem(STORE_KEY, encode(state)); } catch { /* storage unavailable */ }
+    if (edited && code !== savedCode) { savedCode = code; savedId = saved.put(savedId, state.name, code); renderSaved(); }
   }
 
   // A blank character: the fixed controls cleared, the rest rebuilt.
   function startAgain() {
     state = blank();
+    savedCode = encode(state); savedId = null; edited = false;
+    saved.select(null);
+    asking = false;
+    renderSaved();
     for (const el of form.querySelectorAll('[data-for]')) delete el.dataset.for;
     for (const s of form.querySelectorAll('[data-touched]')) delete s.dataset.touched;
     classShape = null;
@@ -1086,11 +1061,31 @@ export async function initBuilder(panel) {
   // of pixels down: a way there and back, moving focus with the view. Not a
   // #link, since the hash names the tab.
   const go = el => { el.scrollIntoView({ block: 'start' }); el.focus({ preventScroll: true }); };
+  // The saved characters, and Start again, which asks first. Starting again
+  // leaves a saved character in the list.
+  const savedBox = h('div', { class: 'b-saved' });
+  let asking = false;
+  const nameOf = (c, i) => decode(c.code)?.name?.trim() || c.name || `Character ${i + 1}`;
+  function renderSaved() {
+    const list = saved.list();
+    savedBox.replaceChildren(...present([
+      asking ? [h('span', {}, savedId ? 'Start a new character? This one stays saved.' : 'Start again? This character isn’t saved.'),
+        h('button', { type: 'button', class: 'b-button', 'data-key': 'again-yes', onclick: () => { startAgain(); } }, 'Start again'),
+        h('button', { type: 'button', class: 'b-button', 'data-key': 'again-no', onclick: () => { asking = false; renderSaved(); savedBox.querySelector('[data-key=again]').focus(); } }, 'Keep working')]
+        : h('button', { type: 'button', class: 'b-button', 'data-key': 'again', onclick: () => { asking = true; renderSaved(); savedBox.querySelector('[data-key=again-no]').focus(); } }, 'Start again'),
+      list.length ? h('label', { class: 'b-saved-pick' }, h('span', {}, 'Saved characters'),
+        h('select', { 'data-key': 'saved', onchange: e => { const c = list.find(x => x.id === e.target.value); if (c) { saved.select(c.id); location.assign(`${location.pathname}?${PARAM}=${c.code}#builder`); } } },
+          h('option', { value: '', selected: !savedId }, savedId ? 'Choose one' : 'This one isn’t saved'), list.map((c, i) => h('option', { value: c.id, selected: c.id === savedId }, nameOf(c, i))))) : null,
+      savedId ? h('button', { type: 'button', class: 'b-link', 'data-key': 'forget', onclick: () => { saved.remove(savedId); savedId = null; savedCode = ''; renderSaved(); } }, 'Remove from saved') : null,
+      saved.ok ? null : h('span', { class: 'b-note' }, 'This browser can’t save, so keep the address.'),
+    ]));
+  }
+  renderSaved();
   const tools = h('div', { class: 'b-tools' },
     h('button', { type: 'button', class: 'b-button', onclick: () => print() }, 'Print the sheet'),
-    h('button', { type: 'button', class: 'b-button', onclick: startAgain }, 'Start again'),
+    savedBox,
     h('button', { type: 'button', class: 'b-link b-jump', onclick: () => go(sheet.querySelector('#sheet-title')) }, 'See your sheet'),
-    h('p', { class: 'b-note' }, 'The address holds this character: copy it to keep or share it.'));
+    h('p', { class: 'b-note' }, 'The address holds this character: copy it to share it.'));
   form.prepend(tools);
   // A printed sheet has every feature's text: closed disclosures don't print,
   // so they open for it and close again after.

@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { euphoniaFiles } from './verify-euphonia.mjs';
 import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
@@ -131,13 +132,22 @@ function themePick() {
   return `<label class="theme-pick" hidden>Theme <select id="theme-pick">${THEMES.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></label><span class="visually-hidden" id="theme-said" aria-live="polite"></span>`;
 }
 
+// The Reading appears only once the book has exported it.
+const hasReading = () => existsSync(new URL('../src/euphonia/euphonia.reading.json', import.meta.url));
+function reading() {
+  return hasReading() ? `<section class="reading" id="the-reading" role="tabpanel" aria-labelledby="tab-reading" tabindex="-1" hidden>
+<div class="r-bar"><span class="r-act"></span><ol class="r-road" aria-hidden="true"></ol><a class="r-door" href="#builder">I know what I want</a></div>
+<div class="r-stage"><p role="status">Opening the reading…</p></div>
+</section>` : '';
+}
+
 // The tabs over the map and the builder. Hidden until the script that runs
 // them does: without it, the page is the map and its text.
 function tabs() {
   return `<div class="euphonia-tabs" role="tablist" aria-label="Euphonia" hidden>
 <button type="button" role="tab" id="tab-map" aria-controls="map-figure" aria-selected="true">Globe</button>
 <button type="button" role="tab" id="tab-builder" aria-controls="character-builder" aria-selected="false" tabindex="-1" aria-label="Character builder"><span class="tab-long">Character </span>builder</button>
-</div>`;
+${hasReading() ? '<button type="button" role="tab" id="tab-reading" aria-controls="the-reading" aria-selected="false" tabindex="-1">The Reading</button>\n' : ''}</div>`;
 }
 
 // The ribbons in place of a title: Euphonia in the languages of the cultures
@@ -366,7 +376,7 @@ ${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${globeLinks(sec.heading 
 
 // Fills euphonia/index.html's markers from the vendored export, in dev
 // and in build alike, the way landing.js fills the landing's.
-const MARKERS = ['<!--euphonia-colophon-->', '<!--euphonia-theme-ids-->', '<!--euphonia-theme-key-->', '<!--euphonia-theme-param-->', '<!--euphonia-theme-pick-->', '<!--euphonia-theme-color-->', '<!--euphonia-ribbon-top-->', '<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-ribbon-bottom-->', '<!--euphonia-footer-->'];
+const MARKERS = ['<!--euphonia-colophon-->', '<!--euphonia-theme-ids-->', '<!--euphonia-theme-key-->', '<!--euphonia-theme-param-->', '<!--euphonia-theme-pick-->', '<!--euphonia-theme-color-->', '<!--euphonia-ribbon-top-->', '<!--euphonia-tabs-->', '<!--euphonia-reading-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-ribbon-bottom-->', '<!--euphonia-footer-->'];
 export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), tongues = tonguesData()) {
   const missing = MARKERS.filter(m => !html.includes(m));
   if (missing.length) throw new Error(`euphonia/index.html is missing ${missing.join(' and ')}: the page has nowhere to go`);
@@ -385,6 +395,7 @@ export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), f
     .replace('<!--euphonia-tabs-->', tabs())
     .replace('<!--euphonia-map-->', mapStage(d, world, fixtures, calendars))
     .replace('<!--euphonia-builder-->', builder())
+    .replace('<!--euphonia-reading-->', reading())
     .replace('<!--euphonia-colophon-->', colophon(d.welcome.data))
     .replace('<!--euphonia-footer-->', euphoniaFooter(d.legal.data));
 }
