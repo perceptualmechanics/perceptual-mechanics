@@ -1927,7 +1927,7 @@ export function character(book, state) {
     const heavy = w !== UNARMED && hasProperty(w, 'Heavy') && rules.heavy[w.range] && scores[rules.heavy[w.range].ability] < rules.heavy[w.range].score ? rules.heavy[w.range] : null;
     return {
       name: magic ? `${magic.name} (${w.name})` : w.name, kind: w === UNARMED ? 'unarmed' : 'weapon', ability, bonus: mod[ability] + (proficient ? bonus : 0) + featBonus(w.range) + (magic?.n ?? 0), proficient,
-      damage: flat !== null ? `${Math.max(flat, 0)} ${type}` : `${roll}${signedMod((/^\d+d\d+$/.test(roll) ? mod[ability] : 0) + (magic?.n ?? 0))} ${type}`,
+      damage: flat !== null ? `${Number.isFinite(flat) ? Math.max(flat, 0) : '—'} ${type}` : `${roll}${signedMod((/^\d+d\d+$/.test(roll) ? mod[ability] : 0) + (magic?.n ?? 0))} ${type}`,
       versatile: versatile && !bigger ? `${versatile}${signedMod(mod[ability] + (magic?.n ?? 0))} ${type}` : null, reach: w === UNARMED ? 'reach 5 feet' : reach(w),
       mastery: mastered.includes(w.name) ? w.mastery : null, disadvantage: heavy ? `Heavy, with ${heavy.ability} under ${heavy.score}` : null,
       riders: riders.filter(r => r.test?.(w, ability)).map(r => r.note),

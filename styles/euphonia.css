@@ -519,6 +519,8 @@ fieldset[data-touched] .b-problem { color: var(--signal-text); }
 .b-gear-add input { width: 4.5rem; }
 .b-link { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
 .b-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+/* The jumps between the form and the sheet, only where the sheet stacks under it. */
+@media (min-width: 900px) { .b-jump { display: none; } }
 .b-notes { margin: 0 0 0.7rem; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.85rem; }
 .b-notes:empty { display: none; }
 .b-spell-choice { border: 1px solid var(--frame-edge); margin: 0 0 0.8rem; padding: 0.5rem 0.8rem 0.4rem; min-width: 0; }
@@ -675,7 +677,7 @@ fieldset[data-touched] .b-problem { color: var(--signal-text); }
   /* With the builder open, the sheet is the page: its details open, its
      ink dark. */
   [data-tab=builder] .skip-link, [data-tab=builder] header.masthead, [data-tab=builder] .builder-form,
-  [data-tab=builder] main ~ .euphonia-foot { display: none; }
+  [data-tab=builder] main ~ .euphonia-foot, [data-tab=builder] .b-jump { display: none; }
   [data-tab=builder] .builder { display: block; padding: 0; }
   [data-tab=builder] .sheet { position: static; max-height: none; overflow: visible; border: 0; box-shadow: none; background: none; padding: 0; color: var(--print-ink); }
   [data-tab=builder] .sheet * { color: var(--print-ink); border-color: var(--print-rule); }

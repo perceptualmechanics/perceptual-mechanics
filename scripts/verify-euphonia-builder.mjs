@@ -726,6 +726,9 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   // Armor Class nothing can compute yet.
   const unscored = engine.character(book, someone([{ class: 'Fighter', level: 1 }], { method: 'standard', base: {} }));
   if (unscored.armor?.name !== 'Chain Mail') fail(`a Fighter with no scores yet wears ${unscored.armor?.name ?? 'no armor'}, not the kit's Chain Mail`);
+  // And no unknown leaks into the sheet as NaN, in any class's attacks.
+  const leaked = book.classes.flatMap(c => engine.character(book, { ...someone([{ class: c.name, level: 5 }]), method: 'standard', base: {} }).attacks.filter(a => /NaN/.test(`${a.damage} ${a.versatile}`)).map(a => `${c.name}: ${a.name} ${a.damage}`));
+  if (leaked.length) fail(`with no scores yet, attacks read NaN: ${leaked.join('; ')}`);
   // Skilled is one choice of skills and tools together; what's unchosen is
   // asked for as either.
   const skilledAsk = engine.character(book, someone([{ class: 'Fighter', level: 1 }], { originFeats: { 'Human Versatile': 'Skilled' } })).problems.find(p => /^tools:feat Versatile/.test(p.field));

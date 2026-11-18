@@ -887,7 +887,8 @@ export async function initBuilder(panel) {
           facts?.text ? h('div', { html: blocks(facts.text) }) : h('p', { class: 'sheet-note' }, withheldText.has(sp.name) ? `The SRD's text names ${listed(withheldText.get(sp.name))}, which Euphonia doesn't publish; read it in SRD 5.2.1.` : 'Its text isn’t in the books’ export.')))(book.spellFacts.get(sp.name)))))));
     rebuild(sheet,
       h('header', { class: 'sheet-head' },
-        h('h2', { id: 'sheet-title' }, state.name.trim() || 'Your character'),
+        h('button', { type: 'button', class: 'b-link b-jump', onclick: () => go(form.querySelector('.b-jump')) }, 'Back to your choices'),
+        h('h2', { id: 'sheet-title', tabindex: '-1' }, state.name.trim() || 'Your character'),
         h('p', {}, who || 'Choose a class, a species and a background.'),
         h('p', { class: 'sheet-level' }, `Level ${result.level} · Proficiency Bonus ${signed(result.bonus)} · ${result.xp.toLocaleString('en')} XP${result.nextXp ? `, the next level at ${result.nextXp.toLocaleString('en')}` : ''}`),
         result.languageChoices.some(c => c.chosen.length || c.given.length) ? h('p', { class: 'sheet-languages' }, `Languages: ${result.languageChoices.flatMap(c => [...(c.key === 'Common' ? c.chosen.map(n => `${n} (vernacular)`) : c.chosen), ...c.given]).join(', ')}`) : null),
@@ -908,7 +909,7 @@ export async function initBuilder(panel) {
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-combat' },
         h('h3', { id: 'sheet-combat' }, 'In a fight'),
         h('dl', { class: 'sheet-facts' },
-          h('dt', {}, 'Hit points'), h('dd', {}, `${known(result.hp)}${result.hpMethod === 'Rolled' ? ' (rolled)' : ''}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${known(x.hp)} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count}d${d.die}`).join(' and ') || 'no'} Hit Dice`),
+          h('dt', {}, 'Hit points'), h('dd', {}, !result.hitDice.length ? '— (choose a class)' : `${known(result.hp)}${result.hpMethod === 'Rolled' ? ' (rolled)' : ''}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${known(x.hp)} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count}d${d.die}`).join(' and ')} Hit Dice`),
           h('dt', {}, 'Armor Class'), h('dd', {}, `${known(result.armorClass.ac)} (${result.armorClass.from})${result.armor ? '' : result.unarmored.length > 1 ? `; without armor, one at a time: ${result.unarmored.map(u => `${known(u.ac)} (${u.from})`).join(', ')}` : ''}`),
           h('dt', {}, 'Initiative'), h('dd', {}, signed(result.initiative)),
           h('dt', {}, 'Speed'), h('dd', {}, `${result.speed ? `${result.speed} feet` : '—'}${Object.entries(result.speeds).map(([k, v]) => `; ${k} ${v} feet`).join('')}`),
@@ -1075,9 +1076,14 @@ export async function initBuilder(panel) {
     nameInput.focus();
   }
 
+  // Where the sheet stacks under the form (narrow screens), it's thousands
+  // of pixels down: a way there and back, moving focus with the view. Not a
+  // #link, since the hash names the tab.
+  const go = el => { el.scrollIntoView({ block: 'start' }); el.focus({ preventScroll: true }); };
   const tools = h('div', { class: 'b-tools' },
     h('button', { type: 'button', class: 'b-button', onclick: () => print() }, 'Print the sheet'),
     h('button', { type: 'button', class: 'b-button', onclick: startAgain }, 'Start again'),
+    h('button', { type: 'button', class: 'b-link b-jump', onclick: () => go(sheet.querySelector('#sheet-title')) }, 'See your sheet'),
     h('p', { class: 'b-note' }, 'The address holds this character: copy it to keep or share it.'));
   form.prepend(tools);
   // A printed sheet has every feature's text: closed disclosures don't print,
