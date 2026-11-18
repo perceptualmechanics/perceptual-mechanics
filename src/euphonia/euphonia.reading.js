@@ -92,14 +92,21 @@ export function why(d, p, answers, most = 3) {
   return said.slice(0, most);
 }
 
-// A character the engine can build from what the export has so far: class,
-// subclass, species and background at level 3, with its scores as they stand.
-// The roster's full builds replace this.
-export function trialBuild(p, book, blank) {
+// What a person's level 3 names, found among what the builder offers: the
+// subclass by its whole words ("Lore" is the College of Lore), the species by
+// its leading name, and its lineage or ancestry by the words in brackets.
+const wholeWords = (name, words) => new RegExp(`(?:^|\\s)${words.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s|$)`, 'i').test(name);
+export function resolveLevel3({ level3: l }, book, speciesOptions) {
+  const cls = book.classNamed(l.class), species = book.species.find(s => l.species.startsWith(s.name)) ?? null;
+  const option = species && speciesOptions(species)?.names.find(n => wholeWords(l.species.replace(/[();]/g, ' ').replace(/\s+/g, ' '), n.split(/ [(’]/)[0]) || new RegExp(`\\b${n.split(' ')[0]}\\b`, 'i').test(l.species.slice(species.name.length)));
+  return { cls, subclass: cls?.subclasses.find(s => s.name === l.subclass || wholeWords(s.name, l.subclass))?.name ?? null, species, option: option ?? null, background: book.backgrounds.find(b => b.name === l.background) ?? null };
+}
+// A character the engine can build from what the export has so far, with its
+// scores as they stand. The roster's full builds replace this.
+export function trialBuild(p, book, blank, speciesOptions) {
   if (p.build) return p.build;
-  const { class: name, subclass, species, background } = p.level3, cls = book.classNamed(name);
-  const sub = cls?.subclasses.find(s => s.name === subclass || s.name.replace(/^The /, '') === subclass || s.name.includes(subclass))?.name ?? '';
-  return { ...blank, name: p.name, species: book.species.find(s => species.startsWith(s.name))?.name ?? '', size: 'Medium', background, homeland: p.region, method: 'rolled', base: p.scores, classes: [{ class: name, level: 3, subclass: sub }] };
+  const r = resolveLevel3(p, book, speciesOptions);
+  return { ...blank, name: p.name, species: r.species?.name ?? '', option: r.option ?? '', size: 'Medium', background: p.level3.background, homeland: p.region, method: 'rolled', base: p.scores, classes: [{ class: p.level3.class, level: 3, subclass: r.subclass ?? '' }] };
 }
 // How many uses the signature has, which may hang on the character's numbers;
 // null where it isn't counted out over rests.

@@ -57,7 +57,7 @@ export function verifyEuphoniaReading({ exported = existsSync(EXPORT) ? json(EXP
     const book = engine.rulebook(src('srd'), src('classes'), src('characters'), src('subclasses'), src('items').data);
     for (const p of d.roster ?? []) {
       people++;
-      const built = engine.character(book, trialBuild(p, book, blank())), n = tonight(built), uses = usesOf(p.signature, built);
+      const built = engine.character(book, trialBuild(p, book, blank(), engine.speciesOptions)), n = tonight(built), uses = usesOf(p.signature, built);
       if (p.build) { full++; for (const x of built.problems) fail(`${p.name}: its build: ${x.message}`); }
       if (!(n.hp > 0 && n.ac > 0 && n.attack) || (uses !== null && !(uses > 0))) fail(`${p.name}: the tracker has nothing to show: ${JSON.stringify({ hp: n.hp, ac: n.ac, uses })}`);
       if (p.scores && !p.build) for (const [k, v] of Object.entries(p.scores)) if (built.scores[k] !== v) fail(`${p.name}: ${k} builds as ${built.scores[k]}, not ${v}`);

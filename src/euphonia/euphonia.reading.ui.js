@@ -91,10 +91,10 @@ export async function initReading(panel) {
     const p = person();
     show(THIRD, h('h2', {}, p.name), h('p', { role: 'status' }, 'Opening the sheet…'));
     try {
-      if (!rules) { const [{ loadBook }, engine] = await Promise.all([import('./euphonia.book.js'), import('./euphonia.character.js')]); rules = { book: (await loadBook()).book, character: engine.character }; }
+      if (!rules) { const [{ loadBook }, engine] = await Promise.all([import('./euphonia.book.js'), import('./euphonia.character.js')]); rules = { book: (await loadBook()).book, character: engine.character, speciesOptions: engine.speciesOptions }; }
     } catch (err) { stage.replaceChildren(h('h2', {}, p.name), h('p', { role: 'status' }, `The rules didn’t load (${err.message}); reload the page to try again.`)); return; }
     if (location.hash !== `${ROUTE}-tonight`) return;
-    const build = trialBuild(p, rules.book, blank()), built = rules.character(rules.book, build), n = tonight(built), id = `reading-${p.id}`, sig = p.signature;
+    const build = trialBuild(p, rules.book, blank(), rules.speciesOptions), built = rules.character(rules.book, build), n = tonight(built), id = `reading-${p.id}`, sig = p.signature;
     const most = usesOf(sig, built), ctx = { maxHp: n.hp, uses: most, signature: sig }, trial = !p.build, resting = most !== null && (sig.per === 'short rest' || sig.back);
     if (!saves.list().some(c => c.id === id)) saves.put(id, p.name, encode(build));
     let play = saves.play(id) ?? freshPlay(n.hp, most);
