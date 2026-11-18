@@ -982,16 +982,20 @@ function scoreMethods() {
   return { standard_array: array, point_budget: budget };
 }
 
-// ---------- the setting's one rename: "Fey" survives only as the creature
-// type, and elsewhere reads "Fae" (euphonia.rules.json, the site's one copy
-// of the rule). Each change is recorded, as the licence asks of an adaptation.
+// ---------- the setting's renames: "Fey" survives only as the creature type,
+// and elsewhere reads "Fae"; the Feywild and the Shadowfell take the
+// setting's names (euphonia.rules.json, the site's one copy of the rules).
+// Each change is recorded, as the licence asks of an adaptation.
 const RULES = JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.rules.json', import.meta.url), 'utf8'));
 function adapt(o, path = '', changes = []) {
   if (Array.isArray(o)) return o.map((v, i) => adapt(v, `${path}/${i}`, changes));
   if (o && typeof o === 'object') return Object.fromEntries(Object.entries(o).map(([k, v]) => [k, adapt(v, `${path}/${k}`, changes)]));
   if (typeof o !== 'string') return o;
-  const kept = [...o.matchAll(new RegExp(RULES.fey_type, 'g'))].map(m => [m.index, m.index + m[0].length]);
-  const out = o.replace(/\b([Ff])ey\b/g, (word, f, at) => (kept.some(([a, b]) => at >= a && at < b) ? word : `${f === 'F' ? 'F' : 'f'}ae`));
+  // The setting's names for the planes the SRD names after another setting
+  // ("the Feywild" reads "the Hidden").
+  const named = Object.entries(RULES.renames ?? {}).reduce((t, [from, to]) => t.replace(new RegExp(`(?<!\\w)${from}(?!\\w)`, 'g'), to), o);
+  const kept = [...named.matchAll(new RegExp(RULES.fey_type, 'g'))].map(m => [m.index, m.index + m[0].length]);
+  const out = named.replace(/\b([Ff])ey\b/g, (word, f, at) => (kept.some(([a, b]) => at >= a && at < b) ? word : `${f === 'F' ? 'F' : 'f'}ae`));
   // The record keeps where and what it reads now: it is held to the rule too.
   if (out !== o) changes.push({ path, to: out });
   return out;
@@ -1056,17 +1060,20 @@ const data = {
     const changes = [];
     const read = { backgrounds: backgrounds(), species: species(), feats: feats(), classes: coreClasses(), spells: spells() };
     holdsToSource(read);
-    // A spell's text that names what Euphonia never publishes (the site's
-    // banned words: someone else's planes, "the Feywild", "the Shadowfell") is
-    // held back, the spell still offered, and the record says why.
+    const content = adapt(read, '', changes);
+    // A spell's text that, adapted, still names what Euphonia never publishes
+    // (the site's banned words) is held back, the spell still offered, and the
+    // record says why.
     const banned = RULES.banned.map(w => [w, new RegExp(`(?<!\\w)${w.replace(/[.*+?^${}()|[\]\\&]/g, '\\$&')}(?!\\w)`, 'i')]);
     const textWithheld = [];
-    for (const sp of read.spells) {
-      const names = banned.filter(([, re]) => re.test(sp.text)).map(([w]) => w);
-      if (names.length) { textWithheld.push({ spell: sp.name, names }); sp.text = null; }
-    }
-    const content = adapt(read, '', changes);
-    return { adapted: { rule: 'euphonia.rules.json fey_type', changes }, spell_text_withheld: textWithheld, ...content };
+    content.spells.forEach((sp, k) => {
+      const names = banned.filter(([, re]) => re.test(sp.text ?? '')).map(([w]) => w);
+      if (!names.length) return;
+      textWithheld.push({ spell: sp.name, names });
+      sp.text = null;
+      changes.splice(0, changes.length, ...changes.filter(c => c.path !== `/spells/${k}/text`));
+    });
+    return { adapted: { rule: 'euphonia.rules.json fey_type and renames', changes }, spell_text_withheld: textWithheld, ...content };
   })(),
   ability_scores: { ...scoreMethods(), background: backgroundIncreases() },
   armor: { items: armor(), strength_speed_penalty: armorStrengthPenalty() },

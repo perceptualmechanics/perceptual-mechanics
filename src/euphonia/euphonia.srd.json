@@ -8,7 +8,7 @@
   "extracted": "Words with their positions and fonts (scripts/srd-words.swift), parsed by scripts/euphonia-srd.mjs; nothing typed. Sidebars, commentary set apart from the rules, are left out of the classes."
  },
  "adapted": {
-  "rule": "euphonia.rules.json fey_type",
+  "rule": "euphonia.rules.json fey_type and renames",
   "changes": [
    {
     "path": "/spells/23/text",
@@ -19,8 +19,24 @@
     "to": "You commune with nature spirits and gain knowledge of the surrounding area. In the outdoors, the spell gives you knowledge of the area within 3 miles of you. In caves and other natural underground settings, the radius is limited to 300 feet. The spell doesn’t function where nature has been replaced by construction, such as in castles and settlements.\n\nChoose three of the following facts; you learn those facts as they pertain to the spell’s area:\n\n- Locations of settlements\n- Locations of portals to other planes of existence\n- Location of one Challenge Rating 10+ creature (GM’s choice) that is a Celestial, an Elemental, a Fae, a Fiend, or an Undead\n- The most prevalent kind of plant, mineral, or Beast (you choose which to learn)\n- Locations of bodies of water\n\nFor example, you could determine the location of a powerful monster in the area, the locations of bodies of water, and the locations of any towns."
    },
    {
+    "path": "/spells/58/text",
+    "to": "You conjure a Medium spirit from the Hidden in an unoccupied space you can see within range. The spirit lasts for the duration, and it looks like a Fey creature of your choice. When the spirit appears, you can make one melee spell attack against a creature within 5 feet of it. On a hit, the target takes Psychic damage equal to 3d12 plus your spellcasting ability modifier, and the target has the Frightened condition until the start of your next turn, with both you and the spirit as the source of the fear.\n\nAs a Bonus Action on your later turns, you can teleport the spirit to an unoccupied space you can see within 30 feet of the space it left and make the attack against a creature within 5 feet of it.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d12 for each spell slot level above 6."
+   },
+   {
+    "path": "/spells/71/text",
+    "to": "You pull wisps of shadow material from the Ghostlands to create an object within range. It is either an object of vegetable matter (soft goods, rope, wood, and the like) or mineral matter (stone, crystal, metal, and the like). The object must be no larger than a 5-foot Cube, and the object must be of a form and material that you have seen.\n\nThe spell’s duration depends on the object’s material, as shown in the Materials table. If the object is composed of multiple materials, use the shortest duration. Using any object created by this spell as another spell’s Material component causes the other spell to fail.\n\n**Materials**\n\n| Material | Duration |\n|---|---|\n| Vegetable matter | 24 hours |\n| Stone or crystal | 12 hours |\n| Precious metals | 1 hour |\n| Gems | 10 minutes |\n| Adamantine or mithral | 1 minute |\n\n**Using a Higher-Level Spell Slot.** The Cube increases by 5 feet for each spell slot level above 5."
+   },
+   {
+    "path": "/spells/87/text",
+    "to": "For the duration, Celestials, Elementals, Fey, Fiends, and Undead have Disadvantage on attack rolls against you. You can end the spell early by using either of the following special functions.\n\n**Break Enchantment.** As a Magic action, you touch a creature that is possessed by or has the Charmed or Frightened condition from one or more creatures of the types above. The target is no longer possessed, Charmed, or Frightened by such creatures.\n\n**Dismissal.** As a Magic action, you target one creature you can see within 5 feet of you that has one of the creature types above. The target must succeed on a Charisma saving throw or be sent back to its home plane if it isn’t there already. If they aren’t on their home plane, Undead are sent to the Ghostlands, and Fae are sent to the Hidden."
+   },
+   {
     "path": "/spells/93/text",
     "to": "You utter a word imbued with power from the Upper Planes. Each creature of your choice in range makes a Charisma saving throw. On a failed save, a target that has 50 Hit Points or fewer suffers an effect based on its current Hit Points, as shown in the Divine Word Effects table. Regardless of its Hit Points, a Celestial, an Elemental, a Fae, or a Fiend target that fails its save is forced back to its plane of origin (if it isn’t there already) and can’t return to the current plane for 24 hours by any means short of a Wish spell.\n\n**Divine Word Effects**\n\n| Hit Points | Effect |\n|---|---|\n| 0–20 | The target dies. |\n| 21–30 | The target has the Blinded, Deafened, and Stunned conditions for 1 hour. |\n| 31–40 | The target has the Blinded and Deafened conditions for 10 minutes. |\n| 41–50 | The target has the Deafened condition for 1 minute. |"
+   },
+   {
+    "path": "/spells/133/text",
+    "to": "You create a ward against magical travel that protects up to 40,000 square feet of floor space to a height of 30 feet above the floor. For the duration, creatures can’t teleport into the area or use portals, such as those created by the Gate spell, to enter the area. The spell proofs the area against planar travel, and therefore prevents creatures from accessing the area by way of the Astral Plane, the Ethereal Plane, the Hidden, the Ghostlands, or the Plane Shift spell.\n\nIn addition, the spell damages types of creatures that you choose when you cast it. Choose one or more of the following: Aberrations, Celestials, Elementals, Fey, Fiends, and Undead. When a creature of a chosen type enters the spell’s area for the first time on a turn or ends its turn there, the creature takes 5d10 Radiant or Necrotic damage (your choice when you cast this spell).\n\nYou can designate a password when you cast the spell. A creature that speaks the password as it enters the area takes no damage from the spell.\n\nThe spell’s area can’t overlap with the area of another Forbiddance spell. If you cast Forbiddance every day for 30 days in the same location, the spell lasts until it is dispelled, and the Material components are consumed on the last casting."
    },
    {
     "path": "/spells/229/text",
@@ -32,34 +48,7 @@
    }
   ]
  },
- "spell_text_withheld": [
-  {
-   "spell": "Conjure Fey",
-   "names": [
-    "Feywild"
-   ]
-  },
-  {
-   "spell": "Creation",
-   "names": [
-    "Shadowfell"
-   ]
-  },
-  {
-   "spell": "Dispel Evil and Good",
-   "names": [
-    "Feywild",
-    "Shadowfell"
-   ]
-  },
-  {
-   "spell": "Forbiddance",
-   "names": [
-    "Feywild",
-    "Shadowfell"
-   ]
-  }
- ],
+ "spell_text_withheld": [],
  "backgrounds": [
   {
    "name": "Acolyte",
@@ -11817,7 +11806,7 @@
    ],
    "components": "V, S",
    "duration": "Concentration, up to 10 minutes",
-   "text": null,
+   "text": "You conjure a Medium spirit from the Hidden in an unoccupied space you can see within range. The spirit lasts for the duration, and it looks like a Fey creature of your choice. When the spirit appears, you can make one melee spell attack against a creature within 5 feet of it. On a hit, the target takes Psychic damage equal to 3d12 plus your spellcasting ability modifier, and the target has the Frightened condition until the start of your next turn, with both you and the spirit as the source of the fear.\n\nAs a Bonus Action on your later turns, you can teleport the spirit to an unoccupied space you can see within 30 feet of the space it left and make the attack against a creature within 5 feet of it.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d12 for each spell slot level above 6.",
    "range": "60 feet",
    "reach": null,
    "area": null,
@@ -12127,7 +12116,7 @@
    "damage": [],
    "components": "V, S, M (a paintbrush)",
    "duration": "Special",
-   "text": null,
+   "text": "You pull wisps of shadow material from the Ghostlands to create an object within range. It is either an object of vegetable matter (soft goods, rope, wood, and the like) or mineral matter (stone, crystal, metal, and the like). The object must be no larger than a 5-foot Cube, and the object must be of a form and material that you have seen.\n\nThe spell’s duration depends on the object’s material, as shown in the Materials table. If the object is composed of multiple materials, use the shortest duration. Using any object created by this spell as another spell’s Material component causes the other spell to fail.\n\n**Materials**\n\n| Material | Duration |\n|---|---|\n| Vegetable matter | 24 hours |\n| Stone or crystal | 12 hours |\n| Precious metals | 1 hour |\n| Gems | 10 minutes |\n| Adamantine or mithral | 1 minute |\n\n**Using a Higher-Level Spell Slot.** The Cube increases by 5 feet for each spell slot level above 5.",
    "range": "30 feet",
    "reach": null,
    "area": null,
@@ -12511,7 +12500,7 @@
    "damage": [],
    "components": "V, S, M (powdered silver and iron)",
    "duration": "Concentration, up to 1 minute",
-   "text": null,
+   "text": "For the duration, Celestials, Elementals, Fey, Fiends, and Undead have Disadvantage on attack rolls against you. You can end the spell early by using either of the following special functions.\n\n**Break Enchantment.** As a Magic action, you touch a creature that is possessed by or has the Charmed or Frightened condition from one or more creatures of the types above. The target is no longer possessed, Charmed, or Frightened by such creatures.\n\n**Dismissal.** As a Magic action, you target one creature you can see within 5 feet of you that has one of the creature types above. The target must succeed on a Charisma saving throw or be sent back to its home plane if it isn’t there already. If they aren’t on their home plane, Undead are sent to the Ghostlands, and Fae are sent to the Hidden.",
    "range": "Self",
    "reach": null,
    "area": null,
@@ -13657,7 +13646,7 @@
    ],
    "components": "V, S, M (ruby dust worth 1,000+ GP)",
    "duration": "1 day",
-   "text": null,
+   "text": "You create a ward against magical travel that protects up to 40,000 square feet of floor space to a height of 30 feet above the floor. For the duration, creatures can’t teleport into the area or use portals, such as those created by the Gate spell, to enter the area. The spell proofs the area against planar travel, and therefore prevents creatures from accessing the area by way of the Astral Plane, the Ethereal Plane, the Hidden, the Ghostlands, or the Plane Shift spell.\n\nIn addition, the spell damages types of creatures that you choose when you cast it. Choose one or more of the following: Aberrations, Celestials, Elementals, Fey, Fiends, and Undead. When a creature of a chosen type enters the spell’s area for the first time on a turn or ends its turn there, the creature takes 5d10 Radiant or Necrotic damage (your choice when you cast this spell).\n\nYou can designate a password when you cast the spell. A creature that speaks the password as it enters the area takes no damage from the spell.\n\nThe spell’s area can’t overlap with the area of another Forbiddance spell. If you cast Forbiddance every day for 30 days in the same location, the spell lasts until it is dispelled, and the Material components are consumed on the last casting.",
    "range": "Touch",
    "reach": null,
    "area": null,

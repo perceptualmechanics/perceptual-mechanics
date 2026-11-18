@@ -13,5 +13,10 @@
  ],
  "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
  "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b|(?<=\\bConjure )Fey\\b|\\b(?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead), Fey\\b|\\bFey(?=,? (?:and|or) (?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead)\\b)",
- "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November). So does a list of creature types: \"any Undead, Fey, or Elemental\"."
+ "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November). So does a list of creature types: \"any Undead, Fey, or Elemental\".",
+ "renames": {
+  "Feywild": "Hidden",
+  "Shadowfell": "Ghostlands"
+ },
+ "renames_because": "The setting's own names for those planes, the first two of the Revelator's Cosmography: the Feywild is the Hidden, the Shadowfell the Ghostlands (setting/whats-out.md, wheel-and-plenum.md). The SRD's \"the Feywild\" reads \"the Hidden\"."
 }
