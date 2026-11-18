@@ -8,13 +8,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-const EXCEPTIONS = {
-  // Widened on 17 November 2026 to cover 4.0.7, the latest release. vite
-  // uses picomatch only at build time, on the globs in our own config; it
-  // isn't in dist/, and no visitor's input reaches it. npm's only "fix" is
-  // downgrading vite to 6.2.7.
-  'GHSA-fc5q-39xc-vjpf': 'picomatch ReDoS: build-time only, on our own globs',
-};
+const EXCEPTIONS = {};
 
 const audit = JSON.parse(process.argv[2]
   ? readFileSync(process.argv[2], 'utf8')
