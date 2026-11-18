@@ -615,6 +615,12 @@ fieldset[data-touched] .b-problem { color: var(--signal-text); }
 .sheet-ability { color: var(--sheet-muted); font-size: 0.85rem; font-weight: 400; }
 .sheet-bonus { font-variant-numeric: tabular-nums; }
 .sheet-mark { color: var(--sheet-mark); font-size: 0.85rem; font-style: italic; font-weight: 400; }
+.sheet-scroll { overflow-x: auto; margin: 0 0 0.6rem; }
+/* Its narrowest words (Quarterstaff, Constitution, Bludgeoning) break at
+   their syllables before the table needs to scroll. */
+.sheet-attacks { hyphens: auto; }
+.sheet-attacks th, .sheet-attacks td { padding-right: 0.5rem; }
+.sheet-scroll:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .sheet-warning { color: var(--sheet-mark); font-style: italic; }
 .sheet-spell-head { color: var(--sheet-muted); font-size: 0.85rem; margin: 0.2rem 0 0.4rem; }
 .sheet-note { color: var(--sheet-muted); font-style: italic; margin: 0.2rem 0 0.4rem; }
@@ -681,6 +687,7 @@ fieldset[data-touched] .b-problem { color: var(--signal-text); }
   [data-tab=builder] .builder { display: block; padding: 0; }
   [data-tab=builder] .sheet { position: static; max-height: none; overflow: visible; border: 0; box-shadow: none; background: none; padding: 0; color: var(--print-ink); }
   [data-tab=builder] .sheet * { color: var(--print-ink); border-color: var(--print-rule); }
+  [data-tab=builder] .sheet-scroll { overflow: visible; }
   /* The theme's band heads the printed sheet too, printed as drawn (it is
      the theme's one mark there; the text stays black), and at the text's
      edge, now the sheet has no padding to bleed it into. */

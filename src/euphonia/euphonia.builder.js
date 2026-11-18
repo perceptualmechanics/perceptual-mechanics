@@ -928,14 +928,17 @@ export async function initBuilder(panel) {
         // The attacks the sheet's numbers give: each weapon carried, the
         // Unarmed Strike, a feature's own or a species', and each spell known
         // or prepared that attacks or forces a save.
-        h('table', { class: 'sheet-attacks' }, h('caption', {}, 'Attacks'),
+        // Five columns don't fit a phone's sheet: the table scrolls in its
+        // own region, which a keyboard can reach and a screen reader names.
+        h('div', { class: 'sheet-scroll', role: 'region', 'aria-labelledby': 'sheet-attacks-caption', tabindex: '0' },
+        h('table', { class: 'sheet-attacks' }, h('caption', { id: 'sheet-attacks-caption' }, 'Attacks'),
           h('thead', {}, h('tr', {}, ['Attack', 'To hit or save', 'Damage', 'Range', 'Notes'].map(t => h('th', { scope: 'col' }, t)))),
           h('tbody', {}, result.attacks.map(a => h('tr', {},
             h('th', { scope: 'row' }, a.name),
             h('td', {}, a.save ? `DC ${known(a.save.dc)} ${a.save.ability}` : signed(a.bonus)),
             h('td', {}, `${a.damage}${a.beams ? `, ${a.beams} beams` : ''}${a.versatile ? `; two-handed ${a.versatile}` : ''}`),
             h('td', {}, a.reach),
-            h('td', {}, [a.disadvantage && `Disadvantage: ${a.disadvantage}`, a.mastery && `Mastery: ${a.mastery}`, ...a.riders, !a.proficient && 'not proficient', a.kind === 'spell' && (a.level ? `level ${a.level} ${a.class} spell` : `${a.class} cantrip`)].filter(Boolean).join('; ') || '—')))))),
+            h('td', {}, [a.disadvantage && `Disadvantage: ${a.disadvantage}`, a.mastery && `Mastery: ${a.mastery}`, ...a.riders, !a.proficient && 'not proficient', a.kind === 'spell' && (a.level ? `level ${a.level} ${a.class} spell` : `${a.class} cantrip`)].filter(Boolean).join('; ') || '—'))))))),
       // The gear the builder sets the character up with: the kits, what its
       // features hand it, the armour it chose, the money left, and the magic
       // items for its level.
