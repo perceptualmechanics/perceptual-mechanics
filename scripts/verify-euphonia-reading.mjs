@@ -45,7 +45,11 @@ export function verifyEuphoniaReading({ exported = existsSync(EXPORT) ? json(EXP
     const order = ranked(d, a), top = Math.max(...d.roster.map(score));
     const first = Array.from({ length: N }, (_, i) => d.roster[(lot + i) % N]).find(p => score(p) === top);
     if (order[0] !== first) fail(`the first person shown is ${order[0].name}, and the rule gives ${first.name}`);
-    if (pages(order).flat().length !== N || pages(order)[0].length !== 3) fail('paging loses someone');
+    const dealt = pages(order);
+    if (dealt.flat().length !== N || new Set(dealt.flat()).size !== N || dealt[0][0] !== order[0]) fail('paging loses or repeats someone, or moves the best fit');
+    if (dealt[0].length !== 3 || new Set(dealt[0].map(p => p.class)).size !== 3) fail(`the first reveal isn't three classes: ${dealt[0].map(p => p.class)}`);
+    const twoClasses = [{ class: 'A' }, { class: 'A' }, { class: 'A' }, { class: 'B' }, { class: 'C' }, { class: 'A' }];
+    if (pages(twoClasses)[0].map(p => p.class).join() !== 'A,B,C' || pages(twoClasses)[1].length !== 3) fail('a reveal doesn\'t reach past a repeated class, or the rest don\'t fill up');
     const fit = order.find(p => p.traits.some(t => t in a.d1.weights));
     if (!why(d, fit, a).includes(a.d1.said)) fail(`why ${fit.name} doesn't use the player's answer`);
     if (steps(d).length !== 1 + d.symbols.length + d.dilemmas.length + 3) fail(`the steps: ${steps(d)}`);

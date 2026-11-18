@@ -72,7 +72,19 @@ export function ranked(d, answers) {
   return d.roster.map((p, i) => ({ p, n: p.traits.reduce((s, t) => s + (w[t] ?? 0), 0) + (p.region === answers.map.region ? d.map.weight : 0), at: (i - lot + N) % N }))
     .sort((a, b) => b.n - a.n || a.at - b.at).map(x => x.p);
 }
-export const pages = (order, size = SHOWN) => Array.from({ length: Math.ceil(order.length / size) }, (_, i) => order.slice(i * size, (i + 1) * size));
+// The order dealt into reveals: each takes the best fits left whose classes it
+// doesn't have yet (Scott, 18 November), and only when too few classes remain
+// fills up with the next in order.
+export function pages(order, size = SHOWN) {
+  const left = [...order], out = [];
+  while (left.length) {
+    const page = [];
+    for (let i = 0; i < left.length && page.length < size;) { if (page.some(p => p.class === left[i].class)) i++; else page.push(...left.splice(i, 1)); }
+    page.push(...left.splice(0, size - page.length));
+    out.push(page);
+  }
+  return out;
+}
 // Why the reading chose someone, in the player's own answers.
 export function why(d, p, answers, most = 3) {
   const said = d.dilemmas.map((_, i) => answers[`d${i + 1}`]).filter(a => a && Object.keys(a.weights).some(t => p.traits.includes(t))).map(a => a.said);
