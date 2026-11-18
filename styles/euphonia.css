@@ -505,7 +505,9 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-tools { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
 .b-tools .b-note { flex-basis: 100%; margin: 0; }
 .b-note { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 0.7rem; }
-.b-problem { color: var(--signal-text); font-size: 0.88rem; margin: -0.3rem 0 0.7rem; }
+.b-problem { color: var(--text-muted); font-size: 0.88rem; margin: -0.3rem 0 0.7rem; }
+/* What's left reads as a note until the player works in its section; then it's a problem. */
+fieldset[data-touched] .b-problem { color: var(--signal-text); }
 /* Problems tuck under the field they're about; under a button they stand clear of it. */
 .b-button + .b-problem { margin-top: 0.6rem; }
 .b-check { display: block; margin: 0 0 0.7rem; }

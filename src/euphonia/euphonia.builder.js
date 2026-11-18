@@ -82,6 +82,7 @@ export async function initBuilder(panel) {
   let state = decode(new URLSearchParams(location.search).get(PARAM) ?? '');
   if (!state) { try { state = decode(localStorage.getItem(STORE_KEY) ?? ''); } catch { /* storage unavailable */ } }
   state ??= blank();
+  const resumed = JSON.stringify(state) !== JSON.stringify(blank());
 
   // ---------- the controls, built once; the parts whose shape depends on
   // earlier choices are rebuilt only when that shape changes.
@@ -177,6 +178,12 @@ export async function initBuilder(panel) {
 
   // ---------- reading the controls into the state
   const set = (mutate) => { mutate(state); update(); };
+  // A section's problems read as what's left to do until the player has
+  // worked in it, and as problems after; a character brought back has been
+  // worked on throughout. Capturing, so the mark is down before the render.
+  const touch = e => e.target.closest('.builder-form > fieldset')?.setAttribute('data-touched', '');
+  for (const type of ['change', 'input', 'click']) form.addEventListener(type, touch, true);
+  if (resumed) for (const s of form.querySelectorAll(':scope > fieldset')) s.setAttribute('data-touched', '');
   nameInput.addEventListener('input', () => set(s => { s.name = nameInput.value; }));
   speciesSelect.addEventListener('change', () => set(s => { s.species = speciesSelect.value; s.option = ''; s.size = ''; }));
   optionSelect.addEventListener('change', () => set(s => { s.option = optionSelect.value; }));
@@ -1060,6 +1067,7 @@ export async function initBuilder(panel) {
   function startAgain() {
     state = blank();
     for (const el of form.querySelectorAll('[data-for]')) delete el.dataset.for;
+    for (const s of form.querySelectorAll('[data-touched]')) delete s.dataset.touched;
     classShape = null;
     nameInput.value = ''; speciesSelect.value = ''; backgroundSelect.value = '';
     form.querySelector('input[name=method][value=standard]').checked = true;
