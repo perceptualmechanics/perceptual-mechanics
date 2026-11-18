@@ -27,6 +27,13 @@ function scoresFrom(scores, background) {
   return point ? { fits: 'point', ...point } : { fits: null, why: `no increase ${background.name} allows (${allowed.join(', ')}) leaves the standard array or a legal Point Cost` };
 }
 const kindOf = field => field.split(':')[0];
+// The builder's own name for each set of picks, and where it lists what it can
+// use, so a pick stored under a name it never asks for shows up.
+const CHOICES = { skills: 'choices', tools: 'toolChoices', languages: 'languageChoices', spells: 'spellChoices', expertise: 'expertiseChoices', mastery: 'masteryChoices', styles: 'styleChoices', originFeats: 'originChoices', kinds: 'kindChoices', notes: 'noteChoices', picks: 'pickChoices', forms: 'formChoices', spellSets: 'spellSetChoices', spellAbilities: 'abilityChoices' };
+const unusedPicks = (state, built) => Object.entries(CHOICES).flatMap(([slot, list]) => { const known = new Set((built[list] ?? []).map(c => c.key)); return Object.keys(state[slot] ?? {}).filter(k => !known.has(k)).map(k => `${slot}["${k}"]`); });
+// The engine lets a caster leave spells unpicked, so a finished build needs
+// this checked too.
+const spellsShort = built => (built.spellChoices ?? []).flatMap(c => { const cantrips = c.chosen.filter(s => s.level === 0).length, others = c.chosen.length - cantrips, out = []; if (c.mixed ? c.chosen.length < c.prepared : others < c.prepared) out.push(`${c.label}: ${c.mixed ? c.chosen.length : others} of ${c.prepared} spells`); if (cantrips < c.cantrips) out.push(`${c.label}: ${cantrips} of ${c.cantrips} cantrips`); return out; }).concat((built.spellbooks ?? []).filter(b => b.chosen.length < b.free).map(b => `${b.class}'s spellbook: ${b.chosen.length} of ${b.free} spells`));
 
 const people = roster.map(p => {
   const l = p.level3, r = resolveLevel3(p, book, engine.speciesOptions), made = scoresFrom(p.scores, r.background), wanted = [], options = r.species && engine.speciesOptions(r.species);
@@ -36,19 +43,22 @@ const people = roster.map(p => {
   if (options && !r.option) wanted.push(`"${l.species}" doesn't name one of ${r.species.name}'s ${options.label} choices (${options.names.join(', ')})`);
   if (!r.background) wanted.push(`the background "${l.background}" isn't in the builder`);
   if (!made.fits) wanted.push(`scores: ${made.why}`);
-  const state = { ...blank(), name: p.name, species: r.species?.name ?? '', option: r.option ?? '', background: l.background, homeland: p.region, classes: [{ class: l.class, level: 3, subclass: r.subclass ?? '' }],
+  const state = p.build ? { ...blank(), ...p.build } : { ...blank(), name: p.name, species: r.species?.name ?? '', option: r.option ?? '', background: l.background, homeland: p.region, classes: [{ class: l.class, level: 3, subclass: r.subclass ?? '' }],
     ...(made.fits ? { method: made.fits, base: made.base, increases: made.increases } : { method: 'rolled', base: p.scores }) };
-  const built = engine.character(book, state), broken = built.problems.filter(x => !x.open), open = built.problems.filter(x => x.open);
+  if (p.build) wanted.length = 0;
+  let built;
+  try { built = engine.character(book, state); } catch (e) { return { id: p.id, name: p.name, class: l.class, subclass: l.subclass, resolved: {}, scores: {}, needsDecision: [`the engine couldn't read this build: ${e.message}`], breaksRule: [], toChoose: [], unusedPicks: [], spellsShort: [] }; }
+  const broken = built.problems.filter(x => !x.open), open = built.problems.filter(x => x.open);
   for (const a of ABILITIES) if (built.scores[a] !== p.scores[a]) wanted.push(`${a} builds as ${built.scores[a]}, and the export says ${p.scores[a]}`);
   if (built.load.over) wanted.push(`its kit is ${(built.load.items + built.load.coins).toFixed(1)} lb., over the ${built.load.carry} lb. it can carry`);
   return { id: p.id, name: p.name, class: l.class, subclass: l.subclass, resolved: { subclass: r.subclass, species: r.species?.name ?? null, option: r.option, background: r.background?.name ?? null }, scores: { method: made.fits, base: made.base ?? null, increases: made.increases ?? null },
-    needsDecision: wanted, breaksRule: broken.map(x => ({ field: x.field, message: x.message })), toChoose: open.map(x => ({ field: x.field, message: x.message })) };
+    needsDecision: wanted, breaksRule: broken.map(x => ({ field: x.field, message: x.message })), toChoose: open.map(x => ({ field: x.field, message: x.message })), unusedPicks: unusedPicks(state, built), spellsShort: spellsShort(built) };
 });
 
 const count = xs => { const m = {}; for (const x of xs) m[x] = (m[x] ?? 0) + 1; return Object.entries(m).sort((a, b) => b[1] - a[1]); };
 const decide = people.filter(p => p.needsDecision.length || p.breaksRule.length);
 const missingSub = count(people.filter(p => p.subclass && !p.resolved.subclass).map(p => `${p.class}: ${p.subclass}`));
-const summary = { master: file.provenance.sha256.slice(0, 8), people: people.length, withDecisions: decide.length, subclassesMissing: people.filter(p => p.subclass && !p.resolved.subclass).length, scoresThatDontFit: people.filter(p => !p.scores.method).length, choicesToMake: people.reduce((n, p) => n + p.toChoose.length, 0) };
+const summary = { master: file.provenance.sha256.slice(0, 8), people: people.length, withDecisions: decide.length, subclassesMissing: people.filter(p => p.subclass && !p.resolved.subclass).length, scoresThatDontFit: people.filter(p => !p.scores.method).length, choicesToMake: people.reduce((n, p) => n + p.toChoose.length, 0), complete: people.filter(p => !p.needsDecision.length && !p.breaksRule.length && !p.toChoose.length && !p.unusedPicks.length && !p.spellsShort.length).length, unusedPicks: people.reduce((n, p) => n + p.unusedPicks.length, 0), spellsShort: people.reduce((n, p) => n + p.spellsShort.length, 0) };
 const out = process.argv[2];
 if (!out) throw new Error('usage: node scripts/euphonia-reading-report.mjs <output folder>');
 writeFileSync(join(out, 'REPORT-reading-builds.json'), `${JSON.stringify({ summary, people }, null, 1)}\n`);
@@ -63,6 +73,9 @@ A complete \`build\` has **no** entries in any column here. "To choose" are pick
 - **Subclasses the builder doesn't have:** ${summary.subclassesMissing} people
 - **Scores no allowed increase explains:** ${summary.scoresThatDontFit} people
 - **Picks to make, across everyone:** ${summary.choicesToMake}
+- **Picks stored where the builder doesn't look:** ${summary.unusedPicks}
+- **Spell choices left short:** ${summary.spellsShort}
+- **Complete builds:** ${summary.complete}
 
 ## Subclasses to remap
 
