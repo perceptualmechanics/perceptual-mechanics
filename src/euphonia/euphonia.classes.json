@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e398d7b0d7c41f7a7325f1ad1e909f56558aa6a2fc775044ad2b72f8742fe680",
-  "modified": "2026-11-18T13:01:56-05:00",
+  "sha256": "ebef895c7459e67e6bd4a60b98a64f29897962499e0d21ee7961bdd66813e0fd",
+  "modified": "2026-11-18T15:14:17-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 34,
   "rules": {
@@ -1134,7 +1134,7 @@
     {
      "level": 20,
      "name": "The Sun Rises",
-     "text": "As a Bonus Action, you can become the center of the world for 1 minute. For the duration, you regain all your Ease, and the following benefits apply:\n\n- Your allies within 60 feet of you that can see you add your Charisma modifier to their attack rolls and saving throws.\n- Hostile creatures within 60 feet of you that can see you have Disadvantage on attack rolls against any target other than you.\n- Your Regard counts as 5 (6 where Grace's Reputation applies).\n\nOnce you use this feature, you can't use it again until you finish a Long Rest.\n\n> **Playing a Courtier**\n>\n> You fence, you cast, and you read every room you walk into. In a fight, you're first through the door, you fence with Charisma, and every hit tells. Ease is how it all looks effortless: a failed save made good, a hit turned into a miss, a miss punished with a riposte.\n>\n> Try the showy thing. Make It Look Easy pays out after you fail, so the daring attempt (the leap, the bluff, the toast to the enemy's face) is the one the class covers.\n>\n> A courtier collects accomplishments from every art, because your Regard, and with it your presence, grows with every new art you take up. Out of a fight, you know who matters in any court on earth, and you never put a foot wrong in front of them.\n\n## Courtier Spell List\n\n| Spell Level | Presence | The Guise | The Read | The Ward |\n|---|---|---|---|---|\n| Cantrip | *Vicious Mockery* | *Minor Illusion* | *Guidance*, *True Strike* | *Resistance* |\n| 1 | *Bless*, *Charm Person*, *Command*, *Dissonant Whispers*, *Heroism*, *Hideous Laughter*, *Sleep* | *Disguise Self*, *Illusory Script*, *Silent Image* | *Comprehend Languages*, *Detect Magic*, *Hunter's Mark*, *Identify* | *Cure Wounds*, *Healing Word*, *Protection from Evil and Good*, *Sanctuary* |\n| 2 | *Calm Emotions*, *Hold Person*, *Suggestion*, *Zone of Truth* | *Invisibility*, *Magic Mouth*, *Mirror Image*, *Phantasmal Force* | *Detect Thoughts*, *Locate Object*, *See Invisibility* | *Aid*, *Arcane Lock*, *Lesser Restoration*, *Warding Bond* |\n| 3 | — | *Fear*, *Major Image* | *Clairvoyance*, *Sending*, *Tongues* | *Counterspell*, *Dispel Magic*, *Glyph of Warding*, *Mass Healing Word*, *Nondetection*, *Remove Curse* |\n| 4 | *Charm Monster*, *Compulsion*, *Confusion* | *Greater Invisibility*, *Hallucinatory Terrain*, *Phantasmal Killer* | *Arcane Eye*, *Divination*, *Locate Creature* | *Banishment*, *Death Ward*, *Freedom of Movement*, *Private Sanctum* |\n| 5 | *Dominate Person*, *Geas*, *Hold Monster*, *Modify Memory* | *Dream*, *Mislead*, *Seeming* | *Legend Lore*, *Scrying*, *Telepathic Bond* | *Dispel Evil and Good*, *Greater Restoration* |\n\nEvery courtier also knows *Prestidigitation*, *Mending*, and *Message* (see Learned Magic): the daily toilette, which no college gives up.\n\nThe columns are the schools: Presence is Enchantment, the Guise is Illusion, the Read is Divination, and the Ward is Abjuration, whose *Counterspell* is the courtier's \"no.\" There's no *Shield* on the list: a courtier's guard is Not a Hair Out of Place. A courtier learns no fire, no summoning, no raising the dead, and no changing the shape of things: a courtier who wants to vanish takes *Invisibility*, or leaves by the door like everyone else."
+     "text": "As a Bonus Action, you can become the center of the world for 1 minute. For the duration, you regain all your Ease, and the following benefits apply:\n\n- Your allies within 60 feet of you that can see you add your Charisma modifier to their attack rolls and saving throws.\n- Hostile creatures within 60 feet of you that can see you have Disadvantage on attack rolls against any target other than you.\n- Your Regard counts as 5 (6 where Grace's Reputation applies).\n\nOnce you use this feature, you can't use it again until you finish a Long Rest.\n\n> **Playing a Courtier**\n>\n> You fence, you cast, and you read every room you walk into. In a fight, you're first through the door, you fence with Charisma, and every hit tells. Ease is how it all looks effortless: a failed save made good, a hit turned into a miss, a miss punished with a riposte.\n>\n> Try the showy thing. Make It Look Easy pays out after you fail, so the daring attempt (the leap, the bluff, the toast to the enemy's face) is the one the class covers.\n>\n> A courtier collects accomplishments from every art, because your Regard, and with it your presence, grows with every new art you take up. Out of a fight, you know who matters in any court on earth, and you never put a foot wrong in front of them."
     }
    ],
    "subclasses": [
@@ -2076,7 +2076,7 @@
     {
      "level": 20,
      "name": "Lightning Itself",
-     "text": "The Arc Gun's damage (the shot's, including extra damage your features add to the shot) ignores Resistance, and a creature with Immunity to the shot's damage type has Resistance to it instead (the shot doesn't ignore that Resistance). Its damage rises to 5d10, as shown in the Arc Gun column of the Mhizha Features table.\n\n> **Playing a Mhizha**\n>\n> You're the party's workshop. Each morning you build the day's devices and hand most of them out: the Shock Gauntlet and the Charged Plate to whoever stands in front, Spring Boots or the Grapple Line to whoever has to get up the wall.\n>\n> In a fight, the Arc Gun cracks every turn and your free hand is in the satchel: Smoke to cover a retreat, Flash in the eyes of whoever frightens you most, Slick to drop a crowd for your friends' blades. From 5th level, Overcharge turns a spell slot into a heavy hit; from 7th, Flare can blind an attacker before its roll.\n>\n> Keep a tool in your hand: every Mhizha spell is cast through one. Out of a fight, your hands open doors: you mend, retune and take things apart to see how they work.\n\n## Mhizha Spell List\n\n#### Cantrips (Level 0 Mhizha Spells)\n\nDancing Lights, Guidance, Light, Mage Hand, Mending, Message, Prestidigitation, Resistance, Spare the Dying\n\n#### Level 1 Mhizha Spells\n\nAlarm, Cure Wounds, Detect Magic, Disguise Self, Expeditious Retreat, Faerie Fire, False Life, Feather Fall, Floating Disk, Identify, Jump, Longstrider, Purify Food and Drink, Sanctuary, Thunderwave, Unseen Servant\n\n#### Level 2 Mhizha Spells\n\nAcid Arrow, Aid, Alter Self, Arcane Lock, Blur, Continual Flame, Darkvision, Enhance Ability, Enlarge/Reduce, Heat Metal, Invisibility, Knock, Lesser Restoration, Levitate, Locate Object, Magic Mouth, Magic Weapon, Rope Trick, See Invisibility, Spider Climb, Web\n\n#### Level 3 Mhizha Spells\n\nBlink, Dispel Magic, Fly, Gaseous Form, Glyph of Warding, Haste, Lightning Bolt, Protection from Energy, Revivify, Tiny Hut, Water Breathing, Water Walk\n\n#### Level 4 Mhizha Spells\n\nArcane Eye, Fabricate, Faithful Hound, Fire Shield, Freedom of Movement, Resilient Sphere, Secret Chest, Stone Shape, Stoneskin\n\n#### Level 5 Mhizha Spells\n\nAnimate Objects, Arcane Hand, Creation, Greater Restoration, Passwall, Telekinesis, Wall of Stone"
+     "text": "The Arc Gun's damage (the shot's, including extra damage your features add to the shot) ignores Resistance, and a creature with Immunity to the shot's damage type has Resistance to it instead (the shot doesn't ignore that Resistance). Its damage rises to 5d10, as shown in the Arc Gun column of the Mhizha Features table.\n\n> **Playing a Mhizha**\n>\n> You're the party's workshop. Each morning you build the day's devices and hand most of them out: the Shock Gauntlet and the Charged Plate to whoever stands in front, Spring Boots or the Grapple Line to whoever has to get up the wall.\n>\n> In a fight, the Arc Gun cracks every turn and your free hand is in the satchel: Smoke to cover a retreat, Flash in the eyes of whoever frightens you most, Slick to drop a crowd for your friends' blades. From 5th level, Overcharge turns a spell slot into a heavy hit; from 7th, Flare can blind an attacker before its roll.\n>\n> Keep a tool in your hand: every Mhizha spell is cast through one. Out of a fight, your hands open doors: you mend, retune and take things apart to see how they work."
     }
    ],
    "subclasses": [
@@ -4009,7 +4009,37 @@
       {
        "level": 3,
        "name": "Reading the Nerves",
-       "text": "When you use Diagnosis on a creature, automatically or with a successful check, you also learn whether any effect on its mind, such as a charm, a fear, a compulsion, or a voice, is the creature's own, the work of a spell or similar magical effect, or the influence of another creature; if the source is a creature you can see, you learn which one.\n\nAdd the following to your Treatment table:\n\n| Treatment | DC |\n|---|---|\n| End the Charmed or Frightened condition | 12 |\n| End the Stunned condition | 15 |\n\nIn addition, you gain proficiency in the Insight skill if you don't already have it, and you learn the *Vicious Mockery* cantrip, which counts as a Physician cantrip for you and doesn't count against the number of cantrips you know.\n\n**Tells.** You can read the body's signals in anyone you talk with for a minute: you know whether they're afraid, in pain, exhausted, drunk or drugged, or hiding an injury. The feature tells you the state; it doesn't tell you the reason.\n\n**Nerve Spells.** A **nerve spell** is a Physician spell that deals Psychic damage or can give a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition. Several Neurologist features work on them.\n\n**Neurologist Spells.** When you reach a Physician level specified in the Neurologist Spells table, you thereafter always have the listed spells prepared. Each counts as a Physician spell for you and is added to your spellbook.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Dissonant Whispers*, *Mind Spike* |\n| 5 | *Speak with Dead*, *Tiny Hut* |\n| 7 | *Compulsion*, *Phantasmal Killer* |\n| 9 | *Dominate Person*, *Modify Memory* |"
+       "text": "When you use Diagnosis on a creature, automatically or with a successful check, you also learn whether any effect on its mind, such as a charm, a fear, a compulsion, or a voice, is the creature's own, the work of a spell or similar magical effect, or the influence of another creature; if the source is a creature you can see, you learn which one.\n\nAdd the following to your Treatment table:\n\n| Treatment | DC |\n|---|---|\n| End the Charmed or Frightened condition | 12 |\n| End the Stunned condition | 15 |\n\nIn addition, you gain proficiency in the Insight skill if you don't already have it, and you learn the *Vicious Mockery* cantrip, which counts as a Physician cantrip for you and doesn't count against the number of cantrips you know.\n\n**Tells.** You can read the body's signals in anyone you talk with for a minute: you know whether they're afraid, in pain, exhausted, drunk or drugged, or hiding an injury. The feature tells you the state; it doesn't tell you the reason.\n\n**Nerve Spells.** A **nerve spell** is a Physician spell that deals Psychic damage or can give a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition. Several Neurologist features work on them.\n\n**Neurologist Spells.** When you reach a Physician level specified in the Neurologist Spells table, you thereafter always have the listed spells prepared. Each counts as a Physician spell for you and is added to your spellbook.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Dissonant Whispers*, *Mind Spike* |\n| 5 | *Speak with Dead*, *Tiny Hut* |\n| 7 | *Compulsion*, *Phantasmal Killer* |\n| 9 | *Dominate Person*, *Modify Memory* |",
+       "spells": [
+        {
+         "level": 3,
+         "spells": [
+          "Dissonant Whispers",
+          "Mind Spike"
+         ]
+        },
+        {
+         "level": 5,
+         "spells": [
+          "Speak with Dead",
+          "Tiny Hut"
+         ]
+        },
+        {
+         "level": 7,
+         "spells": [
+          "Compulsion",
+          "Phantasmal Killer"
+         ]
+        },
+        {
+         "level": 9,
+         "spells": [
+          "Dominate Person",
+          "Modify Memory"
+         ]
+        }
+       ]
       },
       {
        "level": 3,

@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e398d7b0d7c41f7a7325f1ad1e909f56558aa6a2fc775044ad2b72f8742fe680",
-  "modified": "2026-11-18T13:01:56-05:00",
+  "sha256": "ebef895c7459e67e6bd4a60b98a64f29897962499e0d21ee7961bdd66813e0fd",
+  "modified": "2026-11-18T15:14:17-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 34,
   "rules": {
@@ -45,7 +45,7 @@
      "Persuasion"
     ],
     "tool": "Navigator's Tools",
-    "equipment": "Choose A or B: (A) Navigator's Tools, Traveler's Clothes, Ink, Ink Pen, 10 sheets of Parchment, Lamp, Pouch, 11 GP; or (B) 50 GP",
+    "equipment": "Choose A or B: (A) Navigator's Tools, Traveler's Clothes, Ink, Ink Pen, 10 sheets of Parchment, Lamp, Pouch, 10 GP; or (B) 50 GP",
     "about": "You kept a company's books at a factory, as a trading post is called, and learned that a company is a state that happens to float: it makes treaties, builds forts and keeps an army. You've dealt with kings, sultans and pirates and dropped each when the books said so, and you know what a Mutapan lamp fetches in three currencies. Nobody in Europe buys more from Mutapa than a factor, or steals more of its secrets, which is why the spymaster's file exists (see the Chartered Companies, in Powers and Factions). The house you kept books for may as easily have been a Gujarati one in Surat or a Swahili one in Mombasa as the VOC; a factory's books read the same in any script. Counsellors (the Factor), Rogues and Wizards on company contracts come from here.",
     "door": "Any company's factory or counting house in a port opens its books to you and finds you a bed.",
     "debt": "Your old employers want you back, and Mutapa's spymaster keeps a file on you."
@@ -63,7 +63,7 @@
      "Insight"
     ],
     "tool": "Gaming Set (playing cards)",
-    "equipment": "Choose A or B: (A) Fine Clothes, Gaming Set (playing cards), Perfume, Signet Ring, Dagger, Sealing Wax, Ink, Ink Pen, 5 sheets of Parchment, 11 GP; or (B) 50 GP",
+    "equipment": "Choose A or B: (A) Fine Clothes, Gaming Set (playing cards), Perfume, Signet Ring (5 GP), Dagger, Sealing Wax (5 SP), Ink, Ink Pen, 5 sheets of Parchment, 11 GP; or (B) 50 GP",
     "about": "You grew up in a household that lived by a license: a court wizard's royal patent, or a minor noble's place at court. You carried the letters, sat at the gaming tables where posts are won and lost and learned who was about to fall before they did. You can read a room, forge a seal in a pinch and tell last year's lace from this year's. The house that raised you is your way into the courts, and whoever holds its license now owns a piece of you. The Children of the Emerald Tablet know your face; your court's spymaster knows your debts. Counsellors, Wizards and Eldritch Knights (*Player's Handbook*) come out of these houses.",
     "door": "The house that raised you gets you into its court, and its servants still talk to you.",
     "debt": "Whoever holds that house's license now owns a piece of you, and your court's spymaster knows your debts."
@@ -82,7 +82,7 @@
     ],
     "tool": "Herbalism Kit",
     "equipment": "Choose A or B: (A) Herbalism Kit, Healer's Kit, Quarterstaff, Book (charms and receipts), Traveler's Clothes, 10 Candles, Pouch, 12 GP; or (B) 50 GP",
-    "about": "You healed, found lost things and charmed warts and cattle out of the back room of a family business, because somebody had to. Like most of your kind you read; in England the law has let unlicensed herb-knowers treat external complaints since 1542. Your magic is the same as Lanternhall's. You have none of its protection: when a healer tells a court her skill came from the fairies, the court writes down the Devil. Your network knows who's safe and who's informing, and your clients live at the edge, so you know the border too (the Hidden Domain, in *Life on the Border*). Druids, Clerics and Physicians who skipped the hospital come from here; the Physician's Hedge Witch is the model. See The Cunning Folk, in Powers and Factions.",
+    "about": "You healed, found lost things and charmed warts and cattle out of the back room of a family business, because somebody had to. England calls your kind cunning folk; New Spain says curandero, and Kongo nganga. Like most of your kind you read; in England the law has let unlicensed herb-knowers treat external complaints since 1542. Your magic is the same as Lanternhall's. You have none of its protection: when a healer tells a court her skill came from the fairies, the court writes down the Devil. Your network knows who's safe and who's informing, and your clients live at the edge, so you know the border too (the Hidden Domain, in *Life on the Border*). Druids, Clerics and Physicians who skipped the hospital come from here; the Physician's Hedge Witch is the model. See The Cunning Folk, in Powers and Factions.",
     "door": "Your network knows who's safe and who's informing in any district, and hides its own.",
     "debt": "You're unlicensed, and someone can prove it."
    },
@@ -177,7 +177,7 @@
      "Survival"
     ],
     "tool": "Smith's Tools",
-    "equipment": "Choose A or B: (A) Smith's Tools, Sling, 20 Sling Bullets, Dagger, Hunting Trap, 10 Iron Spikes, Hooded Lantern, Oil, Traveler's Clothes, Pouch of salt, 14 GP; or (B) 50 GP",
+    "equipment": "Choose A or B: (A) Smith's Tools, Sling, 20 Sling Bullets, Dagger, Hunting Trap, 10 Iron Spikes, Hooded Lantern, Oil, Traveler's Clothes, Pouch of salt (1 CP), 14 GP; or (B) 50 GP",
     "about": "You grew up where the Hidden come over. The village ironed and salted its doors every night of the dark half; the smith was the most important person in it, and you were her hand. You know the tide by the moon, which fields nobody plows and why the fiddler who came home last spring is a hundred years out of date. Somebody you knew was taken, and somebody went to get them back, or didn't. You sleep light: you were indoors before the last open night because you heard it coming. Your country's name for the Hidden is in The State of the World. A Border-Born may have grown up on either side of the border (*Euphonia: Life on the Border*). In the courts, you notice when the iron is missing from the doorframe.",
     "door": "Any border village takes you in and asks you to look at its doors.",
     "debt": "Somebody you knew was taken, and nobody has brought them back."
@@ -195,10 +195,136 @@
      "Survival"
     ],
     "tool": "Choose one kind of Musical Instrument",
-    "equipment": "Choose A or B: (A) Musical Instrument (same as above), Traveler's Clothes, Bedroll, Tinderbox, Pouch, and the rest of 50 GP in coin (46 GP less the instrument's price); or (B) 50 GP",
+    "equipment": "Choose A or B: (A) Musical Instrument (same as above), Traveler's Clothes, Bedroll, Tinderbox, Pouch, 34 GP; or (B) 50 GP",
     "about": "The Hidden took you, and you came home. Maybe you were a child and they left something in your cradle; maybe you followed music into a hill on your way back from market. You remember a feast, a dance that lasted a night and a road that kept turning back, and none of it in order. Home had moved on without you: a week, a year or a hundred, and the people who mourned you are older, or dead, or sure you're not you. You came back with a tune nobody taught you, a knack for the hedge-magic every village go-between wishes she had and the habit of looking for the way out of every room. Whether you carry a piece of the Hidden is settled by your class: a Danae, a Bordermarch Barbarian, a Hidden Bard, a Mortal Hunter or a Dreamwarden does, and a Rogue taken as a child may simply be quick and strange (The Hidden's Classes, above). Your country's word for the taken is in The State of the World, and the road you came home by is open (Appendix F: Building on Euphonia).",
     "door": "The Hidden of one court know you by sight, and will parley with you where they'd raid anyone else.",
     "debt": "Something there still wants you back."
+   },
+   {
+    "name": "Noble",
+    "ability_scores": [
+     "Strength",
+     "Intelligence",
+     "Charisma"
+    ],
+    "feat": "Skilled",
+    "skills": [
+     "History",
+     "Persuasion"
+    ],
+    "tool": "Choose one kind of Gaming Set",
+    "equipment": "Choose A or B: (A) Gaming Set (same as above), Fine Clothes, Perfume, Mirror, Dagger, Chest, Lock, 7 GP; or (B) 50 GP",
+    "about": "You were born into a house that holds rank. It may hold a title and land from a crown, as a Castilian grandee's or a Rajput chief's does. It may be one of the titled houses of Benin City or a noble house of Kongo, or a chiefly line on Tongatapu whose gifts reach Samoa and Fiji. Among the Haudenosaunee it may be a lineage that holds one of the League's titles, whose clan mother chooses who carries it. Rank in 1668 is a set of duties as much as a privilege: you were raised to host, to judge, to give the gift that binds and to remember what every other house owes yours. You learned your house's history because others will quote it at you, and its games because the gaming table is where equals talk. A woman can head any house in this book. Your house is the reason doors open for you, and the reason some never will. Courtiers, Paladins, Fighters and Counsellors come from these houses, and so do the Clerics a family gives to its church, mosque or temple.",
+    "door": "Any house of your rank receives you as a guest, and its head will hear what you came to say.",
+    "debt": "Your family expects you to win back what it has lost, and a rival house is waiting for you to fail."
+   },
+   {
+    "name": "Artisan",
+    "ability_scores": [
+     "Strength",
+     "Dexterity",
+     "Intelligence"
+    ],
+    "feat": "Skilled",
+    "skills": [
+     "Investigation",
+     "Persuasion"
+    ],
+    "tool": "Choose one kind of Artisan's Tools",
+    "equipment": "Choose A or B: (A) Artisan's Tools (same as above), Traveler's Clothes, 2 Pouches, 37 GP; or (B) 50 GP",
+    "about": "You learned a craft at someone's bench. In London or Florence that meant seven years' apprenticeship and a guild's leave to open a shop; in Benin City, a place in one of the king's guilds, such as the brass casters'; in Gujarat, a family's looms; in Edo, a master's house and, one day, its name; in Sofala, a Mhizha's workshop. You know what your tools can do, what good work costs and who in any city does it well, and you can tell whose hand made a thing by looking at the joins. A craft is a license of its own kind: a guild or a master decides who may set up shop, and work that carries magic answers to the licensing courts as well. A woman can hold any trade and its mastership. Natural Philosophers who build their own instruments, Mhizha, Physicians who learned surgery as a craft and Courtiers of the College of Art come from here, and so does the Hidden Killer who forges her own iron.",
+    "door": "Any workshop of your craft gives you a bench and a meal, and its people talk shop with you.",
+    "debt": "Your old master's house says you still owe it years or a share, and a rival shop wants your secrets."
+   },
+   {
+    "name": "Merchant",
+    "ability_scores": [
+     "Constitution",
+     "Intelligence",
+     "Charisma"
+    ],
+    "feat": "Skilled",
+    "skills": [
+     "Animal Handling",
+     "Persuasion"
+    ],
+    "tool": "Navigator's Tools",
+    "equipment": "Choose A or B: (A) Navigator's Tools, Mule, Traveler's Clothes, Rope, Lamp, Pouch, 13 GP; or (B) 50 GP",
+    "about": "You trade on your own account or your family's. You may hold a stall in a Yoruba market town, where the market is women's business; drive a caravan between Bukhara and Astrakhan; own a share in a ship on the Monsoon Road; or lend money from a cloth spread in a caravanserai. No company answers for you, only your partners and the paper you've signed (a company's man takes Company Factor instead). You know weights, coins and rates of exchange in a dozen markets, how to load a mule so it walks all day and when a buyer's smile means you asked too little. Credit is the whole trade: a bill written in Surat is paid in Isfahan because your name is on it, and a name lost in one market is lost in all of them. Every crown taxes you, and every crown's monopoly is a price you can undercut. Counsellors (the Factor and the Gamester above all), Clerics who keep a market's shrine and Sorcerers who sail come from here.",
+    "door": "Any market or caravanserai on your routes knows your name, and someone there will give you credit.",
+    "debt": "A creditor holds your paper, and a rival would like to see it called in."
+   },
+   {
+    "name": "Entertainer",
+    "ability_scores": [
+     "Strength",
+     "Dexterity",
+     "Charisma"
+    ],
+    "feat": "Skilled",
+    "skills": [
+     "Acrobatics",
+     "Performance"
+    ],
+    "tool": "Choose one kind of Musical Instrument",
+    "equipment": "Choose A or B: (A) Musical Instrument (same as above), Costume, Mirror, Traveler's Clothes, Bedroll, Tinderbox, Pouch, 24 GP; or (B) 50 GP",
+    "about": "You perform for a living: songs at weddings, stories in a coffeehouse, tumbling in a square, the mbira at an all-night bira where the ancestors are called, hula for a chief on Hawaiʻi, a Kazakh akyn's sung contest at the autumn pasture. You know a hundred pieces by heart, how to hold a crowd that didn't come for you and which patron pays late. In Venice the mountebanks of the Piazza San Marco sell cures between their acts, and gave Europe the word charlatan. Women perform everywhere, and since 1660 they have acted on London's stage as well as on those of Paris and Venice. Music is also the oldest road to the Hidden: the best players get asked to play for them, and some come back (Taken, above). Bards, Courtiers of the College of Verse, Warlocks whose patron heard them play, Danae who learned to cross roofs in front of a crowd and Barbarians who dance before they fight come from here.",
+    "door": "Any fair, festival or great hall makes room for you, and the other performers there share their news and their supper.",
+    "debt": "The troupe, the patron or the teacher who made you wants a share of everything you earn."
+   },
+   {
+    "name": "Retainer",
+    "ability_scores": [
+     "Dexterity",
+     "Intelligence",
+     "Wisdom"
+    ],
+    "feat": "Skilled",
+    "skills": [
+     "Investigation",
+     "Perception"
+    ],
+    "tool": "Calligrapher's Supplies",
+    "equipment": "Choose A or B: (A) Calligrapher's Supplies, Fine Clothes (your house's livery), Lock, Dagger, 10 sheets of Paper, Lamp, Pouch, 10 GP; or (B) 50 GP",
+    "about": "You served a house: a court, a temple, a city's council, a merchant family or a lord's household. You may have been its secretary, copying the letters and deciding which reached the master; its steward, holding the keys and the accounts; or the guard at its gate, who sees everyone who comes and goes and remembers them. Every power in 1668 runs on people like you: the Ottoman chancery's scribes, a Chinese magistrate's clerks, the secretaries of Venice's Council of Ten, the khipukamayuq who keep the Inca state's accounts in knotted cords, the palace servants who carry the Alaafin's word through Oyo. You know how a house works from the inside, where it keeps its papers and who reads its post before it does. A license is a paper too, and you know which drawer it's in. Counsellors come from here more than from anywhere (the Spymaster, the Majordomo and the Marshal), and so do Wizards who began as copyists and Revelators who served a court of justice.",
+    "door": "Any great household lets you in by the servants' door, and its people tell you who is rising and who is falling.",
+    "debt": "The house you served expects your silence, and someone else will pay well to break it."
+   },
+   {
+    "name": "Guide",
+    "ability_scores": [
+     "Dexterity",
+     "Constitution",
+     "Wisdom"
+    ],
+    "feat": "Magic Initiate (Druid)",
+    "skills": [
+     "Stealth",
+     "Survival"
+    ],
+    "tool": "Navigator's Tools",
+    "equipment": "Choose A or B: (A) Navigator's Tools, Spear, Traveler's Clothes, Bedroll, Tent, Rope, Tinderbox, Pouch, 4 days of Rations, 15 GP; or (B) 50 GP",
+    "about": "You know a stretch of the world well enough to take other people through it: the passes of the Hindu Kush, the portages between the Great Lakes and the rivers that run to the sea, the wells of a desert caravan road, the reefs from Pate to Sofala, or the star paths between Polowat and Pohnpei, held in the head with no instrument at all. Every traveler in 1668 hires someone like you, and the maps they carry home are mostly what you told them, with your name left off. You read weather and tracks, find water and know which ground the people who live there leave alone, because the Hidden walk on it. The hedge-magic you picked up on the road is the kind every guide learns: a word for the weather, a ward around the camp, a cure for a bad step. Rangers and Druids come from here, and so do Revelators who walk roads nobody else can see and the Natural Philosopher who learned the stars from a navigator.",
+    "door": "Any village, camp or harbor on the routes you know takes your word on the way ahead, and feeds you for news of it.",
+    "debt": "Someone you once led didn't come back, and their family holds you to it."
+   },
+   {
+    "name": "Farmer",
+    "ability_scores": [
+     "Strength",
+     "Constitution",
+     "Wisdom"
+    ],
+    "feat": "Alert",
+    "skills": [
+     "Animal Handling",
+     "Nature"
+    ],
+    "tool": "Carpenter's Tools",
+    "equipment": "Choose A or B: (A) Carpenter's Tools, Sickle, Shovel, Iron Pot, Traveler's Clothes, Blanket, Rope, Pouch, 33 GP; or (B) 50 GP",
+    "about": "Most people in 1668 farm, herd or fish, and you are one of them. You may have grown yams on Pohnpei, rice on Formosa's east coast, millet on Mutapa's plateau, maize and beans in the fields of a Haudenosaunee town, which belong to its women, or wheat on the Dnieper for a lord who never saw it. You know soil, seed, weather and animals; you can mend a roof, a fence or a plow; and your day starts before light, which is why nothing in a camp gets past you. You know which field the village leaves for the Hidden and what to set on the step on the open nights. A bad harvest is a war, a tax or a curse, and you've lived through all three. Druids and Clerics of the harvest come from here, and so do Barbarians and Fighters who left the farm for a war and the Counsellor who runs a household's granary as if it were a kingdom.",
+    "door": "Any farming village takes you in for a day's work, and tells you what the landlord and the Hidden have been doing.",
+    "debt": "Your family's land is owed to someone (a landlord, a lord, a temple or a moneylender), and the rent is due."
    }
   ],
   "species": [

@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e398d7b0d7c41f7a7325f1ad1e909f56558aa6a2fc775044ad2b72f8742fe680",
-  "modified": "2026-11-18T13:01:56-05:00",
+  "sha256": "ebef895c7459e67e6bd4a60b98a64f29897962499e0d21ee7961bdd66813e0fd",
+  "modified": "2026-11-18T15:14:17-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 34,
   "rules": {
@@ -991,7 +991,7 @@
     "homelands": [],
     "living": false,
     "prices": [],
-    "text": "A round shield of pale wood banded in brass, with a lamp-glass boss that burns without oil.\n\nWhile attuned to the shield, you have Shield training. The shield hovers beside you rather than hanging on your arm: you don't need a free hand to benefit from it, and you can perform the Somatic components of spells as if you weren't wielding it. A creature can't benefit from this shield and another Shield at once.\n\n- **Lamp.** The boss sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet, in the color of your Doctor's Coat if you are wearing one and pale gold if you aren't. A creature in the Bright Light can't be hidden from you.\n- **Bedside.** As a Bonus Action, you can send the shield to hover beside a creature you can see within 60 feet of yourself. While it is there, the shield's AC bonus applies to that creature instead of you, and the Lamp moves with it. If the creature is your patient and is Bloodied, the first time on each turn it would take damage from an attack, you can take a Reaction to reduce that damage by one roll of your Prowess Die plus your Intelligence modifier (no die is expended). The shield returns to you as a Bonus Action, or on its own if the creature is ever more than 60 feet from you."
+    "text": "A round shield of pale wood banded in brass, with a lamp-glass boss that burns without oil.\n\nThe shield hovers beside you rather than hanging on your arm: you don't need a free hand to benefit from it, and you can perform the Somatic components of spells as if you weren't wielding it. A creature can't benefit from this shield and another Shield at once.\n\n- **Lamp.** The boss sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet, in the color of your Doctor's Coat if you are wearing one and pale gold if you aren't. A creature in the Bright Light can't be hidden from you.\n- **Bedside.** As a Bonus Action, you can send the shield to hover beside a creature you can see within 60 feet of yourself. While it is there, the shield's AC bonus applies to that creature instead of you, and the Lamp moves with it. If the creature is your patient and is Bloodied, the first time on each turn it would take damage from an attack, you can take a Reaction to reduce that damage by one roll of your Prowess Die plus your Intelligence modifier (no die is expended). The shield returns to you as a Bonus Action, or on its own if the creature is ever more than 60 feet from you."
    },
    {
     "name": "Atlas of Roads",
