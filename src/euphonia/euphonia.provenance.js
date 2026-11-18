@@ -33,9 +33,9 @@ export const FROM = [
 ];
 
 // What an item costs where it's bought, where the books price it by
-// distance: the price as written (the price in `home`), times so many in each
-// place they name. A place with no number (`times: null`) is the buyer's
-// price, in the books' `words`. `homelands` are the regions a place lies in:
+// distance. `rate` is the clause of the item's text that prices a place, from
+// which the rulebook reads the multiple or the buyer's words; the place the
+// text prices at home has none. `homelands` are the regions a place lies in:
 // a character buys in its homeland's one place by default, chooses where a
 // homeland holds several (Mutapa and the Indian Ocean: Sofala and the
 // Swahili coast; East and Southeast Asia: Malacca or Aceh, China, Japan), and
@@ -46,18 +46,17 @@ const BUYER = 'whatever the buyer will bear at a court, or in Japan';
 export const PRICES = [
   {
     item: 'Mutapan Curiosities',
-    home: 'Sofala',
     places: [
-      { place: 'Sofala', homelands: ['Mutapa and the Indian Ocean'], times: 1, because: ["Prices are for Sofala, where they're made"] },
-      { place: 'the Swahili coast', homelands: ['Mutapa and the Indian Ocean'], times: 5, because: [ROAD, 'the Swahili coast'] },
-      { place: 'Surat', homelands: ['India'], times: 5, because: [ROAD, 'Surat'] },
-      { place: 'the Red Sea and Gulf ports', homelands: ['The Ottomans, Persia and the Horn'], times: 5, because: [ROAD, "the Red Sea and Gulf ports where Surat's ships call"] },
-      { place: 'Malacca or Aceh', homelands: ['East and Southeast Asia'], times: 5, because: [ROAD, 'Malacca and Aceh, which are on the Road in all but name'] },
-      { place: 'Europe', homelands: ['Europe'], times: 10, because: [FAR] },
-      { place: 'China', homelands: ['East and Southeast Asia'], times: 10, because: [FAR] },
-      { place: 'the Americas', homelands: ['The Americas'], times: 10, because: [FAR] },
-      { place: 'Japan, at Nagasaki', homelands: ['East and Southeast Asia'], times: null, words: 'whatever the buyer will bear', because: [BUYER, 'the only ships let in are the Dutch and Chinese at Nagasaki'] },
-      { place: 'a court', homelands: [], times: null, words: 'whatever the buyer will bear', because: [BUYER] },
+      { place: 'Sofala', homelands: ['Mutapa and the Indian Ocean'], because: ["Prices are for Sofala, where they're made"] },
+      { place: 'the Swahili coast', homelands: ['Mutapa and the Indian Ocean'], rate: ROAD, because: ['the Swahili coast'] },
+      { place: 'Surat', homelands: ['India'], rate: ROAD, because: ['Surat'] },
+      { place: 'the Red Sea and Gulf ports', homelands: ['The Ottomans, Persia and the Horn'], rate: ROAD, because: ["the Red Sea and Gulf ports where Surat's ships call"] },
+      { place: 'Malacca or Aceh', homelands: ['East and Southeast Asia'], rate: ROAD, because: ['Malacca and Aceh, which are on the Road in all but name'] },
+      { place: 'Europe', homelands: ['Europe'], rate: FAR, because: [] },
+      { place: 'China', homelands: ['East and Southeast Asia'], rate: FAR, because: [] },
+      { place: 'the Americas', homelands: ['The Americas'], rate: FAR, because: [] },
+      { place: 'Japan, at Nagasaki', homelands: ['East and Southeast Asia'], rate: BUYER, because: ['the only ships let in are the Dutch and Chinese at Nagasaki'] },
+      { place: 'a court', homelands: [], rate: BUYER, because: [] },
     ],
   },
 ];

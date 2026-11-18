@@ -11,7 +11,7 @@ import charactersUrl from './euphonia.characters.json?url';
 import languagesUrl from './euphonia.languages.json?url';
 import tonguesUrl from './euphonia.tongues.json?url';
 import places from 'virtual:euphonia-places';
-import { ABILITIES, MAX_LEVEL, rulebook, character, speciesOptions, featsAllowed, featIncrease, qualifies } from './euphonia.character.js';
+import { ABILITIES, MAX_LEVEL, languageNotes, rulebook, character, speciesOptions, featsAllowed, featIncrease, qualifies } from './euphonia.character.js';
 import { inline, blocks } from './euphonia.markdown.js';
 import { khipu } from './euphonia.ornament.js';
 
@@ -131,6 +131,7 @@ export async function initBuilder(panel) {
   const featureOriginBox = h('div', { class: 'b-origin' });
   const languageBox = h('div', { class: 'b-languages' });
   const tongueList = h('datalist', { id: 'b-tongues' }, tongueNames.map(n => h('option', { value: n })));
+  const languageNote = languageNotes(languages.paragraphs);
   const languageAbout = h('details', { class: 'b-about' }, h('summary', {}, 'Languages in 1668'), h('div', { html: blocks(languages.paragraphs.join('\n\n')) }));
   const expertiseBox = h('div', { class: 'b-expertise' });
   const increases = h('div', { class: 'b-increases', role: 'group', 'aria-label': 'Ability increases', 'aria-describedby': idFor('increases') });
@@ -159,10 +160,10 @@ export async function initBuilder(panel) {
       book.unfinished.length ? h('p', { class: 'b-note' }, `${listed(book.unfinished.map((n, i) => `${i ? 'the' : 'The'} ${n}`))} ${book.unfinished.length === 1 ? 'is' : 'are'} still being written, and join${book.unfinished.length === 1 ? 's' : ''} the builder when finished.`) : null),
     optionSection,
     section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, abilityBox, speciesTraits),
-    section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
+    section('Homeland',
       h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink,
       h('label', { class: 'b-field' }, h('span', {}, 'Buying in'), marketSelect),
-      h('p', { class: 'b-note' }, `Mutapan curiosities cost more the farther they travel from ${book.items.find(i => i.prices)?.prices.home}, where they’re made.`)),
+      (item => h('p', { class: 'b-note' }, `${item.name}: ${item.prices.says}`))(book.items.find(i => i.prices))),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
     section('Starting equipment', h('p', { class: 'b-note' }, 'Each kit, or its gold to spend instead. The builder buys armor with what’s left.'), packageBox),
     section('Gear', h('p', { class: 'b-note' }, 'What the character carries: take out what it doesn’t, buy with its money, or add what the DM gives.'), gearBox, problemSlot('inventory'), problemSlot('wear')),
@@ -383,7 +384,8 @@ export async function initBuilder(panel) {
       const read = () => set(s => { s.languages = { ...s.languages, [c.key]: [...group.querySelectorAll('input')].map(x => x.value.trim()).filter(Boolean) }; });
       const label = i => (c.key === 'Common' ? 'Your vernacular (Common)' : `${c.given.length ? 'One more language' : 'Language'}${c.count > 1 ? ` ${i + 1}` : ''}`);
       const group = h('fieldset', { class: 'b-language', 'aria-describedby': idFor(`language:${c.key}`) },
-        h('legend', {}, c.key === 'Common' ? 'Common: the language of the place that raised you' : c.key === 'standard' ? `Two more: a second vernacular, a trade tongue or a learned one` : c.label),
+        h('legend', {}, c.label),
+        languageNote[c.key] ? h('p', { class: 'b-note' }, languageNote[c.key]) : null,
         c.given.length ? h('p', { class: 'b-note' }, `${listed(c.given)}, given.`) : null,
         Array.from({ length: c.count }, (_, i) => h('label', { class: 'b-field' }, h('span', {}, label(i)),
           h('input', { type: 'text', list: 'b-tongues', autocomplete: 'off', 'data-key': `language-${c.key}-${i}`, value: names[i] ?? '', onchange: read }))),

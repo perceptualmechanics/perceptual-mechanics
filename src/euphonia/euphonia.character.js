@@ -11,9 +11,32 @@ import { LIVING, FROM, PRICES, WITHOUT } from './euphonia.provenance.js';
 export const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 export const MAX_LEVEL = 20;
 
+// An item's prices by distance, as its text gives them: the home it prices
+// ("Prices are for Sofala"), and for each place the clause that rates it, a
+// multiple ("five times as much") or the buyer's words.
+function pricesOf(item) {
+  const spec = PRICES.find(x => x.item === item.name);
+  if (!spec) return null;
+  const [says, home] = item.text.match(/Prices are for (\w+), [^.]*\./) ?? [];
+  if (!home) throw new Error(`${item.name}: its text doesn't say where its prices are for`);
+  return { ...spec, home, says, places: spec.places.map(p => {
+    if (!p.rate) { if (p.place !== home) throw new Error(`${item.name}: ${p.place} has no rate and isn't ${home}`); return { ...p, times: 1 }; }
+    if (!item.text.includes(p.rate)) throw new Error(`${item.name}: its text no longer says "${p.rate}"`);
+    const word = p.rate.match(/^(\w+) times as much\b/)?.[1], times = NUMBERS.indexOf(word);
+    if (word && times < 2) throw new Error(`${item.name}: "${word} times" isn't a number the rulebook reads`);
+    return word ? { ...p, times } : { ...p, times: null, words: p.rate.split(' at ')[0] };
+  }) };
+}
+// What the book says the language choices are: its Common and standard
+// languages lines, each to the end of its first sentence.
+export function languageNotes(paragraphs) {
+  const first = label => paragraphs.join('\n').match(new RegExp(`^- \\*\\*${label}\\*\\*[^\\n]*?\\.(?= |$)`, 'm'))?.[0].replace(/^- /, '').replaceAll('**', '') ?? null;
+  return { Common: first('Common'), standard: first('The two standard languages') };
+}
+
 // How a problem reads when what it asks for hasn't been chosen yet.
 const OPEN_CHOICE = /^(?:Choose|Name|Say how|Roll a|Increase one)\b/;
-const NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
+const NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const number = s => (s === '—' || s === '–' || s === undefined ? 0 : Number(String(s).replace(/[,+]/g, '').replace('−', '-')));
 const list = s => s.replace(/\*/g, '').split(/,\s*(?:or\s+|and\s+)?|\s+(?:or|and)\s+/).map(x => x.trim()).filter(Boolean);
 const trait = (c, name) => c.traits.find(t => t.trait === name)?.value ?? '';
@@ -283,7 +306,7 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     // An item that comes only in the story ("No one starts play with a pair")
     // isn't starting gear.
     const story = /\bNo one starts play with\b/.test(item.text);
-    return { ...item, who, members, bound, living, story, from: FROM.find(x => x.item === item.name)?.homelands ?? [], prices: PRICES.find(x => x.item === item.name) ?? null };
+    return { ...item, who, members, bound, living, story, from: FROM.find(x => x.item === item.name)?.homelands ?? [], prices: pricesOf(item) };
   });
   for (const x of [...LIVING, ...FROM, ...PRICES]) if (!goods.items.some(i => i.name === x.item)) throw new Error(`euphonia.provenance.js: there's no item "${x.item}"`);
   return {
@@ -1495,7 +1518,7 @@ export function character(book, state) {
     for (const c of languageChoices) {
       const got = (state.languages?.[c.key] ?? []).map(x => String(x).trim()).filter(Boolean);
       c.chosen = got;
-      if (got.length !== c.count) fail(`language:${c.key}`, c.key === 'Common' ? 'Name your vernacular, the language of the place that raised you.' : `Name ${c.count} language${c.count === 1 ? '' : 's'} for ${c.label}.`, got.length < c.count);
+      if (got.length !== c.count) fail(`language:${c.key}`, c.key === 'Common' ? 'Name your vernacular.' : `Name ${c.count} language${c.count === 1 ? '' : 's'} for ${c.label}.`, got.length < c.count);
       for (const name of [...c.given, ...got]) {
         if (seen.has(name.toLowerCase())) fail(`language:${c.key}`, `${name} is already one of your languages.`);
         seen.add(name.toLowerCase());

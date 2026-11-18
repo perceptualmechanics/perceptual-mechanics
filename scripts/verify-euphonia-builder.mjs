@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as defaultEngine from '../src/euphonia/euphonia.character.js';
 import { LIVING, FROM, PRICES, WITHOUT } from '../src/euphonia/euphonia.provenance.js';
+import { effectsOf, recorded, differences } from './euphonia-effects.mjs';
 
 const read = name => JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 
@@ -729,6 +730,13 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   // And no unknown leaks into the sheet as NaN, in any class's attacks.
   const leaked = book.classes.flatMap(c => engine.character(book, { ...someone([{ class: c.name, level: 5 }]), method: 'standard', base: {} }).attacks.filter(a => /NaN/.test(`${a.damage} ${a.versatile}`)).map(a => `${c.name}: ${a.name} ${a.damage}`));
   if (leaked.length) fail(`with no scores yet, attacks read NaN: ${leaked.join('; ')}`);
+  // Every rule read from the books still comes to what was recorded: a
+  // sentence reworded out of the engine's reach loses its effect here.
+  const changed = differences(recorded(), effectsOf(engine, book));
+  if (changed.length) fail(`${changed.length} effect(s) of the books' rules differ from euphonia-effects.json; if the books meant it, run scripts/euphonia-effects.mjs:\n    ${changed.slice(0, 12).join('\n    ')}`);
+  // The language notes the form shows are the book's own lines.
+  const notes = engine.languageNotes(read('languages').data.paragraphs);
+  if (!notes.Common || !notes.standard) fail(`the languages export no longer has its Common and standard lines: ${JSON.stringify(notes)}`);
   // A character with nothing chosen has broken no rule, in any class at any
   // level or in a multiclass; a build that breaks one says so.
   const unchosen = book.classes.flatMap(c => [
