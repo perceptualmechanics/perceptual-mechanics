@@ -484,11 +484,16 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     const initiate = b.feat.startsWith('Magic Initiate');
     const asked = { ...someone([{ class: 'Fighter', level: 1 }]), background: b.name, increases: { [a1]: 1, [a2]: 1, [a3]: 1 },
       originFeats: { 'Human Versatile': b.feat === 'Alert' ? 'Skilled' : 'Alert' }, featLists: { [b.name]: 'Wizard' },
-      skills: { Fighter: ['Animal Handling', 'Persuasion'].filter(x => !b.skills.includes(x)).concat(['Acrobatics']).slice(0, 2), 'Human Skillful': ['Arcana'], [`${b.name} skills`]: b.skill_choice?.from.slice(0, 1) } };
-    // Its tools, the first each choice offers (Skilled's are its three, as
-    // no skills are taken with it here).
-    const first = run(asked, b.name);
-    const got = first && run({ ...asked, tools: Object.fromEntries(first.toolChoices.map(c => [c.key, c.from.filter(t => !first.tools.some(x => x.name === t && x.from.some(src => src !== c.label))).slice(0, c.count)])) }, b.name);
+      skills: { Fighter: ['Animal Handling', 'Persuasion', 'Acrobatics', 'Athletics'].filter(x => !b.skills.includes(x)).slice(0, 2), 'Human Skillful': ['Arcana'], [`${b.name} skills`]: b.skill_choice?.from.slice(0, 1) } };
+    // Its tools, the first each choice offers that no other choice has taken
+    // (Skilled's are its three, as no skills are taken with it here).
+    const first = run(asked, b.name), taken = new Set();
+    const tools = first && Object.fromEntries(first.toolChoices.map(c => {
+      const picks = c.from.filter(t => !taken.has(t) && !first.tools.some(x => x.name === t && x.from.some(src => src !== c.label))).slice(0, c.count);
+      picks.forEach(t => taken.add(t));
+      return [c.key, picks];
+    }));
+    const got = first && run({ ...asked, tools }, b.name);
     if (got?.problems.length) fail(`${b.name}: ${got.problems.map(p => p.message).join(' ')}`);
     else if (!got?.feats.some(f => f.from === b.name) || (initiate && !got.spellChoices.some(c => c.key === `feat ${b.name}`))) fail(`${b.name}: its feat doesn't come through`);
     else backgrounds++;
