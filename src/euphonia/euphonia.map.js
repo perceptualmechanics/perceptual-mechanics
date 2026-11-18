@@ -388,6 +388,7 @@ export async function initMap(stage) {
     const r = regions.find(x => x.id === b.dataset.region);
     showRegion(r);
     clearMention();
+    if (outOfSight(r)) zoomToRegion(r);
     redraw();
     panelTitle.focus();
   });
@@ -887,6 +888,13 @@ export async function initMap(stage) {
   let zooming = 0;
   const regionZoom = r => REGION_FIT / Math.sin(Math.max(r.spread, 1) * RAD);
   const zoomToRegion = r => zoomTo(r.centre, regionZoom(r));
+  // Whether a region's name can't be seen: turned away, or under the panel.
+  const outOfSight = r => {
+    const b = g.buttons[regions.indexOf(r)];
+    if (b.hidden) return true;
+    const n = b.getBoundingClientRect(), p = panel.getBoundingClientRect();
+    return n.right > p.left && n.left < p.right && n.bottom > p.top && n.top < p.bottom;
+  };
   // A name in the panel turns the glass to where the book places it, a step
   // closer than its region's scale, and rings the spot with its label; the
   // page the reader came from stays open beside it. The names are a person's

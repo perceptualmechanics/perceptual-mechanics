@@ -12,6 +12,9 @@ import { resolvePlaces, regionShape, apart, lookup } from '../src/euphonia/eupho
 import { solarEvents } from '../src/bench/bench.sky.js';
 import * as mounting from '../src/euphonia/euphonia.mount.js';
 import { nearestVertex, parallelStep } from './euphonia-borders.mjs';
+import { wheelNames } from '../src/euphonia/euphonia.draw.js';
+import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
+import { REALM_REACH_REM } from '../src/euphonia/euphonia.ambient.js';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
@@ -587,6 +590,28 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   const wet = segs.filter(([a, b]) => !geo.onLand(world.land, (a[1] + b[1]) / 2, (a[0] + b[0]) / 2)).length;
   const WET_SHARE = 0.01;
   if (!segs.length || wet > WET_SHARE * segs.length) fail(`${wet} of ${segs.length} border segments run over the sea, more than ${WET_SHARE * 100}%`);
+
+  // The Wheel's names, framed as the page frames them, at a phone's widths
+  // and a desktop's, with widths a little over any face's: on a phone none
+  // lost and none over another, the mount or the window; on a desktop none moved.
+  const wheelData = wheelOf(JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.wheel.json', import.meta.url), 'utf8')).data, JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.classes.json', import.meta.url), 'utf8')).data);
+  const REM = 16, NAME_EM = 0.62, named = wheelData.realms.filter(r => r.at !== 'centre').length + wheelData.roads.length;
+  const sizes = [[320, 568], [360, 640], [375, 690], [390, 720], [414, 760], [768, 900], [1280, 780], [1920, 960]];
+  let wheelMoved = 0;
+  for (const [W, H] of sizes) for (const dpr of [1, 2]) {
+    const m = REALM_REACH_REM * REM, f = Math.min(W - 2 * m, H - 2 * m) / (2 * mounting.MERIDIAN.outer);
+    const view = { cx: W / 2 * dpr, cy: H / 2 * dpr, k: f * dpr }, rim = { x: (W / 2 - m) / f, y: (H / 2 - m) / f, margin: m / f };
+    const got = [...wheelNames(view, wheelData, rim, REM, dpr, (t, road) => t.length * NAME_EM * (road ? 0.62 : 0.72) * REM * dpr).values()];
+    if (got.length !== named) fail(`the Wheel at ${W}x${H}: ${got.length} of ${named} names placed`);
+    got.forEach((n, i) => {
+      const { l, r, t, b } = n.box, near = Math.hypot(Math.max(l, Math.min(view.cx, r)) - view.cx, Math.max(t, Math.min(view.cy, b)) - view.cy);
+      if (W >= H) { if (n.moved > 1e-6) fail(`the Wheel at ${W}x${H}: ${n.text} moved ${n.moved.toFixed(1)}px with room to spare`); return; }
+      wheelMoved = Math.max(wheelMoved, n.moved / dpr);
+      if (l < 0 || r > W * dpr || t < 0 || b > H * dpr) fail(`the Wheel at ${W}x${H}: ${n.text} leaves the window`);
+      if (near < mounting.MERIDIAN.outer * view.k) fail(`the Wheel at ${W}x${H}: ${n.text} runs under the mount`);
+      for (const o of got.slice(i + 1)) if (l < o.box.r && o.box.l < r && t < o.box.b && o.box.t < b) fail(`the Wheel at ${W}x${H}: ${n.text} is over ${o.text}`);
+    });
+  }
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]

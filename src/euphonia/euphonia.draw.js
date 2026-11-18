@@ -200,6 +200,69 @@ const mixer = (a, b) => {
   return t => `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
 
+// How a name set inward from the rim hangs from its point: right of centre
+// it ends there, below centre it starts there.
+function inwardOf(deg) {
+  const c = Math.cos(deg * RAD), s = Math.sin(deg * RAD);
+  return { align: c > 0.25 ? 'right' : c < -0.25 ? 'left' : 'center', baseline: s > 0.25 ? 'top' : s < -0.25 ? 'bottom' : 'middle', ax: c > 0.25 ? 1 : c < -0.25 ? 0 : 0.5, ay: s > 0.25 ? 0 : s < -0.25 ? 1 : 0.5 };
+}
+// Line height and clear space of the Wheel's names, in their type size.
+const NAME_LINE = 1.2, NAME_CLEAR = 0.2;
+
+// Where each plane's and road's name goes: the point its bearing gives. On a
+// window narrower than it is tall (a phone's, where the mount fills the
+// width) those points crowd, so a name moves the least distance up or down
+// that clears the mount, the window's edge, the rim's four words and the names
+// already placed, the outermost placed first since they have the least room
+// to move. One with no clear place anywhere isn't drawn, as the spheres' names
+// aren't. `measure(text, road)` is its width in device pixels.
+export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
+  const { cx, cy, k } = view, { point, roadT } = wheelGeometry(view, rim, roads.length);
+  const place = new Map(realms.map(r => [r.name, r.at]));
+  const name = (of, text, at, [x, y], size, road) => ({ of, text, x, y, ...inwardOf(at), w: measure(text, road), h: size * rem * dpr * NAME_LINE });
+  const realmNames = realms.filter(r => r.at !== 'centre').map(r => name(r, r.name, r.at, point(WHEEL_REALMS, r.at), WHEEL_REALM_REM, false));
+  // A road's name stands at its source, where its pathway's opening says it
+  // rises ("The River of Life rises in Elysium", the Mountain "rising from
+  // Asphodel"), in the gap after that realm's name: half the Wheel's sixteenth
+  // on along its arc, or, for a road through the centre, back from the way it
+  // climbs, so two roads rising together part. One rising at the centre, under
+  // the globe (the Tree, from the Middle World), is named at its far end, on
+  // the side toward the rest of the road.
+  const turn = (to, from) => Math.sign(((to - from + 540) % 360) - 180);
+  const roadNames = roads.map((road, j) => {
+    const ring = road.through.map(n => place.get(n)).filter(at => at !== 'centre'), rises = place.get(road.rises);
+    const source = rises === 'centre' ? ring.at(-1) : rises;
+    const along = rises === 'centre' ? turn(ring.at(-2), source) : road.centre ? -turn(ring.find(at => at !== source), source) : source === road.from ? 1 : -1;
+    const at = (source + along * SIXTEENTH / 2 + 360) % 360;
+    return name(road, road.name, at, point(roadT(j), at), WHEEL_SMALL_REM, true);
+  });
+  const clear = WHEEL_SMALL_REM * rem * dpr * NAME_CLEAR, radius = MERIDIAN.outer * k + clear;
+  const edge = { l: cx - k * (rim.x + rim.margin) + clear, r: cx + k * (rim.x + rim.margin) - clear, t: cy - k * (rim.y + rim.margin) + clear, b: cy + k * (rim.y + rim.margin) - clear };
+  const taken = Object.entries(AXES).map(([word, at]) => {
+    const c = Math.round(Math.cos(at * RAD)), s = Math.round(Math.sin(at * RAD)), out = k * rim.margin / 2, [x, y] = point(1, at);
+    const long = measure(word.toUpperCase(), false) / 2, thick = WHEEL_RIM_REM * rem * dpr * NAME_LINE / 2, [hw, hh] = c ? [thick, long] : [long, thick];
+    return { l: x + c * out - hw, r: x + c * out + hw, t: y - s * out - hh, b: y - s * out + hh };
+  });
+  const boxOf = (n, y) => {
+    const l = Math.max(edge.l, Math.min(edge.r - n.w, n.x - n.ax * n.w)), t = y - n.ay * n.h;
+    return { l, r: l + n.w, t, b: t + n.h };
+  };
+  const free = b => b.l >= edge.l - 1e-6 && b.r <= edge.r + 1e-6 && b.t >= edge.t && b.b <= edge.b
+    && Math.hypot(Math.max(b.l, Math.min(cx, b.r)) - cx, Math.max(b.t, Math.min(cy, b.b)) - cy) >= radius
+    && !taken.some(o => b.l < o.r + clear && o.l < b.r + clear && b.t < o.b + clear && o.t < b.b + clear);
+  const narrow = rim.x < rim.y, out = new Map(), step = clear || 1, reach = Math.ceil(2 * k * rim.y / step);
+  for (const n of [...realmNames.sort((a, b) => Math.abs(b.y - cy) - Math.abs(a.y - cy)), ...roadNames]) {
+    for (let i = 0; i <= 2 * reach; i++) {
+      const y = n.y + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * step, b = boxOf(n, y);
+      if (narrow && !free(b)) continue;
+      taken.push(b);
+      out.set(n.of, { ...n, x: b.l + n.ax * n.w, y, box: b, moved: Math.hypot(b.l + n.ax * n.w - n.x, y - n.y) });
+      break;
+    }
+  }
+  return out;
+}
+
 // Where things stand on the Wheel, for its drawing and its ambient life
 // (euphonia.ambient.js) alike: a ring's axes, a point at a ring and bearing,
 // each sphere's ring, each road's track, and the realms' ring.
@@ -217,11 +280,21 @@ export function wheelGeometry(view, rim, roadCount) {
 export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, rem, smallCaps = true) {
   const { cx, cy, axes, point, sphereT, roadT } = wheelGeometry(view, rim, roads.length), k = view.k;
   const type = (size, style = '') => { ctx.font = `${style} ${size * rem * dpr}px ${font}`; };
-  // Lettering that runs inward from the rim: away from the edge it is near.
-  const inward = deg => {
-    const c = Math.cos(deg * RAD), s = Math.sin(deg * RAD);
-    ctx.textAlign = c > 0.25 ? 'right' : c < -0.25 ? 'left' : 'center';
-    ctx.textBaseline = s > 0.25 ? 'top' : s < -0.25 ? 'bottom' : 'middle';
+  // Lettering that runs inward from the rim, each name where wheelNames
+  // finds it room.
+  const lettered = wheelNames(view, { realms, roads }, rim, rem, dpr, (text, road) => {
+    ctx.save();
+    if (road) type(WHEEL_SMALL_REM, 'italic');
+    else { type(WHEEL_REALM_REM); ctx.fontVariantCaps = smallCaps ? 'small-caps' : 'normal'; }
+    const { width } = ctx.measureText(text);
+    ctx.restore();
+    return width;
+  });
+  const letter = of => {
+    const n = lettered.get(of);
+    if (!n) return;
+    ctx.textAlign = n.align; ctx.textBaseline = n.baseline;
+    ctx.fillText(n.text, n.x, n.y);
   };
   ctx.save();
   // The spheres painted, as the period painted them (Cellarius, 1660–61), not
@@ -301,27 +374,14 @@ export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, 
     ctx.globalAlpha = WHEEL_TYPE_ALPHA;
     ctx.fillStyle = colors.paper;
     type(WHEEL_SMALL_REM, 'italic');
-    // Its name at its source, where its pathway's opening says it rises
-    // ("The River of Life rises in Elysium", the Mountain "rising from
-    // Asphodel"), in the gap after that realm's name: half the Wheel's
-    // sixteenth on along its arc, or, for a road through the centre, back
-    // from the way it climbs, so two roads rising together part.
-    const source = place.get(road.rises), half = SIXTEENTH / 2;
-    const along = road.centre ? -Math.sign(((ring.find(at => at !== source) - source + 540) % 360) - 180) : source === road.from ? 1 : -1;
-    const at = (source + along * half + 360) % 360;
-    inward(at);
-    ctx.fillText(road.name, ...point(t, at));
+    letter(road);
   });
 
   // The realms where the Wheel files them, in small capitals where the
   // theme's face has them; the Middle World is the globe.
   type(WHEEL_REALM_REM);
   ctx.fontVariantCaps = smallCaps ? 'small-caps' : 'normal';
-  for (const r of realms) {
-    if (r.at === 'centre') continue;
-    inward(r.at);
-    ctx.fillText(r.name, ...point(WHEEL_REALMS, r.at));
-  }
+  for (const r of realms) letter(r);
   // The height and the bearing, in the middle of the margin past the rim:
   // across it above and below, and turned to run along it at the sides.
   ctx.fontVariantCaps = 'normal';
