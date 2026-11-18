@@ -7,6 +7,7 @@ import { plain, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { ABILITIES } from '../src/euphonia/euphonia.character.js';
 import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 import { RELEASE, releasedMaster, stampsBeside } from './euphonia-release.mjs';
+import { DRAFT_NOTE, DRAFT_NOTE_HTML, HELP_URL } from './euphonia-draft-note.mjs';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
@@ -300,11 +301,18 @@ export function verifyEuphoniaPages(outDir, legal = euphoniaFiles().legal.data) 
     if (text === null) { problemsFound.push(`euphonia/${page}: no visible <footer class="legal">`); continue; }
     for (const [what, want] of owed) if (!text.includes(want)) problemsFound.push(`euphonia/${page}: the footer doesn't carry ${what} as written`);
   }
+  // Every chapter in draft says so in the one wording, with its invitation
+  // to the Patreon page the header links, and the old wording is gone.
+  const front = existsSync(join(dir, 'index.html')) ? readFileSync(join(dir, 'index.html'), 'utf8') : '';
+  const notes = front.split(DRAFT_NOTE_HTML).length - 1, said = front.split(DRAFT_NOTE).length - 1;
+  if (!notes || said !== notes) problemsFound.push(`euphonia/index.html: ${notes} whole draft note(s) for ${said} use(s) of its wording`);
+  if (!front.includes(`<a class="elsewhere" href="${HELP_URL}"`)) problemsFound.push(`euphonia/index.html: the header doesn't link ${HELP_URL}, where the draft note sends people`);
+  if (/A living setting: Scott Cohen/.test(front)) problemsFound.push('euphonia/index.html: still carries the old "living setting" note');
   if (problemsFound.length) {
     log.push(`\neuphonia pages: ${problemsFound.length} problem(s):`);
     for (const p of problemsFound) log.push(`  ${p}`);
   } else {
-    log.push(`ok: all ${pages.length} Euphonia page(s) carry the copyright line, the ORC Notice (${legal.orc_notice.length} paragraphs) and the SRD 5.2.1 attribution in their footer`);
+    log.push(`ok: all ${pages.length} Euphonia page(s) carry the copyright line, the ORC Notice (${legal.orc_notice.length} paragraphs) and the SRD 5.2.1 attribution in their footer; the draft note stands whole in ${notes} place(s)`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log };
 }
