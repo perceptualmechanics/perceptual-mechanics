@@ -82,7 +82,6 @@ export async function initBuilder(panel) {
   let state = decode(new URLSearchParams(location.search).get(PARAM) ?? '');
   if (!state) { try { state = decode(localStorage.getItem(STORE_KEY) ?? ''); } catch { /* storage unavailable */ } }
   state ??= blank();
-  const resumed = JSON.stringify(state) !== JSON.stringify(blank());
 
   // ---------- the controls, built once; the parts whose shape depends on
   // earlier choices are rebuilt only when that shape changes.
@@ -178,12 +177,11 @@ export async function initBuilder(panel) {
 
   // ---------- reading the controls into the state
   const set = (mutate) => { mutate(state); update(); };
-  // A section's problems read as what's left to do until the player has
-  // worked in it, and as problems after; a character brought back has been
-  // worked on throughout. Capturing, so the mark is down before the render.
+  // What's left to choose reads as a note until the player works in its
+  // section, on a new character or one brought back. Capturing, so the mark
+  // is down before the render.
   const touch = e => e.target.closest('.builder-form > fieldset')?.setAttribute('data-touched', '');
   for (const type of ['change', 'input', 'click']) form.addEventListener(type, touch, true);
-  if (resumed) for (const s of form.querySelectorAll(':scope > fieldset')) s.setAttribute('data-touched', '');
   nameInput.addEventListener('input', () => set(s => { s.name = nameInput.value; }));
   speciesSelect.addEventListener('change', () => set(s => { s.species = speciesSelect.value; s.option = ''; s.size = ''; }));
   optionSelect.addEventListener('change', () => set(s => { s.option = optionSelect.value; }));
@@ -842,16 +840,14 @@ export async function initBuilder(panel) {
   // The problems, each beside the choice it belongs to; the notes, beside
   // theirs.
   function renderProblems(result) {
-    const by = list => {
-      const out = new Map();
-      for (const p of list) out.set(idFor(p.field), [...(out.get(idFor(p.field)) ?? []), p.message]);
-      return out;
-    };
-    const problems = by(result.problems);
+    const problems = new Map();
+    for (const p of result.problems) problems.set(idFor(p.field), [...(problems.get(idFor(p.field)) ?? []), p]);
     for (const slot of form.querySelectorAll('.b-problem')) {
-      const messages = problems.get(slot.id) ?? [];
-      slot.textContent = messages.join(' ');
-      slot.hidden = !messages.length;
+      const here = problems.get(slot.id) ?? [];
+      slot.textContent = here.map(p => p.message).join(' ');
+      slot.hidden = !here.length;
+      // A rule the build breaks is said plainly, whoever made the build.
+      slot.classList.toggle('is-broken', here.some(p => !p.open));
     }
     skillNotes.replaceChildren(...result.notes.map(n => h('li', {}, n.message)));
   }

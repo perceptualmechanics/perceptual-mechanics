@@ -11,6 +11,8 @@ import { LIVING, FROM, PRICES, WITHOUT } from './euphonia.provenance.js';
 export const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 export const MAX_LEVEL = 20;
 
+// How a problem reads when what it asks for hasn't been chosen yet.
+const OPEN_CHOICE = /^(?:Choose|Name|Say how|Roll a|Increase one)\b/;
 const NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
 const number = s => (s === '—' || s === '–' || s === undefined ? 0 : Number(String(s).replace(/[,+]/g, '').replace('−', '-')));
 const list = s => s.replace(/\*/g, '').split(/,\s*(?:or\s+|and\s+)?|\s+(?:or|and)\s+/).map(x => x.trim()).filter(Boolean);
@@ -418,7 +420,10 @@ export function character(book, state) {
   // Problems stop a character being built as chosen; notes are facts worth
   // saying (a skill granted twice).
   const problems = [], notes = [];
-  const fail = (field, message) => problems.push({ field, message });
+  // A problem is open (a choice not made yet) or a rule broken by what was
+  // chosen. The sheet says the first quietly and the second plainly. The
+  // wording tells them apart except where one check covers both, which says.
+  const fail = (field, message, open = OPEN_CHOICE.test(message)) => problems.push({ field, message, open });
   const species = book.species.find(s => s.name === state.species) ?? null;
   const background = book.backgrounds.find(b => b.name === state.background) ?? null;
   if (!species) fail('species', 'Choose a species.');
@@ -428,19 +433,19 @@ export function character(book, state) {
   // An unassigned score is unknown (NaN), never Number(null)'s 0, so what's
   // derived from it stays unknown too.
   const base = Object.fromEntries(ABILITIES.map(a => [a, state.base?.[a] === null || state.base?.[a] === '' ? NaN : Number(state.base?.[a])]));
-  const given = ABILITIES.map(a => base[a]);
+  const given = ABILITIES.map(a => base[a]), unscored = !given.every(Number.isFinite);
   if (state.method === 'standard') {
     const sorted = [...given].sort((a, b) => b - a), array = [...book.standardArray].sort((a, b) => b - a);
-    if (!sorted.every((v, i) => v === array[i])) fail('base', `Give each ability one of the standard array's scores: ${book.standardArray.join(', ')}.`);
+    if (!sorted.every((v, i) => v === array[i])) fail('base', `Give each ability one of the standard array's scores: ${book.standardArray.join(', ')}.`, unscored);
   } else if (state.method === 'point') {
-    if (!given.every(v => book.pointCosts.has(v))) fail('base', `Point Cost buys scores from ${Math.min(...book.pointCosts.keys())} to ${Math.max(...book.pointCosts.keys())}.`);
+    if (!given.every(v => book.pointCosts.has(v))) fail('base', `Point Cost buys scores from ${Math.min(...book.pointCosts.keys())} to ${Math.max(...book.pointCosts.keys())}.`, unscored);
     else {
       const spent = given.reduce((n, v) => n + book.pointCosts.get(v), 0);
       if (spent > book.pointBudget) fail('base', `That costs ${spent} points; you have ${book.pointBudget}.`);
     }
   } else if (state.method === 'rolled') {
     // Four d6, the highest three: 3 to 18.
-    if (!given.every(v => Number.isInteger(v) && v >= 3 && v <= 18)) fail('base', 'Rolled scores run from 3 to 18.');
+    if (!given.every(v => Number.isInteger(v) && v >= 3 && v <= 18)) fail('base', 'Rolled scores run from 3 to 18.', unscored);
   } else fail('method', 'Choose how to generate your scores.');
 
   // The background's increases.
@@ -781,7 +786,7 @@ export function character(book, state) {
     const allowed = featsAllowed(book, imp.kind).includes(feat);
     const ok = qualifies(book, feat, { level: total, scores, features });
     if (!allowed) fail(`improvement:${imp.key}`, `${feat.name} isn't a feat ${imp.kind === 'Epic Boon' ? 'an Epic Boon' : 'an Ability Score Improvement'} can be.`);
-    else if (!ok.ok) fail(`improvement:${imp.key}`, `${feat.name} needs ${ok.why.join(' and ')}.`);
+    else if (!ok.ok) fail(`improvement:${imp.key}`, `${feat.name} needs ${ok.why.join(' and ')}.`, unscored);
     if (!feat.repeatable && feats.some(f => f.feat.name === feat.name)) fail(`improvement:${imp.key}`, `${feat.name} can be taken once.`);
     const inc = featIncrease(feat);
     if (inc) {
@@ -836,7 +841,7 @@ export function character(book, state) {
     for (const c of known) {
       const { abilities, any, score } = c.rules.multiclass;
       const met = any ? abilities.some(a => scores[a] >= score) : abilities.every(a => scores[a] >= score);
-      if (!met) fail('classes', `Multiclassing needs ${abilities.join(any ? ' or ' : ' and ')} ${score} or more, for ${c.class}.`);
+      if (!met) fail('classes', `Multiclassing needs ${abilities.join(any ? ' or ' : ' and ')} ${score} or more, for ${c.class}.`, unscored);
     }
   }
 
@@ -864,7 +869,8 @@ export function character(book, state) {
     if (from.length === count && !upTo) { for (const s of from) grant(s, label); return; }
     choices.push({ key, label, from, count, upTo, given });
     const got = (picks ?? []).filter(Boolean);
-    if ((upTo ? got.length > count : got.length !== count) || new Set(got).size !== got.length || !got.every(s => from.includes(s))) fail(`skills:${key}`, `Choose ${upTo ? 'up to ' : ''}${count} skill${count === 1 ? '' : 's'}${from.length < book.skills.length ? ` from ${from.join(', ')}` : ''}.`);
+    const valid = new Set(got).size === got.length && got.every(s => from.includes(s));
+    if ((upTo ? got.length > count : got.length !== count) || !valid) fail(`skills:${key}`, `Choose ${upTo ? 'up to ' : ''}${count} skill${count === 1 ? '' : 's'}${from.length < book.skills.length ? ` from ${from.join(', ')}` : ''}.`, valid && got.length < count);
     for (const s of got.filter(x => from.includes(x))) grant(s, label);
   };
   if (first) { for (const s of first.skills.fixed) grant(s, first.name); chosen(first.name, first.skills.from, first.skills.count, state.skills?.[first.name], first.name, false, first.skills.fixed); }
@@ -1028,7 +1034,7 @@ export function character(book, state) {
     const k = `${key}${parts.length > 1 ? ` ${i + 1}` : ''}${x.replaces ? ` instead of ${x.replaces}` : ''}`;
     const got = (state.tools?.[k] ?? []).filter(t => x.from.includes(t));
     toolChoices.push({ key: k, label: x.replaces ? `${label}, instead of ${x.replaces}` : label, count: x.count, from: x.from, chosen: got });
-    if (got.length !== x.count) fail(`tools:${k}`, x.ask ?? `Choose ${x.count} tool${x.count === 1 ? '' : 's'} for ${label}.`);
+    if (got.length !== x.count) fail(`tools:${k}`, x.ask ?? `Choose ${x.count} tool${x.count === 1 ? '' : 's'} for ${label}.`, got.length < x.count);
     for (const t of got) ownTool(t, label);
   });
   if (first) takeTools(toolPhrase(first.traits.find(t => t.trait === 'Tool Proficiencies')?.value ?? '', first.name), first.name, first.name);
@@ -1270,14 +1276,14 @@ export function character(book, state) {
       const picks = (state.spellbooks?.[c.class] ?? []).map(n => offered.find(sp => sp.name === n)).filter(Boolean);
       reads(features.find(f => f.class === c.class && /\*\*Spellbook\.\*\*/.test(f.text)) ?? {});
       if (picks.length !== (state.spellbooks?.[c.class] ?? []).length) fail(`spells:${key}`, `A spell in the ${c.class}'s spellbook isn't a ${c.class} spell it has slots for.`);
-      else if (picks.length !== free) fail(`spells:${key}`, `The ${c.class}'s spellbook takes ${free} spells of your choice; ${picks.length} are written in.`);
+      else if (picks.length !== free) fail(`spells:${key}`, `The ${c.class}'s spellbook takes ${free} spells of your choice; ${picks.length} are written in.`, picks.length < free);
       else if (picks.filter(sp => sp.level === 1).length < Math.min(start, free)) fail(`spells:${key}`, `The ${c.class}'s spellbook starts with ${start} level 1 spells.`);
       const extra = features.filter(f => f.class === c.class).map(f => ({ f, m: f.text.match(/Choose (\w+) [\w ]+? spells from the (\w+) school, each of which must be no higher than level (\d), and add them to your spellbook for free/) })).filter(x => x.m).map(({ f, m }) => {
         reads(f);
         const count = NUMBERS.indexOf(m[1]) + (/whenever you gain access to a new level of spell slots/.test(f.text) ? Math.max(0, entry.highest - +m[3]) : 0);
         const from = c.rules.spellList.filter(sp => sp.school === m[2] && sp.level > 0 && sp.level <= entry.highest);
         const fkey = `book ${c.class} ${f.name}`, got = (state.spellbooks?.[fkey] ?? []).map(n => from.find(sp => sp.name === n)).filter(Boolean);
-        if (got.length !== count) fail(`spells:${fkey}`, `${f.name} writes ${count} ${m[2]} spells into the spellbook; ${got.length} are chosen.`);
+        if (got.length !== count) fail(`spells:${fkey}`, `${f.name} writes ${count} ${m[2]} spells into the spellbook; ${got.length} are chosen.`, got.length < count);
         return { key: fkey, label: `${f.name} (${c.class} ${f.level})`, count, from, chosen: got };
       });
       const written = [...new Map([...picks, ...entry.book, ...extra.flatMap(x => x.chosen)].map(sp => [sp.name, sp])).values()];
@@ -1368,7 +1374,7 @@ export function character(book, state) {
     const key = f.key ?? `${f.class} ${f.level} ${f.name}`, mine = spellChoices.find(sc => sc.key === m[1])?.chosen.filter(sp => sp.level === 0) ?? [];
     const pick = mine.find(sp => sp.name === state.cantripTargets?.[key]) ?? null;
     cantripTargets.push({ key, label: f.label ?? `${f.name} (${f.class} ${f.level})`, condition: m[2] ?? null, from: mine.map(sp => sp.name), chosen: pick?.name ?? null });
-    if (!pick) fail(`cantrip:${key}`, mine.length ? `Choose which ${m[1]} cantrip ${f.name} improves.` : `${f.name} improves a ${m[1]} cantrip you know; choose one first.`);
+    if (!pick) fail(`cantrip:${key}`, mine.length ? `Choose which ${m[1]} cantrip ${f.name} improves.` : `${f.name} improves a ${m[1]} cantrip you know; choose one first.`, true);
   }
   const featLists = [], listChoices = [];
   for (const f of feats) {
@@ -1489,7 +1495,7 @@ export function character(book, state) {
     for (const c of languageChoices) {
       const got = (state.languages?.[c.key] ?? []).map(x => String(x).trim()).filter(Boolean);
       c.chosen = got;
-      if (got.length !== c.count) fail(`language:${c.key}`, c.key === 'Common' ? 'Name your vernacular, the language of the place that raised you.' : `Name ${c.count} language${c.count === 1 ? '' : 's'} for ${c.label}.`);
+      if (got.length !== c.count) fail(`language:${c.key}`, c.key === 'Common' ? 'Name your vernacular, the language of the place that raised you.' : `Name ${c.count} language${c.count === 1 ? '' : 's'} for ${c.label}.`, got.length < c.count);
       for (const name of [...c.given, ...got]) {
         if (seen.has(name.toLowerCase())) fail(`language:${c.key}`, `${name} is already one of your languages.`);
         seen.add(name.toLowerCase());

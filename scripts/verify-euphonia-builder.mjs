@@ -729,6 +729,18 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   // And no unknown leaks into the sheet as NaN, in any class's attacks.
   const leaked = book.classes.flatMap(c => engine.character(book, { ...someone([{ class: c.name, level: 5 }]), method: 'standard', base: {} }).attacks.filter(a => /NaN/.test(`${a.damage} ${a.versatile}`)).map(a => `${c.name}: ${a.name} ${a.damage}`));
   if (leaked.length) fail(`with no scores yet, attacks read NaN: ${leaked.join('; ')}`);
+  // A character with nothing chosen has broken no rule, in any class at any
+  // level or in a multiclass; a build that breaks one says so.
+  const unchosen = book.classes.flatMap(c => [
+    { class: c.name, level: 1 }, [{ class: c.name, level: 3 }, { class: c.name === 'Wizard' ? 'Fighter' : 'Wizard', level: 1 }],
+    ...[undefined, ...c.subclasses.map(s => s.name)].map(subclass => ({ class: c.name, level: 20, subclass })),
+  ].flatMap(classes => engine.character(book, { classes: [classes].flat() }).problems.filter(p => !p.open).map(p => `${c.name}: ${p.message}`)));
+  if (unchosen.length) fail(`with nothing chosen, broken rules are claimed: ${[...new Set(unchosen)].slice(0, 4).join('; ')}`);
+  const fifteens = Object.fromEntries(Object.keys(ABLE).map(a => [a, 15]));
+  for (const [what, field, extra] of [['a repeated standard-array score', 'base', { method: 'standard', base: fifteens }], ['an overspent Point Cost', 'base', { method: 'point', base: fifteens }], ['armor not owned', 'wear', { inventory: { wear: 'Plate Armor' } }]]) {
+    const p = engine.character(book, someone([{ class: 'Fighter', level: 1 }], extra)).problems.find(x => x.field === field);
+    if (!p || p.open) fail(`${what} isn't said as a broken rule: ${JSON.stringify(p)}`);
+  }
   // Skilled is one choice of skills and tools together; what's unchosen is
   // asked for as either.
   const skilledAsk = engine.character(book, someone([{ class: 'Fighter', level: 1 }], { originFeats: { 'Human Versatile': 'Skilled' } })).problems.find(p => /^tools:feat Versatile/.test(p.field));
