@@ -575,7 +575,11 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-checks .is-yours { color: var(--text-dim); }
 .b-facts, .sheet-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.9rem; margin: 0 0 0.8rem; font-size: 0.9rem; }
 .b-facts dt { color: var(--text-faint); }
-.b-facts dd, .sheet-facts dd { margin: 0; }
+/* A term may have more than one value (the sheet's overload warning is a
+   second dd under Weight carried), so each sits in its own column rather
+   than alternating into whichever cell comes next. */
+.b-facts dt, .sheet-facts dt { grid-column: 1; }
+.b-facts dd, .sheet-facts dd { grid-column: 2; margin: 0; }
 
 /* The sheet: what the choices make, printed on the theme's paper in its
    ink, in a frame of its wood lined with the ring's brass; its
