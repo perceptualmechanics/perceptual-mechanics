@@ -6,26 +6,28 @@
 // error, not a guess. Pure, so the gate (verify-euphonia-builder) runs it
 // against the SRD's own worked examples.
 
-import { LIVING, FROM, PRICES, WITHOUT } from './euphonia.provenance.js';
 
 export const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 export const MAX_LEVEL = 20;
 
-// An item's prices by distance, as its text gives them: the home it prices
-// ("Prices are for Sofala"), and for each place the clause that rates it, a
-// multiple ("five times as much") or the buyer's words.
+// An item's prices by distance, from the place table the book gives it: the
+// home that prices it, its own sentence saying so, and each place's regions
+// with its multiple or the buyer's words.
 function pricesOf(item) {
-  const spec = PRICES.find(x => x.item === item.name);
-  if (!spec) return null;
-  const [says, home] = item.text.match(/Prices are for (\w+), [^.]*\./) ?? [];
-  if (!home) throw new Error(`${item.name}: its text doesn't say where its prices are for`);
-  return { ...spec, home, says, places: spec.places.map(p => {
-    if (!p.rate) { if (p.place !== home) throw new Error(`${item.name}: ${p.place} has no rate and isn't ${home}`); return { ...p, times: 1 }; }
-    if (!item.text.includes(p.rate)) throw new Error(`${item.name}: its text no longer says "${p.rate}"`);
-    const word = p.rate.match(/^(\w+) times as much\b/)?.[1], times = NUMBERS.indexOf(word);
-    if (word && times < 2) throw new Error(`${item.name}: "${word} times" isn't a number the rulebook reads`);
-    return word ? { ...p, times } : { ...p, times: null, words: p.rate.split(' at ')[0] };
-  }) };
+  if (!item.prices?.length) return null;
+  const home = item.prices.find(p => p.home)?.place, says = item.text.match(/Prices are for [^.]*\./)?.[0];
+  if (!home || !says) throw new Error(`${item.name}: its prices name no home`);
+  return { home, says, places: item.prices.map(p => ({ place: p.place, homelands: p.regions, times: p.times, ...(p.times === null ? { words: p.rate.split(' at ')[0] } : {}) })) };
+}
+// The class gear rules as The Classes words them: how far ahead of the table
+// the gear arrives, that a Shield needs training, and what a subclass goes
+// without.
+function classGearRules({ rules, without }) {
+  const text = lead => rules.find(r => r.lead === lead)?.text ?? '';
+  const ahead = NUMBERS.indexOf(text('When it arrives').match(/arrives (\w+) rarit(?:y|ies) ahead/)?.[1]);
+  if (ahead < 1) throw new Error(`Class gear: "${text('When it arrives')}" doesn't say how far ahead it arrives`);
+  if (!/^A Shield goes only to a character with Shield training\b/.test(text('Shields'))) throw new Error(`Class gear: "${text('Shields')}" isn't the Shield rule`);
+  return { ahead, without };
 }
 // What the book says the language choices are: its Common and standard
 // languages lines, each to the end of its first sentence.
@@ -301,14 +303,13 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     });
     const bound = Boolean(who?.member) || new RegExp(`works only for an? ${item.place.class_name} of that subclass`).test(item.text);
     for (const r of item.rarities) if (r.member && !members.some(mb => mb.name === r.member)) throw new Error(`${item.name}: it's ${r.rarity} for the ${r.member}, which isn't one of its members`);
-    const living = LIVING.find(x => x.item === item.name)?.homelands ?? null;
-    if (!living && /\*A living tradition\.\*/.test(item.text)) throw new Error(`${item.name}: the books call it a living tradition, and euphonia.provenance.js doesn't say whose`);
+    const living = item.living ? item.homelands : null;
+    if (!living && /\*A living tradition\.\*/.test(item.text)) throw new Error(`${item.name}: its text calls it a living tradition, and the export doesn't`);
     // An item that comes only in the story ("No one starts play with a pair")
     // isn't starting gear.
     const story = /\bNo one starts play with\b/.test(item.text);
-    return { ...item, who, members, bound, living, story, from: FROM.find(x => x.item === item.name)?.homelands ?? [], prices: pricesOf(item) };
+    return { ...item, who, members, bound, living, story, from: item.homelands, prices: pricesOf(item) };
   });
-  for (const x of [...LIVING, ...FROM, ...PRICES]) if (!goods.items.some(i => i.name === x.item)) throw new Error(`euphonia.provenance.js: there's no item "${x.item}"`);
   return {
     items, periodWeapons: goods.weapons,
     skills: srd.tables.skills.map(r => ({ name: r.Skill, ability: r.Ability })),
@@ -344,6 +345,7 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     attacks: srd.attacks,
     backgroundIncreases: srd.ability_scores.background,
     species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
+    classGear: classGearRules(goods.class_gear), speciesAndPeople: setting.data.species_and_people.text,
     backgrounds: [...srd.backgrounds.map(b => ({ ...b, source: 'SRD 5.2.1' })), ...setting.data.backgrounds.map(b => ({ ...b, source: 'Euphonia' }))]
       .map(b => ({ ...b, packages: packagesOf(b.equipment, b.name) })),
     // What a character starting past level 1 adds to its starting equipment:
@@ -1569,17 +1571,16 @@ export function character(book, state) {
   // A character also has its class's own gear, what the table never gives:
   // the chapter's items rarer than any of the table's, and those the books
   // leave the DM to give (Scott, 17 November). Each comes a rarity ahead of
-  // the table, at the row that first gives the rarity below it (a Very Rare
-  // Bonesaw at 11–16, where the table first gives Rare; the Legendary coat
-  // at 17–20), and all of it in the table's last row; each for one who can
-  // use it (the Bonesaw a Chirurgeon's), and a shield only for one trained
-  // in Shields without it, and none a subclass goes without (WITHOUT, in
-  // euphonia.provenance.js).
+  // the table, as The Classes rules (a Very Rare Bonesaw at 11–16, where the
+  // table first gives Rare; the Legendary coat at 17–20), and all of it in
+  // the table's last row; each for one who can use it (the Bonesaw a
+  // Chirurgeon's), a Shield only for one with Shield training, which the Ward
+  // gives while attuned, and none a subclass goes without.
   const tableTop = RARITIES.indexOf(book.higherLevelEquipment.at(-1).magic.at(-1).rarity);
-  const gearArrives = r => higher && (higher === book.higherLevelEquipment.at(-1) || RARITIES.indexOf(r) <= RARITIES.indexOf(higher.magic.at(-1)?.rarity) + 1);
+  const gearArrives = r => higher && (higher === book.higherLevelEquipment.at(-1) || RARITIES.indexOf(r) <= RARITIES.indexOf(higher.magic.at(-1)?.rarity) + book.classGear.ahead);
   const classGear = () => book.items.filter(i => i.magical && !i.story && i.place.class_name && has(i.place.class_name) && usable(i) && !taken.has(i.name)
     && (i.dm || i.rarities.every(r => RARITIES.indexOf(r.rarity) > tableTop)) && gearArrives(i.rarities.at(-1).rarity)
-    && !(i.kind === 'Armor' && i.base === 'Shield' && !ownTraining.includes('Shield')) && !WITHOUT.some(w => w.item === i.name && w.subclass === subclassOf(i.place.class_name)))
+    && !(i.kind === 'Armor' && i.base === 'Shield' && !ownTraining.includes('Shield') && !/you have Shield training/.test(i.text)) && !book.classGear.without.some(w => w.without === i.name && w.subclass === subclassOf(i.place.class_name)))
     .map(i => { taken.add(i.name); return { rarity: i.rarities.at(-1).rarity, classGear: true, item: { name: i.name, kind: i.kind, base: i.base, member: memberFor(i) && (memberFor(i).name ?? memberFor(i).subclass), bonus: i.rarities.at(-1).bonus, attunement: i.attunement, living: Boolean(i.living), text: i.text } }; });
   // The inventory the player keeps (a tracker; Scott, 17 November): what
   // it takes out, what it adds, bought or given (a magic item only given,
@@ -1771,12 +1772,13 @@ export function character(book, state) {
   const places = [...new Set(book.items.flatMap(i => i.prices?.places.map(p => p.place) ?? []))];
   const homePlaces = item => item.prices.places.filter(p => p.homelands.includes(homeland));
   const placeOf = item => item.prices.places.find(p => p.place === state.market) ?? (homePlaces(item).length === 1 ? homePlaces(item)[0] : null);
+  const inSentence = place => place.replace(/^(?:The|A) /, w => w.toLowerCase());
   const priced = (item, cost) => {
     if (!item.prices) return { cost, note: item.pieces.length ? null : item.note };
     const at = placeOf(item), base = `${cost.toLocaleString('en')} GP in ${item.prices.home}`;
     if (!at) return { cost: null, note: homePlaces(item).length ? `${base}; the books price ${homeland} by place, so choose where you’re buying` : `${base}; the books give no price here, so the DM sets it` };
-    if (at.times === null) return { cost: null, note: `${base}; in ${at.place}, ${at.words}` };
-    return { cost: cost * at.times, note: at.times === 1 ? `in ${item.prices.home}` : `in ${at.place}, ${at.times} times the price in ${item.prices.home}` };
+    if (at.times === null) return { cost: null, note: `${base}; in ${inSentence(at.place)}, ${at.words}` };
+    return { cost: cost * at.times, note: at.times === 1 ? `in ${item.prices.home}` : `in ${inSentence(at.place)}, ${at.times} times the price in ${item.prices.home}` };
   };
   const market = book.items.find(i => i.prices) ? placeOf(book.items.find(i => i.prices))?.place ?? null : null;
   const forSale = [
@@ -2208,7 +2210,7 @@ export function character(book, state) {
     hp, hpFrom, hpMethod: rolled ? 'Rolled' : 'Fixed', hpRolls, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
     inventory: { kept, goods: goods.map(g => ({ name: g.name, count: g.count, how: g.how, cost: g.entry.cost, item: asItem(g), index: g.index })), given: givenMagic.map(m => m.item.name), removed: inventory.remove ?? [], bought, wear: told ? (told[0]?.name ?? 'none') : 'auto', wearOptions },
     load, attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
-    features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), shieldLeft, equipment, training,
+    features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), hoveringShield: shield ? hovering?.name ?? null : null, shieldLeft, equipment, training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,
   };
 }

@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "980a84a972416d15aa5da954dfaa331d201913aabe8d2976acf4da64956eb69b",
-  "modified": "2026-11-18T07:24:12-05:00",
+  "sha256": "e398d7b0d7c41f7a7325f1ad1e909f56558aa6a2fc775044ad2b72f8742fe680",
+  "modified": "2026-11-18T13:01:56-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 33,
+  "exporter_version": 34,
   "rules": {
    "banned": [
     "eladrin",
@@ -248,6 +248,10 @@
     "line": "A fiendish mark from the hells. In a Europe that burns people for the Devil's pact, a tiefling is proof of a crime nobody committed; Spain's Inquisition, which demands evidence, is safer ground than a prince-bishop's court"
    }
   ],
-  "species_status": "final"
+  "species_status": "final",
+  "species_and_people": {
+   "text": "Every species takes its traits as written; the setting supplies where it comes from and what 1668 makes of it. Pick the species, then the people: where the family comes from, what that place calls them and what it thinks of them. The trouble comes with the country. The lore behind each is in Peoples.",
+   "where": "The Setting, Characters, Species and People"
+  }
  }
 }

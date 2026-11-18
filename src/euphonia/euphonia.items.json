@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "980a84a972416d15aa5da954dfaa331d201913aabe8d2976acf4da64956eb69b",
-  "modified": "2026-11-18T07:24:12-05:00",
+  "sha256": "e398d7b0d7c41f7a7325f1ad1e909f56558aa6a2fc775044ad2b72f8742fe680",
+  "modified": "2026-11-18T13:01:56-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 33,
+  "exporter_version": 34,
   "rules": {
    "banned": [
     "eladrin",
@@ -63,7 +63,12 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "Brass plates engraved for one city's latitude, with a rete of stars and a sighting rule. It works within about a week's travel north or south of that city; a plate for another latitude costs 5 GP from an instrument maker.\n\nWhen you finish a Long Rest, you can spend 10 minutes with the astrolabe to find the day's **auspicious hour**: the DM tells you when it falls (or roll a d12: it falls that many hours after dawn). During that hour, you can cast *Bless* from the astrolabe once without expending a spell slot; cast this way, it doesn't require Concentration and lasts until the hour ends. You also have Advantage on Intelligence (Arcana) and Intelligence (History) checks about omens, calendars and the heavens during the hour. The astrolabe's owner decides when the duel is fought, the audience is begged or the window is forced, and the rest of the party moves with them.\n\nThe DM can also name the day's **inauspicious hour**, and what the stars say goes wrong in it. Nothing in the rules makes it so; everyone at court believes it anyway.\n\nCourt astrologers from Istanbul to Isfahan pick the hours of coronations and campaigns with an instrument like this one (Powers and Factions, Institutions Beyond Europe)."
+    "homelands": [
+     "The Ottomans, Persia and the Horn"
+    ],
+    "living": false,
+    "prices": [],
+    "text": "Brass plates engraved for one city's latitude, with a rete of stars and a sighting rule. It works within about a week's travel north or south of that city; a plate for another latitude costs 5 GP from an instrument maker.\n\nWhen you finish a Long Rest, you can spend 10 minutes with the astrolabe to find the day's **auspicious hour**: the DM tells you when it falls (or roll a d12: it falls that many hours after dawn). During that hour, you can cast *Bless* from the astrolabe once without expending a spell slot; cast this way, it doesn't require Concentration and lasts until the hour ends. You also have Advantage on Intelligence (Arcana) and Intelligence (History) checks about omens, calendars and the heavens during the hour. The astrolabe's owner decides when the duel is fought, the audience is begged or the window is forced, and the rest of the party moves with them.\n\nThe DM can also name the day's **inauspicious hour**, and what the stars say goes wrong in it. Nothing in the rules makes it so; everyone at court believes it anyway.\n\nCourt astrologers from Istanbul to Isfahan pick the hours of coronations and campaigns with an instrument like this one (Powers and Factions, Institutions Beyond Europe).\n\n*Homeland:* The Ottomans, Persia and the Horn."
    },
    {
     "name": "Inoculation Lancet",
@@ -83,7 +88,15 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "A silver lancet and a sealed vial of matter taken from a mild case. Healers in Bengal, the Caucasus and North and West Africa already do this with a needle or a small cut, and Chinese physicians give the same protection by blowing powdered scab into the nose. Lanternhall hasn't heard of either.\n\nMagic that cures a disease doesn't teach the body anything, so a creature cured by magic can catch the disease again; a creature that survives it the slow way can't.\n\nThe lancet gives a creature the slow way, safely. One vial is good for ten inoculations against the disease its vial was taken from. Spend 1 minute inoculating a willing creature against that disease. It falls mildly ill: for 1d4 days it has 1 level of Exhaustion that can't be removed until the illness passes. Then it's immune to that disease for life. If it's cured by magic while the illness runs, it gains no immunity, unless the cure is a Physician's Treatment, which counts as the slow way (*The Classes*, Physician, Level 2: Treatment).\n\n*Diseases to use.* Smallpox is the one the practice was built for. By default a vial works against smallpox only, as the practice did in the record; a table can extend it to measles or to the camp fever that follows every army (typhus), since nobody in 1668 knows it wouldn't work. Each disease's save, onset and course are in Running Euphonia, Disease; what matters here is that the party spent the days at Exhaustion before the town's outbreak, and the rival party didn't."
+    "homelands": [
+     "India",
+     "The Ottomans, Persia and the Horn",
+     "West and Central Africa",
+     "East and Southeast Asia"
+    ],
+    "living": false,
+    "prices": [],
+    "text": "A silver lancet and a sealed vial of matter taken from a mild case. Healers in Bengal, the Caucasus and North and West Africa already do this with a needle or a small cut, and Chinese physicians give the same protection by blowing powdered scab into the nose. Lanternhall hasn't heard of either.\n\nMagic that cures a disease doesn't teach the body anything, so a creature cured by magic can catch the disease again; a creature that survives it the slow way can't.\n\nThe lancet gives a creature the slow way, safely. One vial is good for ten inoculations against the disease its vial was taken from. Spend 1 minute inoculating a willing creature against that disease. It falls mildly ill: for 1d4 days it has 1 level of Exhaustion that can't be removed until the illness passes. Then it's immune to that disease for life. If it's cured by magic while the illness runs, it gains no immunity, unless the cure is a Physician's Treatment, which counts as the slow way (*The Classes*, Physician, Level 2: Treatment).\n\n*Diseases to use.* Smallpox is the one the practice was built for. By default a vial works against smallpox only, as the practice did in the record; a table can extend it to measles or to the camp fever that follows every army (typhus), since nobody in 1668 knows it wouldn't work. Each disease's save, onset and course are in Running Euphonia, Disease; what matters here is that the party spent the days at Exhaustion before the town's outbreak, and the rival party didn't.\n\n*Homelands:* India; the Ottomans, Persia and the Horn; West and Central Africa; East and Southeast Asia."
    },
    {
     "name": "Iron and Salt",
@@ -103,6 +116,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Cold iron is no special metal: it's just iron, and its power over the Hidden is that it's mortal, worked by human hands. A **horseshoe** over the door, an **iron nail** in the frame, a **line of salt** across the sill. Those are Europe's. A Persian household keeps iron, onions and garlic by the bed, a Māori one red ochre and a cooking fire, a Malay one a nail or a pair of betel scissors under the pillow. \"Iron and salt\" is the rules' name for all of them, and each works by the same rule.\n\nThis entry is the rule for iron, salt and invitations. Every other mention in these books points here.\n\n- **Warding an opening.** Iron fixed at a door, a window or a chimney, with a line of salt across it, wards that opening until the next dawn. A Hidden creature can't pass inward through a warded opening. The ward is on the opening itself, so breaking down the door or the shutter leaves the ward in place.\n- **Warding a place.** Ten minutes of work wards every opening of a room or a small building (a cottage, a chapel, an inn's ground floor). A great house takes 10 minutes for each floor or wing. While every opening is warded, the place is warded, and a Hidden creature can't enter it by any means: on foot, carried, in another shape, by teleportation, through a Gate or by way of another plane. An effect that would put it inside fails, and the creature stays where it was. A warded place is never thin ground.\n- **Being asked in.** An invitation is the one way in. A creature inside the place that isn't a Hidden creature asks the Hidden creature in, aloud. The invitation counts however it was got: given freely, paid for, won by a lie or spoken by a Charmed creature. It admits the creature that was asked and its company (the DM says who that is; the riders of one Hunt are one company). It lasts until the next dawn, or until the one who gave it takes it back, which requires no action. A guest who lodges in the place can be given an invitation that lasts for the stay. When an invitation is taken back, a Hidden creature already inside can stay and can leave, and can't come back in.\n- **The voice at the door.** A Hidden creature outside can ask, in its own voice or a borrowed one. A player character who hears it decides for themselves. When the DM wants a roll for anyone else, and that creature hasn't been warned, it makes a Wisdom saving throw against the asker's spell save DC (DC 13 if the asker has none) and asks the Hidden creature in on a failure. A creature that has been told plainly what is asking succeeds without a roll, unless it is Charmed. While the Hidden are at the ebb, the save has Advantage.\n- **Breaking a ward.** Moving the iron or breaking the salt line ends the ward on that opening, and the place is no longer warded until someone irons and salts that opening again. A creature that isn't Hidden can do it with a Utilize action. A new opening, such as a hole torn in thatch or a breached wall, has no ward until someone gives it one. Anyone can lay a ward, a Hidden creature included. No Hidden creature can undo one: it can't move the iron or break the salt by hand, with a thrown object or with magic.\n- **What a ward leaves alone.** A Hidden creature that is inside can leave. Voices, sight, missiles and spells pass a warded opening as they pass any open doorway. A house with no ward gives no protection, and a Hidden creature needs no invitation to enter it. A weapon made of iron does no extra harm to a Hidden creature; the Hidden Killer's Cold Iron is a trained art (*Life on the Border*, Hidden Killer).\n- **Exceptions.** A feature passes a ward only if it says so by name. Three do, all in *Life on the Border*: the Crossing Danae's A Door of Your Own and Liminality, and the Naming Danae's Rename.\n- **A player character who is a Hidden creature** is bound like any other. A companion who is already inside and isn't Hidden can ask it in.\n\nEvery village knows this; most households do it every night of the dark half. Forgetting is how stories start."
    },
    {
@@ -129,7 +145,12 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "A main cord with pendant cords hanging from it, knotted in a code of position, color and twist. The Inca state runs on these, kept by its *khipukamayuq*.\n\nWhile you hold the khipu, you can tie a knot in a pendant cord as a Magic action and speak up to 25 words into it. Anyone who holds the khipu and runs a finger over that knot hears the words in your voice. The khipu holds ten such knots; untying one erases it. In addition, you have Advantage on Intelligence checks to recall or reckon numbers, accounts or records you've knotted into it.\n\nA Binding Danae, who ties her magic into knots (*Life on the Border*), finds that its knots and hers feel the same in the hand.\n\n*A living tradition.* Khipu are a real Andean way of keeping records, and some highland communities still hold theirs."
+    "homelands": [
+     "The Americas"
+    ],
+    "living": true,
+    "prices": [],
+    "text": "A main cord with pendant cords hanging from it, knotted in a code of position, color and twist. The Inca state runs on these, kept by its *khipukamayuq*.\n\nWhile you hold the khipu, you can tie a knot in a pendant cord as a Magic action and speak up to 25 words into it. Anyone who holds the khipu and runs a finger over that knot hears the words in your voice. The khipu holds ten such knots; untying one erases it. In addition, you have Advantage on Intelligence checks to recall or reckon numbers, accounts or records you've knotted into it.\n\nA Binding Danae, who ties her magic into knots (*Life on the Border*), finds that its knots and hers feel the same in the hand.\n\n*A living tradition.* Khipu are a real Andean way of keeping records, and some highland communities still hold theirs.\n\n*Homeland:* The Americas."
    },
    {
     "name": "Mutapan Curiosities",
@@ -185,7 +206,101 @@
       "text": "Keeps food as cold as a winter cellar."
      }
     ],
-    "text": "The fashionable rarity of the day: owning one says you have money and reach, and people think they're charming novelties.\n\nSmall work only. Each curiosity does one thing, and anyone can start it with a touch. Prices are for Sofala, where they're made. Abroad, a curiosity costs five times as much in a Monsoon Road port (the Swahili coast, Surat, the Red Sea and Gulf ports where Surat's ships call, and Malacca and Aceh, which are on the Road in all but name), ten times as much in Europe, China or the Americas, and whatever the buyer will bear at a court, or in Japan, where the only ships let in are the Dutch and Chinese at Nagasaki.\n\n| Curiosity | Cost | What it does |\n|---|---|---|\n| **Self-Lighting Lamp** | 50 GP | Bright Light in a 20-foot radius and Dim Light for 20 feet more, with no flame and no oil; on or off with a touch. |\n| **Cold-Country Stove** | 75 GP | A small iron box that warms a room or boils a pot without fuel or smoke. |\n| **Water Pump** | 100 GP | Lifts water from a well or river by a hand's turn to start it, then keeps lifting for a day. |\n| **Singing Bird** | 50 GP | A Tiny soapstone-and-wire bird that sings at the hour you set, or chimes an alarm. |\n| **Night Watch** | 75 GP | A pocket clock that never needs winding and chimes when anyone opens the box it's kept in. |\n| **Small Loom** | 100 GP | Weaves a plain strip of cloth from thread fed into it, slowly, without a weaver. |\n| **Cold Box** | 75 GP | Keeps food as cold as a winter cellar. |\n\n*Electrical, not magical.* A curiosity is not a magic item. The platinum inside takes in the magic that is everywhere in the world and turns it into current, and the stored current does the work (as in a Mhizha's Electrical devices). Four spells come up at the table:\n\n- ***Detect Magic*** shows nothing.\n- ***Identify*** tells the caster the object isn't magical and nothing about how it works. A Mhizha learns that by handling it (*The Classes*, Mhizha, Level 9: How It Works).\n- ***Dispel Magic*** does nothing to it. There is no spell on it to end.\n- **An *Antimagic Field*** doesn't stop it. Inside the field it takes in no new magic and runs on the current it has stored, which outlasts the field.\n\n*Drift.* A curiosity drifts out of calibration. When an adventure begins, and whenever a curiosity has been through hard travel or stood inside a spell's area, roll a d6; on a 1, it stops working until it's retuned. A Mhizha retunes one in 10 minutes with Tinker's Tools; anyone a Mhizha taught takes an hour."
+    "homelands": [
+     "Mutapa and the Indian Ocean"
+    ],
+    "living": false,
+    "prices": [
+     {
+      "place": "Sofala",
+      "regions": [
+       "Mutapa and the Indian Ocean"
+      ],
+      "home": true,
+      "rate": null,
+      "times": 1
+     },
+     {
+      "place": "The Swahili coast",
+      "regions": [
+       "Mutapa and the Indian Ocean"
+      ],
+      "home": false,
+      "rate": "five times as much in a Monsoon Road port",
+      "times": 5
+     },
+     {
+      "place": "Surat",
+      "regions": [
+       "India"
+      ],
+      "home": false,
+      "rate": "five times as much in a Monsoon Road port",
+      "times": 5
+     },
+     {
+      "place": "The Red Sea and Gulf ports",
+      "regions": [
+       "The Ottomans, Persia and the Horn"
+      ],
+      "home": false,
+      "rate": "five times as much in a Monsoon Road port",
+      "times": 5
+     },
+     {
+      "place": "Malacca and Aceh",
+      "regions": [
+       "East and Southeast Asia"
+      ],
+      "home": false,
+      "rate": "five times as much in a Monsoon Road port",
+      "times": 5
+     },
+     {
+      "place": "Europe",
+      "regions": [
+       "Europe"
+      ],
+      "home": false,
+      "rate": "ten times as much in Europe, China or the Americas",
+      "times": 10
+     },
+     {
+      "place": "China",
+      "regions": [
+       "East and Southeast Asia"
+      ],
+      "home": false,
+      "rate": "ten times as much in Europe, China or the Americas",
+      "times": 10
+     },
+     {
+      "place": "The Americas",
+      "regions": [
+       "The Americas"
+      ],
+      "home": false,
+      "rate": "ten times as much in Europe, China or the Americas",
+      "times": 10
+     },
+     {
+      "place": "Japan (at Nagasaki)",
+      "regions": [
+       "East and Southeast Asia"
+      ],
+      "home": false,
+      "rate": "whatever the buyer will bear at a court, or in Japan",
+      "times": null
+     },
+     {
+      "place": "A court",
+      "regions": [],
+      "home": false,
+      "rate": "whatever the buyer will bear at a court, or in Japan",
+      "times": null
+     }
+    ],
+    "text": "The fashionable rarity of the day: owning one says you have money and reach, and people think they're charming novelties.\n\nSmall work only. Each curiosity does one thing, and anyone can start it with a touch. Prices are for Sofala, where they're made. Abroad, a curiosity costs five times as much in a Monsoon Road port (the Swahili coast, Surat, the Red Sea and Gulf ports where Surat's ships call, and Malacca and Aceh, which are on the Road in all but name), ten times as much in Europe, China or the Americas, and whatever the buyer will bear at a court, or in Japan, where the only ships let in are the Dutch and Chinese at Nagasaki.\n\n| Where it's bought | Region (The State of the World) |\n|---|---|\n| Sofala | Mutapa and the Indian Ocean |\n| The Swahili coast | Mutapa and the Indian Ocean |\n| Surat | India |\n| The Red Sea and Gulf ports | The Ottomans, Persia and the Horn |\n| Malacca and Aceh | East and Southeast Asia |\n| Europe | Europe |\n| China | East and Southeast Asia |\n| The Americas | The Americas |\n| Japan (at Nagasaki) | East and Southeast Asia |\n| A court | Anywhere |\n\n| Curiosity | Cost | What it does |\n|---|---|---|\n| **Self-Lighting Lamp** | 50 GP | Bright Light in a 20-foot radius and Dim Light for 20 feet more, with no flame and no oil; on or off with a touch. |\n| **Cold-Country Stove** | 75 GP | A small iron box that warms a room or boils a pot without fuel or smoke. |\n| **Water Pump** | 100 GP | Lifts water from a well or river by a hand's turn to start it, then keeps lifting for a day. |\n| **Singing Bird** | 50 GP | A Tiny soapstone-and-wire bird that sings at the hour you set, or chimes an alarm. |\n| **Night Watch** | 75 GP | A pocket clock that never needs winding and chimes when anyone opens the box it's kept in. |\n| **Small Loom** | 100 GP | Weaves a plain strip of cloth from thread fed into it, slowly, without a weaver. |\n| **Cold Box** | 75 GP | Keeps food as cold as a winter cellar. |\n\n*Electrical, not magical.* A curiosity is not a magic item. The platinum inside takes in the magic that is everywhere in the world and turns it into current, and the stored current does the work (as in a Mhizha's Electrical devices). Four spells come up at the table:\n\n- ***Detect Magic*** shows nothing.\n- ***Identify*** tells the caster the object isn't magical and nothing about how it works. A Mhizha learns that by handling it (*The Classes*, Mhizha, Level 9: How It Works).\n- ***Dispel Magic*** does nothing to it. There is no spell on it to end.\n- **An *Antimagic Field*** doesn't stop it. Inside the field it takes in no new magic and runs on the current it has stored, which outlasts the field.\n\n*Drift.* A curiosity drifts out of calibration. When an adventure begins, and whenever a curiosity has been through hard travel or stood inside a spell's area, roll a d6; on a 1, it stops working until it's retuned. A Mhizha retunes one in 10 minutes with Tinker's Tools; anyone a Mhizha taught takes an hour.\n\n*Homeland:* Mutapa and the Indian Ocean."
    },
    {
     "name": "Shewstones",
@@ -211,7 +326,12 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "A pair of stones, tin-white and mirror-bright, each in its own velvet-lined case. Where the name and the stone come from is in The World in 1668, Words Across Distance.\n\nA pair of shewstones works as a pair of Sending Stones: one message of up to 25 words, and its reply; the stones are ready again at dawn. Their rarity is in what they mean; what they do is small. A pair is never sold for coin; it arrives as a gift from Mutapa's king, through the merchant house that deals in them, with strings. No one starts play with a pair; they come in the story, strings and all.\n\nHandling one bare-handed for months is slow arsenic poisoning."
+    "homelands": [
+     "Mutapa and the Indian Ocean"
+    ],
+    "living": false,
+    "prices": [],
+    "text": "A pair of stones, tin-white and mirror-bright, each in its own velvet-lined case. Where the name and the stone come from is in The World in 1668, Words Across Distance.\n\nA pair of shewstones works as a pair of Sending Stones: one message of up to 25 words, and its reply; the stones are ready again at dawn. Their rarity is in what they mean; what they do is small. A pair is never sold for coin; it arrives as a gift from Mutapa's king, through the merchant house that deals in them, with strings. No one starts play with a pair; they come in the story, strings and all.\n\nHandling one bare-handed for months is slow arsenic poisoning.\n\n*Homeland:* Mutapa and the Indian Ocean."
    },
    {
     "name": "Talisman Papers (fu)",
@@ -242,7 +362,12 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "A strip of yellow paper written in cinnabar by a Daoist master, in a script meant for spirits rather than people. You paste it on the bed, the sleeper or the cursed thing.\n\nA *fu* holds one spell, written into it. Anyone can use it, whatever their class: paste it on yourself, a willing creature or an object within reach as a Magic action (an unwilling creature can't be papered: put an area spell on an object instead), and the spell takes effect as if cast at its lowest level (an area spell is centered on the paper), with a save DC of 13 and no Concentration (it lasts its full duration or until the paper is torn off, and still ends early wherever the spell's own text ends it). Any creature within reach of the paper can tear it off as a Utilize action, which is how a friend breaks a *Calm Emotions* and how a spirit's servant gets at a sleeper. Common papers hold *Sanctuary*; uncommon ones hold *Protection from Evil and Good*, *Calm Emotions* or *Remove Curse*.\n\nThe ones pasted over doors on the fifteenth day of the seventh month are the strongest, or so the masters say.\n\n*A living tradition.* *Fu* are a real part of Daoist practice, written and used today."
+    "homelands": [
+     "East and Southeast Asia"
+    ],
+    "living": true,
+    "prices": [],
+    "text": "A strip of yellow paper written in cinnabar by a Daoist master, in a script meant for spirits rather than people. You paste it on the bed, the sleeper or the cursed thing.\n\nA *fu* holds one spell, written into it. Anyone can use it, whatever their class: paste it on yourself, a willing creature or an object within reach as a Magic action (an unwilling creature can't be papered: put an area spell on an object instead), and the spell takes effect as if cast at its lowest level (an area spell is centered on the paper), with a save DC of 13 and no Concentration (it lasts its full duration or until the paper is torn off, and still ends early wherever the spell's own text ends it). Any creature within reach of the paper can tear it off as a Utilize action, which is how a friend breaks a *Calm Emotions* and how a spirit's servant gets at a sleeper. Common papers hold *Sanctuary*; uncommon ones hold *Protection from Evil and Good*, *Calm Emotions* or *Remove Curse*.\n\nThe ones pasted over doors on the fifteenth day of the seventh month are the strongest, or so the masters say.\n\n*A living tradition.* *Fu* are a real part of Daoist practice, written and used today.\n\n*Homeland:* East and Southeast Asia."
    },
    {
     "name": "Talismanic Shirt",
@@ -270,7 +395,13 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "A linen shirt worn under armor, covered inside and out with Qur'anic verse, the names of God and magic squares, begun on a day the stars chose. Ottoman princes and generals wore them into battle, and so did the Mughal and Deccan courts.\n\nWhile you wear the shirt, you have a +1 bonus to saving throws, and once per Long Rest, when you fail a saving throw, you can reroll it and must use the new roll.\n\n*A living tradition.* These shirts are a real part of Islamic learned practice (the science of letters)."
+    "homelands": [
+     "The Ottomans, Persia and the Horn",
+     "India"
+    ],
+    "living": true,
+    "prices": [],
+    "text": "A linen shirt worn under armor, covered inside and out with Qur'anic verse, the names of God and magic squares, begun on a day the stars chose. Ottoman princes and generals wore them into battle, and so did the Mughal and Deccan courts.\n\nWhile you wear the shirt, you have a +1 bonus to saving throws, and once per Long Rest, when you fail a saving throw, you can reroll it and must use the new roll.\n\n*A living tradition.* These shirts are a real part of Islamic learned practice (the science of letters).\n\n*Homelands:* The Ottomans, Persia and the Horn; India."
    },
    {
     "name": "Water-Bearer's Bucket",
@@ -296,6 +427,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "An oak bucket bound in copper, always cold to the touch, with a dipper chained to the handle. Every village on the border has a story about one.\n\nThe bucket holds 3 gallons, and it fills itself with cold, clean water at dawn and whenever you finish a Short Rest. Pouring the full bucket over a creature as a Utilize action counts as dousing it with a bucketful of cold water: it cools a Bordermarch Barbarian from the Deep Ríastrad, which spares it the Exhaustion (*Life on the Border*, Bordermarch Barbarian, The Deep Ríastrad), puts out a burning creature and ends any effect a dousing ends."
    },
    {
@@ -324,6 +458,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you're attuned to the locket, no likeness, possession, or body part of yours gives anyone a connection to you for *Scrying* or any other divination; the caster is treated as having no connection at all. In addition, when a scrying sensor appears within 10 feet of you, you know it, and you know which direction it's watching from."
    },
    {
@@ -350,6 +487,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "**Reading.** If you study two or more messages written in the same cipher for 1 hour each, the wheel works the cipher out, and you can read anything written in it from then on.\n\n**Writing.** Wheels are made in pairs. A message you write in the wheel's own cipher can be read only by someone holding its twin (Reading doesn't work on it); to anyone else, magic included, it reads as a merchant's dull letter about wool prices."
    },
    {
@@ -378,6 +518,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you hold the spyglass to your eye, you can use Observe on a creature you can see within 300 feet of yourself, and you can read the lips of a creature you can see within that range if you know the language it's speaking."
    },
    {
@@ -404,6 +547,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Papers and objects inside the closed box can't be seen, read, or detected by magic. The box has a lock (DC 18 to pick), and the hidden compartment under the false bottom takes a successful DC 20 Intelligence (Investigation) check to find."
    },
    {
@@ -430,6 +576,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "The miniature shows one creature, painted from life. To *Scrying* and any other divination magic that asks how well the caster is connected to its subject, the miniature counts as the strongest connection possible: a body part, a lock of hair, or a bit of nail.\n\nWhile you hold the miniature and concentrate on it for 1 minute, you know whether its subject is alive, and the direction to it if it's on the same plane as you.\n\n*Court painters are a security risk.* Some courts are learning to commission portraits that are a little wrong on purpose."
    },
    {
@@ -489,6 +638,9 @@
      }
     ],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "- **House Ledger (Factor).** In any settlement where your house has standing, once a week you can draw on credit up to 50 GP times your Counsellor level without coin changing hands; the house settles it, and you owe the house. While you hold the ledger and handle an object for 1 minute, you know what it last sold for and roughly where.\n- **Marked Deck (Gamester).** You have Advantage on any ability check you make with a Gaming Set. In addition, once per Long Rest, when you roll your computation die, you can roll it twice and use either result.\n- **Mask of Manners (Hollowed).** While you wear the mask (it lies against your face and can't be seen), your face shows whatever expression you choose, and Wisdom (Insight) checks to read you have Disadvantage.\n- **Skeleton Keys (Majordomo).** You have Advantage on ability checks you make with Thieves' Tools. In addition, once per Long Rest, you can open a nonmagical lock you touch with them, silently and without a check.\n- **Baton of Command (Marshal).** Once per Long Rest, when you use Direct, you can choose two allies instead of one. While you hold the baton, troops who can see you know what you want of them without being told.\n- **Dead Drop (Spymaster).** A pair of small lockboxes, each about the size of a book. You can open one and place up to 1 pound of objects inside; when it's closed, they're in the other box, wherever it is on the same plane. Once you send something, you can't do so again until the next dawn."
    },
    {
@@ -548,6 +700,9 @@
      }
     ],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Each is made for one subclass and works only for a Mhizha of that subclass.\n\n- *Athanor (Chemist).* Each batch of elixirs you make has one more elixir, of your choice.\n- *Repair Kit (Constructor).* Once per Long Rest, as a Utilize action, you touch your construct and it regains Hit Points equal to 2d8 plus your Intelligence modifier.\n- *Spare Barrel (Gunner).* You can set down your turret one more time before you finish a Long Rest.\n- *Spare Cell (Lionskin).* Your suit can hold two charges at a time. You release them one at a time.\n- *Surveyor's Compass (Mapmaker).* You have two more folds."
    },
    {
@@ -586,6 +741,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "If you find or craft a Tuned Arc Gun, you can attune to it, and it replaces your Arc Gun (a Lionskin builds it into the suit). You gain a bonus, determined by the item's rarity, to attack rolls with the Arc Gun, your turret, and your construct's Strike, and to the spell attack rolls and spell save DCs of your Mhizha spells. Your Preparations and other Mhizha features that use your spell save DC don't gain it."
    },
    {
@@ -614,6 +772,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you wear it, you have a +1 bonus to Armor Class. Once per Long Rest, when you finish a Short Rest, you can rebuild all your devices and regain all your expended Preparations."
    },
    {
@@ -634,6 +795,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Through the flea glass, an object you're holding looks many times its size: you can read writing too small for the eye, find a hairline crack, or see the tool marks on a forged seal. You have Advantage on Intelligence (Investigation) checks to examine an object small enough to hold in one hand."
    },
    {
@@ -654,6 +818,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "It works as a Spyglass and fits in a coat pocket."
    },
    {
@@ -674,6 +841,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Each month, wherever letters can reach you, the DM tells you one piece of news from the learned world: a discovery, a quarrel, a death, an expedition, or a rumor of what someone is working on. Some of it is wrong."
    },
    {
@@ -694,6 +864,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "If you spend 1 minute reading the weatherglass, you know whether a storm is coming within the next 12 hours. It also tells you how high you've climbed, as Pascal's brother-in-law showed on the Puy de Dôme in 1648: you know your height above the sea to within a hundred feet."
    },
    {
@@ -722,6 +895,9 @@
     "dm": true,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "The saw is a magic Greatsword that grants a +2 bonus to attack rolls and damage rolls made with it. It is your Saw for every Physician feature, and you can use it as a Spellcasting Focus for your Physician spells.\n\n- **Serrated.** When you hit a creature with the saw, it bleeds: at the start of each of its turns, it takes 1d6 Slashing damage. The bleeding ends when the creature regains Hit Points, or when any creature within 5 feet of it takes a Utilize action to bind the wound; otherwise it runs until treated, even after the fight. A creature can bleed from the saw only once at a time. Constructs and Undead don't bleed.\n- **Through the Bone.** When you use Amputation on a creature you hit with the saw, the creature makes its saving throw with Disadvantage, and you can use Amputation twice between rests instead of once.\n- **Rough Work.** When you reduce a creature to 0 Hit Points with the saw, you regain one expended Prowess Die. Once this property has restored a die, it can't do so again until you finish a Short or Long Rest."
    },
    {
@@ -750,6 +926,9 @@
     "dm": true,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A long coat of close-woven cloth, cut for work, with deep pockets. Blood, filth, and rain don't cling to it, and it takes the cut and color its wearer's discipline would choose: a white coat for a Doctor, a buff coat for a Combat Medic, a long black wrap for a Plague Doctor, an unbleached, hand-stitched coat for a Hedge Witch, an oddly soothing plum-gray for a Neurologist, an apron for a Surgeon or a Chirurgeon, a weathered field coat for a Vitalist, and for an Immortalist, the color of their attuned energy.\n\nYou gain these benefits while wearing the coat:\n\n- If you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier.\n- You have Advantage on saving throws against spells and other magical effects, and you have Immunity to disease and to the Poisoned condition.\n- Your spell save DC and spell attack bonus each increase by 2.\n- **Attending.** Once on each of your turns, when you restore Hit Points to a creature with a Physician feature or spell, you can use your Diagnosis feature on a creature you can see within 30 feet of yourself as part of the same action, Bonus Action, or Reaction."
    },
    {
@@ -778,6 +957,9 @@
     "dm": true,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A plain rod of dark wood with a single serpent coiled around it. It can be wielded as a magic Mace that grants a +2 bonus to attack rolls and damage rolls made with it. While you hold it, you gain a +2 bonus to spell attack rolls, you can use it as a Spellcasting Focus for your Physician spells, and it serves as a Healer's Kit that never runs out of uses.\n\n**Absorb Life.** While holding the rod, you can take a Reaction when another creature that isn't Hostile to you casts a spell that targets only you. The spell has no effect on you, and the rod gains a number of charges equal to the spell's level. If this brings the rod's charges above 50, the serpent wakes: the rod splits, every creature within 30 feet of you regains Hit Points equal to 4 times the number of charges above 50, and the rod is destroyed.\n\n**Spells.** The rod has 50 charges. While holding it, you can expend charges to cast one of the following spells from it, using your spell save DC and spellcasting ability: *Cure Wounds* (1 charge per spell level, up to 5), *Anaesthesia* (2 charges), *Lesser Restoration* (2 charges), *Mass Healing Word* (3 charges), *Revivify* (3 charges), *Death Ward* (4 charges), *Greater Restoration* (5 charges), *Mass Cure Wounds* (5 charges), *Raise Dead* (5 charges), *Defibrillation* (6 charges, cast as a level 6 spell), *Heal* (6 charges), or *Regenerate* (7 charges). Material components with a cost must still be provided.\n\nThe rod's charges won't do harm. When you cast *Defibrillation* from it, you can choose only the Start effect for each creature.\n\nYou can also cast the following from the rod without expending charges: *Detect Magic*, *Detect Poison and Disease*, *Guidance*, *Light*, *Mage Hand*, *Prestidigitation*, *Purify Food and Drink*, and *Spare the Dying*.\n\n**Steady the Hand.** When you use your Healing Prowess feature, you can expend 1 charge instead of a Prowess Die. You can do this no more than once on each of your turns.\n\n**Regaining Charges.** The rod regains 4d6 + 2 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 20, the rod regains 1d12 + 1 charges.\n\n**Last Breath.** You can take a Magic action to snap the rod in two. The rod is destroyed and releases everything in it in a 30-foot Emanation originating from you. Each creature of your choice in the Emanation regains Hit Points equal to 6 times the number of charges the rod had, and each such creature that died within the last minute returns to life with those Hit Points instead. You then drop to 0 Hit Points and are Stable, and you can't regain Hit Points until you finish a Long Rest."
    },
    {
@@ -806,6 +988,9 @@
     "dm": true,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A round shield of pale wood banded in brass, with a lamp-glass boss that burns without oil.\n\nWhile attuned to the shield, you have Shield training. The shield hovers beside you rather than hanging on your arm: you don't need a free hand to benefit from it, and you can perform the Somatic components of spells as if you weren't wielding it. A creature can't benefit from this shield and another Shield at once.\n\n- **Lamp.** The boss sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet, in the color of your Doctor's Coat if you are wearing one and pale gold if you aren't. A creature in the Bright Light can't be hidden from you.\n- **Bedside.** As a Bonus Action, you can send the shield to hover beside a creature you can see within 60 feet of yourself. While it is there, the shield's AC bonus applies to that creature instead of you, and the Lamp moves with it. If the creature is your patient and is Bloodied, the first time on each turn it would take damage from an attack, you can take a Reaction to reduce that damage by one roll of your Prowess Die plus your Intelligence modifier (no die is expended). The shield returns to you as a Bonus Action, or on its own if the creature is ever more than 60 feet from you."
    },
    {
@@ -844,6 +1029,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A folding chart that never folds the same way twice, with leaves that unfold upward into the Outer Planes. Every road you have walked in spirit is inked on it, and some you haven't yet. You can use the atlas as a Spellcasting Focus for your Revelator spells. While it's on your person, you gain a bonus to spell attack rolls and to the saving throw DCs of your Revelator spells and features. Your Planar Strike uses your spell attack modifier, so it gains the bonus too. The bonus is determined by the atlas's rarity.\n\n**Another Road.** While you carry the atlas, you have one extra Favor."
    },
    {
@@ -872,6 +1060,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A series of planar tattoos, one for each plane, each appearing on the skin when its plane is walked, as if a native of it had inked it there. The artifact begins as a single tattoo of the Middle World (the Material Plane) over your heart; this first tattoo doesn't count as walking the Middle World. It is a Spellcasting Focus for your Revelator spells that needs no hand, and while you are attuned to it, you gain a +3 bonus to spell attack rolls and to the saving throw DCs of your Revelator spells and features. Your Planar Strike uses your spell attack modifier, so it gains the bonus too. This bonus doesn't stack with the Atlas of Roads.\n\n**The Skin Remembers.** Whenever you walk a plane (see \"Soul's Journey\"), a tattoo of it appears somewhere on your body, and stays. Once per Long Rest for each tattoo, you can open a vista to that plane without spending a Favor, if you know its Revelation.\n\n**Opposite Shores.** While you bear tattoos of two planes on opposite sides of the Wheel (such as Elysium and Asphodel, the Celestial Bureaucracy and Limbo, or Svarga and the Nine Circles), you have Advantage on saving throws you make to avoid or end the Charmed or Frightened condition, and to avoid being moved to another plane against your will.\n\n**Marked.** Natives of every plane whose tattoo you bear recognize what you are on sight. They needn't like you for it.\n\n**Destroying the Wheel.** The tattoos can't be removed by any magic short of *Wish*, and they return if the skin they're on is lost. They fade only when their bearer has walked every plane in the Cosmography, and then they leave behind a single tattoo of the whole Wheel, which grants nothing at all."
    },
    {
@@ -926,6 +1117,9 @@
      }
     ],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Each pathway has its keepsake, a little of its earth end carried home.\n\n| Pathway | Keepsake |\n|---|---|\n| The Bridge | A stone from the bridge, worn smooth on one side by every traveler |\n| The River of Life | A stoppered vial of river water that never runs dry |\n| The Mountain | A laurel leaf of beaten gold |\n| The River of Death | An obol that is always cold, and is never the fare |\n| The Tree | A twig of ash that stays in leaf |\n\nWhile you carry the keepsake, you have one extra Favor. Each also does one small thing of its own:\n\n- **The stone.** Set on a doorsill, it tells you by its weight whether anyone has crossed the threshold since you set it down.\n- **The vial.** Water poured from it is clean and sweet, and the spirits of springs and wells know what you carry and come to the surface to look.\n- **The laurel leaf.** A host who sees it seats you in the guest's place and doesn't ask your business until you've eaten.\n- **The obol.** Held over a corpse, it turns colder if the spirit hasn't gone on.\n- **The ash twig.** It leans toward the nearest grave, within a mile, of someone who died fighting."
    },
    {
@@ -959,6 +1153,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A traveler's crossbow on the pattern of the Chinese *zhuge nu* that Ming garrisons carried, with a box magazine above the stock, cocked and fired with a single lever. You gain a bonus to attack and damage rolls made with this magic weapon, determined by its rarity. It doesn't have the Loading property.\n\n**Magazine.** The crossbow holds ten bolts. You don't need a free hand to draw ammunition from it, and you can refill it as a Utilize action.\n\n**Volley (Rare Only).** When you take the Attack action with the crossbow, you can empty the magazine instead of making your attacks: make one attack against each creature of your choice (up to five) within 10 feet of a point you can see within the weapon's normal range, using a separate bolt for each. Once you use this property, you can't use it again until you finish a Short or Long Rest."
    },
    {
@@ -987,6 +1184,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Traveling boots the color of the Border Ethereal, gray on gray. Wherever they've walked, there are footprints on the far side of the Veil. You gain these benefits while wearing them:\n\n- You have Advantage on saving throws against spells and other magical effects.\n- Your spell save DC and spell attack modifier each increase by 2. This stacks with the Atlas of Roads or the Inked Wheel.\n- Your Visiting Spirits have a +2 bonus to Armor Class.\n\n**Weather of the Plane.** While you have a vista open, you have Resistance to the damage type your Planar Strike deals.\n\n**Walk Between.** You ignore Difficult Terrain, including the Difficult Terrain of moving through creatures and objects during Ethereal Stride. Once per Short or Long Rest, you can use Ethereal Stride without spending a Favor."
    },
    {
@@ -1013,6 +1213,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A traveler's cloak of no particular color, patched in a dozen fabrics from a dozen worlds. While you wear the cloak, you gain the following benefits. The cloak protects you from a plane's environment, never from its nature: it does nothing against the hazards described in \"What the Walk Costs.\"\n\n**Weatherproof.** You stay dry in rain and snow, and you ignore the effects of Extreme Cold and Extreme Heat.\n\n**Any Air.** You can breathe normally at any altitude and in smoke, dust, or stale air, and you ignore the effects of High Altitude.\n\n**Inner Pocket.** The cloak has an extradimensional pocket that holds one object weighing no more than 1 pound, such as a map, a key, or a vial. Only you can find the pocket, and you can stow or draw its object as part of any action."
    },
    {
@@ -1041,6 +1244,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A walking stick worn smooth at the grip and notched along its length. You have a +1 bonus to attack and damage rolls made with this magic weapon.\n\n**Trail-Wise.** While you carry the staff, you can't become lost except by magic, and you always know which way is north and the way back to where you finished your last Long Rest, if it's on the same plane.\n\n**Sure Footing.** While you carry the staff, you and up to six creatures traveling with you ignore Difficult Terrain made of natural ground, such as mud, scree, snow, or undergrowth, during overland travel.\n\n**Spells.** The staff has 10 charges and regains 1d6 + 4 expended charges daily at dawn. While holding it, you can expend charges to cast one of the following spells from it, using your spell save DC: *Alarm*, *Comprehend Languages*, *Create or Destroy Water*, *Feather Fall*, *Longstrider*, or *Purify Food and Drink* (1 charge); *Locate Object* or *Pass without Trace* (2 charges); *Tiny Hut*, *Tongues*, or *Water Walk* (3 charges); or *Locate Creature* (4 charges). If you expend the staff's last charge, roll 1d20. On a 1, the staff becomes a nonmagical quarterstaff."
    },
    {
@@ -1067,7 +1273,12 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "While you hold it, you can cast *Elementalism* with it, and when you touch worked stone you know roughly how long ago it was set and whether magic shaped it. A Circle of Shapers Druid can use it as a Druidic Focus."
+    "homelands": [
+     "Oceania"
+    ],
+    "living": false,
+    "prices": [],
+    "text": "While you hold it, you can cast *Elementalism* with it, and when you touch worked stone you know roughly how long ago it was set and whether magic shaped it. A Circle of Shapers Druid can use it as a Druidic Focus.\n\n*Homeland:* Oceania."
    },
    {
     "name": "Origin Stones",
@@ -1124,6 +1335,9 @@
      }
     ],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A stone that carries a little of a plane. Each is keyed to one origin, and it gives whoever holds it, sorcerer or not, a small comfort:\n\n- **Seam Stone (Earth).** Heavy for its size; you always know which way is north and which way is down, and you never lose your footing on loose stone or a ship's deck.\n- **Hearthstone (Fire).** Warm to hold; lights a fire on a touch; you're comfortable in any cold down to freezing.\n- **Rime Stone (Frost).** Always cold; keeps a box of food fresh; you're comfortable in any heat a person could survive.\n- **Lodestone (Kinetic).** Once a day, you can lift twice as much as your Strength allows for up to 1 minute (no action required).\n- **Sunstone (Light).** Sheds Dim Light in a 10-foot radius on command; through it, you can find the sun on a clouded day.\n- **Thunder Egg (Storm).** You know the weather for the next 24 hours where you are."
    },
    {
@@ -1152,6 +1366,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you wear the gauge, its needle steadies whoever stands near you: allies within 10 feet of you have Advantage on saving throws against your Overflow. Once per Long Rest, when your Pressure would increase, you can choose to keep it where it is."
    },
    {
@@ -1180,6 +1397,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Once per Long Rest, you can break the seal (it reseals at dawn) to call an angel as Call an Angel does, at Rank 2 (the table's level 3–4 row), without expending a spell slot. It counts as your angel for that fight, under Call an Angel's one-angel limit. In addition, a letter you write and seal with the same wax reaches its addressee by the next dawn, wherever on the plane they are, if they're willing to receive it."
    },
    {
@@ -1208,6 +1428,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you hold them, you can inscribe your Figures one more time before you need to rest, and you can measure any distance you can see to the inch. In addition, you can spend 10 minutes with them to lay out a building, a road, or a camp so that its lines are true: for 24 hours, the place can't be thin ground, and no creature can teleport into or out of it except to or from a space in one of its doorways. Once you do this, you can't do so again until the next dawn."
    },
    {
@@ -1234,7 +1457,12 @@
     "dm": false,
     "members": [],
     "pieces": [],
-    "text": "In your hands, the astrolabe tells the hour by day or night, your latitude, the direction and rough distance of any city engraved on its plates (Mecca is always engraved), and the hours of prayer for the place you stand."
+    "homelands": [
+     "India"
+    ],
+    "living": false,
+    "prices": [],
+    "text": "In your hands, the astrolabe tells the hour by day or night, your latitude, the direction and rough distance of any city engraved on its plates (Mecca is always engraved), and the hours of prayer for the place you stand.\n\n*Homeland:* India."
    },
    {
     "name": "Dream's Mantle",
@@ -1262,6 +1490,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "This cloak never hangs the same way twice. It is dew-heavy one hour and dry as leaves the next, and it turns with the seasons your warps carry. You gain these benefits while wearing it:\n\n- You have Advantage on saving throws against spells and other magical effects.\n- You gain a +1 bonus to the attack rolls and saving throw DCs of your Danae spells and features. The mantle isn't a focus, so this adds to the bonus of a Danae focus you're holding.\n\n**The Season Lingers.** When you give a warp a season, the mantle takes on that season until you give a warp another.\n\n| Season | While the Mantle Holds It |\n|---|---|\n| Spring | Your Speed increases by 10 feet, and you have Resistance to Poison damage. |\n| Summer | You have Resistance to Fire and Radiant damage. |\n| Autumn | You have Advantage on Charisma checks, and you have Resistance to Psychic damage. |\n| Winter | You have Resistance to Cold and Necrotic damage. |"
    },
    {
@@ -1316,6 +1547,9 @@
      }
     ],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Each method has its token, the subclass's warp made solid.\n\n| Subclass | Token |\n|---|---|\n| Binding | A spool of gray thread that can't be cut |\n| Changing | A die with a seventh face that only you have ever seen it land on |\n| Crossing | A skeleton key that fits any lock once, and every lock it has fitted ever after |\n| Naming | An uncut Name stave that warms near a lie |\n| Shaping | A mason's lodestone that pulls toward bedrock |\n\nEach token's oddity is real (the thread won't cut, the stave does warm), and in play it does only this:\n\nWhen you have no warps left, you can draw on the token (no action required) to regain one expended warp. Once the token is drawn on, it can't be drawn on again until the next dawn."
    },
    {
@@ -1354,6 +1588,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "A set of tools from the Danae's tool list, or a Danae subclass's tool, worked in fae material: a mason's chisel of moonstone, a weaver's shuttle that hums when it's idle, dice that are warm to the touch. You can use the tools as a Spellcasting Focus for your Danae spells. While holding them, you gain a bonus to spell attack rolls and to the saving throw DCs of your Danae spells and features. The bonus is determined by the tools' rarity. It doesn't stack with another Danae focus's bonus to spell attacks or DCs; if more than one applies, use the highest.\n\n**Deep Well.** While you're attuned to the tools, the number of warps you can make between rests increases by 1.\n\n**Fine Weaving.** When you use Fae Weaving with these tools, each object can be worth up to 20 GP × your Danae level."
    },
    {
@@ -1382,6 +1619,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you wear the torc, your allies always know where you stand with the Deep Ríastrad: it glows red while it lasts, and white when you're cooled. When you're cooled from the Deep Ríastrad, you regain Hit Points equal to your Barbarian level."
    },
    {
@@ -1410,6 +1650,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you hold a creature by Hold a Friend and it's wrapped in the mantle, it has Advantage on saving throws against the Charmed and Frightened conditions. When you hold a creature through The Night Turns wrapped in the mantle, the night is won at midnight rather than at dawn."
    },
    {
@@ -1438,6 +1681,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you play the fiddle, the first thing you remember with Remembering after each Long Rest doesn't go on your tally, and creatures that hear it play for 1 minute or more have Disadvantage on saving throws against being Charmed by you. In addition, you can set the fiddle playing on its own for up to 1 hour: anyone who dances to it doesn't tire, and doesn't notice the time."
    },
    {
@@ -1466,6 +1712,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "While you hold the stone to your eye (raising it takes a Bonus Action, and it keeps that hand busy), you see Hidden creatures within 60 feet of you in their true forms, through any illusion, glamour, or shape-change, and you can see Hidden creatures within that range that have the Invisible condition. A Cleric of the Hidden Domain who looks through it at one of the Hidden naming a price also sees the catch in the bargain: the DM tells you, in a sentence, how it could be kept to the letter and still go against you, or that it has no catch."
    },
    {
@@ -1494,6 +1743,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "You can spend 1 minute looking into the bottle to ask the Hidden a question about one creature or place you can see: the bottle shows you the answer as *Augury* would, or tells you whether the creature has been taken, swapped, or elf-shot, and by whom. Once used, the bottle can't be used again until the next dawn. If the bottle is ever smashed, everything it has shown you is forgotten."
    },
    {
@@ -1522,6 +1774,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "As a Magic action, you can ring the bell. Until the end of your next turn, each Hidden creature of your choice within 60 feet of you that can hear it loses the Invisible condition, can't gain it, and can't teleport. You can ring it this way a number of times equal to your Proficiency Bonus, and you regain all uses when you finish a Long Rest. When you ring it this way at a door, it also tells you whether a Hidden creature has crossed that threshold since the last dawn."
    },
    {
@@ -1548,6 +1803,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "Worn as an amulet, the arrowhead brings its wearer home: if it's Taken, it has Advantage on the saving throws it repeats to find its way back. Dipped in water, it makes that water a cure: a creature that drinks it loses the Poisoned condition, and a creature the Hidden's magic made sick is cured of it. Once the arrowhead makes a cure, it can't do so again until the next dawn. A Mortal Hunter who carries one as a token also has Advantage on checks to track the creature it last shot with Elf-Shot."
    },
    {
@@ -1576,6 +1834,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "As a Magic action, you can shake the bridle to call a horse of the Hunt: it acts as the steed of *Phantom Steed* for 8 hours, except that it can run over water and through standing crops as if they were open ground, and it leaves no tracks. Once you call one, you can't do so again until the next dawn. Riders of the Hunt know the bells and leave you alone if you ride with them."
    },
    {
@@ -1604,6 +1865,9 @@
     "dm": false,
     "members": [],
     "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
     "text": "When you drink from the cup as you finish a Short Rest, you regain one expended use of Step into the Hidden, and you can't gain the Charmed condition until your next Long Rest. While the cup is unbroken in your household, the DM can grant the household a small piece of luck once a month. If it breaks, the luck runs out at once, and the DM decides what that costs: by default, the household's next month goes as badly as the luck went well (a lost cow, a spoiled harvest, a quarrel that won't mend)."
    }
   ],
@@ -1672,6 +1936,38 @@
     "change": "concealable as a walking stick",
     "cost": 50
    }
-  ]
+  ],
+  "homelands": {
+   "text": "Some items close with a homeland: the region or regions of The State of the World where the item is made, kept or traded. A character's homeland is the region their family comes from (Species and People, above), and a character finds the items of their own homeland first. An item marked *A living tradition* comes from a practice people still keep, and it goes only to a character of its homeland.",
+   "where": "The Setting, Characters, Wonders and Curiosities, Homelands"
+  },
+  "class_gear": {
+   "about": [
+    "A class's gear is the magic items its chapter carries, in this book and in *Life on the Border*: the Physician's Doctor's Coat, Rod of the Doctor, Ward and Bonesaw, for instance. Three rules decide who has which, and when.",
+    "An item that closes with a homeland, such as the Geomancer's Lahore Astrolabe, is explained in *The Setting*, Characters, Wonders and Curiosities (Homelands)."
+   ],
+   "rules": [
+    {
+     "lead": "When it arrives",
+     "text": "Class gear arrives one rarity ahead of the core rules' Starting Equipment at Higher Levels table, at the row that first gives the rarity below it: a Very Rare item arrives at the first row that gives a Rare one."
+    },
+    {
+     "lead": "Shields",
+     "text": "A Shield goes only to a character with Shield training."
+    },
+    {
+     "lead": "The Chirurgeon",
+     "text": "The Chirurgeon has the Bonesaw and not the Rod of the Doctor."
+    }
+   ],
+   "without": [
+    {
+     "subclass": "Chirurgeon",
+     "has": "Bonesaw",
+     "without": "Rod of the Doctor"
+    }
+   ],
+   "where": "The Classes, Introduction, Class gear"
+  }
  }
 }

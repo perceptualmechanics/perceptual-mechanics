@@ -5,7 +5,6 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as defaultEngine from '../src/euphonia/euphonia.character.js';
-import { LIVING, FROM, PRICES, WITHOUT } from '../src/euphonia/euphonia.provenance.js';
 import { effectsOf, recorded, differences } from './euphonia-effects.mjs';
 
 const read = name => JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
@@ -390,32 +389,25 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
       if (i.who && !(i.who.class === c.name && (!i.who.subclasses || i.who.subclasses.includes(sub.name)))) fail(`${c.name} (${sub.name}) 17: given ${i.name}, which requires Attunement by ${i.attunement.by}`);
     }
   }
-  // Where the items come from (euphonia.provenance.js, authored): each
-  // homeland a region of the State of the World, and each quote in the
-  // item's name or text or a homeland's chapter. A living tradition goes
-  // only to a character of its homeland; the homeland's items come first;
-  // a Mutapan curiosity is priced where it's bought, as the books price it:
-  // by default the one place they name in the homeland, none where they
-  // split the region or don't price it, and the buyer's price at a court or
-  // in Japan.
+  // Where the items come from, as the books close them: each homeland and
+  // priced place a region of the State of the World. A living tradition goes
+  // only to a character of its homeland; the homeland's items come first; a
+  // Mutapan curiosity is priced where it's bought, as the books price it: by
+  // default the one place they name in the homeland, none where they split
+  // the region or don't price it, and the buyer's price at a court or in Japan.
   const regions = read('regions').data;
-  for (const x of [...LIVING, ...FROM, ...PRICES.flatMap(p => p.places.map(a => ({ ...a, item: p.item })))]) {
-    const it = items.items.find(i => i.name === x.item);
-    for (const h of x.homelands) if (!regions.some(r => r.name === h)) fail(`euphonia.provenance.js: ${x.item}'s homeland "${h}" isn't a region`);
-    const where = [it?.name, it?.text, ...x.homelands.map(h => JSON.stringify(regions.find(r => r.name === h) ?? ''))].join('\n');
-    for (const q of x.because) if (!where.includes(q)) fail(`euphonia.provenance.js: "${q}" isn't in ${x.item}'s text or its homelands' chapters`);
-  }
+  for (const it of items.items) for (const h of [...(it.homelands ?? []), ...(it.prices ?? []).flatMap(p => p.regions)]) if (!regions.some(r => r.name === h)) fail(`${it.name}: "${h}" isn't a region`);
   try {
     const marked = { ...items, items: items.items.map(i => (i.name === 'Water-Bearer\'s Bucket' ? { ...i, text: `${i.text}\n\n*A living tradition.* Planted.` } : i)) };
     engine.rulebook(srd, euphonia, setting, subclasses, marked);
-    fail('an item planted as a living tradition, with no homeland in euphonia.provenance.js, builds');
+    fail('an item whose text is a living tradition, and whose export says no homeland, builds');
   } catch { /* the rulebook refuses it, as it should */ }
   const from = (homeland, cls = 'Fighter', subclass = 'Champion') => run({ ...someone([{ class: cls, level: 11, subclass }]), homeland }, `${cls} of ${homeland || 'nowhere'}`)?.equipment;
   for (const r of ['', ...regions.map(x => x.name)]) {
     const got = from(r);
     for (const m of got?.magicItems ?? []) {
-      const living = LIVING.find(x => x.item === m.item?.name);
-      if (living && !living.homelands.includes(r)) fail(`${m.item.name}, a living tradition of ${living.homelands.join(' and ')}, given to a character of ${r || 'no homeland'}`);
+      const living = book.items.find(x => x.name === m.item?.name)?.living;
+      if (living && !living.includes(r)) fail(`${m.item.name}, a living tradition of ${living.join(' and ')}, given to a character of ${r || 'no homeland'}`);
     }
   }
   const named11 = h => (from(h)?.magicItems ?? []).map(m => m.item?.name);
@@ -424,8 +416,8 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const lamp = (homeland, market) => run({ ...someone([{ class: 'Fighter', level: 11, subclass: 'Champion' }]), homeland, market }, `a lamp bought by ${homeland || 'no one'} in ${market || 'the homeland'}`)?.equipment.forSale.find(x => x.name === 'Self-Lighting Lamp');
   const base = items.items.find(i => i.name === 'Mutapan Curiosities').pieces.find(p => p.name === 'Self-Lighting Lamp').cost;
   const LAMPS = [['Mutapa and the Indian Ocean', 'Sofala', base], ['India', '', 5 * base], ['Europe', '', 10 * base], ['The Americas', '', 10 * base], ['East and Southeast Asia', '', null], ['East and Southeast Asia', 'China', 10 * base],
-    ['East and Southeast Asia', 'Malacca or Aceh', 5 * base], ['East and Southeast Asia', 'Japan, at Nagasaki', null], ['Europe', 'a court', null], ['West and Central Africa', '', null], ['', '', null],
-    ['Mutapa and the Indian Ocean', '', null], ['Mutapa and the Indian Ocean', 'the Swahili coast', 5 * base], ['The Ottomans, Persia and the Horn', '', 5 * base]];
+    ['East and Southeast Asia', 'Malacca and Aceh', 5 * base], ['East and Southeast Asia', 'Japan (at Nagasaki)', null], ['Europe', 'A court', null], ['West and Central Africa', '', null], ['', '', null],
+    ['Mutapa and the Indian Ocean', '', null], ['Mutapa and the Indian Ocean', 'The Swahili coast', 5 * base], ['The Ottomans, Persia and the Horn', '', 5 * base]];
   const lamps = LAMPS.map(([h, m]) => lamp(h, m));
   if (!LAMPS.every(([, , cost], i) => lamps[i] && lamps[i].cost === cost) || !/whatever the buyer will bear/.test(lamps[7]?.note) || !/the DM sets it/.test(lamps[9]?.note) || !/by place/.test(lamps[4]?.note) || !/by place/.test(lamps[11]?.note))
     fail(`Self-Lighting Lamps: ${LAMPS.map(([h, m], i) => `${h || 'no homeland'}${m ? ` in ${m}` : ''} ${lamps[i]?.cost ?? 'no price'} (${lamps[i]?.note})`).join('; ')}`);
@@ -831,18 +823,22 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (!(shirted?.saveItems?.includes('Talismanic Shirt') && shirted.saves.every((x, i) => x.bonus === bare.saves[i].bonus + 1))) fail(`the Talismanic Shirt: ${JSON.stringify(shirted?.saves.map(x => x.bonus))} against ${JSON.stringify(bare?.saves.map(x => x.bonus))}`);
   // The class's own gear, a rarity ahead of the table (Scott, 17 November):
   // a Chirurgeon's Very Rare Bonesaw from the row that first gives Rare, not
-  // before; the Ward only to one trained in Shields; the Legendary coat at
+  // before; the Ward to any Physician, whom it trains; the Legendary coat at
   // 17, with its Armor Class without armor, its defenses and "Your spell save
   // DC and spell attack bonus each increase by 2".
   const gearOf = (cls, sub, lv) => run(someone([{ class: cls, level: lv, subclass: sub }]), `${sub} ${lv}`);
   const firstRare = book.higherLevelEquipment.find(r => r.magic.some(m => m.rarity === 'Rare')).lo;
   const gearNames = r => r?.equipment.magicItems.filter(m => m.classGear).map(m => m.item.name) ?? [];
   if (!(gearNames(gearOf('Physician', 'Chirurgeon', firstRare)).includes('Bonesaw') && !gearNames(gearOf('Physician', 'Chirurgeon', firstRare - 1)).includes('Bonesaw'))) fail(`the Bonesaw: ${gearNames(gearOf('Physician', 'Chirurgeon', firstRare))} at ${firstRare}, ${gearNames(gearOf('Physician', 'Chirurgeon', firstRare - 1))} at ${firstRare - 1}`);
-  if (gearNames(gearOf('Physician', 'Doctor', firstRare)).includes('The Ward') || !gearNames(gearOf('Physician', 'Combat Medic', firstRare)).includes('The Ward')) fail('the Ward goes to one untrained in Shields, or not to a Combat Medic');
-  for (const w of WITHOUT) if (!book.items.some(i => i.name === w.item) || !book.classes.some(c => c.subclasses.some(x => x.name === w.subclass))) fail(`euphonia.provenance.js WITHOUT: ${w.item} or ${w.subclass} isn't in the books`);
-  if (gearNames(gearOf('Physician', 'Chirurgeon', book.higherLevelEquipment.at(-1).lo)).includes('Rod of the Doctor')) fail('a Chirurgeon is given the Rod of the Doctor, which WITHOUT keeps from it');
+  // The Ward gives Shield training while attuned, so any Physician qualifies;
+  // without that sentence only one already trained would.
+  const unwarded = engine.rulebook(srd, euphonia, setting, subclasses, { ...items, items: items.items.map(i => (i.name === 'The Ward' ? { ...i, text: i.text.replace('you have Shield training', 'you feel safe') } : i)) });
+  const hasWard = (b, sub) => engine.character(b, someone([{ class: 'Physician', level: firstRare, subclass: sub }])).equipment.magicItems.some(m => m.classGear && m.item.name === 'The Ward');
+  if (!hasWard(book, 'Doctor') || !hasWard(book, 'Combat Medic') || hasWard(unwarded, 'Doctor') || !hasWard(unwarded, 'Combat Medic')) fail('the Ward: every Physician qualifies by its Shield training, and without that sentence only one already trained');
+  for (const w of items.class_gear.without) if (!book.items.some(i => i.name === w.without) || !book.items.some(i => i.name === w.has) || !book.classes.some(c => c.subclasses.some(x => x.name === w.subclass))) fail(`class gear: ${w.subclass}, ${w.has} or ${w.without} isn't in the books`);
+  if (gearNames(gearOf('Physician', 'Chirurgeon', book.higherLevelEquipment.at(-1).lo)).includes('Rod of the Doctor')) fail('a Chirurgeon is given the Rod of the Doctor, which the class gear rules keep from it');
   const last = book.higherLevelEquipment.at(-1).lo, doctor17 = gearOf('Physician', 'Doctor', last), bare17 = gearOf('Physician', 'Doctor', last - 1);
-  const coatAc = 15 + doctor17?.mod.Dexterity;
+  const coatAc = 15 + doctor17?.mod.Dexterity + srd.armor.items.find(x => x.category === 'Shield').bonus;
   if (!(gearNames(doctor17).includes("Doctor's Coat") && !gearNames(bare17).includes("Doctor's Coat") && doctor17.armorClass.ac === coatAc && doctor17.defenses.saveAdvantages.includes('saves against spells and other magical effects')
     && doctor17.spellcasting[0].dc === srd.attacks.spell_save_dc_base + doctor17.mod.Intelligence + doctor17.bonus + 2))
     fail(`the Doctor's Coat at ${last}: ${JSON.stringify({ gear: gearNames(doctor17), ac: doctor17?.armorClass, dc: doctor17?.spellcasting[0].dc })}`);
