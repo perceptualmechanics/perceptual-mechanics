@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
-  "modified": "2026-11-17T15:55:12-05:00",
+  "sha256": "f215cae0ac9404b193467031c6d1ac6dab1e9924880693cd4ec9beb6d4e0a357",
+  "modified": "2026-11-18T06:04:46-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 33,
   "rules": {
@@ -878,7 +878,7 @@
     {
      "level": 3,
      "name": "Hidden Killer Spells",
-     "text": "When you reach a Ranger level specified in the Hidden Killer Spells table, you thereafter always have the listed spell prepared.\n\n| Ranger Level | Spells |\n|---|---|\n| 3 | *Protection from Evil and Good* |\n| 5 | *See Invisibility* |\n| 9 | *Magic Circle* |\n| 13 | *Banishment* |\n| 17 | *Dispel Evil and Good* |",
+     "text": "When you reach a Ranger level specified in the Hidden Killer Spells table, you thereafter always have the listed spells prepared.\n\n| Ranger Level | Spells |\n|---|---|\n| 3 | *Protection from Evil and Good* |\n| 5 | *See Invisibility* |\n| 9 | *Magic Circle* |\n| 13 | *Banishment* |\n| 17 | *Dispel Evil and Good* |",
      "spells": [
       {
        "level": 3,
@@ -953,7 +953,7 @@
     {
      "level": 3,
      "name": "Mortal Hunter Spells",
-     "text": "When you reach a Ranger level specified in the Mortal Hunter Spells table, you thereafter always have the listed spell prepared.\n\n| Ranger Level | Spells |\n|---|---|\n| 3 | *Sleep* |\n| 5 | *Hold Person* |\n| 9 | *Hypnotic Pattern* |\n| 13 | *Confusion* |\n| 17 | *Hold Monster* |",
+     "text": "When you reach a Ranger level specified in the Mortal Hunter Spells table, you thereafter always have the listed spells prepared.\n\n| Ranger Level | Spells |\n|---|---|\n| 3 | *Sleep* |\n| 5 | *Hold Person* |\n| 9 | *Hypnotic Pattern* |\n| 13 | *Confusion* |\n| 17 | *Hold Monster* |",
      "spells": [
       {
        "level": 3,

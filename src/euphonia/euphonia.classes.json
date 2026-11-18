@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "162b58ed372341e467b3a37259ca22d9800b5043a0a1571a00cfc3ad87511852",
-  "modified": "2026-11-17T15:55:12-05:00",
+  "sha256": "f215cae0ac9404b193467031c6d1ac6dab1e9924880693cd4ec9beb6d4e0a357",
+  "modified": "2026-11-18T06:04:46-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 33,
   "rules": {
@@ -5339,7 +5339,7 @@
       {
        "level": 3,
        "name": "Bridge Spells",
-       "text": "When you reach a Revelator level specified in the Bridge Spells table, you thereafter always have the listed spell prepared. Called to Account, at level 3, isn't a spell; it is described below the table.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | Called to Account |\n| 5 | *Zone of Truth* |\n| 9 | *Slow* |\n| 13 | *Stoneskin* |\n| 17 | *Geas* |\n\n**Called to Account.** As a Bonus Action, you can expend a spell slot of level 1 or higher to call one creature you can see within 30 feet of yourself to account. It makes a Wisdom saving throw against your spell save DC. On a failed save, for 1 minute, it has Disadvantage on attack rolls against creatures other than you, and it can't willingly move to a space more than 30 feet away from you. You must maintain Concentration on it as if on a spell. It ends early if you make an attack roll against a creature other than the target, if you cast a spell that targets an enemy other than the target, if an ally of yours damages the target, or if you end your turn more than 30 feet away from the target.",
+       "text": "When you reach a Revelator level specified in the Bridge Spells table, you thereafter always have the listed spells prepared. They count as Revelator spells for you. Called to Account, at level 3, isn't a spell; it is described below the table.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | Called to Account |\n| 5 | *Zone of Truth* |\n| 9 | *Slow* |\n| 13 | *Stoneskin* |\n| 17 | *Geas* |\n\n**Called to Account.** As a Bonus Action, you can expend a spell slot of level 1 or higher to call one creature you can see within 30 feet of yourself to account. It makes a Wisdom saving throw against your spell save DC. On a failed save, for 1 minute, it has Disadvantage on attack rolls against creatures other than you, and it can't willingly move to a space more than 30 feet away from you. You must maintain Concentration on it as if on a spell. It ends early if you make an attack roll against a creature other than the target, if you cast a spell that targets an enemy other than the target, if an ally of yours damages the target, or if you end your turn more than 30 feet away from the target.",
        "spells": [
         {
          "level": 3,
@@ -5432,12 +5432,12 @@
     },
     {
      "name": "The River of Life",
-     "lead": "*Heal Through the River That Never Ends*\n\nThe River of Life rises in Elysium, runs through Eden, and pours out into the sea at the edge of the world. There, in the Deep Ethereal, the Maelstrom carries it back to its source, and a Revelator of the River of Life starts there. A Revelator of the River of Life is a healer: water rises among the wounded, the spirits of wells and rivers talk to them, and the dying are shown the way across.",
+     "lead": "*Heal Through the River That Never Ends*\n\nThe River of Life rises in Eden, runs through Elysium, and pours out into the sea at the edge of the world. There, in the Deep Ethereal, the Maelstrom turns it back toward its source, and that whirlpool is where a River Revelator's road begins. River Revelators are healers: water rises among the wounded, the spirits of wells and rivers talk to them, and the dying are shown the way across.",
      "features": [
       {
        "level": 3,
        "name": "River of Life Spells",
-       "text": "When you reach a Revelator level specified in the River of Life Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bless* |\n| 5 | *Aid* |\n| 9 | *Mass Healing Word* |\n| 13 | *Control Water* |\n| 17 | *Mass Cure Wounds* |",
+       "text": "When you reach a Revelator level specified in the River of Life Spells table, you thereafter always have the listed spells prepared. They count as Revelator spells for you.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bless* |\n| 5 | *Aid* |\n| 9 | *Mass Healing Word* |\n| 13 | *Control Water* |\n| 17 | *Mass Cure Wounds* |",
        "spells": [
         {
          "level": 3,
@@ -5478,18 +5478,13 @@
       },
       {
        "level": 3,
-       "name": "Wellsprings",
-       "text": "*You hold a vista to the River of Life open, allowing its waters to flow through.* As a Bonus Action, you can spend two Favors and call on the Maelstrom to open a Wellspring in a 5-foot Cube within 30 feet of yourself. It holds two draughts, and it lasts for 1 minute or until its draughts are gone; it doesn't require Concentration, and it closes if you have the Incapacitated condition. You have one Wellspring at a time. It's a vista of its own: it doesn't close or replace your open vista, opening another vista doesn't close it, it never counts as your open vista, and opening it doesn't count as opening a vista to the Maelstrom for the rule that a plane needs a breath between answers.\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet to a space you can see (no action required). When a Bloodied creature you can see enters the Wellspring, starts its turn there, or has the Wellspring moved onto it, you can spend a draught to have that creature regain 1d4 Hit Points (no action required). A creature at 0 Hit Points is Bloodied, so a draught gets a fallen friend up at the start of their turn, from across the room."
-      },
-      {
-       "level": 3,
-       "name": "The River Runs One Way",
-       "text": "On each of your turns, you send the river one way. Whichever of these you do first on a turn sets its course until the turn ends:\n\n- **Into a Friend.** You restore Hit Points or give Temporary Hit Points with an Influence or a spirit's command. You can't make a Planar Strike this turn.\n- **Through Your Hands.** You make a Planar Strike. This turn, your Influences and commands do everything else they do, but they don't restore Hit Points or give Temporary Hit Points.\n\nOnly Influences and commands are bound this way. Your Wellspring, your spells, and your other features work on any turn, whichever course you chose."
+       "name": "Wellspring",
+       "text": "As a Bonus Action, you can spend two Favors to set down a Wellspring: the Maelstrom fills a spring in one 5-foot square of a surface a creature could stand on (the ground, a floor, stairs, a deck, or the surface of water; not a wall or ceiling) that you can see within 60 feet of yourself, and the square can be in a creature's space. A creature is in the Wellspring if its space includes that square and it's on the surface or in the water within 5 feet below it; a creature flying above it isn't. Its water doesn't hinder movement or block sight. You can have one Wellspring at a time; setting down a new one closes the old. The Wellspring isn't a vista: setting it down doesn't count toward a plane's breath, and your vistas open and close as usual while it runs.\n\n**The Water Heals.** When a Bloodied creature of your choice starts its turn in the Wellspring, or enters it during its turn by any means, it regains Hit Points equal to your Proficiency Bonus. A creature regains Hit Points this way only once per turn, and the Wellspring arriving under a creature isn't the creature entering it. While you have the Incapacitated condition, the water heals you and your allies, and no one else. A creature at 0 Hit Points that isn't dead is Bloodied, so the water lifts anyone fallen in it, you included, at the start of their turn, before they roll a Death Saving Throw: they regain the Hit Points and are no longer Unconscious (they're still Prone).\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet along a continuous path you can see over surfaces it can be set down on, into a creature's space if you like (no action required). It moves before the water heals anyone, so if it flows under you, it can heal you as your turn starts.\n\n**Striking or Casting Feeds the River.** The Wellspring runs through the end of the turn you set it down, and through the end of each later turn of yours on which, while an enemy is still in the fight, you make a Planar Strike against an enemy (hit or miss) or cast a Revelator spell (a cantrip counts). An enemy is in the fight while it's Hostile and still able and willing to fight; a captive, or a creature that has surrendered or fled, isn't. The DM says when no enemy is left. At the end of any other turn of yours, the Wellspring runs dry and closes. While you have the Incapacitated condition, the Wellspring doesn't run dry and you can't move it. If you're still Incapacitated after the water has healed at the start of your turn, it closes then. It also closes when no enemy is left in the fight, after 1 minute, if you end your turn more than 60 feet from it, or when you dismiss it (no action required).\n\n**Between Fights.** When you set the Wellspring down while no enemy is in the fight, each Bloodied creature of your choice within 10 feet of it regains Hit Points equal to your Proficiency Bonus, and then the Wellspring closes. You can set one down this way once, and you can't do so again until you finish a Short or Long Rest."
       },
       {
        "level": 3,
        "name": "Water-Taken",
-       "text": "You can breathe water. You always know whether water you can see is safe to drink, and if it's fouled (poison, disease, a corpse upstream), which way the fouling came from. The spirits of springs, pools, wells, and rivers know you as one of the water's own, and with your Veilsight they'll talk to you about what they've seen."
+       "text": "You can breathe water, and you have a Swim Speed equal to your Speed. You always know which way the nearest open water lies, and whether water you can see is safe to drink; if it's fouled (poison, disease, a corpse upstream), you know which way the fouling came from. The spirits of springs, pools, wells, and rivers know you as one of the water's own: they start Friendly toward you, and with your Veilsight they'll tell you who has drunk, bathed, or drowned there, and what else they've seen."
       },
       {
        "level": 7,
@@ -5498,23 +5493,23 @@
       },
       {
        "level": 7,
-       "name": "High Water",
-       "text": "When you let in an Influence that restores Hit Points or grants Temporary Hit Points, you can choose a second creature (it can be you) you can see within 30 feet of the vista. The Influence affects both creatures. From level 10, Wider Vistas lets every Influence you let in do the same."
+       "name": "The Spate",
+       "text": "Once per Short or Long Rest, when you make a Planar Strike against an enemy while your Wellspring is open, you can let the Wellspring break after the attack roll, hit or miss (no action required). Each creature of your choice within 10 feet of the Wellspring regains 2d6 Hit Points (3d6 at Revelator level 11, 4d6 at Revelator level 17); roll once for all of them. They don't need to be Bloodied, and this doesn't count as anyone's healing from the water this turn. You can do this on the turn you set the Wellspring down. Then the Wellspring closes."
       },
       {
        "level": 7,
        "name": "Clean Water",
-       "text": "Once per Long Rest, you can spend 10 minutes at a well, spring, cistern, or stretch of stream and open the River of Life into it. All the water within 30 feet of you is cleansed of poison and disease, and water drawn from it stays clean for 24 hours."
+       "text": "Once per Long Rest, you can spend 10 minutes at a well, spring, cistern, or stream and open the River of Life into it. The source is cleansed of poison and disease and stays clean for 24 hours: the whole well, spring, or cistern, or 30 feet of a stream below where you stand. Water that runs on past that can be fouled again. Cleansing the water doesn't cure anyone who already drank it."
       },
       {
        "level": 11,
-       "name": "Confluence",
-       "text": "Your Wellspring holds three draughts, and it can fill a 10-foot Cube instead of a 5-foot one. A creature that regains Hit Points from it can also end the Poisoned condition on itself."
+       "name": "Water Finds Its Level",
+       "text": "Once per Long Rest, when you set down a Wellspring or as a Bonus Action while one is open, you can let the water find its level. Each Bloodied creature of your choice within 10 feet of the Wellspring regains Hit Points until it's no longer Bloodied: it has half its Hit Point maximum (round down) plus 1. A creature at 0 Hit Points is no longer Unconscious (it's still Prone). No creature loses Hit Points, and Temporary Hit Points don't count toward the level and aren't changed. This works between fights too: the water heals first, then finds its level. A creature it lifts is no longer Bloodied, so the water doesn't heal it on its turns until it's Bloodied again."
       },
       {
        "level": 11,
        "name": "What the Water Took",
-       "text": "Once per Long Rest, you can put your hand in a body of water and name a creature or object lost in it within the last year. You learn where it lies, or where it came ashore. If it was a person, you also learn whether they drowned, were taken, or walked out on their own feet, and if they were taken, by what."
+       "text": "Once per Long Rest, you can put your hand in a body of water and name a creature or object lost in it, or in the same river, lake, or stretch of coast, within the last year. You learn where it lies, or where it came ashore. If it was a person, you also learn whether they drowned, were taken, or walked out on their own feet, and if they were taken, by what."
       },
       {
        "level": 15,
@@ -5523,18 +5518,8 @@
       },
       {
        "level": 15,
-       "name": "Cascade",
-       "text": "As a Bonus Action, you can pour your Wellspring into one creature within 5 feet of it. The Wellspring closes, and the creature regains 2d6 Hit Points for each draught it had left."
-      },
-      {
-       "level": 15,
        "name": "The Far Shore",
-       "text": "When a creature dies within sight of you or of your Wellspring, you can tell it the way across (no action required). Its spirit goes on: it doesn't linger as a ghost, and it can't be raised as Undead against its will. This doesn't prevent a spell that returns it to life."
-      },
-      {
-       "level": 15,
-       "name": "No True End",
-       "text": "When an ally within 30 feet of you or of your Wellspring drops to 0 Hit Points, you can take a Reaction to have it drop to 1 Hit Point instead. It then regains Hit Points equal to 2d8 plus your Wisdom modifier. A creature can benefit from this only once per Long Rest.\n\n> **Playing a Revelator of the River of Life**\n>\n> You keep people standing: your Wellspring is water you move around the fight to whoever needs it. Out of a fight you know whether a well is safe, clean a town's water, and find what a river took. In any village, they ask you about the well."
+       "text": "When a creature that you can see, or a creature in your Wellspring, dies, you can tell it the way across (no action required), unless you have the Incapacitated condition. Its spirit goes where its people's dead go, across or home to its family as an ancestor, but it doesn't linger as a ghost, and it can't be made into Undead unless it chose that in life, as a lich does or a guardian sworn to a tomb. This doesn't prevent a spell that returns it to life, and *Speak with Dead* still works on its body. This works on an Undead too: if you tell it the way across, it doesn't rise or re-form again, unless it chose undeath in life. The DM says whether an Undead chose undeath. An Undead that escapes at 0 Hit Points instead of being destroyed, such as a vampire turning to mist, hasn't died.\n\n**Held on This Shore.** Once per Short or Long Rest, when damage would reduce a creature of your choice in your Wellspring from 1 or more Hit Points to 0 and wouldn't kill it outright, the water can catch it (no action required): it's left with Hit Points equal to your Proficiency Bonus instead. This works while you have the Incapacitated condition; the water catches only you and your allies then.\n\n> **Playing a River Revelator**\n>\n> You keep people standing. Your Wellspring is a spring you set down and move around the fight: every turn a Bloodied friend starts in it, the water heals them, and it lifts the fallen before they roll. It runs as long as the fight does and you keep striking or casting. From level 7, once a rest, you let it break over everyone near it; from level 11, once per Long Rest, you let the water find its level and lift every Bloodied friend near it back above half; and from level 15, once a rest, it catches a friend who would drop in it. Out of a fight you know whether a well is safe, clean a town's water, find what a river took, and show the dying the way across. In any village, they ask you about the well."
       }
      ]
     },
@@ -5545,7 +5530,7 @@
       {
        "level": 3,
        "name": "Mountain Spells",
-       "text": "When you reach a Revelator level specified in the Mountain Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Guiding Bolt* |\n| 5 | *Enhance Ability* |\n| 9 | *Haste* |\n| 13 | *Fabricate* |\n| 17 | *Legend Lore* |",
+       "text": "When you reach a Revelator level specified in the Mountain Spells table, you thereafter always have the listed spells prepared. They count as Revelator spells for you.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Guiding Bolt* |\n| 5 | *Enhance Ability* |\n| 9 | *Haste* |\n| 13 | *Fabricate* |\n| 17 | *Legend Lore* |",
        "spells": [
         {
          "level": 3,
@@ -5653,7 +5638,7 @@
       {
        "level": 3,
        "name": "River of Death Spells",
-       "text": "When you reach a Revelator level specified in the River of Death Spells table, you thereafter always have the listed spell prepared. The Ferryman's Sleep, at level 9, isn't a spell; it is described below the table.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bane* |\n| 5 | *Blindness/Deafness* |\n| 9 | The Ferryman's Sleep |\n| 13 | *Confusion* |\n| 17 | *Modify Memory* |\n\n**The Ferryman's Sleep.** As a Magic action, you can expend a spell slot of level 3 or higher and touch a willing creature to lay it down as if dead. You can also do this without expending a spell slot if you take 10 minutes longer, as with a Ritual. For 1 hour, the creature appears dead to outward inspection and to spells used to determine its status. It has the Blinded and Incapacitated conditions, its Speed is 0, it has Resistance to all damage except Psychic damage, and it has Immunity to the Poisoned condition.",
+       "text": "When you reach a Revelator level specified in the River of Death Spells table, you thereafter always have the listed spells prepared. They count as Revelator spells for you. The Ferryman's Sleep, at level 9, isn't a spell; it is described below the table.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bane* |\n| 5 | *Blindness/Deafness* |\n| 9 | The Ferryman's Sleep |\n| 13 | *Confusion* |\n| 17 | *Modify Memory* |\n\n**The Ferryman's Sleep.** As a Magic action, you can expend a spell slot of level 3 or higher and touch a willing creature to lay it down as if dead. You can also do this without expending a spell slot if you take 10 minutes longer, as with a Ritual. For 1 hour, the creature appears dead to outward inspection and to spells used to determine its status. It has the Blinded and Incapacitated conditions, its Speed is 0, it has Resistance to all damage except Psychic damage, and it has Immunity to the Poisoned condition.",
        "spells": [
         {
          "level": 3,
@@ -5746,7 +5731,7 @@
       {
        "level": 3,
        "name": "Tree Spells",
-       "text": "When you reach a Revelator level specified in the Tree Spells table, you thereafter always have the listed spell prepared. Light of the Hall, at level 9, and the Reaching Root, at level 13, aren't spells; they are described below the table.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Heroism* |\n| 5 | *Magic Weapon* |\n| 9 | Light of the Hall |\n| 13 | The Reaching Root |\n| 17 | *Tree Stride* |\n\n**Light of the Hall.** As a Magic action, you can expend a spell slot of level 3 or higher to shine with the light of the hall of the slain. It is a 30-foot Emanation from you that lasts for 1 minute, and you must maintain Concentration on it as if on a spell. While in it, you and your allies each deal an extra 1d4 Radiant damage when you hit with a weapon or an Unarmed Strike.\n\n**The Reaching Root.** As a Bonus Action, you can expend a spell slot of level 4 or higher to raise a root of the world tree from a surface in an unoccupied space you can see within 60 feet of yourself. It lasts for 1 minute, and you must maintain Concentration on it as if on a spell. When it rises, make a melee spell attack against a creature within 30 feet of the root. On a hit, the target takes 4d8 Bludgeoning damage and is pulled up to 30 feet toward the root; if the target is Huge or smaller, it has the Grappled condition (escape DC equal to your spell save DC). The root can grapple only one creature at a time, and you can make it release a Grappled creature (no action required). On each of your later turns, you can take a Bonus Action to repeat the attack against a creature within 30 feet of the root. For each slot level above 4, the root can grapple one more creature at a time.",
+       "text": "When you reach a Revelator level specified in the Tree Spells table, you thereafter always have the listed spells prepared. They count as Revelator spells for you. Light of the Hall, at level 9, and the Reaching Root, at level 13, aren't spells; they are described below the table.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Heroism* |\n| 5 | *Magic Weapon* |\n| 9 | Light of the Hall |\n| 13 | The Reaching Root |\n| 17 | *Tree Stride* |\n\n**Light of the Hall.** As a Magic action, you can expend a spell slot of level 3 or higher to shine with the light of the hall of the slain. It is a 30-foot Emanation from you that lasts for 1 minute, and you must maintain Concentration on it as if on a spell. While in it, you and your allies each deal an extra 1d4 Radiant damage when you hit with a weapon or an Unarmed Strike.\n\n**The Reaching Root.** As a Bonus Action, you can expend a spell slot of level 4 or higher to raise a root of the world tree from a surface in an unoccupied space you can see within 60 feet of yourself. It lasts for 1 minute, and you must maintain Concentration on it as if on a spell. When it rises, make a melee spell attack against a creature within 30 feet of the root. On a hit, the target takes 4d8 Bludgeoning damage and is pulled up to 30 feet toward the root; if the target is Huge or smaller, it has the Grappled condition (escape DC equal to your spell save DC). The root can grapple only one creature at a time, and you can make it release a Grappled creature (no action required). On each of your later turns, you can take a Bonus Action to repeat the attack against a creature within 30 feet of the root. For each slot level above 4, the root can grapple one more creature at a time.",
        "spells": [
         {
          "level": 3,
@@ -6147,7 +6132,7 @@
        "Plane": "The Maelstrom",
        "Learned": "3 (the River of Life)",
        "Influence": "*Renewal:* end a condition and step free",
-       "Command": "*Rising Water:* Temporary Hit Points for an ally",
+       "Command": "*Rising Water:* carry an ally clear, or into your Wellspring",
        "Strike": "Cold"
       },
       {
@@ -6175,7 +6160,7 @@
        "Plane": "Positive Energy",
        "Learned": "5 or 13 (choice)",
        "Influence": "*Surge of Life:* heal 1d8 + Wisdom (2)",
-       "Command": "*Warm Light:* heal a Bloodied ally your Wisdom",
+       "Command": "*Warm Light:* a dying creature becomes Stable",
        "Strike": "Radiant"
       },
       {
@@ -6425,7 +6410,7 @@
         "parts": [
          {
           "label": "Spirit Aspect: River Spirit",
-          "text": "*Elemental.* It has a Swim Speed of 30 feet, and it can breathe water and air. **Command:** *Rising Water.* One ally within 5 feet of the spirit gains Temporary Hit Points equal to your Proficiency Bonus."
+          "text": "*Elemental.* It has a Swim Speed of 30 feet, and it can breathe water and air. **Command:** *Rising Water.* The water carries one creature within 5 feet of the spirit that is willing or has 0 Hit Points up to 15 feet along the ground or across water, ignoring Difficult Terrain and without provoking Opportunity Attacks. If your Wellspring is open and no one else is in it, it can instead carry the creature the same way up to 30 feet into the Wellspring, where the water can heal it when its turn starts."
          },
          {
           "label": "Influence: Renewal",
@@ -6504,7 +6489,7 @@
         "parts": [
          {
           "label": "Spirit Aspect: Radiant Mote",
-          "text": "*Celestial.* It sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. **Command:** *Warm Light.* One Bloodied creature within 5 feet of the spirit that has at least 1 Hit Point regains Hit Points equal to your Wisdom modifier."
+          "text": "*Celestial.* It sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. **Command:** *Warm Light.* One creature within 5 feet of the spirit that has 0 Hit Points and isn't dead becomes Stable."
          },
          {
           "label": "Influence: Surge of Life",
