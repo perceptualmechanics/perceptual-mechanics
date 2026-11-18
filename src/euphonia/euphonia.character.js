@@ -1574,13 +1574,13 @@ export function character(book, state) {
   // the table, as The Classes rules (a Very Rare Bonesaw at 11–16, where the
   // table first gives Rare; the Legendary coat at 17–20), and all of it in
   // the table's last row; each for one who can use it (the Bonesaw a
-  // Chirurgeon's), a Shield only for one with Shield training, which the Ward
-  // gives while attuned, and none a subclass goes without.
+  // Chirurgeon's), a Shield only for one with Shield training, and none a
+  // subclass goes without.
   const tableTop = RARITIES.indexOf(book.higherLevelEquipment.at(-1).magic.at(-1).rarity);
   const gearArrives = r => higher && (higher === book.higherLevelEquipment.at(-1) || RARITIES.indexOf(r) <= RARITIES.indexOf(higher.magic.at(-1)?.rarity) + book.classGear.ahead);
   const classGear = () => book.items.filter(i => i.magical && !i.story && i.place.class_name && has(i.place.class_name) && usable(i) && !taken.has(i.name)
     && (i.dm || i.rarities.every(r => RARITIES.indexOf(r.rarity) > tableTop)) && gearArrives(i.rarities.at(-1).rarity)
-    && !(i.kind === 'Armor' && i.base === 'Shield' && !ownTraining.includes('Shield') && !/you have Shield training/.test(i.text)) && !book.classGear.without.some(w => w.without === i.name && w.subclass === subclassOf(i.place.class_name)))
+    && !(i.kind === 'Armor' && i.base === 'Shield' && !ownTraining.includes('Shield')) && !book.classGear.without.some(w => w.without === i.name && w.subclass === subclassOf(i.place.class_name)))
     .map(i => { taken.add(i.name); return { rarity: i.rarities.at(-1).rarity, classGear: true, item: { name: i.name, kind: i.kind, base: i.base, member: memberFor(i) && (memberFor(i).name ?? memberFor(i).subclass), bonus: i.rarities.at(-1).bonus, attunement: i.attunement, living: Boolean(i.living), text: i.text } }; });
   // The inventory the player keeps (a tracker; Scott, 17 November): what
   // it takes out, what it adds, bought or given (a magic item only given,

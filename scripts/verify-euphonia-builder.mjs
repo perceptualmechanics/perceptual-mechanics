@@ -823,22 +823,19 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (!(shirted?.saveItems?.includes('Talismanic Shirt') && shirted.saves.every((x, i) => x.bonus === bare.saves[i].bonus + 1))) fail(`the Talismanic Shirt: ${JSON.stringify(shirted?.saves.map(x => x.bonus))} against ${JSON.stringify(bare?.saves.map(x => x.bonus))}`);
   // The class's own gear, a rarity ahead of the table (Scott, 17 November):
   // a Chirurgeon's Very Rare Bonesaw from the row that first gives Rare, not
-  // before; the Ward to any Physician, whom it trains; the Legendary coat at
+  // before; the Ward only to one trained in Shields; the Legendary coat at
   // 17, with its Armor Class without armor, its defenses and "Your spell save
   // DC and spell attack bonus each increase by 2".
   const gearOf = (cls, sub, lv) => run(someone([{ class: cls, level: lv, subclass: sub }]), `${sub} ${lv}`);
   const firstRare = book.higherLevelEquipment.find(r => r.magic.some(m => m.rarity === 'Rare')).lo;
   const gearNames = r => r?.equipment.magicItems.filter(m => m.classGear).map(m => m.item.name) ?? [];
   if (!(gearNames(gearOf('Physician', 'Chirurgeon', firstRare)).includes('Bonesaw') && !gearNames(gearOf('Physician', 'Chirurgeon', firstRare - 1)).includes('Bonesaw'))) fail(`the Bonesaw: ${gearNames(gearOf('Physician', 'Chirurgeon', firstRare))} at ${firstRare}, ${gearNames(gearOf('Physician', 'Chirurgeon', firstRare - 1))} at ${firstRare - 1}`);
-  // The Ward gives Shield training while attuned, so any Physician qualifies;
-  // without that sentence only one already trained would.
-  const unwarded = engine.rulebook(srd, euphonia, setting, subclasses, { ...items, items: items.items.map(i => (i.name === 'The Ward' ? { ...i, text: i.text.replace('you have Shield training', 'you feel safe') } : i)) });
-  const hasWard = (b, sub) => engine.character(b, someone([{ class: 'Physician', level: firstRare, subclass: sub }])).equipment.magicItems.some(m => m.classGear && m.item.name === 'The Ward');
-  if (!hasWard(book, 'Doctor') || !hasWard(book, 'Combat Medic') || hasWard(unwarded, 'Doctor') || !hasWard(unwarded, 'Combat Medic')) fail('the Ward: every Physician qualifies by its Shield training, and without that sentence only one already trained');
+  const shieldTrained = book.classes.find(c => c.name === 'Physician').subclasses.map(x => x.name).filter(sub => gearOf('Physician', sub, firstRare)?.training.includes('Shield'));
+  for (const sub of book.classes.find(c => c.name === 'Physician').subclasses.map(x => x.name)) if (gearNames(gearOf('Physician', sub, firstRare)).includes('The Ward') !== ['Combat Medic', 'Chirurgeon'].includes(sub)) fail(`the Ward and the ${sub}: only one with Shield training has it (${shieldTrained.join(', ')})`);
   for (const w of items.class_gear.without) if (!book.items.some(i => i.name === w.without) || !book.items.some(i => i.name === w.has) || !book.classes.some(c => c.subclasses.some(x => x.name === w.subclass))) fail(`class gear: ${w.subclass}, ${w.has} or ${w.without} isn't in the books`);
   if (gearNames(gearOf('Physician', 'Chirurgeon', book.higherLevelEquipment.at(-1).lo)).includes('Rod of the Doctor')) fail('a Chirurgeon is given the Rod of the Doctor, which the class gear rules keep from it');
   const last = book.higherLevelEquipment.at(-1).lo, doctor17 = gearOf('Physician', 'Doctor', last), bare17 = gearOf('Physician', 'Doctor', last - 1);
-  const coatAc = 15 + doctor17?.mod.Dexterity + srd.armor.items.find(x => x.category === 'Shield').bonus;
+  const coatAc = 15 + doctor17?.mod.Dexterity;
   if (!(gearNames(doctor17).includes("Doctor's Coat") && !gearNames(bare17).includes("Doctor's Coat") && doctor17.armorClass.ac === coatAc && doctor17.defenses.saveAdvantages.includes('saves against spells and other magical effects')
     && doctor17.spellcasting[0].dc === srd.attacks.spell_save_dc_base + doctor17.mod.Intelligence + doctor17.bonus + 2))
     fail(`the Doctor's Coat at ${last}: ${JSON.stringify({ gear: gearNames(doctor17), ac: doctor17?.armorClass, dc: doctor17?.spellcasting[0].dc })}`);
