@@ -716,6 +716,20 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     fail(`a Fighter's load: ${JSON.stringify(laden)}, not ${kitWeight} lb. of kit`);
   const weak = run(someone([{ class: 'Fighter', level: 1 }], { base: { ...ABLE, Strength: 3 } }), 'Fighter 1, Strength 3')?.load;
   if (!(laden.over === null && weak?.over === srd.overloaded)) fail(`carrying too much: ${weak?.over} at Strength 3, ${laden?.over} at ${ABLE.Strength}`);
+  // Until there's a size and a Strength, what the character can carry is
+  // unknown, and an unknown can't be exceeded.
+  for (const [what, extra] of [['no species', { species: '', size: '' }], ['no Strength', { method: 'standard', base: { ...ABLE, Strength: null } }]]) {
+    const load = engine.character(book, someone([{ class: 'Fighter', level: 1 }], extra)).load;
+    if (!(load.carry === null && load.over === null)) fail(`a Fighter with ${what} carries ${load.carry} and is ${load.over ? '' : 'not '}overloaded`);
+  }
+  // Before the scores are in, the kit's armor is worn, not set aside for an
+  // Armor Class nothing can compute yet.
+  const unscored = engine.character(book, someone([{ class: 'Fighter', level: 1 }], { method: 'standard', base: {} }));
+  if (unscored.armor?.name !== 'Chain Mail') fail(`a Fighter with no scores yet wears ${unscored.armor?.name ?? 'no armor'}, not the kit's Chain Mail`);
+  // Skilled is one choice of skills and tools together; what's unchosen is
+  // asked for as either.
+  const skilledAsk = engine.character(book, someone([{ class: 'Fighter', level: 1 }], { originFeats: { 'Human Versatile': 'Skilled' } })).problems.find(p => /^tools:feat Versatile/.test(p.field));
+  if (!/^Choose 3 more skills or tools for Skilled, from Versatile \(Human\)\.$/.test(skilledAsk?.message ?? '')) fail(`an unchosen Skilled asks: ${skilledAsk?.message}`);
 
   // What holds in a state or by a choice: Rage's damage noted on Strength
   // attacks, from its column, not added; Agonizing Blast's modifier on the

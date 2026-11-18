@@ -337,7 +337,7 @@ export async function initBuilder(panel) {
       rebuild(skillsBox, ...(result.choices.length ? result.choices.map(c => {
         const read = () => set(s => { s.skills = { ...s.skills, [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
         const group = h('fieldset', { class: 'b-skills', 'data-choice': c.key, 'aria-describedby': idFor(`skills:${c.key}`) },
-          h('legend', {}, `${c.label}: ${c.given.length ? `${c.given.join(', ')}, plus ` : ''}choose ${c.upTo ? 'up to ' : ''}${c.count}${c.upTo ? ' (the rest tools)' : ''}`),
+          h('legend', {}, `${c.label}: ${c.given.length ? `${c.given.join(', ')}, plus ` : ''}${c.upTo ? `${c.count} skills or tools in any mix, the skills here and the tools under Tools` : `choose ${c.count}`}`),
           h('div', { class: 'b-checks' }, c.from.map(skill =>
             h('label', {}, h('input', { type: 'checkbox', value: skill, 'data-key': `skill-${c.key}-${skill}`, checked: (state.skills?.[c.key] ?? []).includes(skill), onchange: read }), ` ${skill}`))),
           problemSlot(`skills:${c.key}`));
@@ -901,7 +901,7 @@ export async function initBuilder(panel) {
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-combat' },
         h('h3', { id: 'sheet-combat' }, 'In a fight'),
         h('dl', { class: 'sheet-facts' },
-          h('dt', {}, 'Hit points'), h('dd', {}, `${known(result.hp)}${result.hpMethod === 'Rolled' ? ' (rolled)' : ''}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${known(x.hp)} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count} d${d.die}`).join(' and ') || 'no'} Hit Dice`),
+          h('dt', {}, 'Hit points'), h('dd', {}, `${known(result.hp)}${result.hpMethod === 'Rolled' ? ' (rolled)' : ''}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${known(x.hp)} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count}d${d.die}`).join(' and ') || 'no'} Hit Dice`),
           h('dt', {}, 'Armor Class'), h('dd', {}, `${known(result.armorClass.ac)} (${result.armorClass.from})${result.armor ? '' : result.unarmored.length > 1 ? `; without armor, one at a time: ${result.unarmored.map(u => `${known(u.ac)} (${u.from})`).join(', ')}` : ''}`),
           h('dt', {}, 'Initiative'), h('dd', {}, signed(result.initiative)),
           h('dt', {}, 'Speed'), h('dd', {}, `${result.speed ? `${result.speed} feet` : '—'}${Object.entries(result.speeds).map(([k, v]) => `; ${k} ${v} feet`).join('')}`),
@@ -934,14 +934,16 @@ export async function initBuilder(panel) {
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-equipment' },
         h('h3', { id: 'sheet-equipment' }, 'Equipment'),
         h('dl', { class: 'sheet-facts' },
-          h('dt', {}, 'Armor'), h('dd', {}, `${result.armor?.name ?? 'None'}${result.armor?.madeFrom ? `, made from ${result.armor.madeFrom}` : ''}${result.shield ? ' and a Shield' : ''}${gear.bought ? `, the armor bought for ${gear.bought.cost.toLocaleString('en')} GP` : ''}`),
-          h('dt', {}, 'Training'), h('dd', {}, result.training.length ? listed(result.training.map(t => (t === 'Shield' ? 'Shields' : `${t} armor`))) : 'None'),
-          h('dt', {}, 'Weapons'), h('dd', {}, listed([...result.weaponTraining.categories.map(k => `${k} weapons`), ...result.weaponTraining.named]) || 'None'),
+          h('dt', {}, 'Wearing'), h('dd', {}, `${result.armor?.name ?? 'No armor'}${result.armor?.madeFrom ? `, made from your ${result.armor.madeFrom}` : ''}${result.shield ? ', and holding a Shield' : ''}${gear.bought ? `; the armor bought for ${gear.bought.cost.toLocaleString('en')} GP` : ''}${result.shieldLeft ? `. Your Shield is packed, not held: ${result.shieldLeft}` : ''}`),
+          h('dt', {}, 'Armor training'), h('dd', {}, result.training.length ? listed(result.training.map(t => (t === 'Shield' ? 'Shields' : `${t} armor`))) : 'None'),
+          h('dt', {}, 'Weapon proficiencies'), h('dd', {}, listed([...result.weaponTraining.categories.map(k => `${k} weapons`), ...result.weaponTraining.named]) || 'None'),
           result.inventory.goods.length ? [h('dt', {}, 'Added'), h('dd', {}, result.inventory.goods.map(g => `${g.item} (${g.how})`).join(', '))] : null,
           result.inventory.removed.length ? [h('dt', {}, 'Taken out'), h('dd', {}, result.inventory.removed.join(', '))] : null,
           gear.carried.length ? [h('dt', {}, 'From your features'), h('dd', {}, gear.carried.map(x => `${x.name} (${x.from})`).join(', '))] : null,
-          gear.kits.map(k => [h('dt', {}, `${k.from}’s kit`), h('dd', {}, k.items.join(', ') || 'Nothing but the coin')]),
-          h('dt', {}, 'Weight carried'), h('dd', {}, `${pounds(result.load.items + result.load.coins)}, ${pounds(result.load.coins)} of it coin, of the ${pounds(result.load.carry)} you can carry; you can drag, lift or push ${pounds(result.load.drag)}${result.load.unweighed.length ? `; the books give no weight for ${listed(result.load.unweighed)}` : ''}`),
+          // Each kit item said where it is: the armour worn or made into the
+          // suit, the Shield held or packed.
+          gear.kits.map(k => [h('dt', {}, `${k.from}’s kit`), h('dd', {}, k.items.map(i => (i === result.armor?.madeFrom ? `${i} (made into your ${result.armor.name})` : i === result.armor?.name ? `${i} (worn)` : i === 'Shield' ? `${i} (${result.shield ? 'held' : 'packed'})` : i)).join(', ') || 'Nothing but the coin')]),
+          h('dt', {}, 'Weight carried'), h('dd', {}, `${pounds(result.load.items + result.load.coins)}, ${pounds(result.load.coins)} of it coin, ${result.load.carry === null ? 'of what your size and Strength let you carry, once you’ve chosen them' : `of the ${pounds(result.load.carry)} you can carry; you can drag, lift or push ${pounds(result.load.drag)}`}${result.load.unweighed.length ? `; the books give no weight for ${listed(result.load.unweighed)}` : ''}`),
           result.load.over ? h('dd', { class: 'sheet-warning' }, `More than you can carry. ${result.load.over}`) : null,
           h('dt', {}, 'Money'), h('dd', {}, `${gear.gold.toLocaleString('en')} GP${gear.levelGold ? `, with the ${gear.levelGold.toLocaleString('en')} GP a character starting at level ${result.level} has; roll ${gear.roll} more` : ''}`)),
         gear.magicItems.length ? [h('h4', {}, 'Magic items'),

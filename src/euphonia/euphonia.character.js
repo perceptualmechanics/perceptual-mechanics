@@ -425,7 +425,9 @@ export function character(book, state) {
   if (!background) fail('background', 'Choose a background.');
 
   // The base scores, by the method chosen.
-  const base = Object.fromEntries(ABILITIES.map(a => [a, Number(state.base?.[a])]));
+  // An unassigned score is unknown (NaN), never Number(null)'s 0, so what's
+  // derived from it stays unknown too.
+  const base = Object.fromEntries(ABILITIES.map(a => [a, state.base?.[a] === null || state.base?.[a] === '' ? NaN : Number(state.base?.[a])]));
   const given = ABILITIES.map(a => base[a]);
   if (state.method === 'standard') {
     const sorted = [...given].sort((a, b) => b - a), array = [...book.standardArray].sort((a, b) => b - a);
@@ -1026,7 +1028,7 @@ export function character(book, state) {
     const k = `${key}${parts.length > 1 ? ` ${i + 1}` : ''}${x.replaces ? ` instead of ${x.replaces}` : ''}`;
     const got = (state.tools?.[k] ?? []).filter(t => x.from.includes(t));
     toolChoices.push({ key: k, label: x.replaces ? `${label}, instead of ${x.replaces}` : label, count: x.count, from: x.from, chosen: got });
-    if (got.length !== x.count) fail(`tools:${k}`, `Choose ${x.count} tool${x.count === 1 ? '' : 's'} for ${label}.`);
+    if (got.length !== x.count) fail(`tools:${k}`, x.ask ?? `Choose ${x.count} tool${x.count === 1 ? '' : 's'} for ${label}.`);
     for (const t of got) ownTool(t, label);
   });
   if (first) takeTools(toolPhrase(first.traits.find(t => t.trait === 'Tool Proficiencies')?.value ?? '', first.name), first.name, first.name);
@@ -1047,7 +1049,10 @@ export function character(book, state) {
   for (const f of feats) {
     if (!/proficiency in any combination of (\w+) skills or tools of your choice/.test(f.feat.description ?? '')) continue;
     const count = NUMBERS.indexOf(f.feat.description.match(/combination of (\w+)/)[1]), skillsTaken = (state.skills?.[`feat ${f.from}`] ?? []).filter(Boolean).length;
-    if (count - skillsTaken > 0) takeTools([{ count: count - skillsTaken, from: concrete }], `feat ${f.from}`, `${f.feat.name}, from ${f.from}: the rest in tools`);
+    // One choice of skills and tools together, asked in two places: what the
+    // skills leave is asked here as tools, in the feat's own terms.
+    const left = count - skillsTaken;
+    if (left > 0) takeTools([{ count: left, from: concrete, ask: `Choose ${left} more skill${left === 1 ? '' : 's'} or tool${left === 1 ? '' : 's'} for ${f.feat.name}, from ${f.from}.` }], `feat ${f.from}`, `${f.feat.name}, from ${f.from}: the tools, after any skills you took with it`);
   }
   // A tool chosen that's the character's already, from another source or
   // another choice, gives nothing: one more of the list's instead.
@@ -1682,7 +1687,9 @@ export function character(book, state) {
   const money = purse - bought;
   if (money < 0) fail('inventory', `What's bought costs ${bought.toLocaleString('en')} GP; there's ${purse.toLocaleString('en')}.`);
   const armorNamed = item => book.armor.items.find(a => a.name === item);
-  const wearable = a => a.category !== 'Shield' && training.includes(a.category) && (!a.strength || scores.Strength >= a.strength);
+  // A Strength not yet assigned doesn't rule armor out; the score, once in,
+  // does.
+  const wearable = a => a.category !== 'Shield' && training.includes(a.category) && (!a.strength || !Number.isFinite(scores.Strength) || scores.Strength >= a.strength);
   const kitShield = items.map(armorNamed).find(a => a?.category === 'Shield' && training.includes('Shield'));
   const owned = items.map(armorNamed).filter(a => a && wearable(a));
   const wears = [[null, 0], ...owned.map(a => [a, 0]), ...book.armor.items.filter(a => wearable(a) && a.cost <= money && !owned.includes(a)).map(a => [a, a.cost])];
@@ -1707,13 +1714,20 @@ export function character(book, state) {
   const wearOptions = suitOf ? [] : owned.map(a => a.name);
   const told = !suitOf && inventory.wear && inventory.wear !== 'auto' ? (inventory.wear === 'none' ? [null, 0] : wears.find(([a, spent]) => a?.name === inventory.wear && spent === 0)) : null;
   if (!suitOf && inventory.wear && inventory.wear !== 'auto' && !told) fail('wear', `${inventory.wear} isn't armor the character owns and can wear.`);
+  // The pick compares Armor Classes; an ability not yet assigned counts as
+  // +0 here, so the armor in the kit is worn before the scores are in
+  // (NaN compares as nothing, which left the character in no armor).
+  const pickMods = Object.fromEntries(Object.entries(mod).map(([a, v]) => [a, Number.isFinite(v) ? v : 0]));
   let gear = null;
   if (suitOf) gear = { spent: suitOf.spent, worn: suitOf.worn, shield: null };
   else for (const shield of hovering ? [book.armor.items.find(x => x.category === 'Shield')] : kitShield ? [kitShield, null] : [null]) for (const [worn, spent] of told ? [told] : wears) {
-    const ac = acOf(mod, worn, shield).ac.ac, quiet = !worn?.stealth_disadvantage;
+    const ac = acOf(pickMods, worn, shield).ac.ac, quiet = !worn?.stealth_disadvantage;
     if (!gear || ac > gear.ac || (ac === gear.ac && (quiet > gear.quiet || (quiet === gear.quiet && spent < gear.spent)))) gear = { ac, quiet, spent, worn, shield };
   }
   const { worn, shield } = gear;
+  // A shield the kit gives but the character doesn't hold, and why: the suit
+  // works only without one, or the Armor Class is higher without it.
+  const shieldLeft = kitShield && !shield ? (suitOf ? `your ${suitOf.worn.name} gives its Armor Class only while you aren't holding one` : 'your Armor Class is higher without it') : null;
   const { unarmored, ac: armorClass } = acOf(mod, worn, shield);
   // The books' gear, for the player to buy at the table with what's left:
   // the setting's own and its classes' chapters', each piece of a priced set
@@ -2141,14 +2155,16 @@ export function character(book, state) {
   const size = sizes.length > 1 ? state.size : sizes[0];
   const things = [...items.flatMap(weigh), ...(equipment.bought ? weigh(equipment.bought.name) : [])];
   const unweighed = [...things.filter(x => x.weight === null).map(x => x.item), ...carried.map(x => x.name), ...magicItems.filter(m => m.item).map(m => m.item.name)];
-  const capacity = W.carrying.find(r => r.sizes.includes(size)) ?? null;
+  // Capacity needs both a size and a Strength; until the player has chosen
+  // them it's unknown, not zero.
+  const capacity = Number.isFinite(scores.Strength) ? W.carrying.find(r => r.sizes.includes(size)) ?? null : null;
   const load = {
     items: things.filter(x => x.weight !== null).reduce((n, x) => n + x.weight, 0), coins: left / W.coinsPerPound, unweighed,
     carry: capacity ? scores.Strength * capacity.carry : null, drag: capacity ? scores.Strength * capacity.drag : null,
   };
   // More than the character can carry is the rule's to say ("While dragging,
   // … your Speed can be no more than 5 feet").
-  load.over = load.items + load.coins > load.carry ? W.overloaded : null;
+  load.over = load.carry !== null && load.items + load.coins > load.carry ? W.overloaded : null;
 
   return {
     problems, notes, species, option: options?.names.includes(state.option) ? state.option : null, size, background, scores, base, mod, level: total, bonus,
@@ -2163,7 +2179,7 @@ export function character(book, state) {
     hp, hpFrom, hpMethod: rolled ? 'Rolled' : 'Fixed', hpRolls, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
     inventory: { kept, goods: goods.map(g => ({ name: g.name, count: g.count, how: g.how, cost: g.entry.cost, item: asItem(g), index: g.index })), given: givenMagic.map(m => m.item.name), removed: inventory.remove ?? [], bought, wear: told ? (told[0]?.name ?? 'none') : 'auto', wearOptions },
     load, attacks, attacksPerAction: perAction, senses, speeds: moving, defenses: Object.fromEntries(Object.entries(defenses).map(([k, v]) => [k, [...v]])),
-    features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), equipment, training,
+    features, read: [...read], feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), shieldLeft, equipment, training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,
   };
 }
