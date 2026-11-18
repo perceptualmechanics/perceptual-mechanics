@@ -469,6 +469,10 @@ export async function initBuilder(panel) {
     pick.addEventListener('change', () => { const c = chosen(); buy.disabled = !c || Boolean(c.magic); give.disabled = !c; count.disabled = Boolean(c?.magic); });
     const wear = h('select', { 'aria-describedby': idFor('wear'), onchange: e => set(s => { s.inventory = { ...s.inventory, wear: e.target.value }; }) },
       options([{ value: 'auto', label: 'The builder’s pick' }, { value: 'none', label: 'No armor' }, ...inv.wearOptions.map(n => ({ value: n, label: n }))], inv.wear));
+    // The list is rebuilt under the player's hand: a keyboard stays where it
+    // was, on what took the removed row's place, not back at the page's top.
+    const controls = () => [...gearBox.querySelectorAll('button:not(:disabled), select:not(:disabled), input:not(:disabled)')];
+    const at = controls().indexOf(document.activeElement);
     rebuild(gearBox,
       h('ul', { class: 'b-gear-list' },
         inv.kept.map(item => row(item, remove(item, () => take(item)))),
@@ -477,6 +481,7 @@ export async function initBuilder(panel) {
       inv.removed.length ? h('p', { class: 'b-note' }, 'Taken out: ', inv.removed.map((item, k) => [k ? ', ' : '', h('button', { type: 'button', class: 'b-link', 'aria-label': `Put back ${item}`, onclick: () => putBack(k) }, item)])) : null,
       h('div', { class: 'b-gear-add' }, pick, count, buy, give),
       inv.wearOptions.length ? h('label', { class: 'b-field' }, h('span', {}, 'Armor worn'), wear) : null);
+    if (at >= 0) { const now = controls(); now[Math.min(at, now.length - 1)]?.focus({ preventScroll: true }); }
   }
   function renderAbilities(result) {
     if (!fresh(abilityBox, JSON.stringify(result.abilityChoices))) return;
