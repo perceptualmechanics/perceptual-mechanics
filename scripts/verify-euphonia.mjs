@@ -11,7 +11,8 @@ import { DRAFT_NOTE, DRAFT_NOTE_HTML, HELP_URL } from './euphonia-draft-note.mjs
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'subclasses', 'items', 'people', 'sheets', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
+// The Reading joins them once the book exports it.
+const FILES = ['classes', 'subclasses', 'items', 'people', 'sheets', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages', ...(existsSync(new URL('../src/euphonia/euphonia.reading.json', import.meta.url)) ? ['reading'] : [])];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -212,12 +213,12 @@ export function verifyEuphonia(d = euphoniaData()) {
   const SHEETS = 'public/euphonia/sheets/';
   const unescape = t => t.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
     .replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => ({ lt: '<', gt: '>', quot: '"', apos: "'", amp: '&' })[e]);
-  const shown = new Set([...people.regions.flatMap(r => r.people.map(p => p.name)), ...people.notable.blocks.filter(b => b.kind === 'heading' && b.level === 3).map(b => b.text)]);
+  const shown = new Set([...people.regions.flatMap(r => r.people.map(p => p.name)), ...people.notable.blocks.filter(b => b.kind === 'heading' && b.level === 3).map(b => b.text), ...(d.reading?.data.roster ?? []).map(p => p.name)]);
   const files = d.sheetFiles ?? (existsSync(new URL(SHEETS, ROOT)) ? readdirSync(new URL(SHEETS, ROOT)).filter(f => f.endsWith('.html')) : []);
   const sheetText = d.sheetText ?? (f => read(SHEETS + f));
   for (const sh of d.sheets.data) {
     const at = `character sheet ${sh.file}`;
-    if (!shown.has(sh.name)) { fail(`${at}: ${sh.name} isn't on the People page`); continue; }
+    if (!shown.has(sh.name)) { fail(`${at}: ${sh.name} isn't on the People page or in the Reading`); continue; }
     if (!files.includes(sh.file)) { fail(`${at}: not in ${SHEETS}`); continue; }
     const src = sheetText(sh.file), title = unescape(src.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '').trim();
     if (title !== `${sh.name} (${sh.line})`) fail(`${at}: titled "${title}", not ${sh.name} (${sh.line})`);

@@ -1,21 +1,42 @@
 // The Reading's symbols, drawn here: stroke paths on a 24-unit square, by the
-// id euphonia.reading.json gives each. The verify gate fails on a symbol the
-// file names and this doesn't draw.
-export const SYMBOLS = {key:'<circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/>',lantern:'<path d="M9 5h6M12 2v3M8 8h8l1 10H7zM8 8l1-3M16 8l-1-3M6 21h12"/><path d="M12 11c2 2 1 4 0 5-1-1-2-3 0-5z"/>',mask:'<path d="M3 8c3-2 6-1 9 1 3-2 6-3 9-1 0 6-3 9-6 8-1-1-2-2-3-2s-2 1-3 2C6 17 3 14 3 8z"/><path d="M7 10.5h2M15 10.5h2"/>',blade:'<path d="M19 3l2 2L9 17l-3-3zM5 13l6 6M4 20l3-3"/>',seed:'<path d="M12 21c-5-4-6-10 0-16 6 6 5 12 0 16zM12 21V10"/>',bell:'<path d="M6 17c1-2 1-4 1-7a5 5 0 0110 0c0 3 0 5 1 7zM4 17h16M10 20a2 2 0 004 0M12 3v2"/>',needle:'<path d="M4 20L20 4M17 4h3v3"/><path d="M7 17c-4-3 2-8 5-5s-1 8 5 7"/>',book:'<path d="M12 6c-2-2-5-2-8-1v14c3-1 6-1 8 1 2-2 5-2 8-1V5c-3-1-6-1-8 1zM12 6v14"/>',compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',anchor:'<circle cx="12" cy="5" r="2"/><path d="M12 7v14M8 10h8M4 13c0 5 4 7 8 8 4-1 8-3 8-8"/>',cup:'<path d="M6 4h12l-1 7a5 5 0 01-10 0zM12 16v4M8 20h8"/>',spool:'<path d="M6 4h12M6 20h12M8 4v16M16 4v16M8 8l8 3M8 12l8 3M8 16l8 1"/>',crown:'<path d="M4 18L3 7l5 4 4-6 4 6 5-4-1 11z"/>',hammer:'<path d="M13 5l6 6-3 2-6-6zM11 9L4 20"/>',feather:'<path d="M5 20C6 10 12 4 20 4c0 8-6 14-13 13M5 20l9-10"/>',door:'<path d="M6 21V5a2 2 0 012-2h8a2 2 0 012 2v16M3 21h18M14 12h.01"/>',flame:'<path d="M12 3c1 4 6 6 6 12a6 6 0 01-12 0c0-3 2-4 3-7 1 2 2 3 3 3 1-2 0-5 0-8z"/>',river:'<path d="M3 8c3-3 6 3 9 0s6 3 9 0M3 13c3-3 6 3 9 0s6 3 9 0M3 18c3-3 6 3 9 0s6 3 9 0"/>',mountain:'<path d="M2 20L9 6l4 7 2-3 7 10zM7 10l2 2 2-2"/>',tree:'<path d="M12 21V9M12 13l-5-4M12 11l5-4M8 21h8"/><path d="M5 9a7 6 0 0114 0 7 3 0 01-14 0z"/>'};
+// id euphonia.reading.json gives each, from the book's "drawn as". The gate
+// fails on a symbol the file names and this doesn't draw.
+export const SYMBOLS = {
+  key: '<circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/>',
+  lantern: '<path d="M9 5h6M12 2v3M8 8h8l1 10H7zM8 8l1-3M16 8l-1-3M6 21h12"/><path d="M12 11c2 2 1 4 0 5-1-1-2-3 0-5z"/>',
+  blade: '<path d="M19 3l2 2L9 17l-3-3zM5 13l6 6M4 20l3-3"/>',
+  seed: '<path d="M12 21c-5-4-6-10 0-16 6 6 5 12 0 16zM12 21V10"/>',
+  book: '<path d="M12 6c-2-2-5-2-8-1v14c3-1 6-1 8 1 2-2 5-2 8-1V5c-3-1-6-1-8 1zM12 6v14"/>',
+  bell: '<path d="M6 17c1-2 1-4 1-7a5 5 0 0110 0c0 3 0 5 1 7zM4 17h16M10 20a2 2 0 004 0M12 3v2"/>',
+  hammer: '<path d="M13 5l6 6-3 2-6-6zM11 9L4 20"/>',
+  cup: '<path d="M6 4h12l-1 7a5 5 0 01-10 0zM12 16v4M8 20h8"/>',
+  mask: '<path d="M3 8c3-2 6-1 9 1 3-2 6-3 9-1 0 6-3 9-6 8-1-1-2-2-3-2s-2 1-3 2C6 17 3 14 3 8z"/><path d="M7 10.5h2M15 10.5h2"/>',
+  door: '<path d="M6 21V5a2 2 0 012-2h8a2 2 0 012 2v16M3 21h18M14 12h.01"/>',
+  flame: '<path d="M12 3c1 4 6 6 6 12a6 6 0 01-12 0c0-3 2-4 3-7 1 2 2 3 3 3 1-2 0-5 0-8z"/>',
+  river: '<path d="M3 8c3-3 6 3 9 0s6 3 9 0M3 13c3-3 6 3 9 0s6 3 9 0M3 18c3-3 6 3 9 0s6 3 9 0"/>',
+  mountain: '<path d="M2 20L9 6l4 7 2-3 7 10zM7 10l2 2 2-2"/>',
+  gate: '<path d="M4 21V4M20 21V4M2.5 4h3M18.5 4h3M4 7h16M4 18h16M8 7v11M12 7v11M16 7v11M4 16L20 9"/>',
+  thunder: '<path d="M14 2L6 13h5l-2 8 9-12h-5l3-7zM11 21l2-3M9 21l-2 1"/>',
+  lullaby: '<path d="M5 11h14l-1.5 6h-11zM5 11c0-3.5 3-6 7-6v6M3 19c5 3 13 3 18 0"/>',
+  loom: '<path d="M4 3v18M20 3v18M2.5 5h19M2.5 19h19M8 5v14M12 5v14M16 5v14M4 12h16M4 14.5h16M4 17h16"/>',
+  dog: '<path d="M4 19c-.5-4 2-7 7-7h3l2-3 1-3 2 3 2 2-.5 2H18l-1 3 1 3zM4 17c-1.5-.5-2-2-1.5-3.5M19 10h.01M9 19v-3M13 19v-3"/>',
+  spear: '<path d="M3 21l12-12M15 9l.5-5L21 3l-1 5.5zM12.5 7.5l4 4"/>',
+  bird: '<path d="M3 13c3-3 6-3 8-1 1-4 5-7 10-7-1 2-2 3-3 4 0 5-4 9-9 8l-4 3 1-4c-1-1-2-2-3-3zM15 9h.01"/>',
+};
 export const symbolSvg = id => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${SYMBOLS[id]}</svg>`;
 
-// A person's sigil, built from their traits until there is art: the ring is
-// broken for someone who works from the edges, the figure's sides come from
-// their approach, a stroke on the rim marks where on the map they're from, and
-// a dot stands for each other trait.
+// A person's sigil, built from their traits until there is art. Each of the
+// nine Ways is a figure of 3 to 11 sides, the first drawn large and the second
+// small within it; each Heart is a mark at its own ninth of the ring; a stroke
+// on the rim is where on the map they're from.
 export function sigilSvg(p, traits, mapX) {
-  const axis = a => p.traits.find(t => traits[t]?.axis === a);
-  const order = Object.keys(traits).filter(t => traits[t].axis === 'approach'), sides = 3 + Math.max(0, order.indexOf(axis('approach')));
-  const pace = Object.keys(traits).filter(t => traits[t].axis === 'pace').indexOf(axis('pace'));
-  const at = (r, a) => `${(50 + r * Math.cos(a)).toFixed(1)} ${(50 + r * Math.sin(a)).toFixed(1)}`, turn = 2 * Math.PI, rim = mapX / 1000 * turn - Math.PI / 2;
-  const figure = Array.from({ length: sides }, (_, i) => at(24, -Math.PI / 2 + i * turn / sides)).join(' L');
-  const dots = p.traits.filter(t => !['approach', 'pace'].includes(traits[t].axis)).map((_, i) => `<circle cx="${at(36, rim + 0.55 * (i + 1)).split(' ')[0]}" cy="${at(36, rim + 0.55 * (i + 1)).split(' ')[1]}" r="2.4" fill="currentColor" stroke="none"/>`).join('');
-  return `<svg viewBox="0 0 100 100" role="img" aria-label="${p.name.replace(/"/g, '&quot;')}’s sigil" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="50" cy="50" r="45"${pace === 1 ? ' stroke-dasharray="5 5"' : ''}/><path d="M${figure}Z"/><path d="M${at(40, rim)} L${at(49, rim)}" stroke-width="3"/>${dots}<circle cx="50" cy="50" r="3" fill="currentColor" stroke="none"/></svg>`;
+  const kind = a => Object.keys(traits).filter(t => traits[t].axis === a), ways = kind('way'), hearts = kind('heart'), turn = 2 * Math.PI;
+  const mine = a => p.traits.filter(t => traits[t].axis === a), at = (r, a) => [50 + r * Math.cos(a), 50 + r * Math.sin(a)].map(n => n.toFixed(1));
+  const figure = (way, r, spin) => { const sides = 3 + ways.indexOf(way); return `M${Array.from({ length: sides }, (_, i) => at(r, spin + i * turn / sides).join(' ')).join(' L')}Z`; };
+  const rim = mapX / 1000 * turn - Math.PI / 2, [first, second] = mine('way');
+  const marks = mine('heart').map((t, i) => { const [x, y] = at(36, hearts.indexOf(t) / hearts.length * turn - Math.PI / 2); return `<circle cx="${x}" cy="${y}" r="3"${i ? ' fill="none"' : ' fill="currentColor" stroke="none"'}/>`; }).join('');
+  const label = `${p.name}’s sigil: ${p.traits.map(t => traits[t].name).join(', ')}`.replace(/"/g, '&quot;');
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${label}" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="50" cy="50" r="45"/><path d="${figure(first, 25, -Math.PI / 2)}"/><path d="${figure(second, 12, Math.PI / 2)}" stroke-width="1.2"/><path d="M${at(40, rim).join(' ')} L${at(49, rim).join(' ')}" stroke-width="3"/>${marks}</svg>`;
 }
 
 // The first screen: two roads meeting under a low sun, and someone already

@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "ebef895c7459e67e6bd4a60b98a64f29897962499e0d21ee7961bdd66813e0fd",
-  "modified": "2026-11-18T15:14:17-05:00",
+  "sha256": "a1cf5ca2aecc5b71e827601e4f19dc744c9047616e428e9e21c99a7d5d0c63d1",
+  "modified": "2026-11-18T15:27:33-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 34,
+  "exporter_version": 35,
   "rules": {
    "banned": [
     "eladrin",
@@ -230,6 +230,12 @@
    "file": "cover_storm_captain.html"
   },
   {
+   "name": "Mirza Qasem Beg",
+   "title": "Mirza Qasem Beg (Courtier 11, Arms)",
+   "line": "Courtier 11, Arms",
+   "file": "show_arms.html"
+  },
+  {
    "name": "Doña Isabel Cuauhtzin",
    "title": "Doña Isabel Cuauhtzin (Courtier 8, Art)",
    "line": "Courtier 8, Art",
@@ -248,10 +254,28 @@
    "file": "show_chemist.html"
   },
   {
+   "name": "Salvu Zammit",
+   "title": "Salvu Zammit (Physician 7, Chirurgeon)",
+   "line": "Physician 7, Chirurgeon",
+   "file": "show_chirurgeon.html"
+  },
+  {
    "name": "Kilimoar",
    "title": "Kilimoar (Circle of Shapers, 13th)",
    "line": "Circle of Shapers, 13th",
    "file": "show_circle_of_shapers.html"
+  },
+  {
+   "name": "Abel Fenwick",
+   "title": "Abel Fenwick (Physician 7, Combat Medic)",
+   "line": "Physician 7, Combat Medic",
+   "file": "show_combat_medic.html"
+  },
+  {
+   "name": "Josiah Thorne",
+   "title": "Josiah Thorne (Natural Philosopher 5, Crowner)",
+   "line": "Natural Philosopher 5, Crowner",
+   "file": "show_crowner.html"
   },
   {
    "name": "Golnar",
@@ -266,16 +290,118 @@
    "file": "show_danae_changing.html"
   },
   {
+   "name": "Kathrin Fehrenbach",
+   "title": "Kathrin Fehrenbach (Danae 12, Naming)",
+   "line": "Danae 12, Naming",
+   "file": "show_danae_naming.html"
+  },
+  {
+   "name": "Zólyomi Benke",
+   "title": "Zólyomi Benke (Danae 14, Shaping)",
+   "line": "Danae 14, Shaping",
+   "file": "show_danae_shaping.html"
+  },
+  {
+   "name": "Elena Grimani",
+   "title": "Elena Grimani (Physician 10, Doctor)",
+   "line": "Physician 10, Doctor",
+   "file": "show_doctor.html"
+  },
+  {
+   "name": "Agata Mangano",
+   "title": "Agata Mangano (Earth sorcerer, 7th)",
+   "line": "Earth sorcerer, 7th",
+   "file": "show_earth_origin.html"
+  },
+  {
+   "name": "Lisabetta Mannucci",
+   "title": "Lisabetta Mannucci (Natural Philosopher 6, Experimentalist)",
+   "line": "Natural Philosopher 6, Experimentalist",
+   "file": "show_experimentalist.html"
+  },
+  {
+   "name": "Alasdair Rua MacAskill",
+   "title": "Alasdair Rua MacAskill (Faebreaker, 6th)",
+   "line": "Faebreaker, 6th",
+   "file": "show_faebreaker.html"
+  },
+  {
+   "name": "Sir Jasper Kellaway",
+   "title": "Sir Jasper Kellaway (Fire sorcerer, 5th)",
+   "line": "Fire sorcerer, 5th",
+   "file": "show_fire_origin.html"
+  },
+  {
+   "name": "Stanisław Gołyński",
+   "title": "Stanisław Gołyński (Frost sorcerer, 8th)",
+   "line": "Frost sorcerer, 8th",
+   "file": "show_frost_origin.html"
+  },
+  {
+   "name": "Johanka Vlková",
+   "title": "Johanka Vlková (Geomancer, 8th)",
+   "line": "Geomancer, 8th",
+   "file": "show_geomancer.html"
+  },
+  {
+   "name": "Mirza Bahram Sabzevari",
+   "title": "Mirza Bahram Sabzevari (Courtier 5, Grace)",
+   "line": "Courtier 5, Grace",
+   "file": "show_grace.html"
+  },
+  {
+   "name": "Daeng Nai",
+   "title": "Daeng Nai (Mhizha 6, Gunner)",
+   "line": "Mhizha 6, Gunner",
+   "file": "show_gunner.html"
+  },
+  {
    "name": "Willka Mamani",
    "title": "Willka Mamani (Physician 7, Hedge Witch)",
    "line": "Physician 7, Hedge Witch",
    "file": "show_hedge_witch.html"
   },
   {
+   "name": "Hywel Bowen",
+   "title": "Hywel Bowen (Hidden Domain, 6th)",
+   "line": "Hidden Domain, 6th",
+   "file": "show_hidden_domain.html"
+  },
+  {
+   "name": "Garabed Vanetsi",
+   "title": "Garabed Vanetsi (Kinetic sorcerer, 9th)",
+   "line": "Kinetic sorcerer, 9th",
+   "file": "show_kinetic_origin.html"
+  },
+  {
+   "name": "Juana de la Luz Quispe",
+   "title": "Juana de la Luz Quispe (Light sorcerer, 6th)",
+   "line": "Light sorcerer, 6th",
+   "file": "show_light_origin.html"
+  },
+  {
+   "name": "Ramji Parekh",
+   "title": "Ramji Parekh (Mhizha 8, Mapmaker)",
+   "line": "Mhizha 8, Mapmaker",
+   "file": "show_mapmaker.html"
+  },
+  {
    "name": "Rakhmabai Deshmukh",
    "title": "Rakhmabai Deshmukh (Counsellor 10, Marshal)",
    "line": "Counsellor 10, Marshal",
    "file": "show_marshal.html"
+  },
+  {
+   "name": "Wat Ellery",
+   "title": "Wat Ellery (Mortal Hunter, 8th)",
+   "line": "Mortal Hunter, 8th",
+   "file": "show_mortal_hunter.html"
+  },
+  {
+   "name": "Hakim Ishak Toledano",
+   "title": "Hakim Ishak Toledano (Physician 12, Neurologist)",
+   "line": "Physician 12, Neurologist",
+   "file": "show_neurologist.html"
   },
   {
    "name": "Kaiawa",
@@ -296,10 +422,28 @@
    "file": "show_plague_doctor.html"
   },
   {
+   "name": "Şerife Hatun",
+   "title": "Şerife Hatun (Courtier 8, Psyche)",
+   "line": "Courtier 8, Psyche",
+   "file": "show_psyche.html"
+  },
+  {
+   "name": "Alvise Trevisan",
+   "title": "Alvise Trevisan (Revelator 6, the River of Death)",
+   "line": "Revelator 6, the River of Death",
+   "file": "show_styx.html"
+  },
+  {
    "name": "Fadzai Shoko",
    "title": "Fadzai Shoko (Physician 7, Vitalist)",
    "line": "Physician 7, Vitalist",
    "file": "show_vitalist.html"
+  },
+  {
+   "name": "Domenego Cargnelutti",
+   "title": "Domenego Cargnelutti (Revelator 5, the Tree)",
+   "line": "Revelator 5, the Tree",
+   "file": "show_yggdrasil.html"
   },
   {
    "name": "Abbas-qoli the Teller",
