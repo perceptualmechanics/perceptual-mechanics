@@ -913,7 +913,7 @@ export function character(book, state) {
   // skill named, or one of several named.
   for (const f of features) {
     const key = f.key ?? `${f.class} ${f.level} ${f.name}`, label = f.label ?? `${f.name} (${f.class} ${f.level})`;
-    const some = f.text.match(/You gain proficiency in (\w+) of (?:these skills|the following skills of your choice): (.+?)\./);
+    const some = f.text.match(/You gain proficiency (?:with [^.]+? and )?in (\w+) of (?:these skills|the following skills of your choice): (.+?)\./);
     if (some) {
       reads(f);
       if (NUMBERS.indexOf(some[1]) < 1) throw new Error(`${f.name}: a skill count the builder doesn't read: "${some[1]}"`);
@@ -927,7 +927,7 @@ export function character(book, state) {
     const all = f.text.match(/proficiency (?:with [^.]+? and )?in the ([A-Z][\w ]+?(?:,? and [A-Z][\w ]+?)?) skills?\b/);
     if (all && !/\bor\b/.test(all[1])) {
       reads(f);
-      const instead = f.text.match(/choose another skill(?: from the (.+?)[’']s skill list)?/);
+      const instead = f.text.match(/choose another (?:tool or )?skill(?: from the (.+?)[’']s skill list)?/);
       for (const sk of list(all[1])) {
         if (!book.skills.some(x => x.name === sk)) throw new Error(`${f.name}: "${sk}" isn't a skill`);
         const k = `${key} instead of ${sk}`;
@@ -1070,7 +1070,7 @@ export function character(book, state) {
   if (background?.tool) takeTools(toolPhrase(background.tool, background.name), `${background.name} tools`, background.name);
   for (const f of features) {
     const key = `tools ${f.key ?? `${f.class} ${f.level} ${f.name}`}`, label = f.label ?? `${f.name} (${f.class} ${f.level})`;
-    for (const m of f.text.matchAll(/gain proficiency (?:in the [\w ]+? skills? and )?with ([^.;]+?)(?=[.;]| \(if| and you (?:have|always)| and learn| and the master)/g)) {
+    for (const m of f.text.matchAll(/gain proficiency (?:in the [\w ]+? skills? and )?with ([^.;]+?)(?=[.;]| \(if| and in | and you (?:have|always)| and learn| and the master)/g)) {
       if (!/Tools|Kit|Supplies|Utensils|Gaming Sets?|[Ii]nstruments?|\btools?\b/.test(m[1]) || /weapons?\b/.test(m[1])) continue;
       reads(f);
       const instead = f.text.match(/choose another (skill or tool|tool from the [\w ]+?[’']s tool list|type of Artisan['’]s Tools|tool)/);
@@ -1502,13 +1502,13 @@ export function character(book, state) {
   const tongues = book.languages;
   // A language a feature names outright ("You know Sylvan."), one of the
   // rules' own.
-  const languageNamed = tongues && new RegExp(`[Yy]ou know (${[...tongues.standard, ...tongues.rare].map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?=[.,;])`);
+  const languageNamed = tongues && new RegExp(`[Yy]ou (?:also )?know (${[...tongues.standard, ...tongues.rare].map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?=[.,;])`);
   if (tongues) {
     languageChoices.push({ key: 'Common', label: 'Common', count: tongues.known.length, given: [] }, { key: 'standard', label: 'Standard languages', count: NUMBERS.indexOf(tongues.choose.count), given: [] });
     for (const f of features) {
       const key = f.key ?? `${f.class} ${f.level} ${f.name}`, label = f.label ?? `${f.name} (${f.class} ${f.level})`;
       const plus = f.text.match(/You know ([A-Z][\w’' ]+?) and (\w+) other languages? of your choice/);
-      const named = f.text.match(/You know ([A-Z][\w’' ]+?), the secret language/) ?? f.text.match(languageNamed);
+      const named = f.text.match(/You know ([A-Z][\w’' ]+?), the secret language/) ?? f.text.replace(/'/g, '’').match(languageNamed);
       const some = f.text.match(/(?:know|learn) (\w+) languages? of your choice/);
       const ask = plus ? { given: [plus[1]], count: NUMBERS.indexOf(plus[2]) } : named ? { given: [named[1]], count: 0 } : some ? { given: [], count: NUMBERS.indexOf(some[1]) } : null;
       if (!ask) continue;
