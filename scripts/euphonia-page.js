@@ -111,6 +111,9 @@ function welcomePage(welcome, games) {
 <blockquote><p>${inline(told.join(' '))}</p></blockquote>
 <figcaption>${esc(welcome.moment.where.replace(/^The Setting, /, ''))}</figcaption>
 </figure>
+<details class="welcome-more"><summary>More about Euphonia</summary>
+${[...welcome.opening, ...welcome.world].map(p => `<p>${inline(p)}</p>`).join('\n')}
+</details>
 ${door(TONIGHT_DOOR, `${tonight.map(g => `<p>${inline(g.ready.replace(LEAD, ''))}</p>`).join('\n')}
 ${ways([page('games', 'Adventures and Hooks')])}`)}
 ${door('Make a character', ways([...(hasReading() ? ['<a href="#reading" data-leave="tab-reading">The Reading</a>'] : []), '<a href="#builder" data-leave="tab-builder">The character builder</a>']))}
@@ -119,12 +122,12 @@ ${forBuilders(welcome)}
 </section>`;
 }
 
-// What Euphonia is, at the foot of the page, in the book's own words: the
-// Setting's welcome and where its world goes (euphonia.welcome.json).
+// What Euphonia is, at the foot of every tab, in the book's first paragraph;
+// the rest of its welcome is the Welcome page's (euphonia.welcome.json).
 function colophon(welcome) {
   return `<section class="colophon" aria-labelledby="colophon-title">
 <h2 id="colophon-title">What is Euphonia?</h2>
-${[...welcome.opening, ...welcome.world].map(p => `<p>${inline(p)}</p>`).join('\n')}
+<p>${inline(welcome.opening[0])} <a href="#welcome">Welcome to Euphonia</a></p>
 </section>`;
 }
 
@@ -383,7 +386,12 @@ ${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><s
 ${peoplePage(people.data, regions.status, sheets.data)}
 ${ribbonsPage(tonguesData())}
 ${regions.data.map(r => `<template class="map-chapter" data-region="${slug(r.name)}">
-${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${globeLinks(sec.heading === 'People' ? chapterPeople(people.data.regions.find(x => x.region === r.name), sheets.data) : blocks(sec.text), globeMarks(r))}`).join('\n')}
+${r.sections.map((sec, i) => {
+    const body = globeLinks(sec.heading === 'People' ? chapterPeople(people.data.regions.find(x => x.region === r.name), sheets.data) : blocks(sec.text), globeMarks(r));
+    // A chapter opens on its first section, At a Glance; the rest wait, each
+    // under its heading, until the reader opens it.
+    return i ? `<details class="map-chapter-more"><summary><h3>${esc(sec.heading)}</h3></summary>\n${body}\n</details>` : `<h3>${esc(sec.heading)}</h3>\n${body}`;
+  }).join('\n')}
 </template>`).join('\n')}`;
 }
 

@@ -58,9 +58,13 @@ export async function initBuilder(panel) {
   // earlier choices are rebuilt only when that shape changes.
   const problemSlot = field => h('p', { class: 'b-problem', id: idFor(field), hidden: true });
   const section = (title, ...body) => h('fieldset', { class: 'b-section' }, h('legend', {}, title), ...body);
+  // An explanation, folded under its section until it's asked for.
+  const why = (topic, ...body) => h('details', { class: 'b-about b-why' }, h('summary', {}, 'Why?', h('span', { class: 'visually-hidden' }, ` (${topic})`)), ...body);
 
   const nameInput = h('input', { name: 'name', type: 'text', autocomplete: 'off', maxlength: 80, value: state.name });
   const classList = h('ol', { class: 'b-classes' });
+  // Only a character of more than one class needs to know which came first.
+  const classNote = h('p', { class: 'b-note', hidden: true }, 'The first is the class you began in. Its levels and the others’ make your character level.');
   const addClass = h('button', { type: 'button', class: 'b-button' }, 'Add another class (multiclass)');
   const speciesSelect = h('select', { name: 'species', 'aria-describedby': idFor('species') }, options(book.species.map(s => s.name), state.species, 'Choose a species'));
   const optionLabel = h('span');
@@ -125,26 +129,33 @@ export async function initBuilder(panel) {
   const optionSection = h('fieldset', { class: 'b-section', hidden: true }, h('legend', {}, 'Class choices'), kindBox, swapBox, pickBox, revelationBox, walkedBox, spellSetBox, formBox, saveBox, weaponBox, masteryBox, optionBox, targetBox, noteBox, ruleBox);
 
   status.remove();
-  form.append(
-    section('Name', h('label', { class: 'b-field' }, h('span', {}, 'Character name'), nameInput)),
-    section('Class', h('p', { class: 'b-note' }, 'The first is the class you began in. Its levels and the others’ make your character level.'), classList, addClass, problemSlot('classes'),
-      book.unfinished.length ? h('p', { class: 'b-note' }, `${listed(book.unfinished.map((n, i) => `${i ? 'the' : 'The'} ${n}`))} ${book.unfinished.length === 1 ? 'is' : 'are'} still being written, and join${book.unfinished.length === 1 ? 's' : ''} the builder when finished.`) : null),
-    optionSection,
-    section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, abilityBox, speciesTraits),
-    section('Homeland', h('p', { class: 'b-note' }, book.speciesAndPeople),
-      h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink,
-      h('label', { class: 'b-field' }, h('span', {}, 'Buying in'), marketSelect),
-      (item => h('p', { class: 'b-note' }, `${item.name}: ${item.prices.says}`))(book.items.find(i => i.prices))),
-    section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
-    section('Starting equipment', h('p', { class: 'b-note' }, 'Each kit, or its gold to spend instead. The builder buys armor with what’s left.'), packageBox),
-    section('Gear', h('p', { class: 'b-note' }, 'What the character carries: take out what it doesn’t, buy with its money, or add what the DM gives.'), gearBox, problemSlot('inventory'), problemSlot('wear')),
-    section('Languages', tongueList, languageBox, languageAbout),
+  // A newcomer meets four choices first: the name, and the class, species and
+  // background everything else follows from. The rest opens once those three
+  // are made, in the order a player needs it.
+  const nextNote = h('p', { class: 'b-note' }, 'Your other choices open here once you’ve chosen a class, a species and a background.');
+  const later = [
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
-    section('Hit points', h('p', { class: 'b-note' }, 'Level 1 takes the Hit Die’s highest. Each level after, take the fixed value or roll the die and enter it.'), hpMethodGroup, rollBox),
+    section('Homeland', h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink,
+      h('label', { class: 'b-field' }, h('span', {}, 'Buying in'), marketSelect),
+      why('Homeland', h('p', {}, book.speciesAndPeople), (item => h('p', {}, `${item.name}: ${item.prices.says}`))(book.items.find(i => i.prices)))),
+    section('Languages', tongueList, languageBox, languageAbout),
+    optionSection,
     section('Skills', skillsBox, expertiseBox, skillNotes),
     section('Tools', toolsBox),
     section('Feats', styleBox, featureOriginBox, featsBox),
     section('Spells', spellsBox),
+    section('Starting equipment', h('p', { class: 'b-note' }, 'Each kit, or its gold to spend instead. The builder buys armor with what’s left.'), packageBox),
+    section('Gear', h('p', { class: 'b-note' }, 'What the character carries: take out what it doesn’t, buy with its money, or add what the DM gives.'), gearBox, problemSlot('inventory'), problemSlot('wear')),
+    section('Hit points', h('p', { class: 'b-note' }, 'Level 1 takes the Hit Die’s highest. Each level after, take the fixed value or roll the die and enter it.'), hpMethodGroup, rollBox),
+  ];
+  form.append(
+    section('Name', h('label', { class: 'b-field' }, h('span', {}, 'Character name'), nameInput)),
+    section('Class', classList, classNote, addClass, problemSlot('classes'),
+      book.unfinished.length ? h('p', { class: 'b-note' }, `${listed(book.unfinished.map((n, i) => `${i ? 'the' : 'The'} ${n}`))} ${book.unfinished.length === 1 ? 'is' : 'are'} still being written, and join${book.unfinished.length === 1 ? 's' : ''} the builder when finished.`) : null),
+    section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, abilityBox, speciesTraits),
+    section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
+    nextNote,
+    ...later,
   );
 
   // ---------- reading the controls into the state
@@ -152,7 +163,7 @@ export async function initBuilder(panel) {
   // What's left to choose reads as a note until the player works in its
   // section, on a new character or one brought back. Capturing, so the mark
   // is down before the render.
-  const touch = e => e.target.closest('.builder-form > fieldset')?.setAttribute('data-touched', '');
+  const touch = e => e.target.closest('.b-section')?.setAttribute('data-touched', '');
   for (const type of ['change', 'input', 'click']) form.addEventListener(type, touch, true);
   nameInput.addEventListener('input', () => set(s => { s.name = nameInput.value; }));
   speciesSelect.addEventListener('change', () => set(s => { s.species = speciesSelect.value; s.option = ''; s.size = ''; }));
@@ -300,40 +311,72 @@ export async function initBuilder(panel) {
     set(s => { s.base = Object.fromEntries([...scoreGrid.querySelectorAll('[data-ability]')].map(el => [el.dataset.ability, el.value === '' ? '' : Number(el.value)])); });
   }
 
+  // A choice of so many from a list, as short as its size allows. What the
+  // character has from elsewhere isn't offered again; the section names it
+  // once. A long list (the 37 tools) is a menu for each pick, grouped as the
+  // SRD groups it; a short one, a box for each. A choice made folds to its
+  // picks until the player opens it again, and stays open while they work in
+  // it.
+  const MENU_FROM = 12, opened = new Set();
+  const toolKind = new Map(srd.tools.flatMap(t => (t.variants ? t.variants.map(v => [`${t.name} (${v})`, `${t.name}s`]) : [[t.name, t.category === 'Other' ? 'Other Tools' : t.category]])));
+  function choiceGroup(result, { key, field, legend, count, from, chosen, taken = () => false, kind = () => null, write, empty }) {
+    const offered = from.filter(x => chosen.includes(x) || !taken(x));
+    // Made when the engine asks nothing more of it (a Skilled may take all
+    // three as tools, and none here).
+    const done = !result.problems.some(p => p.field === `${field}:${key}`);
+    const shown = !done || opened.has(key);
+    const pick = values => { opened.add(key); write(values); };
+    const dataKey = `${field}-${key}`;
+    let controls;
+    if (!offered.length) controls = h('p', { class: 'b-note' }, empty);
+    else if (offered.length > MENU_FROM && count <= 4) {
+      // The SRD's own groups, the catch-all last.
+      const kinds = [...new Set(offered.map(kind))].sort((x, y) => (x === 'Other Tools') - (y === 'Other Tools'));
+      const menus = Array.from({ length: count }, (_, i) => h('select', {
+        'data-key': `${dataKey}-${i}`, 'aria-label': count > 1 ? `${legend}, ${i + 1} of ${count}` : legend,
+        onchange: () => pick([...new Set(menus.map(m => m.value).filter(Boolean))]),
+      }, h('option', { value: '' }, 'Choose'), kinds.map(k => {
+        const items = offered.filter(x => kind(x) === k).map(x => h('option', { value: x, selected: chosen[i] === x || null }, x));
+        return k ? h('optgroup', { label: k }, items) : items;
+      })));
+      controls = h('div', { class: 'b-menus' }, menus);
+    } else {
+      controls = h('div', { class: 'b-checks' }, offered.map(x => h('label', {}, h('input', {
+        type: 'checkbox', value: x, 'data-key': `${dataKey}-${x}`, checked: chosen.includes(x),
+        onchange: () => pick([...controls.querySelectorAll('input:checked')].map(b => b.value)),
+      }), ` ${x}`)));
+    }
+    const body = h('div', { class: 'b-choice-body', id: `choice-${idFor(dataKey)}`, hidden: !shown }, controls);
+    const change = h('button', { type: 'button', class: 'b-link', 'data-key': `${dataKey}-change`, 'aria-expanded': 'false', 'aria-controls': body.id, onclick: () => {
+      opened.add(key); folded.hidden = true; body.hidden = false; group.classList.remove('is-folded'); body.querySelector('input, select')?.focus();
+    } }, 'Change', h('span', { class: 'visually-hidden' }, ` ${legend}`));
+    const folded = h('p', { class: 'b-picked', hidden: shown }, `${chosen.length ? listed(chosen) : 'None'}. `, change);
+    const group = h('fieldset', { class: shown ? 'b-skills' : 'b-skills is-folded', 'aria-describedby': idFor(`${field}:${key}`) }, h('legend', {}, legend), folded, body, problemSlot(`${field}:${key}`));
+    // Folds once the keyboard leaves it, after the rebuild a pick makes.
+    group.addEventListener('focusout', () => setTimeout(() => {
+      if (!group.isConnected || group.contains(document.activeElement) || !done) return;
+      opened.delete(key); body.hidden = true; folded.hidden = false; group.classList.add('is-folded');
+    }));
+    return group;
+  }
+
   // The skill choices, as the engine lists them. Proficiency counts once, so
   // a skill the character has without choosing it (a background's, a
   // feature's) or has chosen in another of these choices (Insight by an elf's
-  // Keen Senses, say) is marked as theirs already in the rest and can't be
-  // chosen there; unticked where it was taken, it is free everywhere again.
+  // Keen Senses, say) isn't offered in the rest; unticked where it was taken,
+  // it is offered everywhere again.
   function renderSkills(result) {
     const chosenAnywhere = new Set(Object.values(state.skills ?? {}).flat());
     const already = result.skills.filter(sk => sk.proficient && !chosenAnywhere.has(sk.name)).map(sk => sk.name);
-    const shape = result.choices.map(c => `${c.key}:${c.count}:${c.upTo}:${c.from.join()}`).join('|') + `|${already.join()}`;
-    if (skillsBox.dataset.for !== shape) {
-      skillsBox.dataset.for = shape;
-      rebuild(skillsBox, ...(result.choices.length ? result.choices.map(c => {
-        const read = () => set(s => { s.skills = { ...s.skills, [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
-        const group = h('fieldset', { class: 'b-skills', 'data-choice': c.key, 'aria-describedby': idFor(`skills:${c.key}`) },
-          h('legend', {}, `${c.label}: ${c.given.length ? `${c.given.join(', ')}, plus ` : ''}${c.upTo ? `${c.count} skills or tools in any mix, the skills here and the tools under Tools` : `choose ${c.count}`}`),
-          h('div', { class: 'b-checks' }, c.from.map(skill =>
-            h('label', {}, h('input', { type: 'checkbox', value: skill, 'data-key': `skill-${c.key}-${skill}`, checked: (state.skills?.[c.key] ?? []).includes(skill), onchange: read }), ` ${skill}`))),
-          problemSlot(`skills:${c.key}`));
-        return group;
-      }) : [h('p', { class: 'b-note' }, 'Your class and species bring their skill choices here.')]));
-    }
-    // Marked in place on every change, so ticking a box never rebuilds the
-    // lists under the reader's focus.
-    for (const box of skillsBox.querySelectorAll('fieldset[data-choice] input[type=checkbox]')) {
-      const key = box.closest('fieldset').dataset.choice, skill = box.value;
-      const yours = !box.checked && (already.includes(skill)
-        || Object.entries(state.skills ?? {}).some(([k, picked]) => k !== key && picked.includes(skill)));
-      const label = box.closest('label');
-      if (yours === label.classList.contains('is-yours')) continue;
-      box.disabled = yours;
-      label.classList.toggle('is-yours', yours);
-      if (yours) label.append(h('span', { class: 'b-mark' }, ' (already yours)'));
-      else label.querySelector('.b-mark')?.remove();
-    }
+    if (!fresh(skillsBox, JSON.stringify([result.choices.map(c => [c.key, c.count, c.upTo, c.from]), state.skills, already, [...opened], result.problems.filter(p => p.field.startsWith('skills:')).map(p => p.field)]))) return;
+    const taken = key => skill => already.includes(skill) || Object.entries(state.skills ?? {}).some(([k, picked]) => k !== key && picked.includes(skill));
+    rebuild(skillsBox,
+      already.length ? h('p', { class: 'b-note' }, `Yours already: ${listed(already)}.`) : null,
+      ...(result.choices.length ? result.choices.map(c => choiceGroup(result, {
+        key: c.key, field: 'skills', count: c.count, from: c.from, chosen: state.skills?.[c.key] ?? [], taken: taken(c.key),
+        legend: `${c.label}: ${c.given.length ? `${c.given.join(', ')}, plus ` : ''}${c.upTo ? `${c.count} skills or tools in any mix, the skills here and the tools under Tools` : `choose ${c.count}`}`,
+        write: picked => set(s => { s.skills = { ...s.skills, [c.key]: picked }; }), empty: 'Every skill here is yours already.',
+      })) : [h('p', { class: 'b-note' }, 'Your class and species bring their skill choices here.')]));
   }
 
   // The options a class's table counts (the Courtier's accomplishments): a
@@ -546,26 +589,18 @@ export async function initBuilder(panel) {
   // Expertise with tools; a tool taken in one choice leaves the others.
   function renderTools(result) {
     const given = result.tools.filter(t => !result.toolChoices.some(c => c.chosen.includes(t.name))).map(t => t.name);
-    if (!fresh(toolsBox, JSON.stringify([result.toolChoices.map(c => [c.key, c.count, c.from, c.chosen]), result.toolExpertise.map(c => [c.key, c.from, c.chosen]), result.tools]))) return;
-    // A tool the character has, and didn't take in this choice, can't be taken
-    // again: its box is disabled and says so. Held, not sourced elsewhere: the
-    // Mhizha is given Tinker's Tools and its own choice offers them too, under
-    // the same label. Expertise is with tools already had.
-    const elsewhere = (c, t) => !c.chosen.includes(t) && result.tools.some(x => x.name === t);
-    const checks = (c, store, legend, field, owned = true) => {
-      const read = () => set(s => { s[store] = { ...s[store], [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
-      const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`${field}:${c.key}`) }, h('legend', {}, legend),
-        h('div', { class: 'b-checks' }, c.from.map(t => {
-          const yours = owned && elsewhere(c, t) && !c.chosen.includes(t);
-          return h('label', { class: yours ? 'is-yours' : null }, h('input', { type: 'checkbox', value: t, 'data-key': `tool-${c.key}-${t}`, checked: c.chosen.includes(t), disabled: yours || null, onchange: read }), ` ${t}`, yours ? h('span', { class: 'b-mark' }, ' (already yours)') : null);
-        })),
-        problemSlot(`${field}:${c.key}`));
-      return group;
-    };
+    if (!fresh(toolsBox, JSON.stringify([result.toolChoices.map(c => [c.key, c.count, c.from, c.chosen]), result.toolExpertise.map(c => [c.key, c.from, c.chosen]), result.tools, [...opened], result.problems.filter(p => p.field.startsWith('tools:')).map(p => p.field)]))) return;
+    // A tool the character has, and didn't take in this choice, isn't offered
+    // again. Held, not sourced elsewhere: the Mhizha is given Tinker's Tools
+    // and its own choice offers them too, under the same label. Expertise is
+    // with tools already had.
+    const taken = c => t => !c.chosen.includes(t) && result.tools.some(x => x.name === t);
+    const kind = t => toolKind.get(t) ?? null;
+    const write = c => picked => set(s => { s.tools = { ...s.tools, [c.key]: picked }; });
     rebuild(toolsBox,
       given.length ? h('p', { class: 'b-note' }, `Yours already: ${listed(given)}.`) : null,
-      ...result.toolChoices.map(c => checks(c, 'tools', `${c.label}: choose ${c.count}`, 'tools')),
-      ...result.toolExpertise.map(c => checks(c, 'tools', `${c.label}: Expertise with ${c.count}${c.skill ? `, ${c.skill} among them if you like` : ''}`, 'tools', false)),
+      ...result.toolChoices.map(c => choiceGroup(result, { key: c.key, field: 'tools', legend: `${c.label}: choose ${c.count}`, count: c.count, from: c.from, chosen: c.chosen, taken: taken(c), kind, write: write(c), empty: 'Every tool here is yours already.' })),
+      ...result.toolExpertise.map(c => choiceGroup(result, { key: c.key, field: 'tools', legend: `${c.label}: Expertise with ${c.count}${c.skill ? `, ${c.skill} among them if you like` : ''}`, count: c.count, from: c.from, chosen: c.chosen, kind, write: write(c), empty: 'Choose tools first: Expertise is with tools you’re proficient with.' })),
       !given.length && !result.toolChoices.length ? h('p', { class: 'b-note' }, 'Your class, background and features bring their tools here.') : null);
   }
   // A feature's one-of choice (Divine Order, Elemental Fury): a radio for
@@ -743,19 +778,11 @@ export async function initBuilder(panel) {
     ]).flat());
   }
   function renderExpertise(result) {
-    const shape = result.expertiseChoices.map(c => `${c.key}:${c.count}:${c.from.join()}`).join('|');
-    if (expertiseBox.dataset.for === shape) return;
-    expertiseBox.dataset.for = shape;
-    rebuild(expertiseBox, ...result.expertiseChoices.map(c => {
-      const picked = state.expertise?.[c.key] ?? [];
-      const read = () => set(s => { s.expertise = { ...s.expertise, [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
-      const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`expertise:${c.key}`) },
-        h('legend', {}, `${c.label}: Expertise in ${c.count}`),
-        c.from.length ? h('div', { class: 'b-checks' }, c.from.map(skill => h('label', {}, h('input', { type: 'checkbox', value: skill, 'data-key': `expertise-${c.key}-${skill}`, checked: picked.includes(skill), onchange: read }), ` ${skill}`)))
-          : h('p', { class: 'b-note' }, 'Choose skills first: Expertise is in skills you’re proficient in.'),
-        problemSlot(`expertise:${c.key}`));
-      return group;
-    }));
+    if (!fresh(expertiseBox, JSON.stringify([result.expertiseChoices.map(c => [c.key, c.count, c.from]), state.expertise, [...opened], result.problems.filter(p => p.field.startsWith('expertise:')).map(p => p.field)]))) return;
+    rebuild(expertiseBox, ...result.expertiseChoices.map(c => choiceGroup(result, {
+      key: c.key, field: 'expertise', legend: `${c.label}: Expertise in ${c.count}`, count: c.count, from: c.from, chosen: state.expertise?.[c.key] ?? [],
+      write: picked => set(s => { s.expertise = { ...s.expertise, [c.key]: picked }; }), empty: 'Choose skills first: Expertise is in skills you’re proficient in.',
+    })));
   }
 
   // The spells: each caster's and each feat's, by level, as the engine
@@ -1003,7 +1030,11 @@ export async function initBuilder(panel) {
     const result = character(book, state);
     renderClasses(result);
     renderLanguages(result);
-    optionSection.hidden = ![result.optionChoices, result.pickChoices, result.masteryChoices, result.spellSetChoices, result.kindChoices, result.saveChoices, result.weaponChoices, result.cantripTargets, result.optionalRules, result.formChoices, result.walkedChoices, result.noteChoices, result.swapChoices].some(x => x.length) && !result.revelationChoices.some(c => !c.moot);
+    const ready = Boolean(state.classes[0]?.class && state.species && state.background);
+    for (const s of later) s.hidden = !ready;
+    nextNote.hidden = ready;
+    classNote.hidden = state.classes.length < 2;
+    optionSection.hidden = !ready || ![result.optionChoices, result.pickChoices, result.masteryChoices, result.spellSetChoices, result.kindChoices, result.saveChoices, result.weaponChoices, result.cantripTargets, result.optionalRules, result.formChoices, result.walkedChoices, result.noteChoices, result.swapChoices].some(x => x.length) && !result.revelationChoices.some(c => !c.moot);
     renderForms(result);
     renderSwaps(result);
     renderWalked(result);

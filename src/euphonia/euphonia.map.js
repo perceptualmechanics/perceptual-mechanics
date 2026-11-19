@@ -481,6 +481,7 @@ export async function initMap(stage) {
     range.setStart(hit.node, hit.start); range.setEnd(hit.node, hit.end);
     const mark = Object.assign(document.createElement('mark'), { className: 'map-mention', tabIndex: -1 });
     range.surroundContents(mark);
+    for (let d = mark.closest('details'); d; d = d.parentElement.closest('details')) d.open = true;
     // The panel scrolls the mark to its middle; scrollIntoView would scroll
     // the page under the globe as well.
     requestAnimationFrame(() => {

@@ -87,8 +87,11 @@ export async function initReading(panel) {
     const words = framed ? [d.reveal.title, d.reveal.more] : [d.reveal.plain_title, d.reveal.plain_more];
     show(SECOND, h('h2', {}, words[page ? 1 : 0]), h('div', { class: 'r-cards' }, shown.map(p => {
       const because = why(d, p, answers);
-      return h('article', { class: 'r-card' }, h('div', { class: 'r-head' }, sigil(p), h('div', {}, h('h3', {}, p.name), h('p', { class: 'r-from' }, p.region))), md('p', {}, p.line), md('p', { class: 'r-scene' }, p.scene),
-        because.length ? h('p', {}, h('span', { class: 'r-label' }, 'Why you'), because.join('; ')) : null, h('p', {}, h('span', { class: 'r-label' }, 'To play'), h('span', { html: inline(p.play) })), md('p', { class: 'r-from' }, `${p.class}. ${p.class_note}`),
+      return h('article', { class: 'r-card' }, h('div', { class: 'r-head' }, sigil(p), h('div', {}, h('h3', {}, p.name), h('p', { class: 'r-from' }, p.region))), md('p', {}, p.line),
+        h('p', {}, h('span', { class: 'r-label' }, 'To play'), h('span', { html: inline(p.play) })),
+        // The scene and the reasons wait under the card, for whoever wants them.
+        h('details', { class: 'r-more' }, h('summary', {}, 'More', h('span', { class: 'visually-hidden' }, ` about ${p.name}`)),
+          md('p', { class: 'r-scene' }, p.scene), because.length ? h('p', {}, h('span', { class: 'r-label' }, 'Why you'), because.join('; ')) : null), md('p', { class: 'r-from' }, `${p.class}. ${p.class_note}`),
         h('div', { class: 'r-row' }, h('button', { type: 'button', class: 'b-button r-go', onclick: () => { chosen = p.id; go('tonight'); } }, 'This is me'), h('a', { href: linkFor(p) }, 'Change one thing')));
     })), all.length > 1 ? h('p', {}, h('button', { type: 'button', class: 'b-button', onclick: () => { page = (page + 1) % all.length; keep(); draw(); } }, 'Show me others')) : null);
   }
