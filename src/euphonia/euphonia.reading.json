@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "ab0530982329eae2bef98e6322c7030011da9fa4eb44748e17e725bac33de082",
-  "modified": "2026-11-18T19:04:34-05:00",
+  "sha256": "b117dd86b8074be15206d6fd4e7dcc678515b6dec5a8f00e52ff535063449bc1",
+  "modified": "2026-11-19T07:00:10-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 36,
   "rules": {
@@ -35,7 +35,7 @@
   "frame": {
    "intro": {
     "title": "The Crossroads",
-    "text": "Two roads cross in the dust, and a stranger sits where they meet, as if waiting for you. *\"I keep nothing you tell me. Answer quickly, and I'll show you who is waiting on your road.\"*",
+    "text": "Two roads cross in the dust, and a stranger sits where they meet, as if waiting for you. *\"What you tell me stays with you. Answer quickly, and I'll show you who is waiting on your road.\"*",
     "begin": "Sit down"
    },
    "plain": {
