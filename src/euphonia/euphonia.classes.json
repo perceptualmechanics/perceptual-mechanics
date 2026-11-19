@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "1409076683700766ce3f9c99a2bdd94dfdf551c11fffbee8a5c827c98fd8b5a0",
-  "modified": "2026-11-18T16:45:20-05:00",
+  "sha256": "ab0530982329eae2bef98e6322c7030011da9fa4eb44748e17e725bac33de082",
+  "modified": "2026-11-18T19:04:34-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 35,
+  "exporter_version": 36,
   "rules": {
    "banned": [
     "eladrin",
@@ -31,33 +31,9 @@
  },
  "withheld": [
   {
-   "where": "Counsellor · Gamester · Level 3: Card Sharp",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
    "where": "Counsellor · Majordomo · introduction",
    "reasons": [
     "bracket"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · Level 3: Underworld",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Marshal · introduction",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Courtier · Grace · Level 3: A Maxim a Day",
-   "reasons": [
-    "names a placeholder"
    ]
   }
  ],
@@ -420,6 +396,11 @@
      "features": [
       {
        "level": 3,
+       "name": "Card Sharp",
+       "text": "You gain proficiency with one Gaming Set and in the Sleight of Hand skill; if you already have either, choose another tool or skill. When you play a game with a Gaming Set you're proficient with, you can use your Intelligence modifier for any check the game calls for, and you have Advantage on checks to cheat at it and to spot someone else cheating.\n\nAny of these can be your Gaming Set."
+      },
+      {
+       "level": 3,
        "name": "Where the Action Is",
        "text": "In any settlement, you can find where the serious play is within an hour: where it's played, who keeps the bank, and who's welcome. You can learn any game of chance or skill by watching it for 10 minutes, and in downtime you can cover your own food and lodging from the tables without spending coin."
       },
@@ -540,6 +521,11 @@
      "name": "Majordomo",
      "lead": "",
      "features": [
+      {
+       "level": 3,
+       "name": "Underworld",
+       "text": "You gain proficiency with Thieves' Tools and in one of the following skills of your choice: Deception, Sleight of Hand, or Stealth. If you already have proficiency with Thieves' Tools, choose another tool. You also know Thieves' Cant.\n\nIn any settlement that has an underworld (the DM decides; every port and city does, and most towns), you can spend 1 hour asking around to find it. When you do, you find:\n\n- *A Fence.* Someone who buys goods that can't be sold openly (stolen, smuggled, or too well known to sell) for half their value, as any merchant buys used goods, and asks nothing. By default, anything a crown or a great house is openly hunting for is too hot for any fence to touch.\n- *A Market.* Someone who sells what the law there forbids or taxes: poisons, forged papers, untaxed goods, passage on a boat that leaves at night. Prices run up to double the usual; by default, half again the usual, and double for anything a crown keeps for itself.\n- *A Hole.* A place to sleep where the watch doesn't come, for a few SP a night. While you and your companions lie low there, anyone searching for you in that settlement has Disadvantage on ability checks to find you.\n- *The Lay of It.* Who runs the underworld there, whom it pays, and which officials it has bought.\n\n**Your Family.** You belong to an underworld organization, a family, which you and the DM choose together: a crew, a brotherhood, a gang, a smuggling ring, or one that works in one of the underworlds in the table below. Keeping a Counsellor is a sizable expense, and every family that can afford one tries to have its own. Where your family operates, you find the underworld in 10 minutes, its Hole costs you nothing, its Market sells to you at the usual price instead of up to double, and its people do you small favors without being asked. The family's enemies are yours, though, and so are its debts.\n\n*Neutral.* Instead of a family, you can be a freelancer: a Counsellor so well known, and so careful, that every family will use you and none will touch you. You have no home ground, but no family counts you as its enemy. You keep that only as long as you stay truly neutral: if you're seen to take a side against a family, every underworld you've worked hears of it within a week, and you have a family's enemies without a family.\n\nSome underworlds at work around 1668:\n\n| Underworld | Where | Known for |\n|---|---|---|\n| Alsatia | London: Whitefriars, and the Mint in Southwark | Old liberties where the bailiffs couldn't follow; debtors, coiners, and thieves lived there openly |\n| The Cour des Miracles | Paris | Beggars' quarters where, it was said, the blind saw and the lame walked once night fell; La Reynie, Paris's first lieutenant of police (1667), was clearing them in 1668 |\n| The brotherhoods of Seville | Seville, and the docks of the silver fleet | Thieves organized like a guild, with dues, ranks, a patron saint, and their own cant, *germanía* (Cervantes drew one, Monipodio's, in 1613) |\n| The owlers | Romney Marsh and the English coast | Running wool to France by night, against the ban on its export (1660) |\n| The gaming houses of Naples | Naples | Taking a cut of every game in the city; the word *camorra* is first recorded for them, in 1735 |\n| The trades of the *ortas*, the Janissary regiments | Istanbul and the Ottoman cities | Janissaries gone into trade, running protection, smuggling, and coffeehouses under the corps' shelter |\n| The sea-ban runners | Fujian, Taiwan, and the China coast | Trading past the Qing's coastal evacuation (1661), much of it for the Zheng on Taiwan, whom the Qing called pirates |\n| The yakko | Edo | Rival gangs of townsmen (*machi-yakko*) and of the shogun's own bannermen (*hatamoto-yakko*); the townsmen's champion, Banzuiin Chōbei, was murdered by a bannerman in 1657 |\n| Sailing without a *cartaz* | Surat, Calicut, the Gulf, Malacca | To Portugal, any Asian ship without its pass was a smuggler; to everyone else, it was a merchant |\n| The *contrabandistas* | Buenos Aires and the Río de la Plata | Potosí's silver run out the back door of Spain's empire, past the fleets that were supposed to carry all of it |\n| Port Royal and Curaçao | Jamaica, and the Dutch islands | Buccaneers selling Spanish prizes (Morgan sacked Portobelo in 1668), and Dutch traders running goods into Spain's colonies against its law |\n| The platinum runners | Sofala, and the roads from Mutapa's mines | Carrying the king's monopoly metal past his tollkeepers, to buyers who ask nothing |"
+      },
       {
        "level": 3,
        "name": "About That",
@@ -1223,6 +1209,11 @@
        "level": 3,
        "name": "Composure",
        "text": "While you aren't Frightened, you and your allies within 10 feet of you have Advantage on saving throws to avoid or end the Frightened condition. In addition, when an ally you can see within 30 feet of you fails a saving throw, you can use Make It Look Easy on its roll as if it were yours."
+      },
+      {
+       "level": 3,
+       "name": "A Maxim a Day",
+       "text": "At dawn, speak a maxim aloud: one from the table below, or one of your own. Once before the next dawn, when you or an ally who heard it acts on the maxim, that creature has Advantage on the D20 Test it's making; or, if it's you and you're using an Ease option on that roll, the option can cost no Ease instead. The table gives samples and the moments they fit; a maxim of your own fits whatever moment the table agrees it does."
       },
       {
        "level": 6,
