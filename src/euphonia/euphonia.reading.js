@@ -15,7 +15,8 @@ export function checkReading(d, { regions = [], drawn = [] } = {}) {
   const traits = d.traits ?? {};
   const weighs = (w, where) => { need(w && Object.keys(w).length, `${where} leans toward nothing`); for (const t of Object.keys(w ?? {})) need(traits[t], `${where} names the unknown trait "${t}"`); };
   for (const [id, t] of Object.entries(traits)) { need(AXES.includes(t.axis), `trait ${id}: no axis`); need(t.name && t.description, `trait ${id}: needs a name and a description`); }
-  for (const key of ['skip', 'restore']) need(d.frame?.[key], `frame: no "${key}" label`);
+  for (const key of ['skip', 'restore', 'resume', 'plain_resume']) need(d.frame?.[key], `frame: no "${key}" label`);
+  for (const key of ['play', 'explore', 'know']) need(d.frame?.doors?.[key], `frame: no name for the "${key}" door`);
   for (const key of ['intro', 'plain']) need(d.frame?.[key]?.title && d.frame[key].text && d.frame[key].begin, `frame: "${key}" needs a title, text and a way to begin`);
   for (const key of ['title', 'more', 'plain_title', 'plain_more']) need(d.reveal?.[key], `reveal: no "${key}"`);
   need(d.symbols?.length, 'no symbol rounds'); need(d.dilemmas?.length, 'no dilemmas'); need(d.roster?.length >= SHOWN, 'too few people');

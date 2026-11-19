@@ -5,7 +5,7 @@
   "sha256": "b117dd86b8074be15206d6fd4e7dcc678515b6dec5a8f00e52ff535063449bc1",
   "modified": "2026-11-19T07:00:10-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 36,
+  "exporter_version": 37,
   "rules": {
    "banned": [
     "eladrin",
@@ -45,7 +45,14 @@
    },
    "begin": "Sit down",
    "skip": "Skip the stranger",
-   "restore": "Bring back the stranger"
+   "restore": "Bring back the stranger",
+   "resume": "Sit down again; we'd begun.",
+   "plain_resume": "Pick up where you left off",
+   "doors": {
+    "play": "Play tonight",
+    "explore": "Explore the world",
+    "know": "I know what I want"
+   }
   },
   "reveal": {
    "title": "These are waiting on your road.",

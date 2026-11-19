@@ -93,7 +93,9 @@ const sentences = md => md.split(/(?<=[.?!])\s+(?=[*“A-Z])/);
 const CROSS_REFERENCE = /\([A-Z][^)]*,[^)]*\)/;
 // A paragraph's bold lead ("**Ready to run.**"), which names it rather than says it.
 const LEAD = /^\*\*[^*]+\*\*\s*/;
-const TONIGHT_DOOR = 'Play tonight', WORLD_DOOR = 'Explore the world';
+// The doors' names, as the Reading's frame words them; without the Reading
+// the Welcome is the front door, under the names it has always had.
+const doorNames = () => (hasReading() ? JSON.parse(readFileSync(READING, 'utf8')).data.frame.doors : { play: 'Play tonight', explore: 'Explore the world' });
 // The quiet line for those who build on the setting, on either front door.
 const forBuilders = welcome => `<p class="welcome-open">${inline(sentences(welcome.building.replace(LEAD, ''))[0])} <a href="#orc-notice">The ORC Notice</a></p>`;
 function welcomePage(welcome, games) {
@@ -114,10 +116,10 @@ function welcomePage(welcome, games) {
 <details class="welcome-more"><summary>More about Euphonia</summary>
 ${[...welcome.opening, ...welcome.world].map(p => `<p>${inline(p)}</p>`).join('\n')}
 </details>
-${door(TONIGHT_DOOR, `${tonight.map(g => `<p>${inline(g.ready.replace(LEAD, ''))}</p>`).join('\n')}
+${door(esc(doorNames().play), `${tonight.map(g => `<p>${inline(g.ready.replace(LEAD, ''))}</p>`).join('\n')}
 ${ways([page('games', 'Adventures and Hooks')])}`)}
 ${door('Make a character', ways([...(hasReading() ? ['<a href="#reading" data-leave="tab-reading">The Reading</a>'] : []), '<a href="#builder" data-leave="tab-builder">The character builder</a>']))}
-${door(WORLD_DOOR, ways(['<button type="button" data-leave>The globe</button>', page('contents', 'The State of the World'), page('people', 'People')]))}
+${door(esc(doorNames().explore), ways(['<button type="button" data-leave>The globe</button>', page('contents', 'The State of the World'), page('people', 'People')]))}
 ${forBuilders(welcome)}
 </section>`;
 }
@@ -144,18 +146,20 @@ function themePick() {
 const READING = new URL('../src/euphonia/euphonia.reading.json', import.meta.url);
 const hasReading = () => existsSync(READING);
 function reading(welcome) {
-  return hasReading() ? `<section class="reading" id="the-reading" role="tabpanel" aria-labelledby="tab-reading" tabindex="-1" hidden>
-<div class="r-bar"><span class="r-act"></span><ol class="r-road" aria-hidden="true"></ol><a class="r-door" href="#builder">I know what I want</a></div>
+  if (!hasReading()) return '';
+  const doors = doorNames();
+  return `<section class="reading" id="the-reading" role="tabpanel" aria-labelledby="tab-reading" tabindex="-1" hidden>
+<div class="r-bar"><span class="r-act"></span><ol class="r-road" aria-hidden="true"></ol><a class="r-door" href="#builder">${esc(doors.know)}</a></div>
 <div class="r-stage"><p role="status">Opening the reading…</p></div>
 <nav class="r-doors" aria-label="Other ways in">
 <ul>
-<li><a href="#games">${TONIGHT_DOOR}</a></li>
-<li><a href="#contents">${WORLD_DOOR}</a></li>
-<li><a href="#builder">I know what I want</a></li>
+<li><a href="#games">${esc(doors.play)}</a></li>
+<li><a href="#contents">${esc(doors.explore)}</a></li>
+<li><a href="#builder">${esc(doors.know)}</a></li>
 </ul>
 ${forBuilders(welcome)}
 </nav>
-</section>` : '';
+</section>`;
 }
 
 // The tabs over the map and the builder. Hidden until the script that runs

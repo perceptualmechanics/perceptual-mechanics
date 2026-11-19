@@ -59,7 +59,7 @@ export async function initReading(panel) {
   function start() {
     const f = framed ? d.frame.intro : d.frame.plain, resume = order.includes(reached);
     show(FIRST, framed ? h('div', { class: 'r-open', html: crossroadsSvg }) : null, h('h2', {}, f.title), md('p', { class: 'r-lede' }, f.text), h('div', { class: 'r-row' },
-      resume ? h('button', { type: 'button', class: 'b-button r-go', onclick: () => go(reached) }, 'Pick up where you left off') : null,
+      resume ? h('button', { type: 'button', class: 'b-button r-go', onclick: () => go(reached) }, framed ? d.frame.resume : d.frame.plain_resume) : null,
       h('button', { type: 'button', class: resume ? 'b-button' : 'b-button r-go', onclick: () => { answers = {}; page = 0; chosen = null; reached = null; go(order[1]); } }, f.begin),
       h('button', { type: 'button', class: 'b-button', onclick: () => { framed = !framed; keep(); draw(); } }, framed ? d.frame.skip : d.frame.restore)));
   }
