@@ -93,6 +93,9 @@ const sentences = md => md.split(/(?<=[.?!])\s+(?=[*“A-Z])/);
 const CROSS_REFERENCE = /\([A-Z][^)]*,[^)]*\)/;
 // A paragraph's bold lead ("**Ready to run.**"), which names it rather than says it.
 const LEAD = /^\*\*[^*]+\*\*\s*/;
+const TONIGHT_DOOR = 'Play tonight', WORLD_DOOR = 'Explore the world';
+// The quiet line for those who build on the setting, on either front door.
+const forBuilders = welcome => `<p class="welcome-open">${inline(sentences(welcome.building.replace(LEAD, ''))[0])} <a href="#orc-notice">The ORC Notice</a></p>`;
 function welcomePage(welcome, games) {
   const tonight = games.filter(g => g.ready);
   if (!tonight.length) throw new Error('euphonia: no game in Adventures and Hooks is Ready to run, for the front door\'s first way in');
@@ -108,11 +111,11 @@ function welcomePage(welcome, games) {
 <blockquote><p>${inline(told.join(' '))}</p></blockquote>
 <figcaption>${esc(welcome.moment.where.replace(/^The Setting, /, ''))}</figcaption>
 </figure>
-${door('Play tonight', `${tonight.map(g => `<p>${inline(g.ready.replace(LEAD, ''))}</p>`).join('\n')}
+${door(TONIGHT_DOOR, `${tonight.map(g => `<p>${inline(g.ready.replace(LEAD, ''))}</p>`).join('\n')}
 ${ways([page('games', 'Adventures and Hooks')])}`)}
-${door('Make a character', ways(['<a href="#builder" data-leave>The character builder</a>']))}
-${door('Explore the world', ways(['<button type="button" data-leave>The globe</button>', page('contents', 'The State of the World'), page('people', 'People')]))}
-<p class="welcome-open">${inline(sentences(welcome.building.replace(LEAD, ''))[0])} <a href="#orc-notice">The ORC Notice</a></p>
+${door('Make a character', ways([...(hasReading() ? ['<a href="#reading" data-leave="tab-reading">The Reading</a>'] : []), '<a href="#builder" data-leave="tab-builder">The character builder</a>']))}
+${door(WORLD_DOOR, ways(['<button type="button" data-leave>The globe</button>', page('contents', 'The State of the World'), page('people', 'People')]))}
+${forBuilders(welcome)}
 </section>`;
 }
 
@@ -132,12 +135,22 @@ function themePick() {
   return `<label class="theme-pick" hidden>Theme <select id="theme-pick">${THEMES.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></label><span class="visually-hidden" id="theme-said" aria-live="polite"></span>`;
 }
 
-// The Reading appears only once the book has exported it.
+// The Reading appears only once the book has exported it, and is then the
+// front door: its first screen carries the other ways in, in the page itself
+// so they stand even if the Reading's data doesn't load.
 const hasReading = () => existsSync(new URL('../src/euphonia/euphonia.reading.json', import.meta.url));
-function reading() {
+function reading(welcome) {
   return hasReading() ? `<section class="reading" id="the-reading" role="tabpanel" aria-labelledby="tab-reading" tabindex="-1" hidden>
 <div class="r-bar"><span class="r-act"></span><ol class="r-road" aria-hidden="true"></ol><a class="r-door" href="#builder">I know what I want</a></div>
 <div class="r-stage"><p role="status">Opening the reading…</p></div>
+<nav class="r-doors" aria-label="Other ways in">
+<ul>
+<li><a href="#games">${TONIGHT_DOOR}</a></li>
+<li><a href="#contents">${WORLD_DOOR}</a></li>
+<li><a href="#builder">I know what I want</a></li>
+</ul>
+${forBuilders(welcome)}
+</nav>
 </section>` : '';
 }
 
@@ -335,7 +348,7 @@ ${regions.data.map(r => `<li><button type="button" data-region="${slug(r.name)}"
 </ul>
 <h3>The book</h3>
 <ul>
-${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}</button></li>`).join('\n')}
+${hasReading() ? '<li><button type="button" data-go="#reading">The Reading</button></li>\n' : ''}${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}</button></li>`).join('\n')}
 </ul>
 </nav>
 ${welcomePage(welcome.data, adventures.data)}
@@ -395,7 +408,7 @@ export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), f
     .replace('<!--euphonia-tabs-->', tabs())
     .replace('<!--euphonia-map-->', mapStage(d, world, fixtures, calendars))
     .replace('<!--euphonia-builder-->', builder())
-    .replace('<!--euphonia-reading-->', reading())
+    .replace('<!--euphonia-reading-->', reading(d.welcome.data))
     .replace('<!--euphonia-colophon-->', colophon(d.welcome.data))
     .replace('<!--euphonia-footer-->', euphoniaFooter(d.legal.data));
 }

@@ -8,6 +8,8 @@ import { blank } from '../src/euphonia/euphonia.build.js';
 import { checkReading, steps, ranked, pages, why, fnv1a, answerKey, trialBuild, usesOf, freshPlay, act, tonight } from '../src/euphonia/euphonia.reading.js';
 import { SYMBOLS } from '../src/euphonia/euphonia.reading.symbols.js';
 import { openSaves } from '../src/euphonia/euphonia.saves.js';
+import { landing } from '../src/euphonia/euphonia.door.js';
+import { injectEuphonia } from './euphonia-page.js';
 
 const json = url => JSON.parse(readFileSync(url, 'utf8'));
 const src = n => json(new URL(`../src/euphonia/euphonia.${n}.json`, import.meta.url));
@@ -27,8 +29,18 @@ export function verifyEuphoniaReading({ exported = existsSync(EXPORT) ? json(EXP
   s.remove(id); if (s.list().length !== 1 || s.play(id) !== null) fail('removing a character leaves it or its play');
   const refused = openSaves({ getItem: () => null, setItem: () => { throw new Error('no'); }, removeItem: () => {} }), mem = refused.put(null, 'C', 'X');
   if (refused.ok || refused.list()[0]?.id !== mem) fail('a browser that refuses storage breaks saving, or goes unmentioned');
+  // The front door: only the bare address gets it, and a return goes back.
+  const bare = { hash: '', search: '', last: null, hasReading: true };
+  for (const [given, want] of [[{}, '#reading'], [{ last: '' }, null], [{ last: '#builder' }, '#builder'], [{ last: '#europe' }, '#europe'], [{ last: '#reading-d2' }, '#reading'], [{ last: '#reading-tonight' }, '#reading-tonight'], [{ hash: '#people' }, null], [{ search: '?c=x' }, null], [{ hasReading: false }, null]]) {
+    const got = landing({ ...bare, ...given });
+    if (got !== want) fail(`the front door: ${JSON.stringify(given)} opens ${got}, not ${want}`);
+  }
   let people = 0, full = 0;
   if (exported) {
+    const page = injectEuphonia(readFileSync(new URL('../euphonia/index.html', import.meta.url), 'utf8'));
+    const ways = [...(page.match(/<nav class="r-doors"[\s\S]*?<\/nav>/)?.[0] ?? '').matchAll(/<li><a href="#([\w-]+)">/g)].map(m => m[1]);
+    if (ways.join() !== 'games,contents,builder') fail(`the front door's ways in are ${ways.join() || 'missing'}`);
+    if (!page.includes('data-page="games"') || !page.includes('data-go="#reading"')) fail('the Reading or the adventures can\'t be reached from the panel');
     const d = exported.data, rules = { regions: src('regions').data.map(r => r.name), drawn: Object.keys(SYMBOLS) };
     for (const m of checkReading(d, rules)) fail(`euphonia.reading.json: ${m}`);
     for (const id2 of Object.keys(SYMBOLS)) if (!d.symbols.some(r => r.options.some(o => o.id === id2))) fail(`the symbol "${id2}" is drawn but no round uses it`);

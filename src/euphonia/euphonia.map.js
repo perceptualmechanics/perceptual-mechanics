@@ -378,13 +378,14 @@ export async function initMap(stage) {
     const b = e.target.closest('[data-page], [data-leave]');
     if (!b) return;
     if (b.dataset.page) { showPage(b.dataset.page); panelTitle.focus(); return; }
-    opener = b.matches('a') ? document.getElementById('tab-builder') : cell;
+    opener = b.dataset.leave ? document.getElementById(b.dataset.leave) : cell;
     closer.close();
   });
   panel.querySelector('.map-panel-contents').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
     if (b.dataset.page) { showPage(b.dataset.page); panelTitle.focus(); return; }
+    if (b.dataset.go) { opener = document.getElementById('tab-reading'); closer.close(); location.hash = b.dataset.go; return; }
     const r = regions.find(x => x.id === b.dataset.region);
     showRegion(r);
     clearMention();
@@ -1128,14 +1129,15 @@ export async function initMap(stage) {
   tideLine.hidden = false;
   stage.classList.add('is-drawn');
 
-  // A link to a region (#europe) opens its chapter; one to the front door
-  // (#welcome), that; one to the People page (#people), or to its Notable
-  // People (#notable-people), that.
+  // A link to a region (#europe) opens its chapter; one to a page of the
+  // panel (#welcome, #contents, #games), that; one to the People page
+  // (#people), or to its Notable People (#notable-people), that.
+  const PANEL_ADDRESSES = ['welcome', 'contents', 'games'];
   function openFromAddress() {
     const id = location.hash.slice(1);
     const r = regions.find(x => x.id === id);
     if (r) { openChapter(r, g.cell); return; }
-    if (id === 'welcome') { openWelcome(); requestAnimationFrame(() => panelTitle.focus()); return; }
+    if (PANEL_ADDRESSES.includes(id)) { openPage(id); requestAnimationFrame(() => panelTitle.focus()); return; }
     const people = panel.querySelector('.map-panel-people');
     if (id !== 'people' && !(id && people.querySelector(`#${CSS.escape(id)}`))) return;
     showPage('people');
@@ -1148,17 +1150,18 @@ export async function initMap(stage) {
       panel.scrollTo({ top: head.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop });
     });
   }
-  function openWelcome() {
-    showPage('welcome');
+  function openPage(name) {
+    showPage(name);
     openPanel(contentsOpen);
   }
   addEventListener('hashchange', openFromAddress);
-  // A first visit opens on the front door, without taking the focus from
-  // where the page put it; the browser remembers it was shown, and where it
-  // can't, every visit is a first. An address names what to open instead.
+  // Without the Reading to open on, a first visit opens on the Welcome,
+  // without taking the focus from where the page put it; the browser
+  // remembers it was shown, and where it can't, every visit is a first. An
+  // address names what to open instead.
   const WELCOMED = 'pm-euphonia-welcomed';
   function firstVisit() {
-    if (location.hash) return false;
+    if (location.hash || document.getElementById('tab-reading')) return false;
     let seen = null;
     try { seen = localStorage.getItem(WELCOMED); localStorage.setItem(WELCOMED, '1'); } catch { /* no storage: a first visit */ }
     return !seen;
@@ -1166,7 +1169,7 @@ export async function initMap(stage) {
   // The address the page opens at waits for the globe's first measure:
   // a chapter zooms to its region, and before the globe has a size the fit
   // is no number (and the zoom with it, for good).
-  measured.then(() => (firstVisit() ? openWelcome() : openFromAddress()));
+  measured.then(() => (firstVisit() ? openPage('welcome') : openFromAddress()));
 }
 
 const stage = document.getElementById('map-figure');

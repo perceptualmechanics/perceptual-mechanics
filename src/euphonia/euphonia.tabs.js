@@ -2,6 +2,7 @@
 // exports it, the Reading. The address says which is open (#builder; #reading
 // and its steps; any other address is the map's, a region's chapter included),
 // so a link to any of them opens it. Their code loads when the tab first opens.
+import { LAST, landing } from './euphonia.door.js';
 
 const BUILDER_HASH = '#builder', READING_HASH = '#reading';
 
@@ -33,6 +34,8 @@ function initTabs(list) {
     if (record) history.replaceState(history.state, '', `${location.pathname}${location.search}${isBuilder ? BUILDER_HASH : isReading ? (location.hash.startsWith(READING_HASH) ? location.hash : READING_HASH) : ''}`);
     if (isBuilder && !builder) builder = import('./euphonia.builder.js').then(m => m.initBuilder(panels[i]));
     if (isReading && !reading) reading = import('./euphonia.reading.ui.js').then(m => m.initReading(panels[i]));
+    // Where to come back to; the colophon, down the page, is no place to open.
+    try { if (!document.getElementById(location.hash.slice(1))?.closest('.euphonia-foot')) localStorage.setItem(LAST, location.hash); } catch { /* no storage: every visit is a first */ }
   }
 
   list.addEventListener('click', e => {
@@ -50,6 +53,10 @@ function initTabs(list) {
   addEventListener('hashchange', () => select(fromAddress(), { record: false }));
 
   list.hidden = false;
+  let last = null;
+  try { last = localStorage.getItem(LAST); } catch { /* as above */ }
+  const door = landing({ hash: location.hash, search: location.search, last, hasReading: readingTab >= 0 });
+  if (door) history.replaceState(history.state, '', `${location.pathname}${door}`);
   select(fromAddress(), { record: false });
 }
 

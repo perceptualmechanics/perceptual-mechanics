@@ -147,10 +147,10 @@ body { background: var(--ground); font-family: var(--type); }
    which only repeats the top one as a belt, gives its height to the globe. */
 .euphonia-menu-open { display: none; }
 @media (max-width: 700px) {
-	.euphonia-bar.has-menu { position: relative; flex-wrap: nowrap; }
+	.euphonia-bar.has-menu { position: relative; flex-wrap: nowrap; gap: 0.4rem; }
 	.euphonia-bar.has-menu .euphonia-menu-open {
 		display: block; margin: 0 0 0.35rem auto; font: inherit; font-size: 0.85rem;
-		color: var(--paper); background: var(--case); border: 1px solid var(--frame); padding: 0.4rem 0.9rem; cursor: pointer;
+		color: var(--paper); background: var(--case); border: 1px solid var(--frame); padding: 0.4rem 0.6rem; cursor: pointer;
 	}
 	.euphonia-bar.has-menu .euphonia-menu-open[aria-expanded=true] { background: var(--surface-pressed); border-color: var(--signal); }
 	.euphonia-bar.has-menu .euphonia-menu-open:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
@@ -163,8 +163,10 @@ body { background: var(--ground); font-family: var(--type); }
 	.euphonia-bar.has-menu .euphonia-aside button { padding: 0.45rem 0.9rem; }
 	.euphonia-bar.has-menu .euphonia-aside :is(.home, .elsewhere) { padding-block: 0.7rem; }
 	.euphonia-bar.has-menu .theme-pick select { padding-block: 0.45rem; }
-	.euphonia-tabs [role=tab] { font-size: 0.72rem; letter-spacing: 0.1em; padding: 0.45rem 0.8rem 0.4rem; }
 	.tab-long { display: none; }
+	/* The front door keeps every way in on one phone screen. */
+	.reading.is-door .r-bar { display: none; }
+	.reading.is-door .r-open svg { height: clamp(5.5rem, 19svh, 10rem); }
 	.ribbon-bottom { display: none; }
 }
 .euphonia-menu-open[hidden] { display: none; }
@@ -243,6 +245,11 @@ body { background: var(--ground); font-family: var(--type); }
 .euphonia-tabs [role=tab]:hover { color: var(--accent-bright); }
 .euphonia-tabs [role=tab][aria-selected=true] { color: var(--accent); background: var(--ground); border-bottom-color: var(--ground); box-shadow: inset 0 2px 0 var(--signal); }
 .euphonia-tabs [role=tab]:focus-visible { outline: 2px solid var(--focus); outline-offset: -4px; }
+/* Three tabs and Menu share a phone's width. */
+@media (max-width: 700px) {
+  .euphonia-tabs { gap: 0.2rem; }
+  .euphonia-tabs [role=tab] { font-size: 0.7rem; letter-spacing: 0.05em; padding: 0.45rem 0.45rem 0.4rem; white-space: nowrap; }
+}
 
 /* The map of 1668: a stage filling what the title and tabs leave, the
    controls over the two discs, side by side on a wide screen and stacked
@@ -623,6 +630,10 @@ fieldset[data-touched] .b-problem, .b-problem.is-broken { color: var(--signal-te
 .r-star { fill: var(--paper); }
 .r-figure { fill: var(--case-edge); }
 .r-flame { fill: var(--accent); }
+.r-door[hidden], .r-doors[hidden] { display: none; }
+.r-doors { margin-top: 1.1rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
+.r-doors ul { display: flex; flex-wrap: wrap; gap: 0.3rem 1.5rem; margin: 0; padding: 0; list-style: none; }
+.r-doors .welcome-open { margin: 0.5rem 0 0; padding: 0; border: 0; }
 .r-lede { margin: 0; max-width: 40rem; color: var(--text-muted); font-size: 1.12rem; }
 .r-count, .r-label { margin: 0; color: var(--accent); font-size: 0.9rem; letter-spacing: 0.07em; font-variant-caps: small-caps; }
 .r-label { display: block; }

@@ -17,7 +17,7 @@ const roll = sides => 1 + Math.floor(Math.random() * sides);
 const md = (tag, attrs, text) => h(tag, { ...attrs, html: inline(text) });
 
 export async function initReading(panel) {
-  const stage = panel.querySelector('.r-stage'), door = panel.querySelector('.r-door'), label = panel.querySelector('.r-act'), road = panel.querySelector('.r-road');
+  const stage = panel.querySelector('.r-stage'), door = panel.querySelector('.r-door'), doors = panel.querySelector('.r-doors'), label = panel.querySelector('.r-act'), road = panel.querySelector('.r-road');
   let d;
   try {
     d = (await (await fetch(await files['./euphonia.reading.json']())).json()).data;
@@ -29,9 +29,9 @@ export async function initReading(panel) {
   }
   const saves = openSaves(), order = steps(d), pinOf = region => map.pins.find(p => p.name === region);
   let kept = {};
-  try { kept = JSON.parse(sessionStorage.getItem(KEPT) ?? '{}'); } catch { /* it lasts as long as the page */ }
-  let answers = kept.answers ?? {}, framed = kept.framed !== false, page = kept.page ?? 0, chosen = kept.chosen ?? null, rules = null;
-  const keep = () => { try { sessionStorage.setItem(KEPT, JSON.stringify({ answers, framed, page, chosen })); } catch { /* as above */ } };
+  try { kept = JSON.parse(localStorage.getItem(KEPT) ?? '{}'); } catch { /* it lasts as long as the page */ }
+  let answers = kept.answers ?? {}, framed = kept.framed !== false, page = kept.page ?? 0, chosen = kept.chosen ?? null, reached = kept.reached ?? null, rules = null;
+  const keep = () => { try { localStorage.setItem(KEPT, JSON.stringify({ answers, framed, page, chosen, reached })); } catch { /* as above */ } };
   const person = () => d.roster.find(p => p.id === chosen) ?? null;
   // Until the book's full builds arrive, a person's links wait for the rules.
   const linkFor = p => (p.build ? builderLink(p.build) : '#builder');
@@ -43,19 +43,24 @@ export async function initReading(panel) {
     road.replaceChildren(...order.slice(1).map((_, i) => h('li', { class: i + 1 < at ? 'is-past' : i + 1 === at ? 'is-here' : null })));
     stage.replaceChildren(...children.flat().filter(Boolean));
     stage.classList.toggle('is-question', at > 0 && at < order.indexOf('map'));
+    // The first screen is the front door: the other ways in stand under it.
+    panel.classList.toggle('is-door', at === 0);
+    doors.hidden = at > 0;
+    door.hidden = at <= 0;
     door.href = person() ? linkFor(person()) : answers.map ? builderLink({ ...blank(), homeland: answers.map.region }) : '#builder';
     const title = stage.querySelector('h2');
     title.tabIndex = -1;
     title.focus({ preventScroll: true });
-    panel.scrollIntoView({ block: 'start' });
+    if (at > 0) panel.scrollIntoView({ block: 'start' });
   }
   const FIRST = 'At the crossroads', SECOND = 'Who is waiting', THIRD = 'Tonight';
   const say = r => (framed ? `“${r.prompt}”` : r.plain_prompt);
 
   function start() {
-    const f = framed ? d.frame.intro : d.frame.plain;
+    const f = framed ? d.frame.intro : d.frame.plain, resume = order.includes(reached);
     show(FIRST, framed ? h('div', { class: 'r-open', html: crossroadsSvg }) : null, h('h2', {}, f.title), md('p', { class: 'r-lede' }, f.text), h('div', { class: 'r-row' },
-      h('button', { type: 'button', class: 'b-button r-go', onclick: () => { answers = {}; page = 0; chosen = null; go(order[1]); } }, f.begin),
+      resume ? h('button', { type: 'button', class: 'b-button r-go', onclick: () => go(reached) }, 'Pick up where you left off') : null,
+      h('button', { type: 'button', class: resume ? 'b-button' : 'b-button r-go', onclick: () => { answers = {}; page = 0; chosen = null; reached = null; go(order[1]); } }, f.begin),
       h('button', { type: 'button', class: 'b-button', onclick: () => { framed = !framed; keep(); draw(); } }, framed ? d.frame.skip : d.frame.restore)));
   }
   function symbols(i, step) {
@@ -125,6 +130,7 @@ export async function initReading(panel) {
     const step = location.hash.slice(ROUTE.length + 1) || 'start', at = order.indexOf(step);
     const missing = order.slice(1, Math.max(at, 1)).filter(s => /^[sd]\d/.test(s) && answers[s]?.index === undefined);
     if (at < 0 || missing.length || (at > order.indexOf('map') && !answers.map) || (step === 'tonight' && !person())) { go('start'); return; }
+    if (step !== 'start' && step !== reached) { reached = step; keep(); }
     if (step === 'start') start();
     else if (step[0] === 's') symbols(+step.slice(1) - 1, step);
     else if (step[0] === 'd') dilemma(+step.slice(1) - 1, step);
