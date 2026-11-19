@@ -3048,3 +3048,23 @@ now reach the builder.
 page, so Bards, Wizards, Paladins and Clerics were missing 12, 8, 7 and 5. A gate
 now holds each list to the spells' own headings, and names the SRD's four
 omissions. The eleven Latin faces take ư and ờ for Mường.
+
+### 7.8.0 — Honed: less at once
+
+**The builder starts with four choices.** Name, class, species and background
+come first, and the rest opens once those three are made: 53 words where 325
+stood, and 745 px of form where there were 2,500. Explanations fold behind Why?.
+
+**Skills and Tools, each option once.** A finished grant folds to its picks,
+what the character has isn't offered again, and a long list of tools is a
+grouped menu. A full level 3 character's two sections go from 4,408 px to 919 at
+1280, and from 8,496 to 1,263 on a phone.
+
+**Chapters open on At a Glance.** Europe opens on 234 words, not 6,068, with each
+later section folded under its heading; a place on the map opens the fold that
+names it. A reveal card folds its scene and reasons under More (536 words to
+229), and the colophon is one paragraph, the rest moved to the Welcome.
+
+**People open the level 3 build.** A person's Character sheet opens the build the
+Reading plays, and the book's full-level sheet follows as At full strength. The
+placeholder notice moves to the foot of each page. Master b117dd86.
