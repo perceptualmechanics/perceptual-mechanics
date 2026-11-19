@@ -3025,3 +3025,26 @@ soft hyphens from the PDF had kept a Rogue's Shortsword from counting.
 only where intended. QA in headless Chrome: each stage's sheet read on the
 local build and live; the attack table and the new form sections at 375 px,
 with no horizontal scroll; no errors.
+
+### 7.7.0 — The Reading, Euphonia's front door
+
+**A reading in three acts.** A first visit to /euphonia/ now opens at the
+crossroads: four symbols, five dilemmas and a place on the map lead to three
+people of 1668, each of a different class, and one of them to a first-session
+sheet with Hit Points, a signature trick and what to do on a turn. The rule is
+the book's. Across all 180,000 paths every reveal shows three classes, and none
+of the 146 people goes unshown.
+
+**Every door on one screen.** Play tonight, Explore the world and I know what I
+want stand under the first screen at 1280 and 375 px in all six themes. A return
+visit opens where the visitor was, and a reading under way can be picked up.
+Links that name something still open it. Back walks all 13 steps.
+
+**Full builds from the book.** All 146 people are level 3 builds the engine reads
+with no rule broken, no choice open and no spell short. Underworld and Card Sharp
+now reach the builder.
+
+**32 spells back.** The SRD exporter stopped where a class's spell list turned a
+page, so Bards, Wizards, Paladins and Clerics were missing 12, 8, 7 and 5. A gate
+now holds each list to the spells' own headings, and names the SRD's four
+omissions. The eleven Latin faces take ư and ờ for Mường.
