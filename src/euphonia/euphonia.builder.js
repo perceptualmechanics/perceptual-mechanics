@@ -31,6 +31,19 @@ function rebuild(container, ...children) {
   if (key) container.querySelector(`[data-key="${CSS.escape(key)}"]`)?.focus();
 }
 
+// A person from the People page (?person=<id>): their level 3 build from the
+// Reading, fetched only then, so the page needn't carry every build in its
+// links.
+const readingFile = import.meta.glob('./euphonia.reading.json', { query: '?url', import: 'default' });
+async function personBuild(id) {
+  const load = readingFile['./euphonia.reading.json'];
+  if (!id || !load) return null;
+  try {
+    const p = (await (await fetch(await load())).json()).data.roster.find(x => x.id === id);
+    return p?.build ? { ...blank(), ...p.build } : null;
+  } catch { return null; }
+}
+
 export async function initBuilder(panel) {
   const form = panel.querySelector('.builder-form');
   const sheet = panel.querySelector('.sheet');
@@ -50,7 +63,8 @@ export async function initBuilder(panel) {
   // A link opens its character without touching the saved ones; it joins them
   // only once the player changes it.
   const saved = openSaves();
-  let state = decode(new URLSearchParams(location.search).get(PARAM) ?? '') ?? decode(saved.current()?.code ?? '') ?? blank();
+  const params = new URLSearchParams(location.search);
+  let state = (await personBuild(params.get('person'))) ?? decode(params.get(PARAM) ?? '') ?? decode(saved.current()?.code ?? '') ?? blank();
   let savedCode = encode(state), savedId = saved.list().find(c => c.code === savedCode)?.id ?? null, edited = false;
   if (savedId) saved.select(savedId);
 

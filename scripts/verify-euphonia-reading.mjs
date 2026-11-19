@@ -41,6 +41,10 @@ export function verifyEuphoniaReading({ exported = existsSync(EXPORT) ? json(EXP
     const ways = [...(page.match(/<nav class="r-doors"[\s\S]*?<\/nav>/)?.[0] ?? '').matchAll(/<li><a href="#([\w-]+)">/g)].map(m => m[1]);
     if (ways.join() !== 'games,contents,builder') fail(`the front door's ways in are ${ways.join() || 'missing'}`);
     if (!page.includes('data-page="games"') || !page.includes('data-go="#reading"')) fail('the Reading or the adventures can\'t be reached from the panel');
+    // People open each person's level 3 build by its id.
+    const linked = [...new Set([...page.matchAll(/\?person=([\w-]+)#builder/g)].map(m => m[1]))];
+    if (!linked.length) fail('no person on the People page opens a level 3 build');
+    for (const pid of linked) if (!exported.data.roster.some(p => p.id === pid && p.build)) fail(`the People page opens "${pid}", which has no build in the Reading`);
     const d = exported.data, rules = { regions: src('regions').data.map(r => r.name), drawn: Object.keys(SYMBOLS) };
     for (const m of checkReading(d, rules)) fail(`euphonia.reading.json: ${m}`);
     for (const id2 of Object.keys(SYMBOLS)) if (!d.symbols.some(r => r.options.some(o => o.id === id2))) fail(`the symbol "${id2}" is drawn but no round uses it`);

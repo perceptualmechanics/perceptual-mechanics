@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { euphoniaFiles } from './verify-euphonia.mjs';
 import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
@@ -65,12 +65,12 @@ ${panelSections({ classes, regions, adventures, hidden, people, sheets, welcome 
 <p class="map-panel-nearby" hidden><button type="button" class="map-panel-read"></button></p>
 </section>
 <div class="map-panel-region" hidden>
-${regions.status === 'draft' ? `${DRAFT_NOTE_HTML}\n` : ''}<p><button type="button" class="map-panel-zoom">Zoom to it</button></p>
+<p><button type="button" class="map-panel-zoom">Zoom to it</button></p>
 <p class="map-panel-theme" hidden><button type="button"></button></p>
 <h3 id="map-panel-places-title">Its places on the map</h3>
 <ul class="map-panel-places" aria-labelledby="map-panel-places-title"></ul>
 <div class="map-panel-content"></div>
-</div>
+${regions.status === 'draft' ? `${DRAFT_NOTE_HTML}\n` : ''}</div>
 </div>
 <p class="map-status" aria-live="polite"></p>
 <div class="map-peek" hidden><p class="map-peek-label"></p><button type="button" class="map-peek-back">Back to entry</button></div>
@@ -141,7 +141,8 @@ function themePick() {
 // The Reading appears only once the book has exported it, and is then the
 // front door: its first screen carries the other ways in, in the page itself
 // so they stand even if the Reading's data doesn't load.
-const hasReading = () => existsSync(new URL('../src/euphonia/euphonia.reading.json', import.meta.url));
+const READING = new URL('../src/euphonia/euphonia.reading.json', import.meta.url);
+const hasReading = () => existsSync(READING);
 function reading(welcome) {
   return hasReading() ? `<section class="reading" id="the-reading" role="tabpanel" aria-labelledby="tab-reading" tabindex="-1" hidden>
 <div class="r-bar"><span class="r-act"></span><ol class="r-road" aria-hidden="true"></ol><a class="r-door" href="#builder">I know what I want</a></div>
@@ -211,9 +212,15 @@ const PLAIN = s => s.replace(/\*+/g, '');
 // for a table: the People page and their region's chapter. The link opens
 // the sheet in a dialog (euphonia.sheet.js), or as its own page without
 // script.
+// A person's sheets: their level 3 build from the Reading first, which a
+// newcomer can play, opened in the builder by id; then the book's sheet at
+// their full level.
+let levelThree = null;
 function sheetLink(sheets, name) {
-  const sh = sheets.find(x => x.name === name);
-  return sh ? `<a class="sheet-link" href="/euphonia/sheets/${esc(sh.file)}">Character sheet</a> (${esc(sh.line)})` : '';
+  levelThree ??= new Map(hasReading() ? JSON.parse(readFileSync(READING, 'utf8')).data.roster.filter(p => p.build).map(p => [p.name, p.id]) : []);
+  const sh = sheets.find(x => x.name === name), id = levelThree.get(name);
+  const full = sh ? `<a class="sheet-link" href="/euphonia/sheets/${esc(sh.file)}">${id ? 'At full strength' : 'Character sheet'}</a> (${esc(sh.line)})` : '';
+  return id ? `<a href="/euphonia/?person=${esc(id)}#builder">Character sheet</a>${full ? ` · ${full}` : ''}` : full;
 }
 // A person the book places (their entry's @at line) is named by a button
 // that turns the globe to them (euphonia.map.js); one it doesn't yet place,
@@ -255,11 +262,12 @@ ${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="
 <label>Name <input type="search" class="people-name" autocomplete="off" spellcheck="false"></label>
 </div>
 <p class="people-said note" aria-live="polite" hidden></p>
-${status === 'draft' ? `${DRAFT_NOTE_HTML}\n` : ''}${regional.join('\n')}
+${regional.join('\n')}
 <section class="people-group" data-group="notable-people" id="notable-people" aria-labelledby="people-notable-people">
 <h3 id="people-notable-people">${esc(people.notable.title)}</h3>
 ${notable}
 </section>
+${status === 'draft' ? DRAFT_NOTE_HTML : ''}
 </section>`;
 }
 
@@ -346,14 +354,14 @@ function panelSections({ classes, regions, adventures, hidden, people, sheets, w
   const pages = [['welcome', 'Welcome'], ['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['people', 'People'], ['games', 'Adventures and Hooks'], ['ribbons', 'The ribbons']];
   return `<nav class="map-panel-page map-panel-contents" aria-label="Contents" data-title="Contents" hidden>
 <h3>The State of the World</h3>
-${regions.status === 'draft' ? `${DRAFT_NOTE_HTML}\n` : ''}<ul>
+<ul>
 ${regions.data.map(r => `<li><button type="button" data-region="${slug(r.name)}">${esc(r.name)}</button></li>`).join('\n')}
 </ul>
 <h3>The book</h3>
 <ul>
 ${hasReading() ? '<li><button type="button" data-go="#reading">The Reading</button></li>\n' : ''}${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}</button></li>`).join('\n')}
 </ul>
-</nav>
+${regions.status === 'draft' ? `${DRAFT_NOTE_HTML}\n` : ''}</nav>
 ${welcomePage(welcome.data, adventures.data)}
 <section class="map-panel-page map-panel-moment" data-page="moment" data-title="This moment" hidden>
 <p class="map-readout">The world between 1 November 1668 and 31 October 1669, on one globe.</p>
