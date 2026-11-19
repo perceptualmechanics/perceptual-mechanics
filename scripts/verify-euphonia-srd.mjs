@@ -10,6 +10,9 @@ import { ABILITIES } from '../src/euphonia/euphonia.character.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 export const srdData = () => read('srd');
+// Where the SRD disagrees with itself: these spells' headings name the class,
+// and the class's printed list leaves them off. The list is what's exported.
+const SRD_LIST_OMITS = ['Bard: Phantasmal Force', 'Sorcerer: Mind Spike', 'Sorcerer: Phantasmal Force', 'Wizard: Phantasmal Force'];
 
 const SIZES = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
 const LEVELS = 20, SPELL_LEVELS = 9;
@@ -200,6 +203,15 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
     for (const [level, list] of Object.entries(c.spells ?? {})) {
       if (+level && !levels.includes(level) && !c.table.columns.includes('Slot Level')) fail(`${c.name}: level-${level} spells but no level-${level} slots`);
       for (const sp of list) if (!sp.name || !/^[A-Z][a-z]+$/.test(sp.school) || !/^([—–]|[CRM](, [CRM])*)$/.test(sp.special)) fail(`${c.name}: the spell ${JSON.stringify(sp)}`);
+      // The SRD says it twice, in the class's list and in each spell's own
+      // heading: a list cut short at a page turn shows here.
+      const listed = new Set(list.map(sp => sp.name));
+      const headed = (srd.spells ?? []).filter(sp => sp.level === +level && sp.classes.includes(c.name)).map(sp => sp.name);
+      for (const name of headed) {
+        const omitted = SRD_LIST_OMITS.includes(`${c.name}: ${name}`);
+        if (listed.has(name) === omitted) fail(omitted ? `${c.name}: ${name} is on its level ${level} list, where the SRD's leaves it off` : `${c.name}: ${name} names the class in its heading, but isn't on its level ${level} list`);
+      }
+      for (const name of listed) if (!headed.includes(name)) fail(`${c.name}: ${name} is on its level ${level} list, but its heading doesn't name the class`);
     }
   }
 

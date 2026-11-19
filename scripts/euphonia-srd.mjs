@@ -472,16 +472,24 @@ function heading(i) {
 }
 // A titled table's lines: the title and the table lines after it in its
 // column, to the next line of another kind there; the other column's text
-// can fall between them in reading order (the Cleric's traits). And the
-// table those lines make.
+// can fall between them in reading order (the Cleric's traits). A table that
+// fills its column runs on at the top of the next, under its header again
+// (the Bard's level 2 spells). And the table those lines make.
 function tableLines(t) {
   const out = [t];
-  for (let k = t + 1; k < lines.length && lines[k].page === lines[t].page; k++) {
-    if (lines[k].right !== lines[t].right) continue;
-    if (lines[k].kind !== 'table') break;
-    out.push(k);
+  let { page, right } = lines[t];
+  for (let k = t + 1; ; k++) {
+    if (k < lines.length && lines[k].page === page) {
+      if (lines[k].right !== right) continue;
+      if (lines[k].kind !== 'table') return out;
+      out.push(k);
+      continue;
+    }
+    [page, right] = right ? [page + 1, false] : [page, true];
+    k = lines.findIndex(l => l.page === page && l.right === right);
+    if (k < 0 || out.length < 2 || lines[k].kind !== 'table' || lines[k].text !== lines[out[1]].text) return out;
+    k--;
   }
-  return out;
 }
 const titled = t => ({ kind: 'table', lines: tableLines(t).slice(1).map(k => lines[k]) });
 // A table in the export's markdown, its wrapped cells joined as table()

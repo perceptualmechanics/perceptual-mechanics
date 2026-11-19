@@ -1876,6 +1876,66 @@
       "name": "Hold Person",
       "school": "Enchantment",
       "special": "C"
+     },
+     {
+      "name": "Invisibility",
+      "school": "Illusion",
+      "special": "C"
+     },
+     {
+      "name": "Knock",
+      "school": "Transmutation",
+      "special": "—"
+     },
+     {
+      "name": "Lesser Restoration",
+      "school": "Abjuration",
+      "special": "—"
+     },
+     {
+      "name": "Locate Animals or Plants",
+      "school": "Divination",
+      "special": "R"
+     },
+     {
+      "name": "Locate Object",
+      "school": "Divination",
+      "special": "C"
+     },
+     {
+      "name": "Magic Mouth",
+      "school": "Illusion",
+      "special": "R, M"
+     },
+     {
+      "name": "Mirror Image",
+      "school": "Illusion",
+      "special": "—"
+     },
+     {
+      "name": "See Invisibility",
+      "school": "Divination",
+      "special": "—"
+     },
+     {
+      "name": "Shatter",
+      "school": "Evocation",
+      "special": "—"
+     },
+     {
+      "name": "Silence",
+      "school": "Illusion",
+      "special": "C, R"
+     },
+     {
+      "name": "Suggestion",
+      "school": "Enchantment",
+      "special": "C"
+     },
+     {
+      "name": "Zone of Truth",
+      "school": "Enchantment",
+      "special": "—"
      }
     ],
     "3": [
@@ -2934,6 +2994,31 @@
      {
       "name": "Prayer of Healing",
       "school": "Abjuration",
+      "special": "—"
+     },
+     {
+      "name": "Protection from Poison",
+      "school": "Abjuration",
+      "special": "—"
+     },
+     {
+      "name": "Silence",
+      "school": "Illusion",
+      "special": "C, R"
+     },
+     {
+      "name": "Spiritual Weapon",
+      "school": "Evocation",
+      "special": "C"
+     },
+     {
+      "name": "Warding Bond",
+      "school": "Abjuration",
+      "special": "M"
+     },
+     {
+      "name": "Zone of Truth",
+      "school": "Enchantment",
       "special": "—"
      }
     ],
@@ -5582,6 +5667,41 @@
       "name": "Detect Poison and Disease",
       "school": "Divination",
       "special": "C, R"
+     },
+     {
+      "name": "Divine Favor",
+      "school": "Transmutation",
+      "special": "—"
+     },
+     {
+      "name": "Divine Smite",
+      "school": "Evocation",
+      "special": "—"
+     },
+     {
+      "name": "Heroism",
+      "school": "Enchantment",
+      "special": "C"
+     },
+     {
+      "name": "Protection from Evil and Good",
+      "school": "Abjuration",
+      "special": "C, M"
+     },
+     {
+      "name": "Purify Food and Drink",
+      "school": "Transmutation",
+      "special": "R"
+     },
+     {
+      "name": "Searing Smite",
+      "school": "Evocation",
+      "special": "—"
+     },
+     {
+      "name": "Shield of Faith",
+      "school": "Abjuration",
+      "special": "C"
      }
     ],
     "2": [
@@ -9935,6 +10055,46 @@
      {
       "name": "Phantasmal Killer",
       "school": "Illusion",
+      "special": "C"
+     },
+     {
+      "name": "Polymorph",
+      "school": "Transmutation",
+      "special": "C"
+     },
+     {
+      "name": "Private Sanctum",
+      "school": "Abjuration",
+      "special": "—"
+     },
+     {
+      "name": "Resilient Sphere",
+      "school": "Abjuration",
+      "special": "C"
+     },
+     {
+      "name": "Secret Chest",
+      "school": "Conjuration",
+      "special": "M"
+     },
+     {
+      "name": "Stone Shape",
+      "school": "Transmutation",
+      "special": "—"
+     },
+     {
+      "name": "Stoneskin",
+      "school": "Transmutation",
+      "special": "C, M"
+     },
+     {
+      "name": "Vitriolic Sphere",
+      "school": "Evocation",
+      "special": "—"
+     },
+     {
+      "name": "Wall of Fire",
+      "school": "Evocation",
       "special": "C"
      }
     ],
