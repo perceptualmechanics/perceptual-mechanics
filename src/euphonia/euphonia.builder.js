@@ -4,7 +4,7 @@
 // so a link is the character, and this browser remembers the last one.
 import { loadBook } from './euphonia.book.js';
 import { h, present } from './euphonia.dom.js';
-import { PARAM, blank, encode, decode } from './euphonia.build.js';
+import { PARAM, blank, encode, decode, choiceOptions, placeGroups } from './euphonia.build.js';
 import { openSaves } from './euphonia.saves.js';
 import places from 'virtual:euphonia-places';
 import { ABILITIES, MAX_LEVEL, languageNotes, character, speciesOptions, featsAllowed, featIncrease, qualifies } from './euphonia.character.js';
@@ -193,15 +193,18 @@ export async function initBuilder(panel) {
     classList.lastElementChild?.querySelector('select')?.focus();
   });
 
-  // A class's subclasses, the setting's first and each named with its book
-  // where a book adds it to an SRD class; a source with none isn't shown.
-  const subclassGroups = (list, chosen) => ['Euphonia', 'SRD 5.2.1'].filter(src => list.some(x => x.source === src)).map(src => h('optgroup', { label: src === 'Euphonia' ? 'Euphonia’s subclasses' : 'The SRD’s subclasses' },
-    list.filter(x => x.source === src).map(x => h('option', { value: x.name, selected: x.name === chosen || null }, x.book ? `${x.name} (${x.book.replace(/^Euphonia: /, '')})` : x.name))));
-  // The classes, the setting's own first; then the SRD's it adds subclasses
-  // to, apart from those it leaves as they are.
+  // A class's subclasses, the setting's first, grouped by where its books
+  // place them, and each named with its book where a book adds it to an SRD
+  // class; a group with none isn't shown.
+  const subclassGroups = (list, chosen) => [...placeGroups(list.filter(x => x.source === 'Euphonia'), 'subclasses'), ['The SRD’s subclasses', list.filter(x => x.source === 'SRD 5.2.1')]]
+    .filter(([, l]) => l.length).map(([label, l]) => h('optgroup', { label },
+      l.map(x => h('option', { value: x.name, selected: x.name === chosen || null }, x.book ? `${x.name} (${x.book.replace(/^Euphonia: /, '')})` : x.name))));
+  // The classes, the setting's own first, grouped by where its books place
+  // them; then the SRD's it adds subclasses to, apart from those it leaves as
+  // they are.
   const withOurs = c => c.subclasses.some(x => x.source === 'Euphonia');
   const classGroups = [
-    ['Euphonia’s classes', book.classes.filter(c => c.source === 'Euphonia')],
+    ...placeGroups(book.classes.filter(c => c.source === 'Euphonia'), 'classes'),
     ['The SRD’s classes, with Euphonia’s subclasses', book.classes.filter(c => c.source === 'SRD 5.2.1' && withOurs(c))],
     ['The SRD’s classes', book.classes.filter(c => c.source === 'SRD 5.2.1' && !withOurs(c))],
   ].filter(([, list]) => list.length);
@@ -325,16 +328,17 @@ export async function initBuilder(panel) {
     set(s => { s.base = Object.fromEntries([...scoreGrid.querySelectorAll('[data-ability]')].map(el => [el.dataset.ability, el.value === '' ? '' : Number(el.value)])); });
   }
 
-  // A choice of so many from a list, as short as its size allows. What the
-  // character has from elsewhere isn't offered again; the section names it
-  // once. A long list (the 37 tools) is a menu for each pick, grouped as the
-  // SRD groups it; a short one, a box for each. A choice made folds to its
-  // picks until the player opens it again, and stays open while they work in
-  // it.
-  const MENU_FROM = 12, opened = new Set();
+  // A choice of so many from a list, as short as its size allows. Every
+  // option is listed; one the character has from elsewhere is marked as
+  // theirs and can't be taken twice. A long list (the 37 tools) is a menu for
+  // each pick, grouped as the SRD groups it; a short one, a box for each. A
+  // choice made folds to its picks until the player opens it again, and
+  // stays open while they work in it.
+  const MENU_FROM = 12, opened = new Set(), pressedAway = new Set();
+  document.addEventListener('pointerdown', e => { for (const away of [...pressedAway]) away(e.target); });
   const toolKind = new Map(srd.tools.flatMap(t => (t.variants ? t.variants.map(v => [`${t.name} (${v})`, `${t.name}s`]) : [[t.name, t.category === 'Other' ? 'Other Tools' : t.category]])));
   function choiceGroup(result, { key, field, legend, count, from, chosen, taken = () => false, kind = () => null, write, empty }) {
-    const offered = from.filter(x => chosen.includes(x) || !taken(x));
+    const options = choiceOptions(from, chosen, taken), open = options.filter(o => !o.held).length;
     // Made when the engine asks nothing more of it (a Skilled may take all
     // three as tools, and none here).
     const done = !result.problems.some(p => p.field === `${field}:${key}`);
@@ -342,23 +346,23 @@ export async function initBuilder(panel) {
     const pick = values => { opened.add(key); write(values); };
     const dataKey = `${field}-${key}`;
     let controls;
-    if (!offered.length) controls = h('p', { class: 'b-note' }, empty);
-    else if (offered.length > MENU_FROM && count <= 4) {
+    if (!open) controls = h('p', { class: 'b-note' }, empty);
+    else if (open > MENU_FROM && count <= 4) {
       // The SRD's own groups, the catch-all last.
-      const kinds = [...new Set(offered.map(kind))].sort((x, y) => (x === 'Other Tools') - (y === 'Other Tools'));
+      const kinds = [...new Set(options.map(o => kind(o.value)))].sort((x, y) => (x === 'Other Tools') - (y === 'Other Tools'));
       const menus = Array.from({ length: count }, (_, i) => h('select', {
         'data-key': `${dataKey}-${i}`, 'aria-label': count > 1 ? `${legend}, ${i + 1} of ${count}` : legend,
         onchange: () => pick([...new Set(menus.map(m => m.value).filter(Boolean))]),
       }, h('option', { value: '' }, 'Choose'), kinds.map(k => {
-        const items = offered.filter(x => kind(x) === k).map(x => h('option', { value: x, selected: chosen[i] === x || null }, x));
+        const items = options.filter(o => kind(o.value) === k).map(o => h('option', { value: o.value, selected: chosen[i] === o.value || null, disabled: o.held || null }, o.held ? `${o.value} (yours)` : o.value));
         return k ? h('optgroup', { label: k }, items) : items;
       })));
       controls = h('div', { class: 'b-menus' }, menus);
     } else {
-      controls = h('div', { class: 'b-checks' }, offered.map(x => h('label', {}, h('input', {
-        type: 'checkbox', value: x, 'data-key': `${dataKey}-${x}`, checked: chosen.includes(x),
+      controls = h('div', { class: 'b-checks' }, options.map(o => h('label', { class: o.held ? 'is-yours' : null }, h('input', {
+        type: 'checkbox', value: o.value, 'data-key': `${dataKey}-${o.value}`, checked: chosen.includes(o.value), disabled: o.held || null,
         onchange: () => pick([...controls.querySelectorAll('input:checked')].map(b => b.value)),
-      }), ` ${x}`)));
+      }), ` ${o.value}`, o.held ? h('span', { class: 'b-mark' }, ' (yours)') : null)));
     }
     const body = h('div', { class: 'b-choice-body', id: `choice-${idFor(dataKey)}`, hidden: !shown }, controls);
     const change = h('button', { type: 'button', class: 'b-link', 'data-key': `${dataKey}-change`, 'aria-expanded': 'false', 'aria-controls': body.id, onclick: () => {
@@ -366,19 +370,28 @@ export async function initBuilder(panel) {
     } }, 'Change', h('span', { class: 'visually-hidden' }, ` ${legend}`));
     const folded = h('p', { class: 'b-picked', hidden: shown }, `${chosen.length ? listed(chosen) : 'None'}. `, change);
     const group = h('fieldset', { class: shown ? 'b-skills' : 'b-skills is-folded', 'aria-describedby': idFor(`${field}:${key}`) }, h('legend', {}, legend), folded, body, problemSlot(`${field}:${key}`));
-    // Folds once the keyboard leaves it, after the rebuild a pick makes.
-    group.addEventListener('focusout', () => setTimeout(() => {
-      if (!group.isConnected || group.contains(document.activeElement) || !done) return;
-      opened.delete(key); body.hidden = true; folded.hidden = false; group.classList.add('is-folded');
-    }));
+    // Folds once the player moves on: by focus going to something past it
+    // (a Tab), or a press elsewhere. Focus that goes nowhere, or out to the
+    // panel around it, doesn't count: a click on a box drops it there in
+    // Safari and in Firefox on a Mac, and so does the rebuild a pick makes.
+    const fold = () => { opened.delete(key); body.hidden = true; folded.hidden = false; group.classList.add('is-folded'); };
+    group.addEventListener('focusout', e => {
+      const to = e.relatedTarget;
+      if (to && !group.contains(to) && !to.contains(group) && done && !body.hidden) fold();
+    });
+    const away = target => {
+      if (!group.isConnected) { pressedAway.delete(away); return; }
+      if (done && !body.hidden && !group.contains(target)) fold();
+    };
+    pressedAway.add(away);
     return group;
   }
 
   // The skill choices, as the engine lists them. Proficiency counts once, so
   // a skill the character has without choosing it (a background's, a
   // feature's) or has chosen in another of these choices (Insight by an elf's
-  // Keen Senses, say) isn't offered in the rest; unticked where it was taken,
-  // it is offered everywhere again.
+  // Keen Senses, say) is marked as theirs in the rest and can't be taken
+  // there; unticked where it was taken, it is free everywhere again.
   function renderSkills(result) {
     const chosenAnywhere = new Set(Object.values(state.skills ?? {}).flat());
     const already = result.skills.filter(sk => sk.proficient && !chosenAnywhere.has(sk.name)).map(sk => sk.name);
@@ -604,8 +617,8 @@ export async function initBuilder(panel) {
   function renderTools(result) {
     const given = result.tools.filter(t => !result.toolChoices.some(c => c.chosen.includes(t.name))).map(t => t.name);
     if (!fresh(toolsBox, JSON.stringify([result.toolChoices.map(c => [c.key, c.count, c.from, c.chosen]), result.toolExpertise.map(c => [c.key, c.from, c.chosen]), result.tools, [...opened], result.problems.filter(p => p.field.startsWith('tools:')).map(p => p.field)]))) return;
-    // A tool the character has, and didn't take in this choice, isn't offered
-    // again. Held, not sourced elsewhere: the Mhizha is given Tinker's Tools
+    // A tool the character has, and didn't take in this choice, is marked as
+    // theirs. Held, not sourced elsewhere: the Mhizha is given Tinker's Tools
     // and its own choice offers them too, under the same label. Expertise is
     // with tools already had.
     const taken = c => t => !c.chosen.includes(t) && result.tools.some(x => x.name === t);

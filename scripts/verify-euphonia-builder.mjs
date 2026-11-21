@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as defaultEngine from '../src/euphonia/euphonia.character.js';
 import { effectsOf, recorded, differences } from './euphonia-effects.mjs';
+import { choiceOptions, placeGroups, PLACES } from '../src/euphonia/euphonia.build.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 
@@ -871,9 +872,31 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (hitOf(splashing, 'Acid Splash')?.save?.ability !== 'Dexterity') fail(`Acid Splash: ${JSON.stringify(hitOf(splashing, 'Acid Splash'))}`);
   for (const c of euphonia.data) for (const sp of c.new_spells ?? []) if (!sp.text || !sp.components || !sp.duration) fail(`${c.name}'s ${sp.name} lacks its text, components or duration`);
 
+  // The class menus group Euphonia's by where the books place them, in the
+  // books' order, and stay one group until every one has a place; once the
+  // export marks places, every class and subclass of Euphonia's has one.
+  const sample = ['font', 'chapter', 'appendix', 'border', 'chapter'].map((place, i) => ({ name: `c${i}`, place }));
+  const grouped = placeGroups(sample, 'classes');
+  if (grouped.map(([label, l]) => `${label}:${l.length}`).join() !== PLACES.map(([p, label]) => `${label('classes')}:${sample.filter(x => x.place === p).length}`).join()) fail(`the class menu's groups: ${JSON.stringify(grouped.map(([label, l]) => [label, l.length]))}`);
+  if (placeGroups([...sample, { name: 'unplaced' }], 'classes').length !== 1) fail('a class without a place breaks the menu into groups it can\'t complete');
+  const ours = [...book.classes.filter(c => c.source === 'Euphonia'), ...book.classes.flatMap(c => c.subclasses.filter(s => s.source === 'Euphonia'))];
+  if (ours.some(x => x.place !== undefined)) for (const x of ours) if (!PLACES.some(([p]) => p === x.place)) fail(`${x.name}: its place is ${JSON.stringify(x.place)}, not one of ${PLACES.map(([p]) => p).join(', ')}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
-  const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
+  const elfSkills = { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] };
+  const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: elfSkills }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);
+  // Each choice lists every option it offers, one held from another choice
+  // among them, marked: the elf's Keen Senses still shows Survival, which the
+  // Barbarian took.
+  let held = 0;
+  for (const c of elf?.choices ?? []) {
+    const picked = Object.entries(elfSkills).filter(([k]) => k !== c.key).flatMap(([, v]) => v);
+    const options = choiceOptions(c.from, elfSkills[c.key] ?? [], sk => picked.includes(sk));
+    if (options.length !== c.from.length) fail(`${c.label}: the builder lists ${options.length} of its ${c.from.length} options`);
+    held += options.filter(o => o.held).length;
+  }
+  if (held < 1) fail('no choice in the Wood Elf Barbarian holds an option another took, so the check above tested nothing');
   if (!elf || elf.unarmored.find(u => u.from === 'Unarmored Defense')?.ac !== 10 + elf.mod.Dexterity + elf.mod.Constitution) fail('a Barbarian\'s Unarmored Defense isn\'t 10 plus Dexterity and Constitution');
 
   const log = problems.length

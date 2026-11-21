@@ -486,6 +486,10 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 @media (min-width: 1200px) {
   .builder-form { display: block; columns: 2 22rem; column-gap: 2.5rem; }
   .builder-form > * { break-inside: avoid; margin-block-end: 1.2rem; }
+  /* Firefox lays out a fieldset rebuilt inside a section of these columns
+     but neither draws it nor lets it be clicked (a Skilled grant, after a
+     pick); contained, each lays out on its own and shows. */
+  .b-section fieldset { contain: layout; }
   .builder-form > .b-tools { column-span: all; }
 }
 .b-section { border: 0; border-top: 1px solid var(--frame-edge); margin: 0; padding: 0.9rem 0 0; min-width: 0; }
@@ -764,6 +768,8 @@ fieldset[data-touched] .b-problem, .b-problem.is-broken { color: var(--signal-te
 .sheet-facts dt { color: var(--sheet-muted); }
 .sheet-placement { color: var(--sheet-muted); font-size: 0.9rem; font-style: italic; margin: 0 0 0.5rem; }
 .sheet-spell-list ul { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; columns: 2 14rem; column-gap: 1.6rem; }
+/* A spell opened on the sheet reads whole in its column. */
+.sheet-spell-list li { break-inside: avoid; }
 /* Each magic item opens on its rules, as a feat does; the gear is a plain list. */
 .sheet-items { list-style: none; margin: 0 0 0.6rem; padding: 0; font-size: 0.92rem; }
 .sheet-gear { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; columns: 2 16rem; column-gap: 1.6rem; }
