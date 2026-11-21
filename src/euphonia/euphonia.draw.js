@@ -211,15 +211,16 @@ const NAME_LINE = 1.2, NAME_CLEAR = 0.2;
 
 // Where each plane's and road's name goes: the point its bearing gives. On a
 // window narrower than it is tall (a phone's, where the mount fills the
-// width) those points crowd, so a name moves the least distance up or down
-// that clears the mount, the window's edge, the rim's four words and the names
-// already placed, the outermost placed first since they have the least room
-// to move. One with no clear place anywhere isn't drawn, as the spheres' names
+// width) those points crowd, so a name moves the least distance up or down,
+// within its own place on the Wheel, that clears the mount, the window's edge,
+// the rim's four words and the names already placed, the outermost placed
+// first since they have the least room to move; at the side it may turn to run
+// along the rim. One with no clear place isn't drawn, as the spheres' names
 // aren't. `measure(text, road)` is its width in device pixels.
 export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
   const { cx, cy, k } = view, { point, roadT } = wheelGeometry(view, rim, roads.length);
   const place = new Map(realms.map(r => [r.name, r.at]));
-  const name = (of, text, at, [x, y], size, road) => ({ of, text, x, y, ...inwardOf(at), w: measure(text, road), h: size * rem * dpr * NAME_LINE });
+  const name = (of, text, at, [x, y], size, road) => ({ of, text, at, x, y, ...inwardOf(at), w: measure(text, road), h: size * rem * dpr * NAME_LINE });
   const realmNames = realms.filter(r => r.at !== 'centre').map(r => name(r, r.name, r.at, point(WHEEL_REALMS, r.at), WHEEL_REALM_REM, false));
   // A road's name stands at its source, where its pathway's opening says it
   // rises ("The River of Life rises in Elysium", the Mountain "rising from
@@ -250,15 +251,66 @@ export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
   const free = b => b.l >= edge.l - 1e-6 && b.r <= edge.r + 1e-6 && b.t >= edge.t && b.b <= edge.b
     && Math.hypot(Math.max(b.l, Math.min(cx, b.r)) - cx, Math.max(b.t, Math.min(cy, b.b)) - cy) >= radius
     && !taken.some(o => b.l < o.r + clear && o.l < b.r + clear && b.t < o.b + clear && o.t < b.b + clear);
-  const narrow = rim.x < rim.y, out = new Map(), step = clear || 1, reach = Math.ceil(2 * k * rim.y / step);
-  for (const n of [...realmNames.sort((a, b) => Math.abs(b.y - cy) - Math.abs(a.y - cy)), ...roadNames]) {
+  // Where every name stands clear where it falls (a desktop's window), each
+  // stays there. On a narrow window each finds the nearest room up or down
+  // its side. Where names would meet in a window wider than tall (above a
+  // phone's open sheet) there's no such room, and a name moved off its realm
+  // would mislead: the Wheel goes unlettered until it has room again.
+  const names = [...realmNames.sort((a, b) => Math.abs(b.y - cy) - Math.abs(a.y - cy)), ...roadNames];
+  const meet = (a, b) => a.l < b.r + clear && b.l < a.r + clear && a.t < b.b + clear && b.t < a.b + clear;
+  const fallen = names.map(n => boxOf(n, n.y)), narrow = rim.x < rim.y;
+  if (!narrow && fallen.some((a, i) => fallen.slice(i + 1).some(b => meet(a, b)))) return new Map();
+  // A name moves only within its own place on the Wheel, so the order round
+  // the rim holds and no name stands by another's realm: never past the next
+  // name above or below that it could meet, and at the side (within a sixth
+  // of a turn of Law or Chaos), where the names stand in a column, never past
+  // halfway to it. A side name with no room across there turns to run along
+  // the rim, as Law and Chaos do, as near its realm as it fits.
+  const SIDE = Math.sin(30 * RAD), atSide = n => Math.abs(Math.sin(n.at * RAD)) <= SIDE;
+  // Its neighbours a step away, or two where one isn't room enough.
+  const range = (n, steps = 1) => {
+    const mine = fallen[names.indexOf(n)], near = names.filter(o => o !== n && fallen[names.indexOf(o)].l < mine.r && mine.l < fallen[names.indexOf(o)].r).map(o => o.y);
+    const ups = near.filter(y => y < n.y).sort((a, b) => b - a), downs = near.filter(y => y > n.y).sort((a, b) => a - b);
+    const above = ups[steps - 1] ?? -Infinity, below = downs[steps - 1] ?? Infinity;
+    return atSide(n) && steps === 1 ? [(n.y + above) / 2, (n.y + below) / 2] : [above, below];
+  };
+  const turnedBox = (x, y, n) => ({ l: x - n.h / 2, r: x + n.h / 2, t: y - n.w / 2, b: y + n.w / 2 });
+  const along = (n, top, bottom) => {
+    const c = Math.sign(Math.cos(n.at * RAD));
+    if (!atSide(n)) return null;
+    const across = Math.ceil((edge.r - edge.l) / step);
+    for (let i = 0; i <= 2 * reach; i++) {
+      const y = n.y + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * step;
+      if (y < top || y > bottom) continue;
+      for (let j = 0; j <= 2 * across; j++) {
+        const x = n.x + (j % 2 ? 1 : -1) * Math.ceil(j / 2) * step, b = turnedBox(x, y, n);
+        if (c * (x - cx) > 0 && free(b)) return { x, y, b, turn: -c * Math.PI / 2 };
+      }
+    }
+    return null;
+  };
+  const out = new Map(), step = clear || 1, reach = Math.ceil(2 * k * rim.y / step);
+  const across = (n, top, bottom) => {
     for (let i = 0; i <= 2 * reach; i++) {
       const y = n.y + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * step, b = boxOf(n, y);
-      if (narrow && !free(b)) continue;
-      taken.push(b);
-      out.set(n.of, { ...n, x: b.l + n.ax * n.w, y, box: b, moved: Math.hypot(b.l + n.ax * n.w - n.x, y - n.y) });
-      break;
+      if (y >= top && y <= bottom && (!narrow || free(b))) return { ...n, x: b.l + n.ax * n.w, y, box: b };
     }
+    return null;
+  };
+  const turned = (n, top, bottom) => {
+    const t = along(n, top, bottom);
+    return t && { ...n, x: t.x, y: t.y, box: t.b, turn: t.turn, align: 'center', baseline: 'middle' };
+  };
+  for (const n of names) {
+    let placed = null;
+    for (const steps of narrow ? [1, 2] : [1]) {
+      const [top, bottom] = narrow ? range(n, steps) : [-Infinity, Infinity];
+      placed = across(n, top, bottom) ?? (narrow ? turned(n, top, bottom) : null);
+      if (placed) break;
+    }
+    if (!placed) continue;
+    taken.push(placed.box);
+    out.set(n.of, { ...placed, moved: Math.hypot(placed.x - n.x, placed.y - n.y) });
   }
   return out;
 }
@@ -293,8 +345,12 @@ export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, 
   const letter = of => {
     const n = lettered.get(of);
     if (!n) return;
+    ctx.save();
+    ctx.translate(n.x, n.y);
+    if (n.turn) ctx.rotate(n.turn);
     ctx.textAlign = n.align; ctx.textBaseline = n.baseline;
-    ctx.fillText(n.text, n.x, n.y);
+    ctx.fillText(n.text, 0, 0);
+    ctx.restore();
   };
   ctx.save();
   // The spheres painted, as the period painted them (Cellarius, 1660–61), not

@@ -550,8 +550,9 @@ export async function initMap(stage) {
     // The Wheel is the frame the cosmos is read in, Good up and Law to the
     // left, not a place on the earth: it stays as the window frames it at
     // home while the globe turns, zooms and slides, and is drawn again only
-    // when the window or the type changes.
-    const framing = `${g.width}x${g.height}|${g.dpr}|${g.typeSet}`;
+    // when the window, the type or the room a phone's sheet leaves it changes,
+    // so it rises and settles with the globe.
+    const framing = `${g.width}x${g.height}|${g.dpr}|${g.typeSet}|${g.cover}`;
     if (framing !== g.wheelKey) {
       g.wheel.width = ambientCanvas.width = g.width; g.wheel.height = ambientCanvas.height = g.height;
       const [ax, ay] = anchor(), f = fit(), framed = { cx: ax * g.dpr, cy: ay * g.dpr, k: f * g.dpr };
@@ -559,7 +560,9 @@ export async function initMap(stage) {
       ambient.setFrame({ view: framed, rim: g.rim, dpr: g.dpr, rem: g.rem, wheel: g.wheel });
       g.wheelKey = framing;
     }
-    const key = `${turn}|${v.width}x${v.height}`, based = key !== g.baseKey;
+    // Keyed on where the globe is drawn, its centre and scale, so whatever
+    // moves it (a phone's sheet rising or settling among them) redraws it.
+    const key = `${turn}|${v.cx}|${v.cy}|${v.k}|${v.width}x${v.height}`, based = key !== g.baseKey;
     if (based) {
       if (!globe) {
         for (const c of [g.fills, g.lines]) { c.width = v.width; c.height = v.height; }
@@ -575,11 +578,11 @@ export async function initMap(stage) {
       const label = `The globe, facing ${degrees(g.eye, 'N', 'S')}`;
       if (g.cell.getAttribute('aria-label') !== label) g.cell.setAttribute('aria-label', label);
     }
-    // The mount turns with nothing the globe does but the eye, the glass and
-    // the theme, so its two passes are drawn into layers of their own and
-    // kept until one of those changes; a turn of the globe reuses them.
+    // The mount turns with nothing the globe does but the eye, where it's
+    // drawn and the theme, so its two passes are drawn into layers of their
+    // own and kept until one of those changes; a turn of the globe reuses them.
     const shown = recede();
-    const mountKey = `${g.eye}|${g.zoom}|${g.focus}|${v.width}x${v.height}|${g.typeSet}|${currentTheme().id}`;
+    const mountKey = `${g.eye}|${v.cx}|${v.cy}|${v.k}|${v.width}x${v.height}|${g.typeSet}|${currentTheme().id}`;
     const layers = globe ? [[backCanvas, 'back'], [canvas, 'front']] : [[g.mountBack, 'back'], [g.mountFront, 'front']];
     if (shown && mountKey !== g.mountKey) {
       const mount = { eye: g.eye, font };
