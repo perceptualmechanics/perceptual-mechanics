@@ -469,9 +469,32 @@ export async function initMap(stage) {
     panelContent.normalize();
     mentionLine.textContent = '';
   }
-  // A panel still sliding in goes straight there, so its text arrives still.
+  // The panel scrolls a target to its top itself (scrollIntoView would
+  // scroll the page under the globe as well), then back by what the bar
+  // covers: the bar sticks only once the panel has scrolled, so it's
+  // measured stuck.
+  const panelBar = panel.querySelector('.map-panel-bar');
+  function scrollUnderBar(el) {
+    panel.scrollTo({ top: el.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop });
+    const covered = panelBar.getBoundingClientRect().bottom - el.getBoundingClientRect().top;
+    if (covered > 0) panel.scrollTop -= covered;
+  }
+  // A place's fold in Places, open, at the panel's top, its name focused.
+  function showFold(fold) {
+    for (let d = fold; d; d = d.parentElement.closest('details')) d.open = true;
+    requestAnimationFrame(() => {
+      scrollUnderBar(fold);
+      fold.querySelector('summary').focus({ preventScroll: true });
+    });
+  }
+  // A place with a fold of its own in Places (each fold is named as the
+  // @places line names it) opens there, with its paragraph and its people;
+  // any other, where the chapter names it. A panel still sliding in goes
+  // straight there, so its text arrives still.
   function jumpTo(place, smooth = true) {
     clearMention();
+    const fold = [...panelContent.querySelectorAll('details.map-chapter-place')].find(d => d.querySelector('summary').textContent === place.name);
+    if (fold) { showFold(fold); return fold; }
     const hit = findName([place.name, place.modern]);
     if (!hit) {
       mentionLine.textContent = `${chosen.name}'s chapter doesn't name ${place.name}; it begins below.`;
@@ -701,7 +724,7 @@ export async function initMap(stage) {
     // region's, outside every glow), and a step past wherever it already is.
     zoomTo(at, Math.max(regionZoom(hit ? hit.region : nearest.region), g.zoom * KEY_ZOOM));
     const mark = hit && jumpTo(hit.place, !arriving);
-    status.textContent = `Picked ${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}${hit ? `, in ${hit.region.name}${mark ? `; its chapter opens where it names ${hit.place.name}` : ''}` : ''}.`;
+    status.textContent = `Picked ${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}${hit ? `, in ${hit.region.name}${mark ? `; its chapter opens at ${hit.place.name}` : ''}` : ''}.`;
     if (!mark) requestAnimationFrame(() => panelTitle.focus());
     redraw();
   }
@@ -1142,22 +1165,7 @@ export async function initMap(stage) {
   const chapterOf = id => id && regions.find(x => panel.querySelector(`template[data-region="${x.id}"]`).content.getElementById(id));
   function openFold(r, id) {
     openChapter(r, g.cell);
-    const fold = panelContent.querySelector(`#${CSS.escape(id)}`);
-    for (let d = fold; d; d = d.parentElement.closest('details')) d.open = true;
-    requestAnimationFrame(() => {
-      scrollUnderBar(fold);
-      fold.querySelector('summary').focus({ preventScroll: true });
-    });
-  }
-  // The panel scrolls an address's target to its top itself (scrollIntoView
-  // would scroll the page under the globe as well), then back by what the
-  // bar covers: the bar sticks only once the panel has scrolled, so it's
-  // measured stuck.
-  const panelBar = panel.querySelector('.map-panel-bar');
-  function scrollUnderBar(el) {
-    panel.scrollTo({ top: el.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop });
-    const covered = panelBar.getBoundingClientRect().bottom - el.getBoundingClientRect().top;
-    if (covered > 0) panel.scrollTop -= covered;
+    showFold(panelContent.querySelector(`#${CSS.escape(id)}`));
   }
   function openFromAddress() {
     const id = location.hash.slice(1);
