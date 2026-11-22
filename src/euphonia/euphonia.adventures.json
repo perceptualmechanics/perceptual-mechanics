@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "0f134ad40f958d489d8bdf9c914f31bda680c283e3a2ddbed5bef2face6a1913",
-  "modified": "2026-11-21T19:26:46-05:00",
+  "sha256": "87856482c7ff04375bfb8e7c1495cbaa31528242bafa3fa4b267cb88f7ba9291",
+  "modified": "2026-11-22T05:40:30-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 39,
+  "exporter_version": 41,
   "rules": {
    "banned": [
     "eladrin",
@@ -56,7 +56,7 @@
    "kind": "Heist, and a delve",
    "where": "Venice, then Toledo",
    "read_with": "Europe",
-   "summary": "**The pitch.** The Republic of Venice is about to sell the most wanted document in Europe, and a crew can be paid to take it before the sale. Venice is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. Its roof-runner is Zanetta Bon, a Danae of the Crossing, who folds space to cross a canal at a step (Europe, People, in The State of the World).",
+   "summary": "**The pitch.** The Republic of Venice is about to sell the most wanted document in Europe, and a crew can be paid to take it before the sale. Venice is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. Its roof-runner is Zanetta Bon, a Danae of the Crossing, who folds space to cross a canal at a step (The State of the World, Europe, Places, Venice).",
    "ready": "**Ready to run.** *The Venice Job: The First Night*, on the site (perceptualmechanics.com/euphonia), is the heist's opening night as a one-shot, with five 3rd-level characters ready to play.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts and bravos; the Spanish one hires a crew.",
@@ -84,7 +84,10 @@
     "One of the taken came home last night, ten years gone and not a day older, and she has brought someone back with her."
    ],
    "regions": [
-    "Mutapa and the Indian Ocean"
+    "Europe",
+    "Mutapa and the Indian Ocean",
+    "West and Central Africa",
+    "East and Southeast Asia"
    ]
   },
   {
@@ -140,6 +143,8 @@
     "The toll over the deep off Pemba was a song last voyage. This voyage it is the ship's name."
    ],
    "regions": [
+    "Mutapa and the Indian Ocean",
+    "India",
     "Oceania"
    ]
   }

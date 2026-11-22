@@ -1133,25 +1133,46 @@ export async function initMap(stage) {
   tideLine.hidden = false;
   stage.classList.add('is-drawn');
 
-  // A link to a region (#europe) opens its chapter; one to a page of the
-  // panel (#welcome, #contents, #games), that; one to the People page
-  // (#people), or to its Notable People (#notable-people), that.
+  // A link to a region (#europe) opens its chapter; one to a place in it
+  // (#place-europe-venice, from the People page), the chapter at that
+  // place's fold, open; one to a page of the panel (#welcome, #contents,
+  // #games), that; one to the People page (#people), or to its Notable
+  // People (#notable-people), that.
   const PANEL_ADDRESSES = ['welcome', 'contents', 'games'];
+  const chapterOf = id => id && regions.find(x => panel.querySelector(`template[data-region="${x.id}"]`).content.getElementById(id));
+  function openFold(r, id) {
+    openChapter(r, g.cell);
+    const fold = panelContent.querySelector(`#${CSS.escape(id)}`);
+    for (let d = fold; d; d = d.parentElement.closest('details')) d.open = true;
+    requestAnimationFrame(() => {
+      scrollUnderBar(fold);
+      fold.querySelector('summary').focus({ preventScroll: true });
+    });
+  }
+  // The panel scrolls an address's target to its top itself (scrollIntoView
+  // would scroll the page under the globe as well), then back by what the
+  // bar covers: the bar sticks only once the panel has scrolled, so it's
+  // measured stuck.
+  const panelBar = panel.querySelector('.map-panel-bar');
+  function scrollUnderBar(el) {
+    panel.scrollTo({ top: el.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop });
+    const covered = panelBar.getBoundingClientRect().bottom - el.getBoundingClientRect().top;
+    if (covered > 0) panel.scrollTop -= covered;
+  }
   function openFromAddress() {
     const id = location.hash.slice(1);
     const r = regions.find(x => x.id === id);
     if (r) { openChapter(r, g.cell); return; }
+    const holder = chapterOf(id);
+    if (holder) { openFold(holder, id); return; }
     if (PANEL_ADDRESSES.includes(id)) { openPage(id); requestAnimationFrame(() => panelTitle.focus()); return; }
     const people = panel.querySelector('.map-panel-people');
     if (id !== 'people' && !(id && people.querySelector(`#${CSS.escape(id)}`))) return;
     showPage('people');
     openPanel(contentsOpen);
-    // The panel scrolls to the section itself; scrollIntoView would scroll
-    // the page under the globe as well.
     requestAnimationFrame(() => {
       if (id === 'people') { panelTitle.focus(); return; }
-      const head = people.querySelector(`#${CSS.escape(id)} h3`);
-      panel.scrollTo({ top: head.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop });
+      scrollUnderBar(people.querySelector(`#${CSS.escape(id)} h3`));
     });
   }
   function openPage(name) {
@@ -1159,6 +1180,12 @@ export async function initMap(stage) {
     openPanel(contentsOpen);
   }
   addEventListener('hashchange', openFromAddress);
+  // A link to the address the page is already at fires no hashchange, so
+  // the panel opens it itself: Venice again from the People page.
+  panel.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (a && a.hash === location.hash) { e.preventDefault(); openFromAddress(); }
+  });
   // Without the Reading to open on, a first visit opens on the Welcome,
   // without taking the focus from where the page put it; the browser
   // remembers it was shown, and where it can't, every visit is a first. An

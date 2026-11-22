@@ -64,14 +64,13 @@ ul.catalog .t { font-weight: 600; font-style: normal; }
 ul.catalog .c { color: var(--text-cite); }
 ul.catalog .e { display: block; color: var(--text-dim); font-size: 0.8rem; margin-top: 0.15rem; }
 ul.catalog .n { display: block; color: var(--text-muted); font-size: 0.88rem; font-style: italic; margin-top: 0.4rem; }
-/* The People page: a region's people as a list, each entry as the book has it;
-   the finding sits above them, once the script is there to run it. */
+/* The People page: a region's people as a list, each by their line and the
+   place they stand; the finding sits above them, once the script is there to
+   run it. */
 .people-find { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; margin: 0 0 1rem; }
 .people-find[hidden] { display: none; }
 .people-find label { display: grid; gap: 0.2rem; font-size: 0.88rem; color: var(--text-quiet); }
 .people-list p { margin: 0.4rem 0 0; font-size: 0.92rem; }
-.people-group h4 { margin: 1.4rem 0 0.4rem; }
-.people-group h5 { margin: 1rem 0 0.3rem; font-size: 0.9rem; }
 /* A name the book places (a person, a place, a ruler): it turns the globe there. */
 button:is(.map-person, .map-mark) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 0.18em; }
 button:is(.map-person, .map-mark):hover { text-decoration-style: solid; }
@@ -402,12 +401,14 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
 .map-panel-zoom:hover, .map-panel-zoom:focus-visible, .map-panel-theme button:hover, .map-panel-theme button:focus-visible { border-color: var(--accent); }
 .map-panel-theme[hidden] { display: none; }
 .map-panel-content h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: var(--text-quiet); }
-.map-chapter-more { border-top: 1px solid var(--rule-faint); }
-.map-chapter-more > summary { cursor: pointer; padding: 0.55rem 0; color: var(--text-quiet); }
-.map-chapter-more > summary h3 { display: inline; margin: 0; }
-.map-chapter-more > summary:hover h3, .map-chapter-more > summary:focus-visible h3 { color: var(--accent-bright); }
-.map-chapter-more > summary:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
-.map-chapter-more[open] > summary { padding-bottom: 0.2rem; }
+/* A chapter's later sections fold under their headings, and in Places each
+   place folds the same way under its name. */
+:is(.map-chapter-more, .map-chapter-place) { border-top: 1px solid var(--rule-faint); }
+:is(.map-chapter-more, .map-chapter-place) > summary { cursor: pointer; padding: 0.55rem 0; color: var(--text-quiet); }
+:is(.map-chapter-more, .map-chapter-place) > summary :is(h3, h4) { display: inline; margin: 0; }
+:is(.map-chapter-more, .map-chapter-place) > summary:is(:hover, :focus-visible) :is(h3, h4) { color: var(--accent-bright); }
+:is(.map-chapter-more, .map-chapter-place) > summary:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+:is(.map-chapter-more, .map-chapter-place)[open] > summary { padding-bottom: 0.2rem; }
 .map-chapter-more:last-child { border-bottom: 1px solid var(--rule-faint); }
 .map-panel-content blockquote { margin: 0.8rem 0; padding-left: 1rem; border-left: 2px solid var(--line); color: var(--text-quiet); }
 

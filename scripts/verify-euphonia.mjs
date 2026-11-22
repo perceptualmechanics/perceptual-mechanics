@@ -191,18 +191,38 @@ export function verifyEuphonia(d = euphoniaData()) {
     if (!new RegExp(`(?<![\\p{L}])${n.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'iu').test(r.sections.map(s => s.text).join('\n'))) fail(`${r.name}: its @${line} line places "${n.name}", which its chapter never names`);
   }
 
-  // The people a table meets: each region's, in the regions' order, each
-  // named once and standing in its chapter's People section as the chapter
-  // shows it; and Notable People, whole, its headings the book's.
-  const people = d.people.data;
-  if (people.regions.map(r => r.region).join('|') !== d.regions.data.map(r => r.name).join('|')) fail(`euphonia.people.json: its regions (${people.regions.map(r => r.region).join(', ')}) aren't the chapters'`);
-  for (const r of people.regions) {
-    const shown = d.regions.data.find(x => x.name === r.region)?.sections.find(sec => sec.heading === 'People')?.text ?? '';
-    if (!r.people.length) fail(`euphonia.people.json: ${r.region} has no people`);
-    if (new Set(r.people.map(p => p.name)).size !== r.people.length) fail(`euphonia.people.json: ${r.region} names someone twice`);
-    for (const p of r.people) if (!shown.includes(`**${p.name}.** ${p.text}`)) fail(`euphonia.people.json: ${r.region}'s ${p.name} isn't as the chapter's People section shows them`);
+  // The people a table meets, each in a place in their region's chapter.
+  // Each chapter has Places, not People, its #### headings its folds, in
+  // order, each fold's anchor once on the page; the directory names each
+  // person once, in the regions' order, at the fold that holds them, and
+  // each holds only directory people; each person's short entry stands in
+  // their fold as the chapter shows it. Notable People is the book's
+  // guidance: paragraphs and its index.
+  const people = d.people.data, regionOrder = d.regions.data.map(r => r.name);
+  const anchors = d.regions.data.flatMap(r => r.folds.map(f => f.anchor));
+  if (new Set(anchors).size !== anchors.length) fail('euphonia.regions.json: two folds share an anchor');
+  for (const r of d.regions.data) {
+    const headings = r.sections.map(sec => sec.heading);
+    if (headings.includes('People') || !headings.includes('Places')) fail(`euphonia.regions.json: ${r.name} has ${headings.includes('People') ? 'a People section' : 'no Places section'}`);
+    const text = r.sections.find(sec => sec.heading === 'Places')?.text ?? '';
+    const shownFolds = [...text.matchAll(/^#### (.+)$/gm)].map(m => m[1]);
+    if (shownFolds.join('|') !== r.folds.map(f => f.name).join('|')) fail(`euphonia.regions.json: ${r.name}'s Places shows ${shownFolds.join(', ')}, not its folds (${r.folds.map(f => f.name).join(', ')})`);
+    const parts = text.split(/^#### (.+)$/m);
+    for (const f of r.folds) {
+      if (!f.people.length) fail(`euphonia.regions.json: ${r.name}'s ${f.name} holds no one`);
+      const body = parts[parts.indexOf(f.name) + 1] ?? '';
+      for (const name of f.people) {
+        const p = people.regions.find(x => x.region === r.name)?.people.find(x => x.name === name);
+        const listed = people.directory.find(x => x.name === name);
+        if (!p || !body.includes(`**${name}.** ${p.text}`)) fail(`euphonia.people.json: ${r.name}'s ${name} isn't as ${f.name} shows them`);
+        if (listed?.anchor !== f.anchor || listed?.region !== r.name) fail(`euphonia.people.json: the directory doesn't put ${name} at ${r.name}'s ${f.name}`);
+      }
+    }
   }
-  if (people.notable.title !== 'Notable People' || !people.notable.blocks.length || people.notable.blocks.some(b => b.kind === 'heading' && ![3, 4].includes(b.level))) fail('euphonia.people.json: Notable People is missing or not the book\'s shape');
+  const held = d.regions.data.flatMap(r => r.folds.flatMap(f => f.people));
+  if (people.directory.length !== held.length || new Set(people.directory.map(p => p.name)).size !== people.directory.length) fail(`euphonia.people.json: the directory lists ${people.directory.length} people, the folds hold ${held.length}, each once`);
+  if (people.directory.some((p, i) => i && regionOrder.indexOf(p.region) < regionOrder.indexOf(people.directory[i - 1].region))) fail('euphonia.people.json: the directory isn\'t in the regions\' order');
+  if (people.notable.title !== 'Notable People' || !people.notable.blocks.length || people.notable.blocks.some(b => !['paragraph', 'list'].includes(b.kind))) fail('euphonia.people.json: Notable People is missing or not the book\'s shape');
 
   // The character sheets the People page links (euphonia.sheets.json, copied
   // into public/euphonia/sheets): each one a person the page shows, its file
@@ -213,7 +233,7 @@ export function verifyEuphonia(d = euphoniaData()) {
   const SHEETS = 'public/euphonia/sheets/';
   const unescape = t => t.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
     .replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => ({ lt: '<', gt: '>', quot: '"', apos: "'", amp: '&' })[e]);
-  const shown = new Set([...people.regions.flatMap(r => r.people.map(p => p.name)), ...people.notable.blocks.filter(b => b.kind === 'heading' && b.level === 3).map(b => b.text), ...(d.reading?.data.roster ?? []).map(p => p.name)]);
+  const shown = new Set([...people.directory.map(p => p.name), ...(d.reading?.data.roster ?? []).map(p => p.name)]);
   const files = d.sheetFiles ?? (existsSync(new URL(SHEETS, ROOT)) ? readdirSync(new URL(SHEETS, ROOT)).filter(f => f.endsWith('.html')) : []);
   const sheetText = d.sheetText ?? (f => read(SHEETS + f));
   for (const sh of d.sheets.data) {
@@ -265,7 +285,7 @@ export function verifyEuphonia(d = euphoniaData()) {
     for (const p of problemsFound) log.push(`  ${p}`);
   } else {
     const n = k => d[k].data.length;
-    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${d.items.data.items.length} items and ${d.items.data.weapons.length} period weapons, ${people.regions.reduce((n, r) => n + r.people.length, 0)} people in the regions besides Notable People, ${d.sheets.data.length} character sheets shown (${d.sheets.withheld.length} waiting), ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
+    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('subclasses')} subclasses for the SRD's classes, ${d.items.data.items.length} items and ${d.items.data.weapons.length} period weapons, ${people.directory.length} people in ${anchors.length} places, ${d.sheets.data.length} character sheets shown (${d.sheets.withheld.length} waiting), ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
 }

@@ -45,12 +45,9 @@ export const slug = name => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]
 
 // Every place the map needs, looked up once: the calendars' seats, by seat
 // name; each region's places, with the name the book shows for each; and
-// each person the book places (euphonia.people.json: a region's people and
-// Notable People's sections), with where. A person both list at one place
-// (Simbarashe Moyo in Mutapa's people and in Notable People) is one person,
-// kept with their region. errors lists any the gazetteer can't place exactly
-// once.
-export function resolvePlaces({ gazetteer, regions, calendars, people = { regions: [], notable: { blocks: [] } } }) {
+// each person the book places (euphonia.people.json's directory), with
+// where. errors lists any the gazetteer can't place exactly once.
+export function resolvePlaces({ gazetteer, regions, calendars, people = { directory: [] } }) {
   const errors = [];
   const at = (where, place, country, province) => {
     const found = lookup(gazetteer, place, country, province);
@@ -67,15 +64,6 @@ export function resolvePlaces({ gazetteer, regions, calendars, people = { region
     // The peoples it names, each lettered on its country.
     peoples: (r.peoples ?? []).map(n => ({ name: n.name, modern: n.modern, country: n.country, ...at(`${r.name}'s ${n.name}`, n.modern, n.country, n.province) })),
   }));
-  const listed = [
-    ...people.regions.flatMap(r => r.people.filter(p => p.at).map(p => ({ name: p.name, region: slug(r.region), at: p.at }))),
-    ...people.notable.blocks.filter(b => b.kind === 'heading' && b.at).map(b => ({ name: b.text, region: null, at: b.at })),
-  ].map(({ name, region, at: where }) => ({ name, region, place: where.name, ...at(`${name}'s place`, where.modern, where.country, where.province) }));
-  const placedPeople = [];
-  for (const p of listed) {
-    const same = placedPeople.find(q => q.name === p.name && q.place === p.place && q.lat === p.lat && q.lon === p.lon);
-    if (same) same.region ??= p.region;
-    else placedPeople.push(p);
-  }
+  const placedPeople = people.directory.filter(p => p.at).map(p => ({ name: p.name, region: slug(p.region), place: p.at.name, ...at(`${p.name}'s place`, p.at.modern, p.at.country, p.at.province) }));
   return { seats, regions: placed, people: placedPeople, errors };
 }

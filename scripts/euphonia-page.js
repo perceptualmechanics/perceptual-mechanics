@@ -205,12 +205,12 @@ ${catalog(tongues.unfound.map(u => `<li><span class="t">${esc(u.language)}</span
 </section>`;
 }
 
-// Everyone the book names for a table to meet, on one page: each region's
-// People, as its chapter has them, each with a link to that chapter, then the
-// book's Notable People in its own order, subsections and hooks included
-// (euphonia.people.json). A reader can narrow it to one region or search it
-// by name (euphonia.people.js); without script it's all there, in order.
-const PLAIN = s => s.replace(/\*+/g, '');
+// Everyone the book names for a table to meet, on one page: the directory
+// (euphonia.people.json), each person by name, line and the place they
+// stand, linked to that place in their region's chapter, where their full
+// entry is; then the book's Notable People, its guidance for a table. A
+// reader can narrow it to one region or search it by name
+// (euphonia.people.js); without script it's all there, in order.
 // Someone with a character sheet the site can show links to it, with the
 // class its title gives (euphonia.sheets.json), wherever the book names them
 // for a table: the People page and their region's chapter. The link opens
@@ -232,37 +232,44 @@ function sheetLink(sheets, name) {
 function personName(name, at) {
   return at ? `<button type="button" class="map-person" data-person="${esc(name)}">${esc(name)}<span class="visually-hidden">, on the globe</span></button>` : esc(name);
 }
-// A region chapter's People: its intro, and each person as the chapter has
-// them (verify-euphonia holds the two to one text), with their sheet.
-function chapterPeople(r, sheets) {
-  return `${r.intro ? `<p>${inline(r.intro)}</p>\n` : ''}${r.people.map(p => `<p><strong>${personName(p.name, p.at)}.</strong> ${inline(p.text)}${sheetLink(sheets, p.name) ? ` <span class="sheet-ref">${sheetLink(sheets, p.name)}</span>` : ''}</p>`).join('\n')}`;
+// A region chapter's Places, as the book has them: its intro, then each
+// place (####) as a fold under the anchor the directory links to, holding
+// the place's paragraph and the people met there. A person's short entry
+// opens with their name, which turns the globe to them, and ends with their
+// sheet; the @at line under it is the book's, for the gazetteer, not the
+// reader. A full entry follows its short one as the book's own paragraphs.
+const AT_LINE = /\n<!-- @at [^\n]*-->$/;
+function chapterPlaces(r, text, sheets, people) {
+  const [intro, ...parts] = text.split(/^#### (.+)$/m);
+  const folds = [];
+  for (let i = 0; i < parts.length; i += 2) {
+    const fold = r.folds.find(f => f.name === parts[i]);
+    if (!fold) throw new Error(`euphonia: ${r.name}'s Places names ${parts[i]}, which isn't one of its folds`);
+    const body = parts[i + 1].trim().split(/\n{2,}/).map(chunk => {
+      const lead = chunk.match(/^\*\*(.+?)\.\*\* /);
+      if (!lead || !fold.people.includes(lead[1])) return blocks(chunk);
+      const sheet = sheetLink(sheets, lead[1]);
+      return `<p><strong>${personName(lead[1], people.get(lead[1]).at)}.</strong> ${inline(chunk.slice(lead[0].length).replace(AT_LINE, '').replace(/\n/g, ' '))}${sheet ? ` <span class="sheet-ref">${sheet}</span>` : ''}</p>`;
+    }).join('\n');
+    folds.push(`<details class="map-chapter-place" id="${esc(fold.anchor)}"><summary><h4>${esc(fold.name)}</h4></summary>\n${body}\n</details>`);
+  }
+  return `${blocks(intro.trim())}\n${folds.join('\n')}`;
 }
-function peoplePage(people, status, sheets) {
+function peoplePage(people, regions, status, sheets) {
   const sheet = name => sheetLink(sheets, name);
   const groupOf = (id, title, body) => `<section class="people-group" data-group="${id}" aria-labelledby="people-${id}">
 <h3 id="people-${id}">${esc(title)}</h3>
 ${body}
 </section>`;
-  const regional = people.regions.map(r => groupOf(slug(r.region), r.region, `${r.intro ? `<p class="note">${inline(r.intro)}</p>\n` : ''}<ul class="catalog people-list">
-${r.people.map(p => `<li class="person" data-name="${esc(p.name)}"><span class="t">${personName(p.name, p.at)}</span><span class="e"><a href="#${slug(r.region)}">${esc(r.region)}</a>${sheet(p.name) ? ` · ${sheet(p.name)}` : ''}</span><p>${inline(p.text)}</p></li>`).join('\n')}
+  const regional = regions.map(r => groupOf(slug(r.name), r.name, `<ul class="catalog people-list">
+${people.directory.filter(p => p.region === r.name).map(p => `<li class="person" data-name="${esc(p.name)}"><span class="t">${personName(p.name, p.at)}</span><span class="e"><a href="#${esc(p.anchor)}">${esc(p.place)}</a>${sheet(p.name) ? ` · ${sheet(p.name)}` : ''}</span><p>${inline(p.line)}</p></li>`).join('\n')}
 </ul>`));
-  // Notable People's blocks, as the book has them: its sections (###) are
-  // each a person or a pair, found by name; the paragraphs before them say
-  // what the section is, and its cover list is a person to an item.
-  let open = false;
-  const notable = people.notable.blocks.map(b => {
-    if (b.kind === 'heading' && b.level === 3) {
-      const html = `${open ? '</div>\n' : ''}<div class="person" data-name="${esc(b.text)}"><h4>${personName(b.text, b.at)}</h4>${sheet(b.text) ? `<p class="note">${sheet(b.text)}</p>` : ''}`;
-      open = true;
-      return html;
-    }
-    if (b.kind === 'heading') return `<h5>${esc(b.text)}</h5>`;
-    if (b.kind === 'paragraph') return `<p>${inline(b.text)}</p>`;
-    return `<ul>${b.items.map(i => (open ? `<li>${inline(i)}</li>` : `<li class="person" data-name="${esc(PLAIN(i))}">${inline(i)}</li>`)).join('')}</ul>`;
-  }).join('\n') + (open ? '\n</div>' : '');
+  // Notable People, as the book has it: its paragraphs of guidance and its
+  // index of the full entries, each pointing to its place.
+  const notable = people.notable.blocks.map(b => (b.kind === 'paragraph' ? `<p>${inline(b.text)}</p>` : `<ul>${b.items.map(i => `<li>${inline(i)}</li>`).join('')}</ul>`)).join('\n');
   return `<section class="map-panel-page map-panel-people" data-page="people" data-title="People" hidden>
 <div class="people-find" hidden>
-<label>Region <select class="people-in"><option value="">Everyone</option>${people.regions.map(r => `<option value="${slug(r.region)}">${esc(r.region)}</option>`).join('')}<option value="notable-people">${esc(people.notable.title)}</option></select></label>
+<label>Region <select class="people-in"><option value="">Everyone</option>${regions.map(r => `<option value="${slug(r.name)}">${esc(r.name)}</option>`).join('')}<option value="notable-people">${esc(people.notable.title)}</option></select></label>
 <label>Name <input type="search" class="people-name" autocomplete="off" spellcheck="false"></label>
 </div>
 <p class="people-said note" aria-live="polite" hidden></p>
@@ -280,7 +287,8 @@ ${status === 'draft' ? DRAFT_NOTE_HTML : ''}
 // button that turns the globe there (euphonia.map.js). A place is matched as
 // the book writes it, a name whatever its case ("The shah", "the shah"), and
 // both accents aside, as the map finds a place in a chapter ("Nojpeten"
-// finds "Nojpetén"). Text already in a link or a button is left as it is.
+// finds "Nojpetén"). Text already in a link or a button is left as it is,
+// and so is a fold's summary, which can't hold a button of its own.
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const fold = s => s.normalize('NFD').replace(/\p{M}/gu, '');
 function globeMarks(r) {
@@ -299,8 +307,8 @@ function globeLinks(html, marks) {
   let inside = 0;
   return html.split(/(<[^>]+>)/).map(part => {
     if (part.startsWith('<')) {
-      if (/^<(a|button)\b/i.test(part)) inside++;
-      else if (/^<\/(a|button)>/i.test(part)) inside--;
+      if (/^<(a|button|summary)\b/i.test(part)) inside++;
+      else if (/^<\/(a|button|summary)>/i.test(part)) inside--;
       return part;
     }
     let out = '', rest = part;
@@ -355,6 +363,7 @@ function panelSections({ classes, regions, adventures, hidden, people, sheets, w
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
   const versions = [...new Set(world.provenance.files.map(f => f.version))].join(' and ');
+  const directory = new Map(people.data.directory.map(p => [p.name, p]));
   const pages = [['welcome', 'Welcome'], ['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['people', 'People'], ['games', 'Adventures and Hooks'], ['ribbons', 'The ribbons']];
   return `<nav class="map-panel-page map-panel-contents" aria-label="Contents" data-title="Contents" hidden>
 <h3>The State of the World</h3>
@@ -395,11 +404,11 @@ ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span 
 <section class="map-panel-page" data-page="games" data-title="Adventures and Hooks" hidden>
 ${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.ready ? `<span class="n">${inline(g.ready)}</span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
 </section>
-${peoplePage(people.data, regions.status, sheets.data)}
+${peoplePage(people.data, regions.data, regions.status, sheets.data)}
 ${ribbonsPage(tonguesData())}
 ${regions.data.map(r => `<template class="map-chapter" data-region="${slug(r.name)}">
 ${r.sections.map((sec, i) => {
-    const body = globeLinks(sec.heading === 'People' ? chapterPeople(people.data.regions.find(x => x.region === r.name), sheets.data) : blocks(sec.text), globeMarks(r));
+    const body = globeLinks(sec.heading === 'Places' ? chapterPlaces(r, sec.text, sheets.data, directory) : blocks(sec.text), globeMarks(r));
     // A chapter opens on its first section, At a Glance; the rest wait, each
     // under its heading, until the reader opens it.
     return i ? `<details class="map-chapter-more"><summary><h3>${esc(sec.heading)}</h3></summary>\n${body}\n</details>` : `<h3>${esc(sec.heading)}</h3>\n${body}`;
