@@ -1180,7 +1180,10 @@ export async function initMap(stage) {
     openPanel(contentsOpen);
     requestAnimationFrame(() => {
       if (id === 'people') { panelTitle.focus(); return; }
-      scrollUnderBar(people.querySelector(`#${CSS.escape(id)} h3`));
+      // The address names a section (#notable-people) or its heading
+      // (#people-europe); either way the heading comes to the top.
+      const target = people.querySelector(`#${CSS.escape(id)}`);
+      scrollUnderBar(target.matches('h3') ? target : target.querySelector('h3'));
     });
   }
   function openPage(name) {

@@ -20,8 +20,8 @@ const options = (values, chosen, prompt) => [
   ...(prompt ? [h('option', { value: '' }, prompt)] : []),
   ...values.map(v => (typeof v === 'string' ? h('option', { value: v, selected: v === chosen }, v) : h('option', { value: v.value, selected: v.value === chosen, disabled: v.disabled }, v.label))),
 ];
-// "A", "A and B", "A, B and C".
-const listed = items => (items.length < 3 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
+// "A", "A and B", "A, B and C" (or "A, B or C").
+const listed = (items, word = 'and') => (items.length < 3 ? items.join(` ${word} `) : `${items.slice(0, -1).join(', ')} ${word} ${items.at(-1)}`);
 const idFor = field => `problem-${field.replace(/[^\w-]+/g, '-')}`;
 // Rebuilding a group of controls keeps the keyboard where it was: the
 // control with the same key takes focus back.
@@ -707,10 +707,10 @@ export async function initBuilder(panel) {
 
   // The feats each improvement level brings, and how a feat raises scores.
   function renderFeats(result) {
-    // Which feats qualify turns on the level and the scores, and which
-    // pickers show on the shape of increase chosen, so they're part of the
-    // shape.
-    const shape = [result.level, ...ABILITIES.map(a => result.scores[a]), ...result.improvements.map(i => `${i.key}:${state.improvements?.[i.key]?.feat ?? ''}:${state.improvements?.[i.key]?.shape ?? ''}`)].join('|');
+    // Which feats qualify turns on the level, the scores and the features
+    // (qualifies reads all three), and which pickers show on the shape of
+    // increase chosen, so they're part of the shape.
+    const shape = [result.level, ...ABILITIES.map(a => result.scores[a]), ...result.features.map(f => f.name), ...result.improvements.map(i => `${i.key}:${state.improvements?.[i.key]?.feat ?? ''}:${state.improvements?.[i.key]?.shape ?? ''}`)].join('|');
     if (featsBox.dataset.for === shape) return;
     featsBox.dataset.for = shape;
     const background = result.feats.find(f => f.from === result.background?.name);
@@ -760,7 +760,6 @@ export async function initBuilder(panel) {
       }) : [h('p', { class: 'b-note' }, 'Ability Score Improvements and the Epic Boon come with levels; choose their feats here.')]));
   }
 
-  // An Origin feat a trait grants (the Human's Versatile).
   // An Origin feat a species' trait grants, with the species; one a class
   // feature grants (Lessons of the First Ones), with the feats.
   function renderOrigin(result) {
@@ -881,8 +880,8 @@ export async function initBuilder(panel) {
 
   // ---------- the sheet
   // What the export changed from the SRD, as the licence asks it be said:
-  // the names it renamed, each once (Conjure Fae is renamed in the Druid's
-  // list and in the spells), and how many passages besides.
+  // any names its renames rule changed, each once, and how many passages
+  // besides (the creature type the setting calls Fae).
   const renames = srd.adapted.changes.filter(c => c.path.endsWith('/name'));
   const renamed = [...new Set(renames.map(c => c.to))];
   const passages = srd.adapted.changes.length - renames.length;
@@ -1110,7 +1109,10 @@ export async function initBuilder(panel) {
     for (const s of form.querySelectorAll('[data-touched]')) delete s.dataset.touched;
     classShape = null;
     nameInput.value = ''; speciesSelect.value = ''; backgroundSelect.value = '';
-    form.querySelector('input[name=method][value=standard]').checked = true;
+    // The two radio groups say what the blank state says, as when the form
+    // was first built.
+    form.querySelector(`input[name=method][value=${state.method}]`).checked = true;
+    form.querySelector(`input[name=hp-method][value=${state.hp?.method ?? 'Fixed'}]`).checked = true;
     update();
     nameInput.focus();
   }

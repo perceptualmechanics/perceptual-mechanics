@@ -35,7 +35,7 @@ async function sheetOf(href) {
   }
   // The generator's styles go before parsing as well as after: a parsed
   // document keeps this page's Content-Security-Policy, which reports the
-  // <style> and each style attribute it meets (five per sheet, in the console)
+  // <style> and each style attribute it meets (in the console)
   // though none would ever be applied. The sheets are the export's own pages,
   // held to plain markup by verify-euphonia, so their style markup is regular.
   const html = (await pages.get(href)).replace(/<style\b[\s\S]*?<\/style>/gi, '').replace(/\sstyle=(?:"[^"]*"|'[^']*')/gi, '');
@@ -54,7 +54,9 @@ async function sheetOf(href) {
 
 async function open(link) {
   opener = link;
-  body.replaceChildren(Object.assign(document.createElement('p'), { className: 'sheet-level', textContent: 'Opening the sheet…' }));
+  // Until the sheet's own title arrives, the line saying it's coming names
+  // the dialog.
+  body.replaceChildren(Object.assign(document.createElement('p'), { className: 'sheet-level', id: 'sheet-dialog-title', textContent: 'Opening the sheet…' }));
   if (!dialog.isConnected) document.body.append(dialog);
   dialog.showModal();
   article.scrollTop = 0;

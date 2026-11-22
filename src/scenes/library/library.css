@@ -95,7 +95,7 @@
      reads as a tight label line, not a paragraph. */
   font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
   /* 0.5 alpha cannot reach 4.5:1 over any dark ground — 4.0:1 even against
-     pure black. 0.72 measures 8.0:1 over this panel's #0a0806. */
+     pure black. 0.72 measures 7.45:1 over this panel's #0a0806. */
   color: rgba(230,215,180,0.72); margin: 0 0 0.6rem;
 }
 .library-panel-title {
@@ -236,8 +236,9 @@
 .library-panel-refs:empty { margin: 0; }
 /* ─── Keyboard jump list ────────────────────────────────────────────────
    Built locally by library.js instead of through sceneKit's shared
-   createJumpList — see that call site's own comment for why 265 items
-   needs grouping and the flat list sceneKit builds doesn't scale to it.
+   createJumpList: 265 items need grouping into disclosure sections
+   (books & decks, films, music), and the flat list sceneKit builds
+   doesn't scale to that.
 
    Same "parked off-screen until something inside actually takes focus"
    idiom as .pm-jumplist (styles/main.css) and the site skip-link, but the

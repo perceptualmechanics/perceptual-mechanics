@@ -374,7 +374,7 @@ html, body {
    above the title; side by side, they sit in its band at the bottom left.
    Side by side needs the links clear of the centred title by the same 1.5rem
    they keep from the window's edge: 2 x (24 + 269.9 + 24) + 239.6 = 875.4px,
-   the links' run and the title's width measured in Arapey. At 601px, where
+   the links' run and the title's width measured in Electrolize. At 601px, where
    it used to change, the title covered the last 30% of "euphonia" through
    iPad portrait. One query, so the three can't disagree. */
 @media (min-width: 876px) {
@@ -501,7 +501,6 @@ html, body {
 	}
 }
 #scene-previews {
-  --tile-cols: 4;
   list-style: none;
   margin: 0;
   width: 100%;

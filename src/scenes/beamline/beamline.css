@@ -27,19 +27,17 @@
    is the new real title, above the anchor; the two epigraph lines
    (still filled from beamline.text.js) consolidate into the subtitle
    position at/below it, in place of standing in as the title themselves. */
-/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base
+/* Mobile-first (standing convention): base
    declarations target the smallest viewport by default; the nested
    min-width query layers the wider-viewport values on top, never the
    reverse. Native CSS nesting keeps a selector's responsive behavior in
    the same block as its base rule instead of a separate block elsewhere
-   in the file (standing convention as of 2026-08-26, STANDARDS.md). */
+   in the file. */
 .beamline-title {
   /* left:5vw;right:5vw (rather than left:50%+transform:translateX(-50%))
      makes this a full-width flex row so align-items:center can center
-     each line below by its own margin box — see #site-title-row's fuller
-     comment in styles/main.css for why translateX(-50%) self-centering
-     was replaced everywhere in this codebase (standing convention as of
-     2026-08-26, NOTES.md). */
+     each line below by its own margin box, without any line needing to
+     know its own width. */
   bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
   text-align: center; color: rgba(215,250,230,0.88);
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
@@ -73,8 +71,8 @@
 /* Each title line below sits inside .beamline-title's flex column, which
    centers every line by its own margin-box width (align-items: center).
    letter-spacing's trailing gap (added after the last character too, not
-   just between characters — a real Chrome rendering quirk, see
-   #site-title's fuller comment in styles/main.css) inflates that width,
+   just between characters — a real Chrome rendering quirk) inflates
+   that width,
    shifting each line's visible glyphs left of its own true center.
    margin-right: -tracking cancels the gap's contribution to the margin
    box, which flex's own align-items centering already accounts for — no

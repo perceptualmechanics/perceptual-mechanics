@@ -74,7 +74,7 @@ ${regions.status === 'draft' ? `${DRAFT_NOTE_HTML}\n` : ''}</div>
 </div>
 <p class="map-status" aria-live="polite"></p>
 <div class="map-peek" hidden><p class="map-peek-label"></p><button type="button" class="map-peek-back">Back to entry</button></div>
-<p class="map-help visually-hidden" id="map-help">Drag the globe across, or focus it and use the left and right arrows, to spin it on its axis; drag up or down, or use the up and down arrows, to slide its brass ring through the horizon and set it for a latitude, the pole raised that far. The wheel, a pinch, or + and − zoom; 0 sets it home again. The wooden horizon's calendar marks today beside the sun's place in the zodiac. A region's name opens its chapter beside the globe, and Contents lists every chapter and the rest of the book's pages. Click or tap a place, or press Enter on the globe for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
+<p class="map-help visually-hidden" id="map-help">Drag the globe across, or focus it and use the left and right arrows, to spin it on its axis; drag up or down, or use the up and down arrows, to look down on it from farther north or farther south, as far as the poles. The wheel, a pinch, or + and − zoom; 0 sets it home again. A region's name opens its chapter beside the globe, and Contents lists every chapter and the rest of the book's pages. Click or tap a place, or press Enter on the globe for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter at that place, or where the chapter names it.</p>
 <noscript><p class="map-help">The map and its pages are drawn in the page by script.</p></noscript>`;
 }
 
@@ -265,16 +265,17 @@ ${body}
 ${people.directory.filter(p => p.region === r.name).map(p => `<li class="person" data-name="${esc(p.name)}"><span class="t">${personName(p.name, p.at)}</span><span class="e"><a href="#${esc(p.anchor)}">${esc(p.place)}</a>${sheet(p.name) ? ` · ${sheet(p.name)}` : ''}</span><p>${inline(p.line)}</p></li>`).join('\n')}
 </ul>`));
   // Notable People, as the book has it: its paragraphs of guidance and its
-  // index of the full entries, each pointing to its place.
+  // index of the full entries, each pointing to its place. It's guidance,
+  // not a group of people, so the finding hides it rather than counting it.
   const notable = people.notable.blocks.map(b => (b.kind === 'paragraph' ? `<p>${inline(b.text)}</p>` : `<ul>${b.items.map(i => `<li>${inline(i)}</li>`).join('')}</ul>`)).join('\n');
   return `<section class="map-panel-page map-panel-people" data-page="people" data-title="People" hidden>
 <div class="people-find" hidden>
-<label>Region <select class="people-in"><option value="">Everyone</option>${regions.map(r => `<option value="${slug(r.name)}">${esc(r.name)}</option>`).join('')}<option value="notable-people">${esc(people.notable.title)}</option></select></label>
+<label>Region <select class="people-in"><option value="">Everyone</option>${regions.map(r => `<option value="${slug(r.name)}">${esc(r.name)}</option>`).join('')}</select></label>
 <label>Name <input type="search" class="people-name" autocomplete="off" spellcheck="false"></label>
 </div>
 <p class="people-said note" aria-live="polite" hidden></p>
 ${regional.join('\n')}
-<section class="people-group" data-group="notable-people" id="notable-people" aria-labelledby="people-notable-people">
+<section class="people-notes" id="notable-people" aria-labelledby="people-notable-people">
 <h3 id="people-notable-people">${esc(people.notable.title)}</h3>
 ${notable}
 </section>

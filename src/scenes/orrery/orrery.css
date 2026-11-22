@@ -88,8 +88,8 @@
 
 .orrery-hint {
   /* z-index must clear #experience-overlay (styles/main.css: fixed,
-     z-index:300) — appended to document.body, outside the overlay,
-     same as butterfly's own label/hint in main.js. Below 300 it's
+     z-index:300) — appended to #scene-chrome through sceneChromeRoot(),
+     outside the overlay. Below 300 it's
      only visible during the overlay's ~0.6s fade-in, then gone once
      it's fully opaque. */
   position: fixed; top: 4.5rem; right: 1.2rem;
@@ -118,15 +118,15 @@
 		visibility: visible;
 	}
 }
-/* .orrery-title shares the same z-index:310/body-level trick, for
+/* .orrery-title shares the same z-index:310 in #scene-chrome, for
    the same reason. .orrery-panel is nested inside #experience-overlay
    (z-index:300) and only reaches z-index:10 within that stacking
    context, so no z-index the panel could have would ever let it paint
-   above a document.body sibling at 310 — that's how stacking contexts
+   above a #scene-chrome element at 310 — that's how stacking contexts
    work, not a value to out-escalate. Once the panel's open, the
    ambient labels are redundant anyway (the panel has its own title and
    era line) — fade them out instead of fighting the stacking order.
-   See openPanel() and its three close sites below. */
+   See openPanel() and its close sites in orrery.js. */
 .orrery-title.panel-open, .orrery-hint.panel-open {
   opacity: 0;
 }
@@ -134,11 +134,8 @@
    Early-'90s CD-ROM adventure game atmosphere, not a literal Myst
    import: a soft vignette and a single faint grain pass. The texture
    belongs to the RENDER (warm ray-traced-era lighting, real Three.js
-   fog doing the atmospheric-haze work — see the fog color note near
-   createOrrery — and the camera-drag lag near the bottom of this
-   file, standing in for those slightly labored pre-rendered
-   transition movies), not to a screen sitting between the visitor
-   and the room. ─────────────────────────────── */
+   fog doing the atmospheric-haze work), not to a screen sitting
+   between the visitor and the room. ─────────────────────────────── */
 .orrery-vignette {
   position: absolute; inset: 0; pointer-events: none; z-index: 5;
   background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(10,7,4,0.6) 100%);

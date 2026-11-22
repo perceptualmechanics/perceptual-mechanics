@@ -1,6 +1,6 @@
 // The globe drawn by WebGL2, every layer of it in one canvas the page shows as
 // it is: the sea's depths and the land's relief from the vendored ETOPO5 grid
-// (euphonia.relief.json), the water-lining, the lakes, the lines, the roses,
+// (euphonia.relief.bin, laid out by euphonia.relief.json), the water-lining, the lakes, the lines, the roses,
 // the regions' glows and the marks. The 2D canvas drew the same (and still
 // does where WebGL2 isn't there: euphonia.draw.js), but stroked and filled
 // every coast each frame; in Firefox a turn of the globe cost 600 ms. Here

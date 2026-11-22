@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { tileLayout, tileLayoutHeight, nudgeScale, tileScale, tileNudge, tileDrift, driftClearance, DRIFT, TILE_GAP, TILE_MAX } from '../src/utils/tileLayout.js';
+import { tileLayout, nudgeScale, tileScale, tileDrift, driftClearance, DRIFT, TILE_GAP, TILE_MAX } from '../src/utils/tileLayout.js';
 import { previewTilesHtml } from './landing.js';
 import { SCENES } from '../src/scenes/registry.js';
 import { TILE_FLOOR, LIST_PAD } from '../src/utils/tileLayout.js';
@@ -33,7 +33,6 @@ function cssTileMetrics() {
 
 const SCALES = Object.values(SCENES).map(s => s.tile ?? 1);
 const NUDGES = Object.values(SCENES).map(s => s.nudge ?? 0);
-const MIN_SCALE = Math.min(...SCALES);
 const MAX_SCALE = Math.max(...SCALES);
 const NUDGE_SPAN = Math.max(...NUDGES) - Math.min(...NUDGES);
 

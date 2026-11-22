@@ -136,11 +136,11 @@
 	}
 }
 .sphere-panel-content p{padding:0 0 1rem;}
-/* rgba(255,255,255,.4) over this panel's #05070d composites to ~3.7:1 —
-   fine for a UI component's own boundary (WCAG 1.4.11), short of the 4.5:1
-   this actually needs, since the ✕ is a text glyph at 1.2rem (19.2px,
-   regular weight — under the 24px "large text" allowance). .5 alpha
-   measures 5.53:1 against the same background and is still visibly quiet. */
+/* The ✕'s resting colour is .pm-panel-close's rgba(255,255,255,.62)
+   (styles/main.css): 7.8:1 over this panel's #05070d, and 7.0:1 where the
+   radial tint is at full strength — clear of the 4.5:1 it needs, since the
+   ✕ is a text glyph at 1.2rem (19.2px, regular weight — under the 24px
+   "large text" allowance). */
 /* :hover was the only state this button had — a keyboard visitor had no way
    to see where focus was sitting. Matches the hover treatment plus a real
    ring, and :focus-visible rather than :focus so a mouse click doesn't

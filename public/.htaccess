@@ -64,7 +64,7 @@ RewriteRule ^euphonia/(.*/)?index\.html$ /euphonia/%1 [L,R=301]
 #
 # woff2 — same year, same `immutable`, guaranteed a different way. These are
 # the faces that used to come from (and be cached by) Google's CDN; see
-# styles/main.css's "Self-hosted fonts" block. They aren't content-hashed,
+# the @font-face rules at the top of styles/main.css. They aren't content-hashed,
 # but a font swap means a new filename here by this repo's own convention,
 # never an overwrite, which gives the same guarantee.
 #
@@ -77,7 +77,7 @@ RewriteRule ^euphonia/(.*/)?index\.html$ /euphonia/%1 [L,R=301]
 # through a cache-buster"). `max-age=0, must-revalidate` still lets the
 # browser keep the copy — it just has to ask first, so an unchanged page
 # costs a 304 and a real deploy is never invisible. This also covers the
-# eleven prerendered text pages, each served as <dir>/index.html.
+# twelve prerendered text pages, each served as <dir>/index.html.
 #
 # json/bin — Euphonia's data, 2026-11-16: the relief grid, the world, the
 # borders, the classes and the rules. Vite content-hashes each into
@@ -120,7 +120,7 @@ RewriteRule ^euphonia/(.*/)?index\.html$ /euphonia/%1 [L,R=301]
 
 # Content Security Policy, 2026-09-01. Shipped Report-Only first (v3.12.0),
 # then switched to enforcing here after a fully clean Report-Only pass: every scene that existed then
-# (ten of the current thirteen — apollo, psyshell and medium landed later and
+# (ten of the current fourteen — apollo, psyshell, medium and quiz landed later and
 # have never been through a Report-Only pass of their own) opened via real pointer clicks, all 11 pmGlimpse hash-allowlisted
 # handlers hovered, and Library's video facade + iframe + Open Library cover
 # image all exercised — zero policy violations in the console the entire

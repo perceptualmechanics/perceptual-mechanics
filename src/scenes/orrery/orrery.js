@@ -1268,7 +1268,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     const center = new THREE.Vector3().copy(moonPos).addScaledVector(axis, tt);
     const coneR = Math.max(0.02, tt * moteTanAngle);
     const ang = Math.random() * Math.PI * 2;
-    const radFrac = Math.pow(Math.random(), 1.8); // biased toward the axis — see comment above
+    const radFrac = Math.pow(Math.random(), 1.8); // biased toward the axis, so the beam is densest at its core
     const rr = coneR * radFrac;
     const p = center
       .addScaledVector(perpA, Math.cos(ang) * rr)
@@ -1879,7 +1879,7 @@ export function createOrrery(container, { preview = false } = {}) {
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
 
   const holeW = preview ? 0.7 : 0.9; // the ceiling's actual skylight-hole half-width, square
-  const moonGap = orrery.dishR * 3.25; // clearance above the dish rim — see reasoning above
+  const moonGap = orrery.dishR * 3.25; // clearance above the dish rim, in dish radii
   const moonPos = new THREE.Vector3(
     holeW * 0.28, orrery.riserTopY + orrery.dishH / 2 + moonGap, holeW * 0.11
   );
@@ -2249,11 +2249,11 @@ export function createOrrery(container, { preview = false } = {}) {
 
       const realSeconds = performance.now() / 1000;
       const RING_PERIOD = 34;   // TUNABLE: real seconds between struck events
-      const RING_WINDOW = 6;    // TUNABLE: wide enough for every mode's own decay to die out (shorter than earlier rounds' 9s — see NOTES.md 2.2.20, the real modal decay settles faster)
+      const RING_WINDOW = 6;    // TUNABLE: wide enough for every mode's own decay to die out (the real modal decay settles well inside it)
       const FREQ_SCALE = 14;    // TUNABLE: converts the graph's raw sqrt(eigenvalue) units into real angular frequency (rad/s) — chosen so the lowest modes land around ~1Hz, the highest around ~5Hz, a similar range to the single hand-picked RING_FREQ earlier rounds used
       const DAMP_BASE = 0.5;    // TUNABLE: every mode's own minimum damping (per second)
       const DAMP_FREQ_SCALE = 0.05; // TUNABLE: additional damping proportional to a mode's own frequency — "real materials damp higher frequencies faster" (the brief's optional refinement), cheap to include since it's just one more multiply per mode
-      const IMPULSE_STRENGTH = 0.55; // TUNABLE: overall strike strength — calibrated (see NOTES.md 2.2.20/2.2.21) against this specific graph's own eigenvector magnitudes, not a generic constant
+      const IMPULSE_STRENGTH = 0.55; // TUNABLE: overall strike strength — calibrated against this specific graph's own eigenvector magnitudes, not a generic constant
       const BASELINE_AMP = 0.006;    // TUNABLE: continuous per-mode hum amplitude, well below the strike's own peak
 
       const { values, vectors } = orrery.dishPhysics.modes;

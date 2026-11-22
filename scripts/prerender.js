@@ -1,6 +1,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { NAV_MARKER, TILES_MARKER } from './landing.js';
 
 import { scrollPieces } from '../src/scenes/scroll/scroll.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';
@@ -810,7 +811,7 @@ export function prerender(outDir) {
       // that the registry can produce it and that nobody has put a second copy
       // back by hand.
       const src = fs.readFileSync(path.join(import.meta.dirname, '..', 'index.html'), 'utf8');
-      for (const marker of ['<!--scene-nav-->', '<!--scene-tiles-->']) {
+      for (const marker of [NAV_MARKER, TILES_MARKER]) {
         if (!src.includes(marker)) problems.push(`index.html has no ${marker} — the generated landing markup has nowhere to go`);
       }
       if (/class="nav-icon"|class="preview-wrapper"/.test(src)) {

@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { RESONANCES } from '../src/resonances.js';
 import { LINKS } from '../src/links.js';
-import { BEATS as theaterBeats } from '../src/scenes/theater/theater.text.js';
+import { BEATS as theaterBeats, PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 import { FIELD } from '../src/utils/sceneField.js';
 import { FILAPIXEL_COUNT } from '../src/scenes/psyshell/psyshell.text.js';
@@ -63,7 +63,14 @@ const CLAIMS = [
   {
     name: "the Theater's beats",
     value: theaterBeats.length,
-    phrases: [/all (\S+) bubbles\b/, /(\S+) beats in the reel\b/, /the reel's (\S+) beats\b/, /of the (\S+) beats\b/],
+    phrases: [/(\S+) beats in the reel\b/, /the reel's (\S+) beats\b/, /of the (\S+) beats\b/],
+  },
+  {
+    // A bubble is a spoken line: not a chorus beat, and not a silent one
+    // (theater.js's onLine).
+    name: "the Theater's bubbles",
+    value: theaterPieces.flatMap(p => p.scenes.flatMap(s => s.beats)).filter(b => b.t !== undefined && !b.silent).length,
+    phrases: [/all (\S+) bubbles\b/],
   },
   {
     name: 'filapixels',
@@ -83,7 +90,6 @@ const CLAIMS = [
     name: "bardjs's tests",
     value: bardTestCount(),
     phrases: [/Its (\S+)[\s\S]{0,40}node --test tests\b/],
-    multiline: true,
   },
   {
     name: 'library CDs',

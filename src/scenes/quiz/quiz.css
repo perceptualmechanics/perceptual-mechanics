@@ -18,8 +18,8 @@
   display: block;
 }
 
-/* The ground the text is read against. `--quiz-scrim` is animated by quiz.js:
-   heavy while the form is up, gone once the verdict takes the frame, because
+/* The ground the text is read against. quiz.js sets data-verdict on both
+   scrims and their opacities cross-fade: heavy while the form is up, gone once the verdict takes the frame, because
    at that point the big type IS the contrast and the gyres are the subject. */
 .quiz-scrim {
   position: absolute; inset: 0;
@@ -57,7 +57,7 @@
 .quiz-scrim[data-verdict='true'].quiz-scrim--oval { opacity: 1; }
 
 /* The scene title goes in the site's shared bottom band, the same place every
-   other scene's does — see apollo.css and STANDARDS.md's centering rule. A
+   other scene's does — see apollo.css. A
    first version put it at top: 0, which on this site means underneath #pm-nav:
    the bar is 3.5rem tall and the title rendered behind it, invisible in every
    screenshot and present in the DOM, which is the worst of both. */

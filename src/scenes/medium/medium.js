@@ -196,7 +196,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
     let total = 0;
     const widths = [];
     for (const ch of str) { const w = ctx2d.measureText(ch).width; widths.push(w); total += w + track; }
-    total -= track;                              // no trailing gap: see STANDARDS.md's centering rule
+    total -= track;                              // no trailing gap, so the glyphs centre on cx
     let x = cx - total / 2;
     let i = 0;
     for (const ch of str) {

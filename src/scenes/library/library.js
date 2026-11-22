@@ -926,7 +926,6 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   function closePanel() {
     if (!panel) return;
     panel.querySelector('.library-panel-video').innerHTML = '';
-    selected = null;
     // Closed, the address drops the item too, so a reload doesn't reopen
     // what the reader closed.
     onPieceChange?.(null);
@@ -934,7 +933,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
 
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  let hovered = null, selected = null;
+  let hovered = null;
   let containerRect = null;
   const pointer = { x: 0, y: 0 };
   let pointerMoved = false;
@@ -1051,7 +1050,6 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   }
 
   function openItem(mesh, { fromLeft } = {}) {
-    selected = mesh;
     populatePanel(mesh.userData.item);
     if (!panel.classList.contains('open') && fromLeft !== undefined
         && panel.classList.contains('from-left') !== fromLeft) {
@@ -1149,7 +1147,6 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
 
       if (panel.classList.contains('open')) {
         if (hitMesh) {
-          selected = hitMesh;
 
           const clickedLeft = clickedLeftHalf(e, rect);
           if (panel.classList.contains('from-left') !== clickedLeft) {

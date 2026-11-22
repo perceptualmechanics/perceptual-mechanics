@@ -2,8 +2,8 @@
    color comes from var(--hint-text-color), defined once in styles/main.css. */
 
 /* z-index must clear #experience-overlay (styles/main.css: fixed,
-   z-index:300) — appended to document.body, outside that overlay,
-   same reasoning as orrery.js's hint/title fix. */
+   z-index:300) — appended to #scene-chrome through sceneChromeRoot(),
+   outside that overlay, same reasoning as orrery.css's .orrery-hint. */
 .orbiter-title, .orbiter-hint {
   /* No colour here: both elements set their own below (.orbiter-title-sub
      at 0.8, .orbiter-hint from --hint-text-color), so the 0.35 white this

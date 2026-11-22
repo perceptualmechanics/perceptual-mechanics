@@ -279,7 +279,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     const sp = Math.sin(cfg.polar), cp = Math.cos(cfg.polar);
     mesh.position.set(cfg.r * sp * Math.sin(cfg.az), cfg.r * cp, cfg.r * sp * Math.cos(cfg.az));
     scene.add(mesh);
-    return { mesh, geo, mat, tex, base, noise: makeSimplex2D(cfg.seed), // 0.02 advanced the noise input by less than 1.0 in thirty-five seconds, so
+    return { mesh, geo, mat, tex, base, noise: makeSimplex2D(cfg.seed),
     driftSpeed: 0.28 + Math.random() * 0.14 };
   });
 
@@ -920,9 +920,6 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     renderer.setSize(nw, nh);
     managedRenderer.applyPixelRatio();
   });
-
-  if (initialPieceId != null) {
-  }
 
   return {
     setPaused(next) {

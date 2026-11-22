@@ -6,7 +6,7 @@ import {
 } from '../../utils/sceneKit.js';
 import {
   ELEMENTS, ELEMENT_BY_KEY, VISIBLE_MIN, VISIBLE_MAX, CHORD_CAP, SOLAR_MIXTURE,
-  wavelengthToRGB, luminousEfficiency, wavelengthToHz, visibleLines, fraunhoferFor,
+  wavelengthToRGB, luminousEfficiency, wavelengthToHz, visibleLines,
 } from './apollo.text.js';
 import apolloHtml from './apollo.html?raw';
 import './apollo.css';
@@ -796,7 +796,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
   function strikeLine(line) {
     playLine(line.nm, line.rel, 1);
     markStruck(line.nm, line.el, 1);
-    const el = ELEMENTS.find(e => e.key === line.el);
+    const el = ELEMENT_BY_KEY[line.el];
     srSay(`${el ? el.name : line.el} ${line.nm.toFixed(3)} nanometres, ${wavelengthToHz(line.nm).toFixed(1)} hertz.`);
   }
 
@@ -945,7 +945,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
         : `The ${items.length} lines currently in the band`,
       items,
       getLabel: line => {
-        const el = ELEMENTS.find(e => e.key === line.el);
+        const el = ELEMENT_BY_KEY[line.el];
         return `${el ? el.name : line.el} ${line.nm.toFixed(3)}nm — ${wavelengthToHz(line.nm).toFixed(0)} Hz`;
       },
       onSelect: line => strikeLine(line),

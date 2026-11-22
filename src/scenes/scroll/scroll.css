@@ -213,7 +213,7 @@
 /* ── Patch: one section of hide, one uninterrupted stretch of text ──
    clip-path (set per instance in JS, --patch-clip below) cuts the whole
    perimeter into a ragged, disjointed hide-shape — not just top/bottom. */
-/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md) from here
+/* Mobile-first (standing convention) from here
    down: each base rule targets the smallest viewport by default; the
    single min-width query near the end of this file layers the
    wider-viewport values on top, never the reverse. */
@@ -224,10 +224,10 @@
   clip-path: var(--patch-clip, none);
   /* Three expensive things stack on every one of the twelve patches, all
      of them live the whole time whether the patch is on screen or not: a
-     five-function filter chain ending in drop-shadow (agingFilter, set
-     per instance in scroll.js), a ~30-point clip-path, and the ::after
-     candlelight glow below — a mix-blend-mode: screen layer on an
-     infinite keyframe. The whole scroll is ~64,000px tall at desktop
+     four-function filter chain (agingFilter, set per instance in
+     scroll.js), a ~30-point clip-path, and the ::after candlelight glow
+     below — a mix-blend-mode: screen layer whose opacity follows the
+     JS-driven --flame property. The whole scroll is ~64,000px tall at desktop
      width, so all but one patch is off screen at any moment.
      content-visibility: auto lets the browser skip layout, paint and
      style for the ones that are, and pick them up again as they come
@@ -678,8 +678,9 @@
      inside an intense passage wasn't, and it is the more agitated of the
      two — franticWords() rotates each word up to 3.5deg and shoves it up to
      3px off its baseline. It survived because applyDeferredStyles() writes
-     it as a real inline style (the CSP note in scroll.js explains why it
-     can't be a stylesheet rule: the values are per-load random), and an
+     it as a real inline style (the values are per-load random, so they
+     can't be a stylesheet rule, and the CSP's style-src blocks a style
+     attribute in markup but not a CSSOM write), and an
      inline style beats any non-!important rule regardless of specificity.
      Same hand-written-jitter rationale as the paragraph rule, same
      treatment. */

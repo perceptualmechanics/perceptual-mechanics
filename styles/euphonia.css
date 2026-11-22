@@ -462,13 +462,6 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
 .map-moon .face { fill: var(--surface); stroke: var(--line-accent); stroke-width: 0.06; }
 .map-moon .lit { fill: var(--text); }
 
-/* The regions' chapters, one disclosure each. */
-details.region { border-top: 1px solid var(--rule); padding: 0.5rem 0; }
-details.region > summary { cursor: pointer; font-weight: 600; }
-details.region h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: var(--text-quiet); }
-details.region blockquote { margin: 0.8rem 0; padding-left: 1rem; border-left: 2px solid var(--line); color: var(--text-quiet); }
-details.region:target > summary, details.region[open] > summary { color: var(--accent); }
-
 /* The character builder: the choices beside the sheet they make, across the
    window like the map, the choices taking three parts of its width to the
    sheet's two, one column on a narrow screen; where the choices have room,

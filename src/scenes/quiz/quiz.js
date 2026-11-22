@@ -3,7 +3,7 @@ import {
   createFrameClock, claimContainer, parseHTML, escapeHtml, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import {
-  PHASES, PHASE_BY_N, ITEMS, CHOICES, PREAMBLE, score,
+  REACHABLE, ITEMS, CHOICES, PREAMBLE, score,
   report, CARDINAL,
 } from './quiz.text.js';
 import quizHtml from './quiz.html?raw';
@@ -265,7 +265,7 @@ export function createQuiz(container, { preview = false, initialPieceId = null, 
   }
 
   function showPhase(n, { shared = true } = {}) {
-    if (!PHASE_BY_N[n] || n === 1 || n === 15) return false;
+    if (!REACHABLE.includes(n)) return false;
     renderVerdict({ n, raw: n, displaced: false }, { shared });
     markN = n; markPulse = 1; revealed = true;
     whirl = 0.42; whirlTarget = 0.42;
@@ -274,6 +274,8 @@ export function createQuiz(container, { preview = false, initialPieceId = null, 
     hintEl?.setAttribute('data-hidden', 'true');
     verdict.hidden = false;
     requestAnimationFrame(() => { verdict.dataset.shown = 'true'; });
+    // With motion reduced no frame is pending, so the wheel is drawn here.
+    if (reduced) frame();
     return true;
   }
 
@@ -291,6 +293,9 @@ export function createQuiz(container, { preview = false, initialPieceId = null, 
     onPieceChange?.(null);
     form.scrollTop = 0;
     form.querySelector('input')?.focus?.();
+    // With motion reduced no frame is pending: the gyres are drawn here at
+    // rest, the wheel gone.
+    if (reduced) { whirl = whirlTarget; whirlV = 0; frame(); }
   }
 
   let verdictTimer = null;
@@ -350,7 +355,7 @@ export function createQuiz(container, { preview = false, initialPieceId = null, 
     if (reduced) frame();
   });
 
-  if (!reduced) frame(); else frame();
+  frame();
 
   return {
     openPieceById(id) { showPhase(Number(id)); },

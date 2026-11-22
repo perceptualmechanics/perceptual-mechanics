@@ -35,8 +35,8 @@ export function previewTilesHtml() {
     + `        </button>\n      </li>`).join('\n\n');
 }
 
-// The markers index.html carries in place of the markup. Exported so the gates
-// can assert the shipped HTML no longer contains them.
+// The markers index.html carries in place of the markup. Exported so the
+// prerender gate checks the source keeps a place for each.
 export const NAV_MARKER = '<!--scene-nav-->';
 export const TILES_MARKER = '<!--scene-tiles-->';
 

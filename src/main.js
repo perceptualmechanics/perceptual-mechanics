@@ -59,13 +59,6 @@ function setPageTitle(title) {
   document.title = title;
 }
 
-function rememberElsewhere(sceneName, pieceId) {
-  if (!sceneName || sceneName === 'harmonics' || pieceId == null) return;
-  try {
-    sessionStorage.setItem('pm_elsewhere', JSON.stringify({ scene: sceneName, id: pieceId, t: Date.now() }));
-  } catch {  }
-}
-
 function navIconFor(sceneName) {
   return document.querySelector(`.nav-icon[data-scene="${sceneName}"]`);
 }
@@ -201,7 +194,6 @@ function expandScene(sceneName, triggerEl = null, pieceId = null, sceneArg = nul
     activeScene = sceneName;
     setActiveIcon(sceneName);
     setHash(sceneName, pieceId, { arg: sceneArg });
-    rememberElsewhere(sceneName, pieceId);
     setPageTitle(`${SCENES[sceneName]?.label ?? sceneName} — ${SITE_TITLE}`);
 
     landing.style.display = 'none';
@@ -233,7 +225,7 @@ function expandScene(sceneName, triggerEl = null, pieceId = null, sceneArg = nul
         initialPieceId: pieceId,
         initialArg: sceneArg,
         onStateChange: str => setHash(sceneName, null, { push: false, arg: str || null }),
-        onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
+        onPieceChange: id => { setHash(sceneName, id, { push: false }); },
       });
       // Focusable by script so a keyboard starts inside the scene; in the tab
       // order only where the container is itself the control.
@@ -407,7 +399,6 @@ function applyDerivedLayout() {
   list.classList.toggle('rows-forced', Boolean(fit));
   list.dataset.laidOut = '';
   if (fit) {
-    list.style.setProperty('--tile-cols', String(fit.cols));
     list.style.setProperty('--tile', `${fit.base}px`);
     list.style.setProperty('--tile-row', `${Math.round(fit.base * (1 + (MAX_TILE_SCALE - 1) * fit.v))}px`);
   } else {

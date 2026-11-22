@@ -198,7 +198,7 @@ export const SCENES = {
                blurb: 'medium',
                hint: 'press on the cup and rest your hand &nbsp;&middot;&nbsp; nothing moves until you do',
                srLive: true,
-               controls: 'Press on the cup and rest your hand; nothing moves until you do, and nothing moves once you let go. Letters land while you are touching it and fill a tape along the bottom.',
+               controls: 'Press on the cup and rest your hand; nothing moves until you do, and nothing moves once you let go. Letters land while you are touching it and fill a tape along the bottom. From the keyboard, Space or Enter rests your hand on the cup or lifts it, and the arrow keys move it.',
                // Played from the keyboard on the scene's own container (Space and
                // the arrows), so the container keeps a place in the tab order.
                keysOnContainer: true },

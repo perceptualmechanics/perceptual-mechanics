@@ -1,10 +1,5 @@
 
 .medium-scene {
-  --md-void: #0a0a0c;
-  --md-bone: #ded3c4;
-  --md-bone-dim: #a99d8c;
-  --md-hairline: rgba(222, 211, 196, 0.22);
-
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;

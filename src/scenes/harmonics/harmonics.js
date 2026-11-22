@@ -722,6 +722,9 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const hits = raycaster.intersectObject(pendingPoints);
     return hits.length ? hits[0].index : -1;
   }
+  // The container is the page's, shared with the next scene, so the cursor
+  // set over a node goes back to what it was when the scene leaves.
+  const cursorBefore = container.style.cursor;
   if (!preview && nodeList.length) {
     onMove = e => {
       const newHover = pickNodeAt(e.clientX, e.clientY);
@@ -921,7 +924,8 @@ const btns = document.querySelectorAll('.pm-jumplist button');
 
     if (!reduceMotion) {
       if (autoRotate && !(orbitDrag && orbitDrag.isDragging)) {
-        theta0 += preview ? 0.0018 : 0.0006;
+        // Radians a second: 0.0018 and 0.0006 a frame at 60 Hz, at any rate.
+        theta0 += dt * (preview ? 0.108 : 0.036);
         updateCamera();
       }
       galaxy.points.rotation.y += dt * 0.012;
@@ -1073,6 +1077,7 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       soundToggle.dispose();
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (onMove) container.removeEventListener('mousemove', onMove);
+      container.style.cursor = cursorBefore;
       if (onLeave) container.removeEventListener('pointerleave', onLeave);
       if (onClick) container.removeEventListener('click', onClick);
       managedRenderer.dispose();

@@ -37,8 +37,8 @@
    The URL is unchanged but the file behind it is now the 150x129 asset
    (3,036,690 B -> 30,712 B); its alpha channel, which is the entire
    point of this mask, survived the resize bit-for-bit. Deliberately the
-   PNG and not the WebP: per STANDARDS.md the -webkit-mask- prefix is
-   carried for Safari 9-15.3, and Safari only gained WebP in 14 — a WebP
+   PNG and not the WebP: the -webkit-mask- prefix is carried for
+   Safari 9-15.3, and Safari only gained WebP in 14 — a WebP
    mask would silently fail there and paint the raw gradient rectangle
    over the button instead of a hare-shaped gleam. */
 .colophon-mark::after {
@@ -113,9 +113,7 @@
   opacity: 0; pointer-events: none;
   visibility: hidden;
   transition: opacity 0.35s ease, visibility 0s linear 0.35s;
-  /* Moved above the nested query (was below it) per STANDARDS.md's
-     "ordinary declarations come before any nested @media block" — nest on
-     touch, and this rule was being touched anyway. */
+  /* Ordinary declarations come before any nested @media block. */
   display: flex; align-items: center; justify-content: center;
   padding: 4vh 1.5rem;
 
@@ -133,7 +131,7 @@
 	}
 }
 
-/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base rule
+/* Mobile-first (standing convention): base rule
    below targets the smallest viewport by default; the min-width query
    layers the wider-viewport values on top, never the reverse. */
 .colophon-panel {

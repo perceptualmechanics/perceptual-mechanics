@@ -14,7 +14,7 @@ import { mulberry32, hashSeed } from '../../utils/prng.js';
 const ACCENT = 0x50C878;        // canonical — rail core, station glow, vessel light, terrain grid
 const ACCENT_HALO = 0x8ADAA4;   // lighter tint, same hue — rail halo, dust, shimmer
 const ACCENT_DEEP = 0x309A54;   // darker tint, same hue — vessel/station chassis fill
-const ACCENT_SHADOW = 0x1E6034; // darkest tint, same hue — the bottom stop of the terrain colour ramp (see buildTerrain), i.e. the valleys
+const ACCENT_SHADOW = 0x1E6034; // darkest tint, same hue — the bottom stop of the terrain colour ramp (TERRAIN_COLOR_STOPS), i.e. the valleys
 
 function accentCss(hex) {
   return `rgba(${(hex >> 16) & 0xff},${(hex >> 8) & 0xff},${hex & 0xff},`;
@@ -697,7 +697,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     terrainGeo.computeVertexNormals();
 
     terrainTex = makeGridTexture(); // repeat arg irrelevant — both axes overridden next line for whichever extent above
-    terrainTex.repeat.x = preview ? 145 : 727; // plane isn't square — keeps grid cells ~11 units on both axes (1600/145≈11.0, 8000/727≈11.0)
+    terrainTex.repeat.x = preview ? 145 : 727; // plane isn't square — keeps each texture tile (16 cells) ~11 units on both axes (1600/145≈11.0, 8000/727≈11.0)
     terrainTex.repeat.y = preview ? 116 : 582; // 1280/116≈11.0, 6400/582≈11.0
     terrainMat = new THREE.MeshStandardMaterial({
       color: 0xffffff, vertexColors: true, emissive: 0xffffff, emissiveMap: terrainTex,
@@ -1061,8 +1061,8 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     root.add(skyMotes);
   }
 
-  const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces — STRUCTURAL: this is measured to match the terrain grid texture, not a free spacing choice; changing it desyncs either tier from the ground pattern it's meant to sit on. FAR uses a clean multiple of this (3x), not an unrelated spacing, so its points still land on real terrain grid intersections, just every third one.
-  const CA_EDGE_START = 0.8; // fraction of a tier's own half-extent where its perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades. FAR ONLY, as of 4.11.17 — see `perimeter` in the header comment above for why NEAR no longer has an edge to dissolve.
+  const GRID_CELL = 2600 / 236; // ≈11.02 — close to one terrain texture tile (8000/727 ≈ 11.0, each tile drawing 16 cells), so the lattice reads at the ground pattern's tile scale; it isn't locked to the tile (and points are scattered by CA_SCATTER), so it doesn't sit on grid intersections. FAR uses 3x this, keeping the same scale relation.
+  const CA_EDGE_START = 0.8; // fraction of a tier's own half-extent where its perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades. FAR ONLY — NEAR is built with perimeter: false, so it has no edge to dissolve.
   const CA_SCATTER = 0.36;
   const CA_SEED_DENSITY = 0.28; // classic "random soup" density for interesting Life activity — TUNABLE, but not freely: Life is known to behave interestingly (a mix of die-off, stabilization, and sustained activity) around densities roughly in the 0.2-0.4 range; push it much lower and almost everything dies in a few generations, push it much higher and the grid tends to collapse into a static, over-crowded mess faster
   function stepGameOfLife(grid, next, cols, rows) {
