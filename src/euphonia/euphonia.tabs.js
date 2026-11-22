@@ -1,5 +1,5 @@
-// The tabs over /euphonia/: the map, the character builder and, once the book
-// exports it, the Reading. The address says which is open (#builder; #reading
+// The tabs over /euphonia/: the Reading first, once the book exports it, then
+// the map and the character builder. The address says which is open (#builder; #reading
 // and its steps; any other address is the map's, a region's chapter included),
 // so a link to any of them opens it. Their code loads when the tab first opens.
 import { LAST, landing } from './euphonia.door.js';
@@ -10,15 +10,15 @@ function initTabs(list) {
   const tabs = [...list.querySelectorAll('[role=tab]')];
   const panels = tabs.map(t => document.getElementById(t.getAttribute('aria-controls')));
   const top = list.closest('.euphonia-top');
+  const mapTab = tabs.findIndex(t => t.id === 'tab-map'), builderTab = tabs.findIndex(t => t.id === 'tab-builder'), readingTab = tabs.findIndex(t => t.id === 'tab-reading');
   // With the tabs running, the map's stage is a tab's panel, not a region of
   // its own.
-  const map = panels[0];
+  const map = panels[mapTab];
   map.setAttribute('role', 'tabpanel');
   map.removeAttribute('aria-label');
-  map.setAttribute('aria-labelledby', tabs[0].id);
+  map.setAttribute('aria-labelledby', tabs[mapTab].id);
 
-  const builderTab = tabs.findIndex(t => t.id === 'tab-builder'), readingTab = tabs.findIndex(t => t.id === 'tab-reading');
-  const fromAddress = () => (location.hash === BUILDER_HASH ? builderTab : readingTab >= 0 && location.hash.startsWith(READING_HASH) ? readingTab : 0);
+  const fromAddress = () => (location.hash === BUILDER_HASH ? builderTab : readingTab >= 0 && location.hash.startsWith(READING_HASH) ? readingTab : mapTab);
   let builder = null, reading = null;
   function select(i, { focus = false, record = true } = {}) {
     tabs.forEach((t, k) => {
@@ -27,7 +27,7 @@ function initTabs(list) {
       panels[k].hidden = k !== i;
     });
     const isBuilder = i === builderTab, isReading = i === readingTab;
-    top.classList.toggle('is-builder', i !== 0);
+    top.classList.toggle('is-builder', i !== mapTab);
     // The sheet is what prints while the builder is open.
     document.documentElement.dataset.tab = isBuilder ? 'builder' : isReading ? 'reading' : 'map';
     if (focus) tabs[i].focus();

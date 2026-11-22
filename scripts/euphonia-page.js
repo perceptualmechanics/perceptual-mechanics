@@ -166,9 +166,9 @@ ${forBuilders(welcome)}
 // them does: without it, the page is the map and its text.
 function tabs() {
   return `<div class="euphonia-tabs" role="tablist" aria-label="Euphonia" hidden>
-<button type="button" role="tab" id="tab-map" aria-controls="map-figure" aria-selected="true">Globe</button>
+${hasReading() ? '<button type="button" role="tab" id="tab-reading" aria-controls="the-reading" aria-selected="false" tabindex="-1">The Reading</button>\n' : ''}<button type="button" role="tab" id="tab-map" aria-controls="map-figure" aria-selected="true">Globe</button>
 <button type="button" role="tab" id="tab-builder" aria-controls="character-builder" aria-selected="false" tabindex="-1" aria-label="Character builder"><span class="tab-long">Character </span>builder</button>
-${hasReading() ? '<button type="button" role="tab" id="tab-reading" aria-controls="the-reading" aria-selected="false" tabindex="-1">The Reading</button>\n' : ''}</div>`;
+</div>`;
 }
 
 // The ribbons in place of a title: Euphonia in the languages of the cultures
