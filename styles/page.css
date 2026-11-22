@@ -1,8 +1,10 @@
 
   :root { color-scheme: dark; }
   /* Self-hosted, the same face styles/main.css loads; font-src 'self'
-     already allows it. Roman only — see this constant's own comment
-     above for why, and for what this block was missing until 4.0. */
+     already allows it. Roman only: main.css's italic is another 9.8 kB file
+     for a few quiet italic lines here, and a synthesized oblique is the
+     better trade on pages meant to load at once and read with nothing else
+     on the domain reachable. */
   @font-face { font-family: 'Arapey'; font-style: normal; font-weight: 400;
     font-display: swap; src: url('/fonts/arapey-400.woff2') format('woff2'); }
   * { box-sizing: border-box; }
@@ -46,21 +48,16 @@
     scroll-margin-top: 1rem;
   }
   .meta { color: #8c8377; font-size: 0.8rem; letter-spacing: 0.08em; margin: 0 0 1.3rem; }
-  /* .note is one look worn by two different things, and the markup now says
-     which is which. An editorial caveat in this site's own voice stays a
+  /* .note is one look worn by two different things, and the markup says
+     which is which. An editorial caveat in this site's own voice is a
      p.note; a passage quoted from outside the document — Beamline's
-     two found epigraphs, Psyshell's manuscript source — is a blockquote, and
-     picks up the same treatment from the shared selector below rather than a
-     second set of values. blockquote's user-agent margin has to go, since the
-     border-left is doing the setting-apart. */
-  .note {
+     two found epigraphs, Psyshell's manuscript source — is a blockquote,
+     .epigraph or .note, and wears the same rule. Its margin also replaces
+     blockquote's user-agent one, since the border-left is doing the
+     setting-apart. */
+  .note, blockquote.epigraph {
     color: #9c9384; font-size: 0.88rem; font-style: italic;
     border-left: 1px solid #3a342b; padding-left: 0.9rem; margin: 0 0 1.4rem;
-  }
-  blockquote.note, blockquote.epigraph {
-    color: #9c9384; font-size: 0.88rem; font-style: italic;
-    border-left: 1px solid #3a342b; padding-left: 0.9rem;
-    margin: 0 0 1.4rem;
   }
   blockquote.note p, blockquote.epigraph p { margin: 0 0 0.7rem; }
   blockquote.note p:last-child, blockquote.epigraph p:last-child { margin-bottom: 0; }
@@ -92,10 +89,11 @@
   .script .line { margin: 0 0 0.9rem; padding-left: 3rem; }
   ul.catalog { list-style: none; padding: 0; margin: 0 0 2.4rem; }
   ul.catalog li { border-bottom: 1px solid #1e1b17; padding: 0.85rem 0; }
-  /* cite is the element for the title of a work, and this page is 261 of
-     them. Its user-agent italic is reset here rather than accepted: these rows
-     are already dense, and the visual weight that distinguishes a title from a
-     creator has been the 600 since the page was first built. */
+  /* cite is the element for the title of a work, and every row of the
+     library's catalogue is one. Its user-agent italic is reset here rather
+     than accepted: these rows are already dense, and the visual weight that
+     distinguishes a title from a creator has been the 600 since the page was
+     first built. */
   ul.catalog .t { font-weight: 600; font-style: normal; }
   ul.catalog .c { color: #a89f92; }
   /* #837c70, not the #7d766b this started as: at 0.8rem this is normal-size

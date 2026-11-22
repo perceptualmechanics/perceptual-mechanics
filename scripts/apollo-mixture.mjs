@@ -1,10 +1,13 @@
-import { ELEMENTS, SOLAR_MIXTURE, VISIBLE_MIN, VISIBLE_MAX, visibleLines }
-  from '../src/scenes/apollo/apollo.text.js';
+// Prints, for each element in Apollo's solar mixture (SOLAR_MIXTURE in
+// apollo.text.js), the deepest optical depth its lines reach, where, and how
+// much light gets through there, at a few band widths in device columns; then
+// whether the elements keep the same order by depth at every width. Reads
+// only. Run it when a fader value or the line model changes:
+//   node scripts/apollo-mixture.mjs [band widths...]   (default 1400 1126 686)
+// The line model is the scene's own (apollo.text.js).
 
-const TAU_MAX = 4.6;
-const RELATIVE_STRENGTH_EXPONENT = 0.55;
-const LINE_SIGMA_FLOOR = 0.35;
-const lineSigma = (bandW) => Math.max(LINE_SIGMA_FLOOR, (bandW / 1400) * 0.7);
+import { ELEMENTS, SOLAR_MIXTURE, VISIBLE_MIN, VISIBLE_MAX, visibleLines, TAU_MAX, RELATIVE_STRENGTH_EXPONENT, LINE_SIGMA_FLOOR, lineSigma }
+  from '../src/scenes/apollo/apollo.text.js';
 
 function peakFor(el, density, bandW) {
   const sigma = lineSigma(bandW);

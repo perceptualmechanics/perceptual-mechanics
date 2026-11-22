@@ -6,6 +6,7 @@ import {
 } from '../../utils/sceneKit.js';
 import {
   ELEMENTS, ELEMENT_BY_KEY, VISIBLE_MIN, VISIBLE_MAX, CHORD_CAP, SOLAR_MIXTURE,
+  TAU_MAX, RELATIVE_STRENGTH_EXPONENT, lineSigma,
   wavelengthToRGB, luminousEfficiency, wavelengthToHz, visibleLines,
 } from './apollo.text.js';
 import apolloHtml from './apollo.html?raw';
@@ -14,10 +15,6 @@ import './apollo.css';
 
 const BAND_LEFT_NM = VISIBLE_MIN;
 const BAND_RIGHT_NM = VISIBLE_MAX;
-
-const TAU_MAX = 4.6;
-
-const RELATIVE_STRENGTH_EXPONENT = 0.55;
 
 export function createApollo(container, { preview = false, initialArg = null, onStateChange = null } = {}) {
   let disposed = false;
@@ -75,13 +72,19 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
       const scaleBlock = SCALE_BLOCK * r;
 
+      const cb = container.getBoundingClientRect();
+      const toCanvasY = y => (y - cb.top) * (H / cb.height);
       let floor = H - 8 * r;
       if (railEl) {
-        const cb = container.getBoundingClientRect();
         const rb = railEl.getBoundingClientRect();
-        if (rb.height && cb.height) floor = Math.min(floor, (rb.top - cb.top) * (H / cb.height) - 12 * r);
+        if (rb.height && cb.height) floor = Math.min(floor, toCanvasY(rb.top) - CHROME_GAP * r);
       }
-      const ceiling = Math.round(H * 0.17);  // clear of the hint, which wraps to two lines on a phone
+      // The hint wraps to two lines on a phone and sits low in a short landscape window, so the ceiling is measured from it.
+      let ceiling = 0;
+      if (hintEl) {
+        const hb = hintEl.getBoundingClientRect();
+        if (hb.height && cb.height) ceiling = Math.round(toCanvasY(hb.bottom) + CHROME_GAP * r);
+      }
 
       const avail = floor - ceiling;
       rulerFits = !rulerOn || (avail - scaleBlock - RULER_BLOCK * r >= BAND_MIN * r);
@@ -99,6 +102,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
   }
 
   const SCALE_BLOCK = 24;
+  const CHROME_GAP = 12;  // CSS px kept clear between the band, with its scale and ruler, and the chrome above and below
   const RULER_BLOCK = 46;
   const BAND_MIN = 70;   // CSS px — the band's preferred floor
   let rulerFits = true;
@@ -170,14 +174,9 @@ export function createApollo(container, { preview = false, initialArg = null, on
   let tau = null;
   let bandDirty = true;
 
-  const LINE_SIGMA_FLOOR = 0.35;
-  function lineSigma() {
-    return Math.max(LINE_SIGMA_FLOOR, (bandW / 1400) * 0.7);
-  }
-
   function buildBand() {
     if (!bandW || !bandH) return;
-    const sigma = lineSigma();
+    const sigma = lineSigma(bandW);
     const inv2s2 = 1 / (2 * sigma * sigma);
     const reach = Math.ceil(sigma * 4);
     const nmPerCol = (BAND_RIGHT_NM - BAND_LEFT_NM) / Math.max(1, bandW - 1);
@@ -818,7 +817,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
       + `${lines.length === total ? 'all' : `the strongest ${lines.length}`} sounding. ${el.character}`);
   }
 
-  let titleRowEl = null, hintEl = null, rulerToggleEl = null, railEl = null, ambientToggleEl = null, copyLinkEl = null;
+  let titleRowEl = null, hintEl = null, hintWatch = null, rulerToggleEl = null, railEl = null, ambientToggleEl = null, copyLinkEl = null;
   const faderInputs = {};
   const faderCells = {};
   let soundToggle = { dispose() {} };
@@ -1043,6 +1042,9 @@ export function createApollo(container, { preview = false, initialArg = null, on
     srLiveEl = frag.querySelector('.apollo-sr-live');
     sceneChromeRoot().append(titleRowEl, hintEl, soundToggleEl);
     container.appendChild(srLiveEl);
+    // The hint rewraps when the mode changes its text or its font arrives; the band's ceiling follows it.
+    hintWatch = new ResizeObserver(() => resize.trigger());
+    hintWatch.observe(hintEl);
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'apollo');
 
@@ -1104,6 +1106,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
       stopAmbient();
       timers.dispose();
       resize.dispose();
+      hintWatch?.disconnect();
       reducedWatch.dispose();
       canvas.removeEventListener('click', onCanvasClick);
       document.removeEventListener('visibilitychange', onVisibilityChange);

@@ -77,21 +77,6 @@ export const RENDERED_FIELDS = {
   library: new Set(['scene', 'excerpt', 'excerpt_from']),
 };
 
-export const WITHHELD_FIELDS = {
-  library: new Set(['catalog']),
-};
-
-
-export const CONDITIONAL_FIELDS = {
-};
-
-export function isRenderedField(scene, field, id) {
-  if (RENDERED_FIELDS[scene]?.has(field) === true) return true;
-  const cond = CONDITIONAL_FIELDS[scene]?.[field];
-  return cond !== undefined && id !== undefined && cond(id) === true;
-}
-
-
 export function getOutboundLinks(scene, id, field, index) {
   return LINKS.filter(l =>
     l.from.scene === scene && l.from.id === id && l.from.field === field
@@ -99,9 +84,8 @@ export function getOutboundLinks(scene, id, field, index) {
   );
 }
 
-export function getInboundLinks(scene, id, { includeWithheld = false } = {}) {
-  return LINKS.filter(l =>
-    l.to.scene === scene && l.to.id === id
-    && (includeWithheld || isRenderedField(l.from.scene, l.from.field, l.from.id))
-  );
+// Every link starts from a field its scene shows (verify-links holds it), so
+// every inbound link has text to come back to.
+export function getInboundLinks(scene, id) {
+  return LINKS.filter(l => l.to.scene === scene && l.to.id === id);
 }

@@ -394,7 +394,10 @@ function applyDerivedLayout() {
   const cs = getComputedStyle(landing);
   const height = landing.clientHeight
     - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-  const fit = desktop ? tileLayout(SCENE_COUNT, width, height) : null;
+  // The stylesheet changes the gap at a breakpoint, so the fit and the drift
+  // take the one in force now; a resize across it re-runs this.
+  const gap = parseFloat(getComputedStyle(list).columnGap);
+  const fit = desktop ? tileLayout(SCENE_COUNT, width, height, gap) : null;
 
   list.classList.toggle('rows-forced', Boolean(fit));
   list.dataset.laidOut = '';
@@ -414,7 +417,7 @@ function applyDerivedLayout() {
     // feed back into it. Both layouts get it; a tile with no key does not,
     // since the seed is the key.
     if (key) {
-      const d = tileDrift(key);
+      const d = tileDrift(key, gap);
       el.style.setProperty('--tile-drift-x', `${d.x}px`);
       el.style.setProperty('--tile-drift-y', `${d.y}px`);
     }

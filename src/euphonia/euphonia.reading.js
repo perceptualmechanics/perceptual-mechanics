@@ -37,7 +37,7 @@ export function checkReading(d, { regions = [], drawn = [] } = {}) {
     for (const k of ['name', 'region', 'class', 'line', 'scene', 'play', 'class_note', 'sheet']) need(p[k], `${who}: no ${k}`);
     need(d.regions?.includes(p.region), `${who}: "${p.region}" isn't a region`);
     need(p.traits?.length === 4, `${who}: needs four traits`); for (const t of p.traits ?? []) need(traits[t], `${who}: unknown trait "${t}"`);
-    need(p.build || (p.level3?.class && p.scores), `${who}: no build, and nothing to try one from`);
+    need(p.build, `${who}: no build to play from`);
     const s = p.signature ?? {}; need(s.name && s.line && PER.includes(s.per), `${who}: its signature needs a name, a line and a rest`);
     need(s.uses === null || Number.isInteger(s.uses) || s.uses === 'Proficiency Bonus' || /^\w+ modifier$/.test(s.uses ?? ''), `${who}: can't read its uses "${s.uses}"`);
   }
@@ -101,13 +101,6 @@ export function resolveLevel3({ level3: l }, book, speciesOptions) {
   const cls = book.classNamed(l.class), species = book.species.find(s => l.species.startsWith(s.name)) ?? null;
   const option = species && speciesOptions(species)?.names.find(n => wholeWords(l.species.replace(/[();]/g, ' ').replace(/\s+/g, ' '), n.split(/ [(’]/)[0]) || new RegExp(`\\b${n.split(' ')[0]}\\b`, 'i').test(l.species.slice(species.name.length)));
   return { cls, subclass: cls?.subclasses.find(s => s.name === l.subclass || wholeWords(s.name, l.subclass))?.name ?? null, species, option: option ?? null, background: book.backgrounds.find(b => b.name === l.background) ?? null };
-}
-// A character the engine can build from what the export has so far, with its
-// scores as they stand. The roster's full builds replace this.
-export function trialBuild(p, book, blank, speciesOptions) {
-  if (p.build) return p.build;
-  const r = resolveLevel3(p, book, speciesOptions);
-  return { ...blank, name: p.name, species: r.species?.name ?? '', option: r.option ?? '', size: 'Medium', background: p.level3.background, homeland: p.region, method: 'rolled', base: p.scores, classes: [{ class: p.level3.class, level: 3, subclass: r.subclass ?? '' }] };
 }
 // How many uses the signature has, which may hang on the character's numbers;
 // null where it isn't counted out over rests.

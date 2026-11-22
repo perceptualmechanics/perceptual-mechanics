@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { libraryItems, cdRackItems } from './library.text.js';
-import { getOutboundLinks, getInboundLinks, isRenderedField } from '../../links.js';
+import { getOutboundLinks, getInboundLinks } from '../../links.js';
+import { luminance, ratio } from '../../utils/contrast.js';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag, prefersReducedMotion, onReducedMotionChange, createPanelCloser, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers, sceneTemplate,
   sceneChromeRoot,
@@ -150,10 +151,8 @@ function titleCase(text, t) {
 }
 function relLuminance(hex) {
   const n = typeof hex === 'number' ? hex : parseInt(String(hex).replace('#', ''), 16);
-  const lin = (v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
-  return 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  return luminance([(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => v / 255));
 }
-const contrastRatio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
 function vividColor(hex) {
   const c = new THREE.Color(hex);
@@ -243,8 +242,8 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
 
   const DARK_INK = 0x201a14, CREAM_INK = 0xf0ece0;
   const spineLum = relLuminance(baseColor);
-  const useDark = contrastRatio(spineLum, relLuminance(DARK_INK))
-                > contrastRatio(spineLum, relLuminance(CREAM_INK));
+  const useDark = ratio(spineLum, relLuminance(DARK_INK))
+                > ratio(spineLum, relLuminance(CREAM_INK));
   const inkTitle = useDark ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
   const inkCreator = useDark ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
 

@@ -1,3 +1,9 @@
+// Prints the corpus as src/utils/corpus.js counts it: sentences, words and
+// pieces per scene, each scene's share of the words, and which of the
+// registry's scenes publish no text of their own. Reads the scenes' .text.js
+// modules; writes nothing. For checking a figure before it goes into prose:
+//   node scripts/corpus-figures.mjs
+
 import { readCorpus, flatSentences, wordCount } from '../src/utils/corpus.js';
 import { SCENES } from '../src/scenes/registry.js';
 import * as scroll from '../src/scenes/scroll/scroll.text.js';

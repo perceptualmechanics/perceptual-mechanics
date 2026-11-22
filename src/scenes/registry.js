@@ -221,7 +221,7 @@ export const sceneAria = spec => `${spec.blurb} ${spec.controls}`;
 export const tileAria  = spec => `${spec.blurb}`;
 
 export const TEXT_EXEMPT = {
-  butterfly: 'Its entire found text is its own placard title, which the landing page already carries.',
+  butterfly: 'Its entire found text is its own placard title, which the scene shows on screen to everyone who opens it. A page would hold that one line and nothing else.',
   harmonics: 'It publishes no text of its own — it is a view of the connections between other scenes, each of which has its own page.',
-  outside:   'Its text is 19 proper names — five Sources of Power, their Folk Origins, Magi and Psi — laid out as a diagram rather than written as prose. There is no passage to publish, only labels on a flower.',
+  outside:   'It is wordless by design. Its jump list names each petal by its angel and device; the Folk Origins along them and Magi and Psi at the center are unnamed points. There is no passage to publish.',
 };

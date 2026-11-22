@@ -100,7 +100,7 @@ function verifyCssInvariantsPlugin() {
       if (!ok) {
         this.error(`verify-css-invariants: ${failures} problem(s) — see above.`);
       } else {
-        console.log(`  ✓ verify-css-invariants: the safe zone holds and nothing is declared twice`);
+        console.log(`  ✓ verify-css-invariants: every sheet holds its invariants (see above)`);
       }
     },
   };

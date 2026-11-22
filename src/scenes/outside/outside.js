@@ -417,12 +417,6 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     return { geo, pos, col, mat, points, haloMat, halo };
   }
 
-  const psPoints = makePointGroup(5, preview ? 3.4 : 4.0, preview ? 9 : 11, 0.34);
-  const originPoints = makePointGroup(7, preview ? 2.6 : 3.0, preview ? 7.5 : 9, 0.3);
-  const centerPoints = makePointGroup(CENTER_ORIGINS.length, preview ? 3.0 : 3.5, preview ? 8 : 10, 0.36);
-
-  const newestGlow = makePointGroup(NEWEST_ORIGINS.length, preview ? 4 : 5, preview ? 13 : 16, 0.28);
-
   const PS_ANCHORS = [
     { inst: 0, u: 1 }, { inst: 1, u: 1 }, { inst: 2, u: 1 }, { inst: 3, u: 1 },
     { inst: NATURE_CLUSTER_START + 1, u: 1 }, // Nature's own marker: center sub-lobe's tip
@@ -439,6 +433,12 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       }
     });
   });
+
+  const psPoints = makePointGroup(PS_ANCHORS.length, preview ? 3.4 : 4.0, preview ? 9 : 11, 0.34);
+  const originPoints = makePointGroup(originEntries.length, preview ? 2.6 : 3.0, preview ? 7.5 : 9, 0.3);
+  const centerPoints = makePointGroup(CENTER_ORIGINS.length, preview ? 3.0 : 3.5, preview ? 8 : 10, 0.36);
+
+  const newestGlow = makePointGroup(NEWEST_ORIGINS.length, preview ? 4 : 5, preview ? 13 : 16, 0.28);
 
   let titleEl = null, hintEl = null, soundToggleEl = null, soundToggleLabelEl = null;
   let srLiveEl = null;

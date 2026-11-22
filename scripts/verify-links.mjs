@@ -6,9 +6,7 @@ import { BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
 import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
-import { readFileSync } from 'node:fs';
-import { LINKS } from '../src/links.js';
-import * as linkStore from '../src/links.js';
+import { LINKS, RENDERED_FIELDS } from '../src/links.js';
 import { crossLinkPlan, applyCrossLinkPlan, ENTITY_RE, isSupportedEntity } from '../src/utils/crossLinkMatch.js';
 import { pathToFileURL } from 'node:url';
 
@@ -44,60 +42,35 @@ export function verifyLinks() {
     log.push(`note: library items and cdRackItems share ${sharedIds.length} id value(s) — harmless today (no link targets a cd), but a { scene: 'library', id } pair is ambiguous between the two arrays. Flagged, not failed.`);
   }
 
-  const scenes = {
-    sphere: { items: fragments, fields: { text: it => it.text } },
-    orbiter: { items: poems, fields: { stanzas: (it, index) => it.stanzas?.[index] } },
-    scroll: { items: scrollPieces, fields: { body: (it, index) => it.body?.[index] } },
-    library: {
-      items: libraryItems,
-      fields: {
-        note: it => it.note, scene: it => it.scene,
-        excerpt: it => it.excerpt, excerpt_from: it => it.excerpt_from,
-      },
-    },
-  };
+  // A link can only start in text its scene displays, so the fields a link
+  // may name are RENDERED_FIELDS itself; this map only says where each
+  // scene's pieces live.
+  const items = { sphere: fragments, orbiter: poems, scroll: scrollPieces, library: libraryItems };
+  for (const scene of Object.keys(RENDERED_FIELDS)) {
+    if (!items[scene]) fail(`RENDERED_FIELDS names "${scene}", but this check has no piece list for it — add one to \`items\``);
+  }
+  const fieldText = (piece, field, index) => index === undefined ? piece[field] : piece[field]?.[index];
 
   function findPiece(scene, id) {
-    const s = scenes[scene];
-    if (!s) return undefined;
-    return s.items.find(it => it.id === id);
+    return items[scene]?.find(it => it.id === id);
   }
 
   let checked = 0;
   LINKS.forEach((l, i) => {
     const where = `LINKS[${i}] (${l.from.scene}#${l.from.id} -> ${l.to.scene}#${l.to.id})`;
-    const fromScene = scenes[l.from.scene];
-    if (!fromScene) { fail(`${where}: unknown source scene "${l.from.scene}"`); return; }
+    const rendered = RENDERED_FIELDS[l.from.scene];
+    if (!rendered || !items[l.from.scene]) { fail(`${where}: "${l.from.scene}" is not a scene links can start in (RENDERED_FIELDS has ${Object.keys(RENDERED_FIELDS).join(', ')})`); return; }
     const fromPiece = findPiece(l.from.scene, l.from.id);
     if (!fromPiece) { fail(`${where}: no piece with id ${l.from.id} in ${l.from.scene}`); return; }
-    const fieldFn = fromScene.fields[l.from.field];
-    if (!fieldFn) { fail(`${where}: "${l.from.scene}" has no linkable field "${l.from.field}"`); return; }
-    const text = fieldFn(fromPiece, l.from.index);
+    if (!rendered.has(l.from.field)) { fail(`${where}: "${l.from.scene}" does not display a field "${l.from.field}" (it displays ${[...rendered].join(', ')}), so the phrase would be invisible on the source side`); return; }
+    const text = fieldText(fromPiece, l.from.field, l.from.index);
     if (typeof text !== 'string') { fail(`${where}: field "${l.from.field}"${l.from.index !== undefined ? `[${l.from.index}]` : ''} is not a string on piece ${l.from.id}`); return; }
     if (!text.includes(l.phrase)) { fail(`${where}: phrase "${l.phrase}" not found verbatim in ${l.from.scene}#${l.from.id}.${l.from.field}${l.from.index !== undefined ? `[${l.from.index}]` : ''}`); return; }
     const toPiece = findPiece(l.to.scene, l.to.id);
     if (!toPiece) { fail(`${where}: target ${l.to.scene}#${l.to.id} does not resolve`); return; }
     checked++;
   });
-  if (checked === LINKS.length) ok(`links.js: all ${LINKS.length} rows resolve (source field + verbatim phrase + target)`);
-
-  {
-    const src = readFileSync(new URL('../src/links.js', import.meta.url), 'utf8');
-    const actual = {};
-    for (const l of LINKS) actual[l.from.scene] = (actual[l.from.scene] ?? 0) + 1;
-    const headers = [...src.matchAll(/^\s*\/\/ ── (\S+) \((\d+)\) ──/gm)];
-    if (!headers.length) {
-      log.push('note: no `// ── scene (n) ──` section headers found in links.js — nothing to check');
-    } else {
-      let bad = 0;
-      for (const [, scene, stated] of headers) {
-        const real = actual[scene] ?? 0;
-        if (Number(stated) !== real) { bad++; fail(`links.js: the "${scene}" section header says ${stated}, but ${real} row(s) have \`from.scene\` "${scene}"`); }
-      }
-      if (!bad) ok(`links.js: all ${headers.length} section headers match their sections`);
-    }
-  }
-
+  if (checked === LINKS.length) ok(`links.js: all ${LINKS.length} rows resolve (a displayed source field + verbatim phrase + target)`);
 
   function countOccurrences(haystack, needle) {
     if (!needle) return 0;
@@ -142,11 +115,9 @@ export function verifyLinks() {
       }
     }
 
-    const sceneEntry = scenes[f.scene];
     const piece = findPiece(f.scene, f.id);
-    const fieldFn = sceneEntry?.fields?.[f.field];
-    if (!sceneEntry || !piece || !fieldFn) return;
-    const text = fieldFn(piece, f.index);
+    if (!piece || !RENDERED_FIELDS[f.scene]?.has(f.field)) return;
+    const text = fieldText(piece, f.field, f.index);
     if (typeof text !== 'string') return;
 
     const wanted = new Map();
@@ -164,11 +135,9 @@ export function verifyLinks() {
   let planned = 0, unplaced = 0;
   groups.forEach(entries => {
     const f = entries[0].link.from;
-    const sceneEntry = scenes[f.scene];
     const piece = findPiece(f.scene, f.id);
-    const fieldFn = sceneEntry?.fields?.[f.field];
-    if (!sceneEntry || !piece || !fieldFn) return;
-    const text = fieldFn(piece, f.index);
+    if (!piece || !RENDERED_FIELDS[f.scene]?.has(f.field)) return;
+    const text = fieldText(piece, f.field, f.index);
     if (typeof text !== 'string') return;
     const links = entries.map(e => e.link);
     const plan = crossLinkPlan(text, links.map(l => l.phrase), 'x-link');
@@ -186,9 +155,8 @@ export function verifyLinks() {
   let badEntities = 0, badTags = 0;
   groups.forEach(entries => {
     const f = entries[0].link.from;
-    const fieldFn = scenes[f.scene]?.fields?.[f.field];
     const piece = findPiece(f.scene, f.id);
-    const text = fieldFn && piece ? fieldFn(piece, f.index) : null;
+    const text = piece && RENDERED_FIELDS[f.scene]?.has(f.field) ? fieldText(piece, f.field, f.index) : null;
     if (typeof text !== 'string') return;
     for (const m of text.matchAll(ENTITY_RE)) {
       if (!isSupportedEntity(m[0])) {
@@ -224,86 +192,6 @@ export function verifyLinks() {
     fixtureProblems.forEach(m => fail(`matcher fixture: ${m}`));
   } else {
     ok('matcher fixture: phrases containing & and < > link correctly, and nothing outside the anchors changes');
-  }
-
-  const RENDERED_FIELDS = linkStore.RENDERED_FIELDS;
-  if (!RENDERED_FIELDS) {
-    throw new Error(
-      'verify-links: src/links.js does not export RENDERED_FIELDS, so the ' +
-      'rendered-field check below cannot run. It is deliberately NOT ' +
-      'skippable — a link authored into a field its scene withholds passes ' +
-      'every other check in this file while being invisible on the source ' +
-      'side. Add `export const RENDERED_FIELDS` to src/links.js (scene name ' +
-      '-> the set of content fields that scene actually displays) rather ' +
-      'than removing this guard.'
-    );
-  }
-
-  function rendersField(rendered, field) {
-    if (rendered instanceof Set) return rendered.has(field);
-    if (Array.isArray(rendered)) return rendered.includes(field);
-    if (rendered && typeof rendered === 'object') return Boolean(rendered[field]);
-    return false;
-  }
-  function renderedFieldNames(rendered) {
-    if (rendered instanceof Set) return [...rendered];
-    if (Array.isArray(rendered)) return rendered;
-    if (rendered && typeof rendered === 'object') return Object.keys(rendered).filter(k => rendered[k]);
-    return [];
-  }
-
-  const WITHHELD_FIELDS = linkStore.WITHHELD_FIELDS ?? {};
-  let unknownFields = 0;
-  const withheldRows = [];
-
-  const conditionalRows = [];
-  LINKS.forEach((l, i) => {
-    const rendered = RENDERED_FIELDS[l.from.scene];
-    if (rendered === undefined) {
-      unknownFields++;
-      fail(`LINKS[${i}]: RENDERED_FIELDS has no entry for scene "${l.from.scene}" — add one (even an empty set) so it's a stated decision rather than an omission.`);
-      return;
-    }
-    if (rendersField(rendered, l.from.field)) return;
-
-    if (linkStore.isRenderedField(l.from.scene, l.from.field, l.from.id)) {
-      conditionalRows.push(l);
-      return;
-    }
-
-    if (rendersField(WITHHELD_FIELDS[l.from.scene], l.from.field)) {
-      withheldRows.push(l);
-      return;
-    }
-    unknownFields++;
-    fail(`LINKS[${i}] (${l.from.scene}#${l.from.id} -> ${l.to.scene}#${l.to.id}): "${l.from.field}" is neither in RENDERED_FIELDS.${l.from.scene} (${renderedFieldNames(rendered).join(', ') || 'nothing'}) nor declared in WITHHELD_FIELDS.${l.from.scene}, and no conditional rule covers piece #${l.from.id}. Either the field name is wrong, or the scene gained a field nobody declared. A link into an undeclared field passes every other check in this file while being invisible on the source side.`);
-  });
-
-  const CONDITIONAL_FIELDS = linkStore.CONDITIONAL_FIELDS ?? {};
-  let uncovered = 0;
-  LINKS.forEach((l, i) => {
-    const cond = CONDITIONAL_FIELDS[l.from.scene]?.[l.from.field];
-    if (!cond) return;
-    if (cond(l.from.id) === true) return;
-    uncovered++;
-    fail(`LINKS[${i}] (${l.from.scene}#${l.from.id} -> ${l.to.scene}#${l.to.id}): "${l.from.field}" is a conditionally-rendered field, but the condition does not cover piece #${l.from.id} — so this link's phrase is authored into content the scene will not display, and there is nothing to click.`);
-  });
-  if (!uncovered && conditionalRows.length) {
-    ok(`conditional fields: ${conditionalRows.length} row(s) render from a conditional field, all covered`);
-  }
-
-
-  if (!unknownFields) {
-    ok(`rendered fields: all ${LINKS.length} rows link from a field that is either rendered or explicitly declared withheld`);
-  }
-  if (withheldRows.length) {
-    const byScene = new Map();
-    withheldRows.forEach(l => {
-      const key = `${l.from.scene}.${l.from.field}`;
-      byScene.set(key, (byScene.get(key) ?? 0) + 1);
-    });
-    const summary = [...byScene].map(([k, n]) => `${n} from ${k}`).join(', ');
-    ok(`withheld fields: ${withheldRows.length} row(s) link from deliberately unrendered content (${summary}) — invisible from both ends by design, see WITHHELD_FIELDS in src/links.js`);
   }
 
   return { ok: failures === 0, failures, log };

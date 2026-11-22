@@ -1,9 +1,15 @@
+// Finds passages that appear word for word in two different pieces, by
+// matching five-word shingles across the found text of Sphere, Orbiter,
+// Scroll, Beamline, the Library's excerpts, the Orrery and Theater, and
+// prints each overlapping run of six words or more, exact or near. The
+// verbatim rows in src/resonances.js are checked by it. Reads only:
+//   node scripts/find-verbatim-overlaps.mjs
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';
 import { scrollPieces } from '../src/scenes/scroll/scroll.text.js';
 import { BOUNCES } from '../src/scenes/beamline/beamline.text.js';
-import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
+import { libraryItems } from '../src/scenes/library/library.text.js';
 import { BEATS as theaterBeats } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 
@@ -38,10 +44,7 @@ poems.forEach(p => addPiece('orbiter', { id: p.id }, p.stanzas.join(' '), p.titl
 scrollPieces.forEach(p => addPiece('scroll', { id: p.id }, p.body.join(' '), p.title));
 BOUNCES.forEach(b => addPiece('beamline', { id: b.id }, b.text, `bounce ${b.id}`));
 libraryItems.forEach(it =>
-  addPiece('library', { id: it.id }, [it.excerpt, it.note].filter(Boolean).join(' '), it.title)
-);
-cdRackItems.forEach(it =>
-  addPiece('library-cd', { id: it.id }, [it.note].filter(Boolean).join(' '), it.title)
+  addPiece('library', { id: it.id }, it.excerpt ?? '', it.title)
 );
 addPiece('orrery', { id: ORRERY.id }, ORRERY.note, ORRERY.name);
 theaterBeats.forEach(b =>

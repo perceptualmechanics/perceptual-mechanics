@@ -1,3 +1,8 @@
+// Writes docs/constellation_resonances.md, the review document for
+// Harmonics' cross-scene resonances, from RESONANCES in src/resonances.js:
+// each row's endpoints, excerpts centred on the quoted words, and its
+// rationale and status. Regenerate it after editing RESONANCES, never by hand:
+//   node scripts/build-resonances-doc.mjs
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';

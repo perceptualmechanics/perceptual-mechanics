@@ -34,7 +34,7 @@ function offAxis(d, az, elev) {
 }
 
 export const SEGMENTS = [];   // { from, to, radius, parent, depth }
-export const NUBS = [];       // { pos, radius }
+export const NUBS = [];       // { pos, radius, seg }: seg is the segment the nub ends or sits on
 
 function tine(from, dir, len, radius, depth, parent, bend) {
   let p = from, d = dir, r = radius, last = parent;
@@ -48,7 +48,7 @@ function tine(from, dir, len, radius, depth, parent, bend) {
     p = q; r = rr;
   }
   if (depth >= MAX_DEPTH || len < 0.16) {
-    NUBS.push({ pos: p, radius: r * NUB_SCALE });
+    NUBS.push({ pos: p, radius: r * NUB_SCALE, seg: last });
     return;
   }
 
@@ -95,9 +95,9 @@ function tine(from, dir, len, radius, depth, parent, bend) {
       tine(p, offAxis(d, az, elev), len, r * rand(0.48, 0.66), 1, last,
         norm(add([rand(-0.5, 0.5), rand(-0.1, 0.4), rand(-0.5, 0.5)], [0, 1, 0], UPSWEEP * rand(0.5, 1.7))));
     }
-    if (rnd() < 0.35) NUBS.push({ pos: mix(p, q, rand(0.2, 0.8)), radius: rr * rand(1.15, 1.6) });
+    if (rnd() < 0.35) NUBS.push({ pos: mix(SEGMENTS[last].from, q, rand(0.2, 0.8)), radius: rr * rand(1.15, 1.6), seg: last });
   }
-  NUBS.push({ pos: p, radius: r * NUB_SCALE });
+  NUBS.push({ pos: p, radius: r * NUB_SCALE, seg: last });
 }
 
 export const SEGMENT_COUNT = SEGMENTS.length;

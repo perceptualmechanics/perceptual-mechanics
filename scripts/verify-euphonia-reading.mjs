@@ -4,8 +4,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as engine from '../src/euphonia/euphonia.character.js';
-import { blank } from '../src/euphonia/euphonia.build.js';
-import { checkReading, steps, ranked, pages, why, fnv1a, answerKey, trialBuild, usesOf, freshPlay, act, tonight } from '../src/euphonia/euphonia.reading.js';
+import { checkReading, steps, ranked, pages, why, fnv1a, answerKey, usesOf, freshPlay, act, tonight } from '../src/euphonia/euphonia.reading.js';
 import { SYMBOLS } from '../src/euphonia/euphonia.reading.symbols.js';
 import { openSaves } from '../src/euphonia/euphonia.saves.js';
 import { landing } from '../src/euphonia/euphonia.door.js';
@@ -35,7 +34,7 @@ export function verifyEuphoniaReading({ exported = existsSync(EXPORT) ? json(EXP
     const got = landing({ ...bare, ...given });
     if (got !== want) fail(`the front door: ${JSON.stringify(given)} opens ${got}, not ${want}`);
   }
-  let people = 0, full = 0;
+  let people = 0;
   if (exported) {
     const page = injectEuphonia(readFileSync(new URL('../euphonia/index.html', import.meta.url), 'utf8'));
     const ways = [...(page.match(/<nav class="r-doors"[\s\S]*?<\/nav>/)?.[0] ?? '').matchAll(/<li><a href="#([\w-]+)">/g)].map(m => m[1]);
@@ -73,10 +72,9 @@ export function verifyEuphoniaReading({ exported = existsSync(EXPORT) ? json(EXP
     const book = engine.rulebook(src('srd'), src('classes'), src('characters'), src('subclasses'), src('items').data);
     for (const p of d.roster ?? []) {
       people++;
-      const built = engine.character(book, trialBuild(p, book, blank(), engine.speciesOptions)), n = tonight(built), uses = usesOf(p.signature, built);
-      if (p.build) { full++; for (const x of built.problems) fail(`${p.name}: its build: ${x.message}`); }
+      const built = engine.character(book, p.build), n = tonight(built), uses = usesOf(p.signature, built);
+      for (const x of built.problems) fail(`${p.name}: its build: ${x.message}`);
       if (!(n.hp > 0 && n.ac > 0 && n.attack) || (uses !== null && !(uses > 0))) fail(`${p.name}: the tracker has nothing to show: ${JSON.stringify({ hp: n.hp, ac: n.ac, uses })}`);
-      if (p.scores && !p.build) for (const [k, v] of Object.entries(p.scores)) if (built.scores[k] !== v) fail(`${p.name}: ${k} builds as ${built.scores[k]}, not ${v}`);
     }
     // A night's play stays in range, and each rest gives back only its own.
     const ctx = { maxHp: 2, uses: 2, signature: { per: 'long rest', back: 'one on a Short Rest' } }; let play = freshPlay(2, 2);
@@ -84,6 +82,6 @@ export function verifyEuphoniaReading({ exported = existsSync(EXPORT) ? json(EXP
     if (play.hp !== 0 || play.uses !== 0) fail(`spending went out of range: ${JSON.stringify(play)}`);
     if (act(play, ctx, 'short').uses !== 1 || act(play, { ...ctx, signature: { per: 'long rest' } }, 'short').uses !== 0 || act(play, { ...ctx, signature: { per: 'short rest' } }, 'short').uses !== 2 || act(play, ctx, 'long').hp !== 2) fail('a rest gave back the wrong amount');
   }
-  return { ok: !problems.length, failures: problems.length, log: problems.length ? [`\neuphonia reading: ${problems.length} problem(s):`, ...problems.slice(0, 20).map(x => `  ${x}`)] : [`ok: the Reading ${exported ? `chooses by the book's rule and has a sheet for all ${people} people (${full} from full builds, the rest trial builds)` : 'has no export yet, so its tab stays hidden'}; saving keeps builds and play apart`] };
+  return { ok: !problems.length, failures: problems.length, log: problems.length ? [`\neuphonia reading: ${problems.length} problem(s):`, ...problems.slice(0, 20).map(x => `  ${x}`)] : [`ok: the Reading ${exported ? `chooses by the book's rule and has a sheet for all ${people} people from their full builds` : 'has no export yet, so its tab stays hidden'}; saving keeps builds and play apart`] };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) { const r = verifyEuphoniaReading(); r.log.forEach(l => console.log(l)); process.exit(r.ok ? 0 : 1); }

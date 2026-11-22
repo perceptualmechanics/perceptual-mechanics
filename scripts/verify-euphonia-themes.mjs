@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { THEMES, CONTRAST } from '../src/euphonia/euphonia.themes.js';
+import { luminance, ratio } from '../src/utils/contrast.js';
 import { placesData } from './verify-euphonia-map.mjs';
 import { khipu as drawKhipu } from '../src/euphonia/euphonia.ornament.js';
 
@@ -16,8 +17,8 @@ const channels = c => {
   return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null;
 };
 const over = ([r, g, b, a], [R, G, B]) => [r * a + R * (1 - a), g * a + G * (1 - a), b * a + B * (1 - a)];
-const luminance = rgb => { const c = rgb.map(v => v / 255).map(v => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
-export const contrast = (fg, bg, ground) => { const [x, y] = [luminance(over(fg, over(bg, ground))), luminance(over(bg, ground))].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const lum = rgb => luminance(rgb.map(v => v / 255));
+export const contrast = (fg, bg, ground) => ratio(lum(over(fg, over(bg, ground))), lum(over(bg, ground)));
 
 // Colour literals: hex, functional notation with numbers, and CSS's named
 // colours (CSS Color 4, section 6.1), as values.

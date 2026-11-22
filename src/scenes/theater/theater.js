@@ -4,6 +4,7 @@ import {
   escapeHtml, parseHTML, claimContainer, trackTimers,
   prefersReducedMotion, onReducedMotionChange, bindGuardedResize,
 } from '../../utils/sceneKit.js';
+import { inkOn, parseHex, over } from './theater.ink.js';
 import './theater.css';
 import theaterHtml from './theater.html?raw';
 const DEV = import.meta.env?.DEV === true;
@@ -102,12 +103,23 @@ function buildHouseRow() {
   return house;
 }
 
-function buildActorEl(key, CHARACTERS) {
-  const ch = CHARACTERS[key];
+// Each character's colour as text on the two grounds it is set on (see
+// .tab-root's custom properties): the screen, under the figure, its name and
+// the speaking mark; the room, under the speech strip's name.
+function castInks(CHARACTERS, root) {
+  const css = getComputedStyle(root);
+  const screen = over([0, 0, 0], parseHex(css.getPropertyValue('--tab-screen-edge')),
+    parseFloat(css.getPropertyValue('--tab-scanline')));
+  const room = parseHex(css.getPropertyValue('--tab-room-glow'));
+  return Object.fromEntries(Object.entries(CHARACTERS).map(([key, ch]) =>
+    [key, { screen: inkOn(ch.color, screen), room: inkOn(ch.color, room) }]));
+}
+
+function buildActorEl(key, ch, ink) {
   const el = document.createElement('div');
   el.className = 'tab-actor';
   el.dataset.char = key;
-  el.style.color = ch.color;
+  el.style.color = ink;
   el.innerHTML = `
     <pre class="sf">${poseFor(ch).join('\n')}</pre>
     <div class="sf-name">${escapeHtml(ch.name)}</div>
@@ -116,9 +128,8 @@ function buildActorEl(key, CHARACTERS) {
   return el;
 }
 
-function bubbleWidthFor() {
-  return (typeof window !== 'undefined' && window.innerWidth < 480) ? 24 : 40;
-}
+// theater.css sizes .tab-bubble for forty columns at 12px.
+const BUBBLE_COLUMNS = 40;
 
 const INTERSTITIALS = [
   { eyebrow: 'Now is a good time to', main: 'HIT THE REFRESHMENT COUNTER', sub: 'popcorn, candy, and beverages are available in the lobby (there is no lobby)' },
@@ -132,7 +143,7 @@ const INTERSTITIALS = [
 ];
 
 class TheaterRenderer {
-  constructor({ stage, captionEl, speechEl, slugEl, interstitialEl, srLive, characters, clipEl, timers }) {
+  constructor({ stage, captionEl, speechEl, slugEl, interstitialEl, srLive, characters, inks, clipEl, timers }) {
     this.stage = stage;
     this.speechEl = speechEl;
     this.captionEl = captionEl;
@@ -140,16 +151,15 @@ class TheaterRenderer {
     this.interstitialEl = interstitialEl;
     this.srLive = srLive;
     this.characters = characters;
+    this.inks = inks;
     this.clipEl = clipEl;
     this.timers = timers;
     this.actors = {};
-    this.currentLine = null;
-    this.bubbleWidth = bubbleWidthFor();
   }
 
   ensureActor(key) {
     if (this.actors[key]) return this.actors[key];
-    const el = buildActorEl(key, this.characters);
+    const el = buildActorEl(key, this.characters[key], this.inks[key].screen);
     this.stage.appendChild(el);
     this.actors[key] = el;
     this.timers.nextFrame(() => el.classList.add('on'));
@@ -166,7 +176,6 @@ class TheaterRenderer {
     this.speechEl.replaceChildren();
     Object.values(this.actors).forEach(a => a.classList.remove('talking'));
     this.captionEl.classList.remove('on');
-    this.currentLine = null;
   }
 
   onSceneChange(scene) {
@@ -211,8 +220,6 @@ class TheaterRenderer {
       el.classList.add('talking');
       this.timers.after(900, () => el.classList.remove('talking'));
     }
-    this.bubbleWidth = bubbleWidthFor();
-    this.currentLine = { key, text, voice }; // no `el`: relayout() re-queries the bubble, and nothing else read it
     const bubble = document.createElement('div');
     bubble.className = 'tab-bubble';
     bubble.innerHTML = this._bubbleHtml(ch, text, voice);
@@ -223,7 +230,7 @@ class TheaterRenderer {
     // speaker; the CSS shows these or the bubble, by the window.
     const name = document.createElement('span');
     name.className = 'tab-speech-name';
-    name.style.color = ch.color;
+    name.style.color = this.inks[key].room;
     name.textContent = `${ch.name}${voice ? ' (voice)' : ''}`;
     this.speechEl.replaceChildren(name, text);
     if (el) {
@@ -237,7 +244,7 @@ class TheaterRenderer {
 
   _bubbleHtml(ch, text, voice) {
     return `<span class="bubble-name">${escapeHtml(ch.name)}${voice ? ' (voice)' : ''}</span>`
-      + escapeHtml(asciiBubble(text, false, this.bubbleWidth));
+      + escapeHtml(asciiBubble(text, false, BUBBLE_COLUMNS));
   }
 
   _placeBubble(bubble) {
@@ -262,16 +269,11 @@ class TheaterRenderer {
   }
 
   relayout() {
-    if (!this.currentLine) return;
     const bubble = this.stage.querySelector('.tab-bubble');
     if (!bubble) return;
-    const width = bubbleWidthFor();
-    const { key, text, voice } = this.currentLine;
-    if (width !== this.bubbleWidth) {
-      this.bubbleWidth = width;
-      bubble.innerHTML = this._bubbleHtml(this.characters[key], text, voice);
-    }
+    // _placeBubble measures where the bubble sits unshifted.
     bubble.style.removeProperty('--bubble-shift');
+    bubble.style.removeProperty('--bubble-lift');
     this._placeBubble(bubble);
   }
 
@@ -350,7 +352,7 @@ export function createTheater(container, { preview = false } = {}) {
 
     const renderer = new TheaterRenderer({
       stage, captionEl, speechEl: root.querySelector('.tab-speech'), slugEl, interstitialEl, srLive,
-      characters: CHARACTERS, clipEl: root, timers,
+      characters: CHARACTERS, inks: castInks(CHARACTERS, root), clipEl: root, timers,
     });
     let endCard = null;
 

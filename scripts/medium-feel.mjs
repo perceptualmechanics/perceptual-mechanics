@@ -1,3 +1,11 @@
+// Checks how Medium's cup feels in the hand, by simulation at 60 Hz: two
+// visitors get different sentences (nothing is stored), a visitor's drag
+// beats the partner, a let-go cup is taken back, a held letter lands, how long
+// the cup holds and coasts, and that 30, 60 and 144 Hz end in the same place.
+// Prints each with the verdict in capitals when it fails. Reads
+// medium.physics.js, medium.lexicon.js and medium.text.js; writes nothing:
+//   node scripts/medium-feel.mjs
+
 import {
   CUP, PARTNER_FORCE, DWELL_EASE, DWELL_RESIST,
   createCup, stepCup, createWander, stepWander,

@@ -1,3 +1,11 @@
+// Runs Medium's partner hand over the board for a few minutes of simulated
+// time per seed, at 60 Hz, and prints what it spells: nothing with no one
+// touching, a tape and the words it passed through with a hand resting on it,
+// then letter rate and vowel share with the lexicon's plausibility on and
+// flat, and with the letters placed two ways. Reads medium.physics.js,
+// medium.lexicon.js and medium.text.js; writes nothing. Takes a few seconds:
+//   node scripts/medium-spell.mjs
+
 import {
   DWELL_EASE, DWELL_RESIST,
   createCup, stepCup, createWander, stepWander,

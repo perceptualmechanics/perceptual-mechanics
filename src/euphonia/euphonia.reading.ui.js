@@ -6,7 +6,7 @@ import { h } from './euphonia.dom.js';
 import { blank, builderLink, encode } from './euphonia.build.js';
 import { openSaves } from './euphonia.saves.js';
 import { inline } from './euphonia.markdown.js';
-import { checkReading, steps, ranked, pages, why, trialBuild, usesOf, freshPlay, act, tonight } from './euphonia.reading.js';
+import { checkReading, steps, ranked, pages, why, usesOf, freshPlay, act, tonight } from './euphonia.reading.js';
 import { SYMBOLS, symbolSvg, sigilSvg, crossroadsSvg } from './euphonia.reading.symbols.js';
 
 const files = import.meta.glob('./euphonia.reading.json', { query: '?url', import: 'default' });
@@ -33,8 +33,7 @@ export async function initReading(panel) {
   let answers = kept.answers ?? {}, framed = kept.framed !== false, page = kept.page ?? 0, chosen = kept.chosen ?? null, reached = kept.reached ?? null, rules = null;
   const keep = () => { try { localStorage.setItem(KEPT, JSON.stringify({ answers, framed, page, chosen, reached })); } catch { /* as above */ } };
   const person = () => d.roster.find(p => p.id === chosen) ?? null;
-  // Until the book's full builds arrive, a person's links wait for the rules.
-  const linkFor = p => (p.build ? builderLink(p.build) : '#builder');
+  const linkFor = p => builderLink(p.build);
   const go = step => { keep(); const hash = step === 'start' ? ROUTE : `${ROUTE}-${step}`; if (location.hash === hash) draw(); else location.hash = hash; };
   const sigil = p => h('span', { class: 'r-sigil', html: sigilSvg(p, d.traits, pinOf(p.region)?.x ?? 0) });
   function show(act, ...children) {
@@ -102,8 +101,8 @@ export async function initReading(panel) {
       if (!rules) { const [{ loadBook }, engine] = await Promise.all([import('./euphonia.book.js'), import('./euphonia.character.js')]); rules = { book: (await loadBook()).book, character: engine.character, speciesOptions: engine.speciesOptions }; }
     } catch (err) { stage.replaceChildren(h('h2', {}, p.name), h('p', { role: 'status' }, `The rules didn’t load (${err.message}); reload the page to try again.`)); return; }
     if (location.hash !== `${ROUTE}-tonight`) return;
-    const build = trialBuild(p, rules.book, blank(), rules.speciesOptions), built = rules.character(rules.book, build), n = tonight(built), id = `reading-${p.id}`, sig = p.signature;
-    const most = usesOf(sig, built), ctx = { maxHp: n.hp, uses: most, signature: sig }, trial = !p.build, resting = most !== null && (sig.per === 'short rest' || sig.back);
+    const build = p.build, built = rules.character(rules.book, build), n = tonight(built), id = `reading-${p.id}`, sig = p.signature;
+    const most = usesOf(sig, built), ctx = { maxHp: n.hp, uses: most, signature: sig }, resting = most !== null && (sig.per === 'short rest' || sig.back);
     if (!saves.list().some(c => c.id === id)) saves.put(id, p.name, encode(build));
     let play = saves.play(id) ?? freshPlay(n.hp, most);
     const taught = new Set(), result = h('div', { class: 'r-result', 'aria-live': 'polite' }, md('p', {}, sig.line));
@@ -124,7 +123,7 @@ export async function initReading(panel) {
         h('button', { type: 'button', onclick: () => tell(`You can go up to ${n.speed} feet.`) }, 'Move', h('small', {}, `${n.speed} feet`)), h('button', { type: 'button', onclick: () => tell(d.teach.help) }, 'Help', h('small', { html: inline(d.teach.help_short) })))),
       h('div', {}, h('span', { class: 'r-label' }, 'If you try'), h('div', { class: 'r-acts' }, n.tries.map(t => h('button', { type: 'button', onclick: () => attempt(t) }, d.tries[t.ability], h('small', {}, `${t.ability} ${signed(t.bonus)}`)))))),
       h('details', {}, h('summary', {}, 'The full sheet'), h('p', {}, `Armor Class ${n.ac} · Initiative ${signed(n.initiative)} · ${Object.entries(n.mods).map(([a, m]) => `${a.slice(0, 3)} ${signed(m)}`).join(' · ')}`), h('p', {}, h('a', { href: p.sheet }, 'Who you could become'), ' · ', h('a', { href: builderLink(build) }, 'Open in the builder'))),
-      h('p', { class: 'r-from' }, `${saves.ok ? 'Saved on this device.' : 'This browser can’t save, so this sheet resets when you close it.'}${trial ? ' Trial numbers until this character’s full build arrives.' : ''}`)));
+      h('p', { class: 'r-from' }, `${saves.ok ? 'Saved on this device.' : 'This browser can’t save, so this sheet resets when you close it.'}`)));
     paint();
     stage.querySelector('h2').focus({ preventScroll: true });
   }

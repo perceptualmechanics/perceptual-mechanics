@@ -41,15 +41,12 @@ function uAtArc(frac) {
   return u[lo - 1] + (u[lo] - u[lo - 1]) * t;
 }
 
-function gyrePoints(spin, dir) {
-  const out = new Array(GYRE_SEGMENTS);
-  const k = 2 * Math.PI * GYRE_TURNS;
-  for (let i = 0; i < GYRE_SEGMENTS; i++) {
-    const u = uAtArc(i / (GYRE_SEGMENTS - 1));
-    const th = k * u * dir + spin * dir;
-    out[i] = { x: u * Math.cos(th), y: u * Math.sin(th), z: dir * (2 * u - 1), u };
-  }
-  return out;
+// A point's place along the gyre depends only on its index, never on the spin, so it is found once.
+const GYRE_U = new Float64Array(GYRE_SEGMENTS);
+const GYRE_KU = new Float64Array(GYRE_SEGMENTS);   // the turn angle 2*pi*turns*u, before spin and direction
+for (let i = 0; i < GYRE_SEGMENTS; i++) {
+  GYRE_U[i] = uAtArc(i / (GYRE_SEGMENTS - 1));
+  GYRE_KU[i] = 2 * Math.PI * GYRE_TURNS * GYRE_U[i];
 }
 
 export function createQuiz(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
@@ -127,22 +124,29 @@ export function createQuiz(container, { preview = false, initialPieceId = null, 
 
   const clock = createFrameClock();
 
-  function project(p, t) {
-    const tilt = 0.62 + 0.09 * Math.sin(t * 0.19);
-    const c = Math.cos(tilt), sn = Math.sin(tilt);
-    const y = p.y * c - p.z * sn;
-    const z = p.y * sn + p.z * c;
-    const persp = 2.6 / (2.6 + z);
-    return { x: p.x * persp, y: y * persp, depth: z };
+  // project() runs for every vertex of every frame, so it writes into one object and works out the tilt once per t.
+  const projected = { x: 0, y: 0 };
+  let tiltT = NaN, tiltCos = 1, tiltSin = 0;
+  function project(x, y, z, t) {
+    if (t !== tiltT) {
+      const tilt = 0.62 + 0.09 * Math.sin(t * 0.19);
+      tiltT = t; tiltCos = Math.cos(tilt); tiltSin = Math.sin(tilt);
+    }
+    const yt = y * tiltCos - z * tiltSin;
+    const zt = y * tiltSin + z * tiltCos;
+    const persp = 2.6 / (2.6 + zt);
+    projected.x = x * persp; projected.y = yt * persp;
+    return projected;
   }
 
-  function drawGyre(pts, t, scale, cx, cyy, hue) {
-    let started = false;
+  function drawGyre(dir, t, scale, cx, cyy, hue) {
     ctx.beginPath();
-    for (let i = 0; i < pts.length; i++) {
-      const q = project(pts[i], t);
+    for (let i = 0; i < GYRE_SEGMENTS; i++) {
+      const u = GYRE_U[i];
+      const th = GYRE_KU[i] * dir + spin * dir;
+      const q = project(u * Math.cos(th), u * Math.sin(th), dir * (2 * u - 1), t);
       const X = cx + q.x * scale, Y = cyy + q.y * scale;
-      if (!started) { ctx.moveTo(X, Y); started = true; } else ctx.lineTo(X, Y);
+      if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
     }
     ctx.strokeStyle = hue;
     ctx.stroke();
@@ -151,13 +155,13 @@ export function createQuiz(container, { preview = false, initialPieceId = null, 
   function drawWheel(t, scale, cx, cyy, alpha) {
     for (let i = 1; i <= 28; i++) {
       const th = ((i - 1) / 28) * Math.PI * 2 - Math.PI / 2 + t * 0.06;
-      const p = project({ x: Math.cos(th), y: Math.sin(th), z: 0 }, t);
       const inner = CARDINAL.includes(i) ? 0.84 : 0.92;
-      const p2 = project({ x: Math.cos(th) * inner, y: Math.sin(th) * inner, z: 0 }, t);
       const lit = markN === i;
       ctx.beginPath();
-      ctx.moveTo(cx + p.x * scale, cyy + p.y * scale);
-      ctx.lineTo(cx + p2.x * scale, cyy + p2.y * scale);
+      let q = project(Math.cos(th), Math.sin(th), 0, t);
+      ctx.moveTo(cx + q.x * scale, cyy + q.y * scale);
+      q = project(Math.cos(th) * inner, Math.sin(th) * inner, 0, t);
+      ctx.lineTo(cx + q.x * scale, cyy + q.y * scale);
       ctx.lineWidth = lit ? 3 : 1;
       ctx.strokeStyle = lit
         ? `rgba(246,226,164,${Math.min(1, alpha * 2 + markPulse)})`
@@ -228,8 +232,8 @@ export function createQuiz(container, { preview = false, initialPieceId = null, 
     ctx.lineJoin = 'round';
 
     const a = 0.42 + whirl * 1.05;
-    drawGyre(gyrePoints(spin, 1), t, scale, cx, cyy, `rgba(196,206,232,${a})`);
-    drawGyre(gyrePoints(spin, -1), t, scale, cx, cyy, `rgba(226,196,150,${a})`);
+    drawGyre(1, t, scale, cx, cyy, `rgba(196,206,232,${a})`);
+    drawGyre(-1, t, scale, cx, cyy, `rgba(226,196,150,${a})`);
     if (revealed) drawWheel(t, scale, cx, cyy, 0.22 + whirl * 0.5);
 
     ctx.globalCompositeOperation = 'source-over';

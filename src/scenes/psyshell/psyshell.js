@@ -205,7 +205,6 @@ export function createPsyshell(container, { preview = false } = {}) {
 
   const stemGeo = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
   const nubGeo = new THREE.IcosahedronGeometry(1, 0);
-  nubGeo.setAttribute('aLit', new THREE.InstancedBufferAttribute(new Float32Array(NUBS.length), 1));
   const stemMat = makeCrystalMat(CRYSTAL_RIM);
   const nubMat = makeCrystalMat(NUB_RIM);
   const stems = new THREE.InstancedMesh(stemGeo, stemMat, SEGMENTS.length);
@@ -419,6 +418,8 @@ export function createPsyshell(container, { preview = false } = {}) {
 
   const stemLit = new Float32Array(SEGMENTS.length);
   stemGeo.setAttribute('aLit', new THREE.InstancedBufferAttribute(stemLit, 1));
+  const nubLit = new Float32Array(NUBS.length);
+  nubGeo.setAttribute('aLit', new THREE.InstancedBufferAttribute(nubLit, 1));
 
   const transmits = [];
   function armTransmitter(index) {
@@ -490,7 +491,9 @@ export function createPsyshell(container, { preview = false } = {}) {
       touched = true;
     }
     if (touched) {
+      for (let i = 0; i < NUBS.length; i++) nubLit[i] = stemLit[NUBS[i].seg];
       stemGeo.getAttribute('aLit').needsUpdate = true;
+      nubGeo.getAttribute('aLit').needsUpdate = true;
       levelsDirty = true;
     }
     return touched;

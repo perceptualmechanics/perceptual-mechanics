@@ -14,6 +14,7 @@ import orbiterHtml from './orbiter.html?raw';
 
 
 const NUCLEUS_RADIUS = 0.16;
+const ORBIT_FLOOR = 1.35; // the innermost satellite orbit; the orbital cloud is scaled to sit inside it
 
 function gaussianPair() {
   const u = 1 - Math.random(); // (0,1] rather than [0,1) — Math.log(0) is -Infinity
@@ -65,9 +66,11 @@ function makePOrbitalDotTexture() {
 
 function buildOrbitalCloud(preview) {
   const count = preview ? 900 : 2800;
-  const A0 = 0.175;
-  const R_MAX = A0 * 9; // truncation radius: e^(-9) ≈ 0.0001, so cutting the proposal distribution off here throws away a negligible sliver of the true (infinite-tailed) distribution rather than biasing it
-  const F_MAX = 4 * A0 * A0 * Math.exp(-2); // the true peak of r^2*e^(-r/A0)*cos^2(theta): the radial factor peaks at r=2*A0 (value (2A0)^2*e^-2), the angular factor cos^2(theta) peaks at 1 when theta=0 (right on the lobe's axis) — multiplying the two peak values together bounds the *whole* 2D density, which is exactly what the rejection test below needs
+  // The 2p_z density is |psi_210|^2 ∝ r^2 e^(-r/A0) cos^2(theta), so A0 is the Bohr radius. Per unit of r
+  // and cos(theta) the volume element adds another r^2: the radial law is r^4 e^(-r/A0), peaking at 4*A0,
+  // and 12*A0 leaves 0.8% of it outside, which is where the satellites' orbits begin.
+  const A0 = ORBIT_FLOOR / 12;
+  const radialWeight = r => (r / (4 * A0)) ** 4 * Math.exp(4 - r / A0); // r^4 e^(-r/A0), 1 at its peak
 
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
@@ -78,12 +81,12 @@ function buildOrbitalCloud(preview) {
   const colorNeg = new THREE.Color(0xc978ff);
 
   function sampleUpperLobePoint() {
-    let r, u, weight;
-    do {
-      r = Math.random() * R_MAX;
-      u = Math.random();
-      weight = r * r * Math.exp(-r / A0) * u * u;
-    } while (Math.random() * F_MAX >= weight);
+    // r^4 e^(-r/A0) is a gamma distribution of shape 5, the sum of five exponentials; cos(theta) has
+    // density 3u^2 on the upper lobe, whose inverse CDF is a cube root. Both are exact, with no rejection or cut-off.
+    let product = 1;
+    for (let k = 0; k < 5; k++) product *= 1 - Math.random(); // (0,1]: Math.log(0) is -Infinity
+    const r = -A0 * Math.log(product);
+    const u = Math.cbrt(Math.random());
     const phi = Math.random() * Math.PI * 2; // azimuth: uniform all the way around the lobe's axis — a p-orbital has no preferred direction to spin the dumbbell around, only along it, so this angle carries no shaping information, just spreads points evenly around the tube
     const y = r * u; // height along the lobe's axis = distance * cos(theta) — plain spherical-to-Cartesian, u already IS cos(theta) so no trig call is even needed here
     const perpR = r * Math.sqrt(Math.max(0, 1 - u * u)); // distance from the axis = distance * sin(theta), via sin^2+cos^2=1 (Math.max guards a tiny negative under sqrt from floating-point error when u rounds to exactly 1)
@@ -93,7 +96,7 @@ function buildOrbitalCloud(preview) {
   const half = count / 2;
   for (let i = 0; i < half; i++) {
     const p = sampleUpperLobePoint();
-    const dens = 0.35 + 0.65 * Math.min(1, (p.r * p.r * Math.exp(-p.r / A0)) / (4 * A0 * A0 * Math.exp(-2)));
+    const dens = 0.35 + 0.65 * radialWeight(p.r);
 
     [1, -1].forEach(lobeSign => {
       const idx = lobeSign > 0 ? i : half + i;
@@ -111,7 +114,7 @@ function buildOrbitalCloud(preview) {
         dx, dy, dz,
         phase: Math.random() * Math.PI * 2, // TUNABLE only in the sense of range (0 to 2*PI is "no bias in starting point") — this is what keeps every particle's sine wave out of sync with every other's, so the swarm shimmers rather than pulsing in unison
         speed: 0.3 + Math.random() * 0.5, // TUNABLE: how fast each particle's own oscillation cycles — raise for a jitterier/faster-shimmering cloud
-        amp: 0.015 + Math.random() * 0.02, // TUNABLE: how far each particle strays from its sampled position — raise for a looser/fuzzier-looking cloud, lower to make the underlying rejection-sampled shape read more crisply
+        amp: 0.015 + Math.random() * 0.02, // TUNABLE: how far each particle strays from its sampled position — raise for a looser/fuzzier-looking cloud, lower to make the underlying sampled shape read more crisply
       };
     });
   }
@@ -274,7 +277,7 @@ function buildSatellites(preview) {
   const panelGeo = new THREE.PlaneGeometry(0.09, 0.026);
 
   for (let i = 0; i < count; i++) {
-    const radius = 1.35 + Math.random() * 0.85; // TUNABLE: orbit radii land between 1.35 and 2.2 units out. Raising the floor (1.35) pushes every satellite farther from the cloud; raising the range (0.85) spreads them across a wider band. 1.35 isn't arbitrary though — it's the same floor A0 above was tuned against, so the orbital cloud's tail stays mostly inside it; push it down much further and satellites start passing through the cloud itself.
+    const radius = ORBIT_FLOOR + Math.random() * 0.85; // TUNABLE: orbit radii land between ORBIT_FLOOR and 0.85 beyond it. The orbital cloud's A0 is derived from ORBIT_FLOOR, so moving the floor rescales the cloud with it; raising the range (0.85) spreads the satellites across a wider band.
 
     const pivot = new THREE.Object3D();
     const [gx, gy] = gaussianPair();

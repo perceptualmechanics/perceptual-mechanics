@@ -97,8 +97,9 @@ export function drawFills(ctx, view, world, colors, dpr) {
 // period's maps drew them. A border is a fine line, BORDER CSS pixels wide.
 // A reach is a band of wash along the inside of a polity's edge, laid as
 // Dutch colourists laid outline colour, with no line under it, fading to
-// nothing `width` CSS pixels in: wide enough to read as a band on the whole
-// globe, about 700 CSS pixels across. It carries a border's ink, no more: a
+// nothing `width` CSS pixels in: the narrowest that reads as a band rather
+// than a soft line, so it stays that wide on a phone's smaller globe as on a
+// desktop's. It carries a border's ink, no more: a
 // linear fade from `alpha` holds width·alpha/2 of it, so alpha is
 // 2·BORDER/width.
 const BORDER = 0.5, REACH_WIDTH = 6;

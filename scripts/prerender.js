@@ -74,7 +74,7 @@ function lines(text) {
 // in .htaccess's style-src) and linked by /euphonia/, so the two can't drift.
 export const PAGE_STYLE = fs.readFileSync(new URL('../styles/page.css', import.meta.url), 'utf8');
 
-export const PAGE_STYLE_SHA256 = 'sha256-2IEIosd7xcKSXoyHYxb5REbHYSLVf1PlVAauy+8tKts=';
+export const PAGE_STYLE_SHA256 = 'sha256-w0NjfRopbzxtRWwZe5YNL9Hc9YqKRbjw6//gEPJeCSE=';
 
 function page({ slugPath, title, description, sceneKey, sceneName, lede, bodyHtml, jsonLd }) {
   const url = `${ORIGIN}/text/${slugPath ? slugPath + '/' : ''}`;

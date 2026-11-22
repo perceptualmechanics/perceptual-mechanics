@@ -652,11 +652,25 @@ export async function initMap(stage) {
   // eye sees through hides nothing behind it.
   const inTheWay = (v, x, y) => recede() === 1 && covers((x - v.cx) / v.k, (v.cy - y) / v.k, g.eye);
 
+  // The open panel's box in the labels' own coordinates; none while it's
+  // closed or stepped aside.
+  function panelOverLabels() {
+    if (!panel.classList.contains('open') || panel.classList.contains('peeked')) return null;
+    const p = panel.getBoundingClientRect(), c = g.labels.getBoundingClientRect();
+    return { left: p.left - c.left, right: p.right - c.left, top: p.top - c.top, bottom: p.bottom - c.top };
+  }
+  // The names are placed against where the panel stands; one that slides
+  // in arrives after the redraw that opened it, so its arrival places them
+  // again. (With motion reduced it doesn't slide, and that redraw saw it.)
+  panel.addEventListener('transitionend', e => { if (e.target === panel && e.propertyName === 'transform') redraw(); });
   function placeLabels() {
     const v = cssView(), project = projectionFor(v);
-    // A point of the canvas on the globe's face: inside its limb, and on
-    // the canvas.
-    const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height;
+    // A point of the canvas on the globe's face: inside its limb, on the
+    // canvas, and not under the open panel, where a name could be reached by
+    // the keyboard but not seen.
+    const under = panelOverLabels();
+    const covered = (x, y) => under && x >= under.left && x <= under.right && y >= under.top && y <= under.bottom;
+    const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height && !covered(x, y);
     const ringed = hoverPlace ?? marked ?? held?.at;
     const tip = ringed && faces(v, ringed) && project([ringed.lon, ringed.lat]);
     g.tip.hidden = !tip;

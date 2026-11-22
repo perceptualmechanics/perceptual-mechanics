@@ -205,3 +205,46 @@ test('an empty timeline sits still instead of throwing on goTo/play', () => {
   assert.equal(player.index, -1);
   assert.equal(player.playing, false);
 });
+
+test('prev() and goTo() land with the stage as playing forward would have left it', () => {
+  const at = (sceneIndex, event) => ({ sceneIndex, event });
+  const script = {
+    scenes: [{ slug: 'INT. BAR' }, { slug: 'EXT. STREET' }],
+    timeline: [
+      at(0, { type: 'enter', keys: ['brian', 'paul'] }),
+      at(0, { type: 'line', key: 'brian', text: 'One.' }),
+      at(0, { type: 'exit', keys: ['brian'] }),
+      at(0, { type: 'line', key: 'paul', text: 'Two.' }),
+      at(0, { type: 'enter', keys: ['brian'] }),
+      at(0, { type: 'line', key: 'brian', text: 'Three.' }),
+      at(1, { type: 'intermission' }),
+      at(1, { type: 'enter', keys: ['sarah'] }),
+      at(1, { type: 'line', key: 'sarah', text: 'Four.' }),
+    ],
+  };
+  let stage = [];
+  let lines = 0;
+  const renderer = {
+    onSceneChange: () => { stage = []; },
+    onEnter: keys => keys.forEach(k => { if (!stage.includes(k)) stage.push(k); }),
+    onExit: keys => { stage = stage.filter(k => !keys.includes(k)); },
+    onLine: () => { lines++; },
+  };
+  const forward = [];
+  const player = new Player(script, renderer);
+  for (let i = 0; i < script.timeline.length; i++) { player.goTo(i); forward.push([...stage]); }
+
+  for (let i = script.timeline.length - 2; i >= 0; i--) {
+    const before = lines;
+    player.prev();
+    assert.deepEqual(stage, forward[i], `prev() onto event ${i}`);
+    assert.equal(lines - before, script.timeline[i].event.type === 'line' ? 1 : 0, `prev() onto event ${i} speaks only its own line`);
+  }
+  for (let i = 0; i < script.timeline.length; i++) {
+    for (const from of [0, 3, script.timeline.length - 1]) {
+      player.goTo(from);
+      player.goTo(i);
+      assert.deepEqual(stage, forward[i], `goTo(${i}) from ${from}`);
+    }
+  }
+});

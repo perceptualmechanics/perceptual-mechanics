@@ -100,6 +100,10 @@
   --title-block-clear-mobile: 8rem;
 
   --footer-safe-zone: 4.5rem;
+  /* #landing-bottom-fade's height. #landing keeps the same band as scroll
+     padding, so a tile reached by Tab scrolls clear of the fade instead of
+     counting as on screen beneath it. */
+  --landing-fade: 10rem;
   /* #site-title's distance from the bottom, which a scene's own controls
      can share (Theater, in a short landscape window). */
   --site-title-bottom: 1.2rem;
@@ -480,6 +484,7 @@ html, body {
      the planetary hour at 6.9rem, ends inside the title block's clearance. */
   padding-bottom: var(--title-block-clear-mobile);
   overflow-y: auto;
+  scroll-padding-bottom: var(--landing-fade);
 
 	@media (min-width: 481px) {
 		align-items: center;
@@ -559,7 +564,7 @@ html, body {
   display: block;
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  height: 10rem;
+  height: var(--landing-fade);
   z-index: 50;
   pointer-events: none;
   background: linear-gradient(to top,

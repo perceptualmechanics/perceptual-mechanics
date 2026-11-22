@@ -2,6 +2,15 @@
 export const VISIBLE_MIN = 380; // nm — the band's left edge (violet)
 export const VISIBLE_MAX = 750; // nm — the band's right edge (deep red)
 
+// The absorption band's line model, shared by the scene and the script that
+// tables it (scripts/apollo-mixture.mjs): a line's peak optical depth is
+// density · TAU_MAX · (strength/1000)^RELATIVE_STRENGTH_EXPONENT, drawn as a
+// Gaussian `lineSigma(bandW)` device columns wide.
+export const TAU_MAX = 4.6;
+export const RELATIVE_STRENGTH_EXPONENT = 0.55;
+export const LINE_SIGMA_FLOOR = 0.35;
+export const lineSigma = bandW => Math.max(LINE_SIGMA_FLOOR, (bandW / 1400) * 0.7);
+
 export const C_LIGHT = 2.99792458e8;            // m/s, exact by definition
 export const RYDBERG_INF = 1.0973731568160e7;   // m^-1, CODATA — infinite nuclear mass
 export const ELECTRON_PROTON_MASS_RATIO = 1 / 1836.15267343;

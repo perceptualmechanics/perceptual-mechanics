@@ -36,8 +36,10 @@ with nothing standing between writing it and seeing it happen.
 ## Architecture
 
 - **`Player`** walks a compiled `{ scenes, timeline }` script one event at
-  a time — play, pause, next, prev, goTo, restart. It knows nothing about
-  how anything is drawn.
+  a time — play, pause, next, prev, goTo, restart. A jump (prev, goTo)
+  lands with the stage as playing up to it would have left it: the scene's
+  entrances and exits are replayed, its lines are not. It knows nothing
+  about how anything is drawn.
 - **A renderer** is any object with (some subset of) `mount`,
   `onSceneChange`, `onChorus`, `onEnter`, `onExit`, `onLine`,
   `onIntermission`, `onEnd`, `dispose`. `Player` calls whichever methods

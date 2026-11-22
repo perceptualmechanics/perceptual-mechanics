@@ -3,6 +3,16 @@ const MAX_DUR = 40000;
 const MS_PER_CHAR = 55;
 const INTERMISSION_DUR = 4400;
 
+// Who stands on stage after `event`, in the order they came on, which is the
+// order a renderer lays them out in.
+function castAfter(cast, event) {
+  if (event.type === 'enter') return [...cast, ...event.keys.filter(k => !cast.includes(k))];
+  if (event.type === 'exit') return cast.filter(k => !event.keys.includes(k));
+  return cast;
+}
+
+const sameCast = (a, b) => a.length === b.length && a.every((k, i) => k === b[i]);
+
 export class Player {
   /**
    * @param {{ scenes: any[], timeline: { sceneIndex: number, event: object }[] }} script
@@ -15,6 +25,7 @@ export class Player {
     this.hooks = hooks;
     this.index = -1;
     this.curSceneIndex = -1;
+    this._cast = [];
     this.playing = false;
     this._timer = null;
     this._disposed = false;
@@ -76,6 +87,7 @@ export class Player {
     if (this._disposed) return this;
     if (script) this.script = script;
     this.curSceneIndex = -1;
+    this._cast = [];
     this.index = -1;
     this.playing = opts.autoplay ?? true;
     return this.goTo(0);
@@ -86,13 +98,9 @@ export class Player {
     clearTimeout(this._timer);
     if (!this.length) return this;
     const clamped = Math.max(0, Math.min(this.length - 1, newIndex));
-    this.index = clamped;
-
     const { sceneIndex, event } = this.script.timeline[clamped];
-    if (sceneIndex !== this.curSceneIndex) {
-      this.curSceneIndex = sceneIndex;
-      this.renderer.onSceneChange?.(this.script.scenes[sceneIndex], sceneIndex);
-    }
+    if (clamped !== this.index + 1 || sceneIndex !== this.curSceneIndex) this._setStage(clamped, sceneIndex);
+    this.index = clamped;
     this._dispatch(event);
 
     this.hooks.onAdvance?.({ index: this.index, length: this.length });
@@ -114,7 +122,33 @@ export class Player {
     this.renderer.dispose?.();
   }
 
+  /**
+   * Anything but the next event in the same scene: set the stage as playing
+   * the scene from its start would have, replaying only its entrances and
+   * exits so no line is spoken twice. A stage that already matches is left
+   * alone, so stepping back within a scene doesn't redraw every figure.
+   */
+  _setStage(index, sceneIndex) {
+    const { timeline } = this.script;
+    let start = index;
+    while (start > 0 && timeline[start - 1].sceneIndex === sceneIndex) start--;
+    const moves = [];
+    let cast = [];
+    for (let i = start; i < index; i++) {
+      const { event } = timeline[i];
+      if (event.type !== 'enter' && event.type !== 'exit') continue;
+      moves.push(event);
+      cast = castAfter(cast, event);
+    }
+    if (sceneIndex === this.curSceneIndex && sameCast(cast, this._cast)) return;
+    this.curSceneIndex = sceneIndex;
+    this._cast = [];
+    this.renderer.onSceneChange?.(this.script.scenes[sceneIndex], sceneIndex);
+    moves.forEach(event => this._dispatch(event));
+  }
+
   _dispatch(event) {
+    this._cast = castAfter(this._cast, event);
     switch (event.type) {
       case 'chorus':
         this.renderer.onChorus?.(event.text);

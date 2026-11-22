@@ -4,6 +4,7 @@ import {
   claimContainer, manageRenderer, trackTimers, createFrameClock, sceneTemplate,
   sceneChromeRoot,
 } from '../../utils/sceneKit.js';
+import { BUTTERFLY } from './butterfly.text.js';
 import butterflyHtml from './butterfly.html?raw';
 import './butterfly.css';
 
@@ -77,6 +78,7 @@ export function createButterfly(container, { preview = false } = {}) {
   if (!preview) {
     const frag = parseHTML(sceneTemplate('butterfly', butterflyHtml));
     expLabel = frag.querySelector('.butterfly-exp-label-row');
+    expLabel.querySelector('.butterfly-exp-label').textContent = BUTTERFLY.title;
     hint = frag.querySelector('.butterfly-hint');
     sceneChromeRoot().appendChild(expLabel);
     sceneChromeRoot().appendChild(hint);
