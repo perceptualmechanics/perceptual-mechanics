@@ -262,11 +262,12 @@ export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
   if (!narrow && fallen.some((a, i) => fallen.slice(i + 1).some(b => meet(a, b)))) return new Map();
   // A name moves only within its own place on the Wheel, so the order round
   // the rim holds and no name stands by another's realm: never past the next
-  // name above or below that it could meet, and at the side (within a sixth
-  // of a turn of Law or Chaos), where the names stand in a column, never past
-  // halfway to it. A side name with no room across there turns to run along
-  // the rim, as Law and Chaos do, as near its realm as it fits.
-  const SIDE = Math.sin(30 * RAD), atSide = n => Math.abs(Math.sin(n.at * RAD)) <= SIDE;
+  // name above or below that it could meet, and at the side (Law's or
+  // Chaos's side of the diagonals, the diagonals included), where the names
+  // stand in a column, never past halfway to it. A side name with no room
+  // across there turns to run along the rim, as Law and Chaos do, as near its
+  // realm as it fits.
+  const SIDE = Math.SQRT1_2 + 1e-9, atSide = n => Math.abs(Math.sin(n.at * RAD)) <= SIDE;
   // Its neighbours a step away, or two where one isn't room enough.
   const range = (n, steps = 1) => {
     const mine = fallen[names.indexOf(n)], near = names.filter(o => o !== n && fallen[names.indexOf(o)].l < mine.r && mine.l < fallen[names.indexOf(o)].r).map(o => o.y);
@@ -310,7 +311,10 @@ export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
     }
     if (!placed) continue;
     taken.push(placed.box);
-    out.set(n.of, { ...placed, moved: Math.hypot(placed.x - n.x, placed.y - n.y) });
+    // How far it stands from its realm's own point: to the nearest of its
+    // edges, so a name turned to run along the rim isn't counted by its middle.
+    const { l, r, t, b } = placed.box;
+    out.set(n.of, { ...placed, moved: Math.hypot(Math.max(l - n.x, 0, n.x - r), Math.max(t - n.y, 0, n.y - b)) });
   }
   return out;
 }

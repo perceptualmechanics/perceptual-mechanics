@@ -595,18 +595,25 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   // and a desktop's, with widths a little over any face's: on a phone none
   // lost and none over another, the mount or the window; on a desktop none
   // moved. Above a phone's open sheet, where the names would meet and can't
-  // move up or down, the Wheel is unlettered.
+  // move up or down, the Wheel is unlettered. In the stage a phone held
+  // upright gives the globe, every realm is named; a road's name may wait for
+  // a taller one. Phones' screens, from the first SE to the largest, less the
+  // bar above the stage (118 px on a phone, measured for 7.6.0).
   const wheelData = wheelOf(JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.wheel.json', import.meta.url), 'utf8')).data, JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.classes.json', import.meta.url), 'utf8')).data);
   const REM = 16, NAME_EM = 0.62, named = wheelData.realms.filter(r => r.at !== 'centre').length + wheelData.roads.length;
   const sizes = [[320, 568], [360, 640], [375, 690], [390, 720], [414, 760], [768, 900], [1280, 780], [1920, 960]];
   const aboveSheet = [[375, 290], [390, 350], [440, 400]];
+  const PHONE_BAR = 118;
+  const stages = [[320, 568], [360, 640], [375, 667], [375, 812], [390, 844], [414, 736], [414, 896], [430, 932]].map(([W, H]) => [W, H - PHONE_BAR]);
+  const realmNames = wheelData.realms.filter(r => r.at !== 'centre').map(r => r.name);
   let wheelMoved = 0;
-  for (const [W, H] of [...sizes, ...aboveSheet]) for (const dpr of [1, 2]) {
-    const sheet = aboveSheet.some(([w, h]) => w === W && h === H);
+  for (const [W, H, kind] of [...sizes, ...aboveSheet.map(f => [...f, 'sheet']), ...stages.map(f => [...f, 'stage'])]) for (const dpr of [1, 2]) {
+    const sheet = kind === 'sheet';
     const m = REALM_REACH_REM * REM, f = Math.min(W - 2 * m, H - 2 * m) / (2 * mounting.MERIDIAN.outer);
     const view = { cx: W / 2 * dpr, cy: H / 2 * dpr, k: f * dpr }, rim = { x: (W / 2 - m) / f, y: (H / 2 - m) / f, margin: m / f };
     const got = [...wheelNames(view, wheelData, rim, REM, dpr, (t, road) => t.length * NAME_EM * (road ? 0.62 : 0.72) * REM * dpr).values()];
-    if (got.length !== (sheet ? 0 : named)) fail(`the Wheel at ${W}x${H}: ${got.length} of ${named} names placed${sheet ? ', above a phone\'s open sheet' : ''}`);
+    if (kind === 'stage') { for (const r of realmNames) if (!got.some(n => n.text === r)) fail(`the Wheel in a ${W}x${H} stage: ${r} isn't named`); }
+    else if (got.length !== (sheet ? 0 : named)) fail(`the Wheel at ${W}x${H}: ${got.length} of ${named} names placed${sheet ? ', above a phone\'s open sheet' : ''}`);
     got.forEach((n, i) => {
       const { l, r, t, b } = n.box, near = Math.hypot(Math.max(l, Math.min(view.cx, r)) - view.cx, Math.max(t, Math.min(view.cy, b)) - view.cy);
       if (W >= H && !sheet) { if (n.moved > 1e-6) fail(`the Wheel at ${W}x${H}: ${n.text} moved ${n.moved.toFixed(1)}px with room to spare`); return; }
