@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "b117dd86b8074be15206d6fd4e7dcc678515b6dec5a8f00e52ff535063449bc1",
-  "modified": "2026-11-19T07:00:10-05:00",
+  "sha256": "0f134ad40f958d489d8bdf9c914f31bda680c283e3a2ddbed5bef2face6a1913",
+  "modified": "2026-11-21T19:26:46-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 37,
+  "exporter_version": 39,
   "rules": {
    "banned": [
     "eladrin",
@@ -44,8 +44,7 @@
     "A shewstone pair given by Mutapa has started answering in a voice that isn't the other stone's.",
     "An Agitator cell inside the Invisible College has a scheme for the Grand Divertissement; a natural philosopher among them has doubts.",
     "A Mutapan lamp in a minister's study has been opened and closed again, and the guild's mark on its base is now upside down.",
-    "Mutapa's spymaster wants to know who told Spain what its platina was: the letter came from Lisbon, in excellent Portuguese.",
-    "Anselme Lafrenaye, the Gamester of the French court, has lost a hand he couldn't have lost, to a man who shouldn't have known the odds."
+    "Mutapa's spymaster wants to know who told Spain what its platina was: the letter came from Lisbon, in excellent Portuguese."
    ],
    "regions": [
     "Europe",
@@ -58,7 +57,7 @@
    "where": "Venice, then Toledo",
    "read_with": "Europe",
    "summary": "**The pitch.** The Republic of Venice is about to sell the most wanted document in Europe, and a crew can be paid to take it before the sale. Venice is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. Its roof-runner is Zanetta Bon, a Danae of the Crossing, who folds space to cross a canal at a step (Europe, People, in The State of the World).",
-   "ready": "**Ready to run.** *The Venice Job: The First Night* is the heist's opening night as a one-shot, with five 3rd-level characters ready to play.",
+   "ready": "**Ready to run.** *The Venice Job: The First Night*, on the site (perceptualmechanics.com/euphonia), is the heist's opening night as a one-shot, with five 3rd-level characters ready to play.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts and bravos; the Spanish one hires a crew.",
     "The scryer who made the report left notes the Ten's clerks didn't understand, and Spain's ambassador is looking for her.",

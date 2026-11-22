@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "b117dd86b8074be15206d6fd4e7dcc678515b6dec5a8f00e52ff535063449bc1",
-  "modified": "2026-11-19T07:00:10-05:00",
+  "sha256": "0f134ad40f958d489d8bdf9c914f31bda680c283e3a2ddbed5bef2face6a1913",
+  "modified": "2026-11-21T19:26:46-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 37,
+  "exporter_version": 39,
   "rules": {
    "banned": [
     "eladrin",
@@ -40,6 +40,29 @@
  "data": {
   "items": [
    {
+    "name": "Iron and Salt",
+    "kind": "Adventuring Gear",
+    "base": null,
+    "magical": false,
+    "rarities": [],
+    "attunement": null,
+    "cost": null,
+    "note": "cheap and common",
+    "place": {
+     "class_name": null,
+     "subclass": null,
+     "section": "Equipment and Firearms",
+     "book": "Euphonia: The Setting"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "Cold iron is no special metal: it's just iron, and its power over the Hidden is that it's mortal, worked by human hands. A **horseshoe** over the door, an **iron nail** in the frame, a **line of salt** across the sill. Those are Europe's. A Persian household keeps iron, onions and garlic by the bed, a Māori one red ochre and a cooking fire, a Malay one a nail or a pair of betel scissors under the pillow. \"Iron and salt\" is the rules' name for all of them, and each works by the same rule.\n\nThis entry is the rule for iron, salt and invitations. Every other mention in these books points here.\n\n- **Warding an opening.** Iron fixed at a door, a window or a chimney, with a line of salt across it, wards that opening until the next dawn. A Hidden creature can't pass inward through a warded opening. The ward is on the opening itself, so breaking down the door or the shutter leaves the ward in place.\n- **Warding a place.** Ten minutes of work wards every opening of a room or a small building (a cottage, a chapel, an inn's ground floor). A great house takes 10 minutes for each floor or wing. While every opening is warded, the place is warded, and a Hidden creature can't enter it by any means: on foot, carried, in another shape, by teleportation, through a Gate or by way of another plane. An effect that would put it inside fails, and the creature stays where it was. A warded place is never thin ground.\n- **Being asked in.** An invitation is the one way in. A creature inside the place that isn't a Hidden creature asks the Hidden creature in, aloud. The invitation counts however it was got: given freely, paid for, won by a lie or spoken by a Charmed creature. It admits the creature that was asked and its company (the DM says who that is; the riders of one Hunt are one company). It lasts until the next dawn, or until the one who gave it takes it back, which requires no action. A guest who lodges in the place can be given an invitation that lasts for the stay. When an invitation is taken back, a Hidden creature already inside can stay and can leave, and can't come back in.\n- **The voice at the door.** A Hidden creature outside can ask, in its own voice or a borrowed one. A player character who hears it decides for themselves. When the DM wants a roll for anyone else, and that creature hasn't been warned, it makes a Wisdom saving throw against the asker's spell save DC (DC 13 if the asker has none) and asks the Hidden creature in on a failure. A creature that has been told plainly what is asking succeeds without a roll, unless it is Charmed. While the Hidden are at the ebb, the save has Advantage.\n- **Breaking a ward.** Moving the iron or breaking the salt line ends the ward on that opening, and the place is no longer warded until someone irons and salts that opening again. A creature that isn't Hidden can do it with a Utilize action. A new opening, such as a hole torn in thatch or a breached wall, has no ward until someone gives it one. Anyone can lay a ward, a Hidden creature included. No Hidden creature can undo one: it can't move the iron or break the salt by hand, with a thrown object or with magic.\n- **What a ward leaves alone.** A Hidden creature that is inside can leave. Voices, sight, missiles and spells pass a warded opening as they pass any open doorway. A house with no ward gives no protection, and a Hidden creature needs no invitation to enter it. A weapon made of iron does no extra harm to a Hidden creature; the Hidden Killer's Cold Iron is a trained art (*Life on the Border*, Hidden Killer).\n- **Exceptions.** A feature passes a ward only if it says so by name. Three do, all in *Life on the Border*: the Crossing Danae's A Door of Your Own and Liminality, and the Naming Danae's Rename.\n- **A player character who is a Hidden creature** is bound like any other. A companion who is already inside and isn't Hidden can ask it in.\n\nEvery village knows this; most households do it every night of the dark half. Forgetting is how stories start."
+   },
+   {
     "name": "Court Astrologer's Astrolabe",
     "kind": "Wondrous Item",
     "base": null,
@@ -68,7 +91,7 @@
     ],
     "living": false,
     "prices": [],
-    "text": "Brass plates engraved for one city's latitude, with a rete of stars and a sighting rule. It works within about a week's travel north or south of that city; a plate for another latitude costs 5 GP from an instrument maker.\n\nWhen you finish a Long Rest, you can spend 10 minutes with the astrolabe to find the day's **auspicious hour**: the DM tells you when it falls (or roll a d12: it falls that many hours after dawn). During that hour, you can cast *Bless* from the astrolabe once without expending a spell slot; cast this way, it doesn't require Concentration and lasts until the hour ends. You also have Advantage on Intelligence (Arcana) and Intelligence (History) checks about omens, calendars and the heavens during the hour. The astrolabe's owner decides when the duel is fought, the audience is begged or the window is forced, and the rest of the party moves with them.\n\nThe DM can also name the day's **inauspicious hour**, and what the stars say goes wrong in it. Nothing in the rules makes it so; everyone at court believes it anyway.\n\nCourt astrologers from Istanbul to Isfahan pick the hours of coronations and campaigns with an instrument like this one (Powers and Factions, Institutions Beyond Europe).\n\n*Homeland:* The Ottomans, Persia and the Horn."
+    "text": "Brass plates engraved for one city's latitude, with a rete of stars and a sighting rule. It works within about a week's travel north or south of that city; a plate for another latitude costs 5 GP from an instrument maker.\n\nWhen you finish a Long Rest, you can spend 10 minutes with the astrolabe to find the day's **auspicious hour**: the DM tells you when it falls (or roll a d12: it falls that many hours after dawn). During that hour, you can cast *Bless* from the astrolabe once without expending a spell slot; cast this way, it doesn't require Concentration and lasts until the hour ends. You also have Advantage on Intelligence (Arcana) and Intelligence (History) checks about omens, calendars and the heavens during the hour. The astrolabe's owner decides when the duel is fought, the audience is begged or the window is forced, and the rest of the party moves with them.\n\nThe DM can also name the day's **inauspicious hour**, and what the stars say goes wrong in it. Nothing in the rules makes it so; everyone at court believes it anyway.\n\nCourt astrologers from Istanbul to Isfahan pick the hours of coronations and campaigns with an instrument like this one.\n\n*Homeland:* The Ottomans, Persia and the Horn."
    },
    {
     "name": "Inoculation Lancet",
@@ -96,30 +119,7 @@
     ],
     "living": false,
     "prices": [],
-    "text": "A silver lancet and a sealed vial of matter taken from a mild case. Healers in Bengal, the Caucasus and North and West Africa already do this with a needle or a small cut, and Chinese physicians give the same protection by blowing powdered scab into the nose. Lanternhall hasn't heard of either.\n\nMagic that cures a disease doesn't teach the body anything, so a creature cured by magic can catch the disease again; a creature that survives it the slow way can't.\n\nThe lancet gives a creature the slow way, safely. One vial is good for ten inoculations against the disease its vial was taken from. Spend 1 minute inoculating a willing creature against that disease. It falls mildly ill: for 1d4 days it has 1 level of Exhaustion that can't be removed until the illness passes. Then it's immune to that disease for life. If it's cured by magic while the illness runs, it gains no immunity, unless the cure is a Physician's Treatment, which counts as the slow way (*The Classes*, Physician, Level 2: Treatment).\n\n*Diseases to use.* Smallpox is the one the practice was built for. By default a vial works against smallpox only, as the practice did in the record; a table can extend it to measles or to the camp fever that follows every army (typhus), since nobody in 1668 knows it wouldn't work. Each disease's save, onset and course are in Running Euphonia, Disease; what matters here is that the party spent the days at Exhaustion before the town's outbreak, and the rival party didn't.\n\n*Homelands:* India; the Ottomans, Persia and the Horn; West and Central Africa; East and Southeast Asia."
-   },
-   {
-    "name": "Iron and Salt",
-    "kind": "Adventuring Gear",
-    "base": null,
-    "magical": false,
-    "rarities": [],
-    "attunement": null,
-    "cost": null,
-    "note": "cheap and common",
-    "place": {
-     "class_name": null,
-     "subclass": null,
-     "section": "Equipment and Firearms",
-     "book": "Euphonia: The Setting"
-    },
-    "dm": false,
-    "members": [],
-    "pieces": [],
-    "homelands": [],
-    "living": false,
-    "prices": [],
-    "text": "Cold iron is no special metal: it's just iron, and its power over the Hidden is that it's mortal, worked by human hands. A **horseshoe** over the door, an **iron nail** in the frame, a **line of salt** across the sill. Those are Europe's. A Persian household keeps iron, onions and garlic by the bed, a Māori one red ochre and a cooking fire, a Malay one a nail or a pair of betel scissors under the pillow. \"Iron and salt\" is the rules' name for all of them, and each works by the same rule.\n\nThis entry is the rule for iron, salt and invitations. Every other mention in these books points here.\n\n- **Warding an opening.** Iron fixed at a door, a window or a chimney, with a line of salt across it, wards that opening until the next dawn. A Hidden creature can't pass inward through a warded opening. The ward is on the opening itself, so breaking down the door or the shutter leaves the ward in place.\n- **Warding a place.** Ten minutes of work wards every opening of a room or a small building (a cottage, a chapel, an inn's ground floor). A great house takes 10 minutes for each floor or wing. While every opening is warded, the place is warded, and a Hidden creature can't enter it by any means: on foot, carried, in another shape, by teleportation, through a Gate or by way of another plane. An effect that would put it inside fails, and the creature stays where it was. A warded place is never thin ground.\n- **Being asked in.** An invitation is the one way in. A creature inside the place that isn't a Hidden creature asks the Hidden creature in, aloud. The invitation counts however it was got: given freely, paid for, won by a lie or spoken by a Charmed creature. It admits the creature that was asked and its company (the DM says who that is; the riders of one Hunt are one company). It lasts until the next dawn, or until the one who gave it takes it back, which requires no action. A guest who lodges in the place can be given an invitation that lasts for the stay. When an invitation is taken back, a Hidden creature already inside can stay and can leave, and can't come back in.\n- **The voice at the door.** A Hidden creature outside can ask, in its own voice or a borrowed one. A player character who hears it decides for themselves. When the DM wants a roll for anyone else, and that creature hasn't been warned, it makes a Wisdom saving throw against the asker's spell save DC (DC 13 if the asker has none) and asks the Hidden creature in on a failure. A creature that has been told plainly what is asking succeeds without a roll, unless it is Charmed. While the Hidden are at the ebb, the save has Advantage.\n- **Breaking a ward.** Moving the iron or breaking the salt line ends the ward on that opening, and the place is no longer warded until someone irons and salts that opening again. A creature that isn't Hidden can do it with a Utilize action. A new opening, such as a hole torn in thatch or a breached wall, has no ward until someone gives it one. Anyone can lay a ward, a Hidden creature included. No Hidden creature can undo one: it can't move the iron or break the salt by hand, with a thrown object or with magic.\n- **What a ward leaves alone.** A Hidden creature that is inside can leave. Voices, sight, missiles and spells pass a warded opening as they pass any open doorway. A house with no ward gives no protection, and a Hidden creature needs no invitation to enter it. A weapon made of iron does no extra harm to a Hidden creature; the Hidden Killer's Cold Iron is a trained art (*Life on the Border*, Hidden Killer).\n- **Exceptions.** A feature passes a ward only if it says so by name. Three do, all in *Life on the Border*: the Crossing Danae's A Door of Your Own and Liminality, and the Naming Danae's Rename.\n- **A player character who is a Hidden creature** is bound like any other. A companion who is already inside and isn't Hidden can ask it in.\n\nEvery village knows this; most households do it every night of the dark half. Forgetting is how stories start."
+    "text": "A silver lancet and a sealed vial of matter taken from a mild case. Healers in Bengal, the Caucasus and North and West Africa already do this with a needle or a small cut, and Chinese physicians give the same protection by blowing powdered scab into the nose. Lanternhall hasn't heard of either.\n\nMagic that cures a disease doesn't teach the body anything, so a creature cured by magic can catch the disease again; a creature that survives it the slow way can't.\n\nThe lancet gives a creature the slow way, safely. One vial is good for ten inoculations against the disease its vial was taken from. Spend 1 minute inoculating a willing creature against that disease. It falls mildly ill: for 1d4 days it has 1 level of Exhaustion that can't be removed until the illness passes. Then it's immune to that disease for life. If it's cured by magic while the illness runs, it gains no immunity, unless the cure is a Physician's Treatment, which counts as the slow way (*The Classes*, Physician, Level 2: Treatment).\n\n*Diseases to use.* By default a vial works against smallpox only, as the practice did in the record; a table can extend it to measles or to the camp fever that follows every army (typhus), since nobody in 1668 knows it wouldn't work. Each disease's save, onset and course are in Running Euphonia, Disease.\n\n*Homelands:* India; the Ottomans, Persia and the Horn; West and Central Africa; East and Southeast Asia."
    },
    {
     "name": "Khipu of Record",
