@@ -881,6 +881,14 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (placeGroups([...sample, { name: 'unplaced' }], 'classes').length !== 1) fail('a class without a place breaks the menu into groups it can\'t complete');
   const ours = [...book.classes.filter(c => c.source === 'Euphonia'), ...book.classes.flatMap(c => c.subclasses.filter(s => s.source === 'Euphonia'))];
   if (ours.some(x => x.place !== undefined)) for (const x of ours) if (!PLACES.some(([p]) => p === x.place)) fail(`${x.name}: its place is ${JSON.stringify(x.place)}, not one of ${PLACES.map(([p]) => p).join(', ')}`);
+  // So does each optional rule, which the builder sets under the book it's
+  // from: the rule a character can take carries its place through.
+  for (const c of euphonia.data) for (const r of c.optional_rules ?? []) {
+    if (!PLACES.some(([p]) => p === r.place)) fail(`${c.name}'s ${r.name}: its place is ${JSON.stringify(r.place)}, not one of ${PLACES.map(([p]) => p).join(', ')}`);
+    const who = r.lead.match(/only an? (\w+) can take it\./)?.[1], at = +[r.lead, ...r.sections.map(x => x.text)].join('\n').match(/You choose it when you reach \w+ level (\d+)/)?.[1];
+    const offered = run(someone([{ class: c.name, level: at, subclass: who }]), `${c.name} ${at} (${who})`)?.optionalRules.find(x => x.name === r.name);
+    if (offered?.place !== r.place) fail(`${c.name}'s ${r.name}: the builder offers it ${offered ? `placed ${JSON.stringify(offered.place)}` : 'not at all'}, not as from ${r.place}`);
+  }
 
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elfSkills = { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] };

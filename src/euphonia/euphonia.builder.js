@@ -556,13 +556,13 @@ export async function initBuilder(panel) {
         h('select', { 'data-key': `cantrip-${c.key}`, 'aria-describedby': idFor(`cantrip:${c.key}`), onchange: e => set(s => { s.cantripTargets = { ...s.cantripTargets, [c.key]: e.target.value }; }) }, options(c.from, c.chosen, c.from.length ? 'Choose a cantrip' : 'Choose your cantrips first'))),
       problemSlot(`cantrip:${c.key}`)]).flat());
   }
-  // An optional rule, where the DM allows it (The Monster Within): taken or
-  // not, then each Rite reached and, at its level, the Final Rite; what the
-  // record brings, said beneath.
+  // An optional rule, where the DM allows it (The Monster Within), under the
+  // book it's from, as the classes are: taken or not, then each Rite reached
+  // and, at its level, the Final Rite; what the record brings, said beneath.
   function renderRules(result) {
     if (!fresh(ruleBox, JSON.stringify(result.optionalRules))) return;
     const keep = (key, change) => set(s => { const was = s.optional?.[key] ?? {}; s.optional = { ...s.optional, [key]: change(was) }; });
-    rebuild(ruleBox, ...result.optionalRules.map(r => h('fieldset', { class: 'b-pick' },
+    rebuild(ruleBox, ...placeGroups(result.optionalRules, 'optional rules').flatMap(([label, rules]) => [h('p', { class: 'b-group' }, label), ...rules.map(r => h('fieldset', { class: 'b-pick' },
       h('legend', {}, `${r.name}, an optional rule (${r.class} ${r.at})`),
       h('div', { class: 'b-pick-text', html: blocks(r.lead) }),
       h('label', { class: 'b-check' }, h('input', { type: 'checkbox', 'data-key': `rule-${r.key}`, checked: r.taken || null, onchange: e => keep(r.key, was => ({ ...was, taken: e.target.checked })) }), ` Take ${r.name} (the DM turns it on)`),
@@ -572,7 +572,7 @@ export async function initBuilder(panel) {
       r.taken ? r.rites.map(rite => problemSlot(`optional:${r.key} ${rite.level}`)) : null,
       r.final ? [h('label', { class: 'b-field' }, h('span', {}, `The Final Rite (level ${r.final.level})`),
         h('select', { 'data-key': `rite-${r.key}-final`, 'aria-describedby': idFor(`optional:${r.key} final`), onchange: e => keep(r.key, was => ({ ...was, final: e.target.value })) }, options(r.final.offered, r.final.chosen, 'Resign, or the outcome rolled'))), problemSlot(`optional:${r.key} final`)] : null,
-      r.taken ? h('p', { class: 'b-note' }, `${r.boons.length ? `Ascendance: ${r.boons.length} of ${r.ascendance.length} boons. ` : ''}${r.carries ? `You carry the Monster${r.growth.length ? `, grown ${r.growth.length} of ${r.overgrowth.length} times` : ''}.` : 'You don’t carry the Monster.'}`) : null)));
+      r.taken ? h('p', { class: 'b-note' }, `${r.boons.length ? `Ascendance: ${r.boons.length} of ${r.ascendance.length} boons. ` : ''}${r.carries ? `You carry the Monster${r.growth.length ? `, grown ${r.growth.length} of ${r.overgrowth.length} times` : ''}.` : 'You don’t carry the Monster.'}`) : null))]));
   }
   // Wild Shape's known forms, by Challenge Rating; the Revelation a first
   // voyage walked; a name for each someone or somewhere a feature has the

@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "87856482c7ff04375bfb8e7c1495cbaa31528242bafa3fa4b267cb88f7ba9291",
-  "modified": "2026-11-22T05:40:30-05:00",
+  "sha256": "29ab5009d8c2d1f87bd21e683cb78d2e68a755c862daad300f3bfcaf4061f794",
+  "modified": "2026-11-22T07:01:17-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 41,
+  "exporter_version": 42,
   "rules": {
    "banned": [
     "eladrin",
@@ -4707,6 +4707,7 @@
    "optional_rules": [
     {
      "name": "The Monster Within",
+     "place": "font",
      "lead": "You heard the warnings against pushing the limits of Immortalism, and you did it anyway.\n\n*This optional rule is off unless the DM turns it on for a campaign about a healer and the monster inside, and even then only an Immortalist can take it. Every feature in this rule is a Physician feature.*\n\nOn this path you draw more deeply on the Font than is safe. You are tested at four points in your career and once more at the end. Each test you pass gives you power. The first test you fail puts the Monster in you, and each failure after that makes it stronger.\n\nThe Rites belong to the hospitals that found the Font by study, Lanternhall first among them, and the hospitals warn their students off them. They are no part of Nath or Daoist practice (see Immortalist).",
      "sections": [
       {

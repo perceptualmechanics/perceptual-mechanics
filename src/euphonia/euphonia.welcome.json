@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "87856482c7ff04375bfb8e7c1495cbaa31528242bafa3fa4b267cb88f7ba9291",
-  "modified": "2026-11-22T05:40:30-05:00",
+  "sha256": "29ab5009d8c2d1f87bd21e683cb78d2e68a755c862daad300f3bfcaf4061f794",
+  "modified": "2026-11-22T07:01:17-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 41,
+  "exporter_version": 42,
   "rules": {
    "banned": [
     "eladrin",
@@ -43,7 +43,7 @@
    "You are an exceptional person in a dynamic and changing world. A counsellor in the royal courts of Europe. An artificer plying their trade on the Monsoon Road on the Indian Ocean. A practitioner of healing magics in the halls of Constantinople. A weary Andean priest repelling a mercenary and Spanish raid on your home. A New England experimenter trying not to blow up his home (again). A hunter fighting sea monsters in the South Pacific. A disgraced alchemist breaking into a tomb in Beijing.",
    "Your talents, be they martial, magical or mental, set you apart and make you coveted by any number of powers and factions. Most adventurers end up bossing kings around. What if you work for those kings? What if you're opposed to them? Will you work for the common good? Will you try and walk the halls of power? Are you in it for the money? Or are there darker forces at work through you? Whatever your motivation, you are a power in a world at the crossroads of everything. What will you do with your power?"
   ],
-  "building": "**Building on Euphonia.** What the books only sketch is open for anyone to build on; the brief for developers is Appendix F: Building on Euphonia, and what each chapter leaves open is Open for Developers, the last chapter of this book. While the books are in draft, text in square brackets is first-draft flavor that anyone may keep or rewrite.",
+  "building": "**Building on Euphonia.** What the books only sketch is open for anyone to build on. The brief for developers is Appendix F: Building on Euphonia, and what each chapter leaves open is Open for Developers, the last chapter of this book. While the books are in draft, text in square brackets is first-draft flavor that anyone may keep or rewrite.",
   "moment": {
    "text": "**The lamp in the kitchen.** In Mutapa a lamp that lights itself is a household thing. In Vienna it's a duchess's toy, until she tires of it and it goes downstairs: Regina Mayrhofer, cook to a countess on the Herrengasse, works late under one now and swears by it. It dims a little every month, and the polite foreign tinker who comes to set it right asks a great many friendly questions about the house. What the ministries have just worked out about that lamp is the Mark of 1668, and what the tinker does with his questions is in Characters (Backgrounds, Mutapan Agent).",
    "where": "The Setting, Life in 1668, The Day"

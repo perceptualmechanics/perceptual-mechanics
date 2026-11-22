@@ -618,7 +618,7 @@ export function character(book, state) {
     const numbered = (text, title) => (text.match(new RegExp(`\\*\\*[^*]*${title}[^*]*\\*\\*[^\\n]*`))?.[0].split(/\*\*\(\d\)\*\*\s*/).slice(1) ?? []).map(x => x.replace(/[;.]\s*$/, '').trim());
     const rites = section('The Rites'), ascendance = numbered(rites, 'Ascendance'), overgrowth = numbered(rites, 'the Monster');
     const riteLevels = [at, ...(rites.match(/and again when you reach levels ([\d, and]+)/)?.[1].match(/\d+/g) ?? []).map(Number)].filter(l => c.level >= l);
-    const entry = { key, class: c.class, name: rule.name, at, lead: rule.lead, taken: Boolean(kept.taken), rites: [], ascendance, overgrowth, boons: [], growth: [], carries: false, final: null };
+    const entry = { key, class: c.class, name: rule.name, place: rule.place, at, lead: rule.lead, taken: Boolean(kept.taken), rites: [], ascendance, overgrowth, boons: [], growth: [], carries: false, final: null };
     optionalRules.push(entry);
     if (!entry.taken) continue;
     let passed = 0, failed = 0, declined = false;
