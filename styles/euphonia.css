@@ -184,7 +184,7 @@ body { background: var(--ground); font-family: var(--type); }
   margin-inline: calc(-1 * var(--gutter)); overflow: hidden;
   color: var(--ribbon-ink);
   font: 400 calc(1.5rem * sqrt(2))/1 var(--type);
-  text-transform: uppercase; letter-spacing: 0.06em;
+  letter-spacing: 0.06em;
   mask-image: linear-gradient(90deg, transparent, #000 4em, #000 calc(100% - 4em), transparent);
 }
 .ribbon-top { padding-block-end: var(--ribbon-below, 0); }

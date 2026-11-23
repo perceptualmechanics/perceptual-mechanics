@@ -45,14 +45,14 @@ if (button && upper && lower) {
     const cap = ink.measureText('H').actualBoundingBoxAscent;
     let above = 0, below = 0;
     for (const word of line.querySelectorAll('[lang]')) {
-      const m = ink.measureText(word.textContent.toLocaleUpperCase(word.lang));
+      const m = ink.measureText(word.textContent);
       above = Math.max(above, m.actualBoundingBoxAscent - cap);
       below = Math.max(below, m.actualBoundingBoxDescent);
     }
     top.style.setProperty('--ribbon-above', `${Math.ceil(above)}px`);
     top.style.setProperty('--ribbon-below', `${Math.ceil(below)}px`);
   };
-  document.fonts.load(`${fontSize} ${fontFamily}`, line.textContent.toUpperCase()).then(reach);
+  document.fonts.load(`${fontSize} ${fontFamily}`, line.textContent).then(reach);
   upper.addEventListener('scroll', follow, { passive: true });
   const offer = () => { button.hidden = still.matches; follow(); };
   still.addEventListener('change', offer);
