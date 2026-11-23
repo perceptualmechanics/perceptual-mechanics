@@ -97,8 +97,12 @@ export function ribbonOrder(words) {
 // A word as its language sets it in capitals, as the ribbons carry it. Greek
 // type drops a capital's accents and breathings (which toLocaleUpperCase
 // keeps, and no shipped face draws over a capital) but keeps its diaeresis.
+// Georgian's Mkhedruli has no capitals in running text: its Mtavruli are a
+// display alphabet, and browsers' text-transform leaves it be, as the ribbons
+// always have.
 const GREEK_MARKS = /[\u0300-\u0307\u0309-\u036f]/g;
 export const capitalOf = ({ word, lang }) => {
+  if (/^ka\b/.test(lang)) return word;
   const up = word.toLocaleUpperCase(lang);
   return /^(?:el|grc)\b/.test(lang) ? up.normalize('NFD').replace(GREEK_MARKS, '').normalize('NFC') : up;
 };
@@ -139,9 +143,9 @@ export function declaredFaces(css = read('styles/euphonia.css'), themes = THEMES
 // format characters (joiners, direction marks, soft hyphens), which only
 // shape or steer their neighbours.
 const inkOf = text => [...new Set(text.normalize('NFC'))].filter(c => c.trim() && !/\p{Cf}/u.test(c));
-// A word's, in its own case and in the capitals the ribbons set it in (in its
-// language's casing).
-const inked = (word, lang) => inkOf(word + word.toLocaleUpperCase(lang));
+// A word's, in its own case (the ribbons' page lists it so) and in the
+// capitals the ribbons set it in.
+const inked = (word, lang) => inkOf(word + capitalOf({ word, lang }));
 
 // Everything the page sets in type: the page's text, as the build makes it,
 // every string of the data it loads, and the ribbons' words in capitals. The
