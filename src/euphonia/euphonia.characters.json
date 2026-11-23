@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "ebdd24c71086ed0d22c1d0c6fb1ff3aba17cd6f2f14a92aa4653a3dc2df20507",
-  "modified": "2026-11-23T06:08:02-05:00",
+  "sha256": "5ae2a0eaa672ad2653ecc9cc09363d040da46de3add030643da64127057f16a7",
+  "modified": "2026-11-23T10:12:44-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -64,7 +64,7 @@
     ],
     "tool": "Gaming Set (playing cards)",
     "equipment": "Choose A or B: (A) Fine Clothes, Gaming Set (playing cards), Perfume, Signet Ring (5 GP), Dagger, Sealing Wax (5 SP), Ink, Ink Pen, 5 sheets of Parchment, 11 GP; or (B) 50 GP",
-    "about": "You grew up in a household that lived by a license: a court wizard's royal patent, or a minor noble's place at court. You carried the letters, sat at the gaming tables where posts are won and lost and learned who was about to fall before they did. You can read a room, forge a seal in a pinch and tell last year's lace from this year's, and the Children of the Emerald Tablet know your face. Counsellors, Wizards and Eldritch Knights (*Player's Handbook*) come out of these houses.",
+    "about": "You grew up in a household that lived by a license: a court wizard's royal patent, or a minor noble's place at court. You carried the letters, sat at the gaming tables where posts are won and lost, and learned who was about to fall before they did. You can read a room, forge a seal in a pinch and tell last year's lace from this year's, and the Children of the Emerald Tablet know your face. Counsellors, Wizards and Eldritch Knights (*Player's Handbook*) come out of these houses.",
     "door": "The house that raised you gets you into its court, and its servants still talk to you.",
     "debt": "Whoever holds that house's license now owns a piece of you, and your court's spymaster knows your debts."
    },
@@ -82,7 +82,7 @@
     ],
     "tool": "Herbalism Kit",
     "equipment": "Choose A or B: (A) Herbalism Kit, Healer's Kit, Quarterstaff, Book (charms and receipts), Traveler's Clothes, 10 Candles, Pouch, 12 GP; or (B) 50 GP",
-    "about": "You healed, found lost things and charmed warts and cattle out of the back room of a family business, because somebody had to. England calls your kind cunning folk; New Spain says curandero, and Kongo nganga. Like most of your kind you read; in England the law has let unlicensed herb-knowers treat external complaints since 1542. Your magic is Lanternhall's, without its protection: when a healer tells a court her skill came from the fairies, the court writes down the Devil. Your clients live at the edge, so you know the border too (the Hidden Domain, in *Life on the Border*). Druids, Clerics and Physicians who skipped the hospital come from here; the Physician's Hedge Witch is the model.",
+    "about": "You healed, found lost things and charmed warts and cattle out of the back room of a family business, because somebody had to. England calls your kind cunning folk; New Spain says curandero, and Kongo nganga. Like most of your kind, you read; in England the law has let unlicensed herb-knowers treat external complaints since 1542. Your magic is Lanternhall's, without its protection: when a healer tells a court her skill came from the fairies, the court writes down the Devil. Your clients live at the edge, so you know the border too (the Hidden Domain, in *Life on the Border*). Druids, Clerics and Physicians who skipped the hospital come from here; the Physician's Hedge Witch is the model.",
     "door": "Your network knows who's safe and who's informing in any district, and hides its own.",
     "debt": "You're unlicensed, and someone can prove it."
    },
@@ -124,7 +124,7 @@
     ],
     "tool": "Tinker's Tools",
     "equipment": "Choose A or B: (A) Tinker's Tools; or (B) 50 GP",
-    "about": "You work abroad for Mutapa, under the cover it gives its people: a Mhizha taught you to retune curiosities (Mutapan Curiosities, below). Every Mutapan lamp in a Viennese drawing room drifts, so a quiet technician with Tinker's Tools enters any great house in Europe and is thanked for it. What you carry home is what you saw. Mutapa's spymaster is brilliant and badly resourced, and her service runs on people like you. You may be a Shona clerk of the House of the Bird, Mutapa's bank, a Khoekhoe go-between from Hoerikwaggo or a foreigner recruited at Sofala; loyal, bought or both. Mhizha, Counsellors and Rogues come this way.",
+    "about": "You work abroad for Mutapa, under the cover it gives its people: a Mhizha taught you to retune curiosities (Mutapan Curiosities, below). Every Mutapan lamp in a Viennese drawing room drifts, so a quiet technician with Tinker's Tools enters any great house in Europe and is thanked for it. What you carry home is what you saw. Mutapa's spymaster is brilliant and badly resourced, and her service runs on people like you. You may be a Shona clerk of the House of the Bird (Mutapa's bank), a Khoekhoe go-between from Hoerikwaggo or a foreigner recruited at Sofala; loyal, bought or both. Mhizha, Counsellors and Rogues come this way.",
     "door": "Any house that owns a curiosity lets you in to retune it, and thanks you.",
     "debt": "Mutapa's spymaster expects a report."
    },
@@ -142,7 +142,7 @@
     ],
     "tool": "Cook's Utensils",
     "equipment": "Choose A or B: (A) Light Crossbow, 20 Bolts, Handaxe, Dagger, Cook's Utensils, Traveler's Clothes, Rope, 13 GP; or (B) 50 GP",
-    "about": "You signed articles. Before every cruise the Brethren of the Coast at Port Royal and Tortuga write the terms: the captain's share, the surgeon's, a payment set down for each limb or eye lost and no prey, no pay. You voted on the captain and smoked beef over a boucan, which is where the name comes from. No license sails with the Brethren, and the witch who can raise a wind draws a full share. Fighters, Rogues, Rangers and Storm Sorcerers come off these ships, and the odd Cleric who found the Brethren more honest than the bishop.",
+    "about": "You signed articles. Before every cruise the Brethren of the Coast at Port Royal and Tortuga write the terms: the captain's share, the surgeon's, a payment set down for each limb or eye lost, and no prey, no pay. You voted on the captain and smoked beef over a boucan, which is where the name comes from. No license sails with the Brethren, and the witch who can raise a wind draws a full share. Fighters, Rogues, Rangers and Storm Sorcerers come off these ships, and the odd Cleric who found the Brethren more honest than the bishop.",
     "door": "Any free port's taverns know the articles you signed, and a crew there will take you on.",
     "debt": "Spain wants you hanged, and every governor who used you will eventually agree."
    },
@@ -268,7 +268,7 @@
     ],
     "tool": "Choose one kind of Musical Instrument",
     "equipment": "Choose A or B: (A) Musical Instrument (same as above), Costume, Mirror, Traveler's Clothes, Bedroll, Tinderbox, Pouch, 24 GP; or (B) 50 GP",
-    "about": "You perform for a living: songs at weddings, stories in a coffeehouse, tumbling in a square, the mbira at an all-night bira where the ancestors are called, hula for a chief on Hawaiʻi, a Kazakh akyn's sung contest at the autumn pasture. In Venice the mountebanks of the Piazza San Marco sell cures between their acts, and gave Europe the word charlatan. Women perform everywhere, and since 1660 they have acted on London's stage as well as on those of Paris and Venice. Music is also the oldest road to the Hidden: the best players get asked to play for them, and some come back (Taken, above). Bards, Courtiers of the College of Verse, Warlocks whose patron heard them play, Danae who learned to cross roofs in front of a crowd and Barbarians who dance before they fight come from here.",
+    "about": "You perform for a living: songs at weddings, stories in a coffeehouse, tumbling in a square, the mbira at an all-night bira where the ancestors are called, hula for a chief on Hawaiʻi, a Kazakh akyn's sung contest at the autumn pasture. In Venice the mountebanks of the Piazza San Marco sell cures between their acts, and gave Europe the word *charlatan*. Women perform everywhere, and since 1660 they have acted on London's stage as well as on those of Paris and Venice. Music is also the oldest road to the Hidden: the best players get asked to play for them, and some come back (Taken, above). Bards, Courtiers of the College of Verse, Warlocks whose patron heard them play, Danae who learned to cross roofs in front of a crowd and Barbarians who dance before they fight come from here.",
     "door": "Any fair, festival or great hall makes room for you, and the other performers there share their news and their supper.",
     "debt": "The troupe, the patron or the teacher who made you wants a share of everything you earn."
    },

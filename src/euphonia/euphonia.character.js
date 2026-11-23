@@ -42,6 +42,9 @@ const NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 
 const number = s => (s === '—' || s === '–' || s === undefined ? 0 : Number(String(s).replace(/[,+]/g, '').replace('−', '-')));
 const list = s => s.replace(/\*/g, '').split(/,\s*(?:or\s+|and\s+)?|\s+(?:or|and)\s+/).map(x => x.trim()).filter(Boolean);
 const trait = (c, name) => c.traits.find(t => t.trait === name)?.value ?? '';
+// What a feature says a firearm is ("A firearm is a Pistol, a Musket or a
+// period firearm …", with or without the comma before "or"): the named ones.
+const firearmsIn = text => text?.match(/A firearm is (.+?),? or a period firearm/)?.[1].split(/,\s*/).map(x => x.replace(/^an? /, '')) ?? [];
 const listed = (items, word = 'and') => (items.length < 3 ? items.join(` ${word} `) : `${items.slice(0, -1).join(', ')} ${word} ${items.at(-1)}`);
 
 // A class's skill choice, as either export words it: "Choose 2: A, B, or C",
@@ -664,12 +667,12 @@ export function character(book, state) {
   // Bolt*, then …", "- *Infiltrator model.* …").
   const kindChoices = [];
   for (const f of [...features]) {
-    const named = f.text.match(/(?:^|[.!]\s+)Choose (?:an? |one of (?:those|these) )([a-z ]+?): ((?:[A-Z][\w']*(?: [A-Z][\w']*)*, )+or [A-Z][\w']*(?: [A-Z][\w']*)*)\./);
+    const named = f.text.match(/(?:^|[.!]\s+)Choose (?:an? |one of (?:those|these) )([a-z ]+?): ((?:[A-Z][\w']*(?: [A-Z][\w']*)*, )+[A-Z][\w']*(?: [A-Z][\w']*)*,? or [A-Z][\w']*(?: [A-Z][\w']*)*)\./);
     const pair = f.text.match(/(?:^|[.!]\s+)Choose the (\w+) (\w+) or the (\w+) \2\./);
     const typed = f.text.match(/(?:^|[.!]\s+)Choose (?:one|a) damage type(?!:)(?:, other than ([^,.]+),)?/);
     const rested = f.text.match(/(?:^|[.!]\*?\s+)When you finish a Long Rest, choose the [\w’']+ (\w+), ([A-Z]\w+) or ([A-Z]\w+)\./);
     const yours = f.text.match(/(?:^|[.!]\*?\s+)When you finish a Long Rest, choose one of your (\w+):/);
-    const defined = yours && features.filter(x => x.class === f.class).map(x => x.text.match(new RegExp(`((?:[A-Z]\\w+, )+or [A-Z]\\w+)\\. These are your \\*\\*${yours[1]}\\*\\*`))).find(Boolean);
+    const defined = yours && features.filter(x => x.class === f.class).map(x => x.text.match(new RegExp(`((?:[A-Z]\\w+, )+[A-Z]\\w+,? or [A-Z]\\w+)\\. These are your \\*\\*${yours[1]}\\*\\*`))).find(Boolean);
     if (!named && !pair && !typed && !rested && !defined) continue;
     // "One of those types" asks for one type; so does a choice among damage
     // types a feature names as yours.
@@ -1240,7 +1243,7 @@ export function character(book, state) {
     // that energy's spells (its kind, under the feature's key).
     if (/picking each one from any of the \w+ sets/.test(f.text)) {
       const sets = [...f.text.matchAll(/^> \*\*(\w+)\.\*\* \*([^*]+)\*.*?then \*([^*]+)\*/gm)].map(m => ({ type: m[1], spells: [m[2], ...m[3].replace(/\.$/, '').split(/\s*·\s*/)] }));
-      const swap = f.text.match(/for another spell of the same level that deals ((?:\w+, )+or \w+) damage, from the (.+?) spell lists?\./);
+      const swap = f.text.match(/for another spell of the same level that deals ((?:\w+, )+\w+,? or \w+) damage, from the (.+?) spell lists?\./);
       const types = swap ? list(swap[1]) : [], lists = swap ? swap[2].split(/,\s*(?:or\s+)?|\s+or\s+/) : [];
       const pool = [...new Map([...lists.flatMap(n => book.classNamed(n)?.spellList ?? []), ...[...book.spellFacts.values()].filter(sp => sp.classes?.some(n => lists.includes(n)))].map(sp => [sp.name, sp])).values()]
         .filter(sp => types.some(t => book.spellFacts.get(sp.name)?.damage.includes(t)));
@@ -1477,7 +1480,7 @@ export function character(book, state) {
   for (const f of features) {
     // Or one kind ("the mastery property of one kind of crossbow or firearm
     // you're proficient with"), a firearm what the feature says one is ("A
-    // firearm is a Pistol, a Musket, or …").
+    // firearm is a Pistol, a Musket or …").
     const m = f.text.match(/use the mastery properties of (\w+) kinds of (.+?) of your choice( with which you have proficiency)?/)
       ?? f.text.match(/use the mastery property of (one) kind of ((?:weapon|crossbow|firearm)(?: or (?:crossbow|firearm))?)( you're proficient with)/);
     if (!m) continue;
@@ -1486,7 +1489,7 @@ export function character(book, state) {
     const column = c.rules.table.columns.includes('Weapon Mastery') ? number(c.rules.table.rows[c.level - 1]?.['Weapon Mastery']) : 0;
     const count = column || NUMBERS.indexOf(m[1]);
     if (count < 1) throw new Error(`${f.name}: a count the builder doesn't read: "${m[1]}"`);
-    const firearms = f.text.match(/A firearm is (.+?), or a period firearm/)?.[1].split(/,\s*/).map(x => x.replace(/^an? /, '')) ?? [];
+    const firearms = firearmsIn(f.text);
     const named = /crossbow|firearm/.test(m[2]) ? w => (/crossbow/.test(m[2]) && /Crossbow/.test(w.name)) || (/firearm/.test(m[2]) && firearms.includes(w.name)) : null;
     const kind = named ? [] : m[2].match(/^(?:(Simple|Martial)(?: or (Simple|Martial))? )?(?:(Melee|Ranged) )?(?:(Slashing|Piercing|Bludgeoning) )?weapons?$/);
     if (!kind) throw new Error(`${f.name}: "${m[2]}", weapons the builder doesn't read`);
@@ -1639,7 +1642,7 @@ export function character(book, state) {
   // Spell attacks and DCs, by class ("of your Revelator spells") or every
   // class's ("a +2 bonus to spell attack rolls").
   const castingBoosts = inUse.flatMap(i => {
-    const m = said(i, /(?:a \+(\d+) bonus|a bonus(?:, determined by the item[’']s rarity,)?) to (?:spell attack rolls and to the saving throw DCs|the attack rolls and saving throw DCs|attack rolls with [^,]+, [^,]+, and [^,]+, and to the spell attack rolls and spell save DCs) of your (\w+) spells/);
+    const m = said(i, /(?:a \+(\d+) bonus|a bonus(?:, determined by the item[’']s rarity,)?) to (?:spell attack rolls and to the saving throw DCs|the attack rolls and saving throw DCs|attack rolls with [^.]+?, and to the spell attack rolls and spell save DCs) of your (\w+) spells/);
     const any = said(i, /a \+(\d+) bonus to spell attack rolls\b(?! and)/);
     const both = said(i, /Your spell save DC and spell attack bonus each increase by (\d+)/);
     const focus = said(i, /doesn[’']t stack with another (\w+) focus[’']s bonus/)?.[1];
@@ -1832,7 +1835,7 @@ export function character(book, state) {
   // lineage's ("You also know the Poison Spray cantrip"), a trait's own ("You
   // know the Thaumaturgy cantrip … the same spellcasting ability you use for
   // your Fiendish Legacy trait"), the feat's chosen ones.
-  const ABILITY_CHOICE = /(\w+), (\w+), or (\w+) is your spellcasting ability for (?:the spells you cast with this trait|this feat[’']s spells)/;
+  const ABILITY_CHOICE = /(\w+), (\w+),? or (\w+) is your spellcasting ability for (?:the spells you cast with this trait|this feat[’']s spells)/;
   const abilityChoices = [];
   const askAbility = (key, label, text) => {
     const m = text.match(ABILITY_CHOICE);
@@ -1879,7 +1882,7 @@ export function character(book, state) {
   const signedMod = n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : '');
   const f0 = t => t[0].toUpperCase() + t.slice(1);
   const atLevel = (c, column) => { const k = known.find(x => x.class === c); return k?.rules.table.rows[k.level - 1]?.[column] ?? null; };
-  const firearms = features.map(f => f.text.match(/A firearm is (.+?), or a period firearm/)?.[1]).find(Boolean)?.split(/,\s*/).map(x => x.replace(/^an? /, '')) ?? [];
+  const firearms = firearmsIn(features.find(f => firearmsIn(f.text).length)?.text);
   const mastered = masteryChoices.flatMap(c => c.chosen.map(w => w.name));
   // What a phrase names: "a Simple weapon", "a Martial weapon that has the
   // Finesse or Light property", "a crossbow", "a firearm", "a weapon whose

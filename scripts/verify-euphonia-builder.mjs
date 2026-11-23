@@ -608,7 +608,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (!(suitAc && lionskin?.armor?.name === 'Powered Suit' && lionskin.armor.madeFrom === 'Scale Mail' && !lionskin.shield && lionskin.armorClass.ac === suitAc && lionskin.training.includes('Heavy') && lionskin.stealthDisadvantage))
     fail(`a Lionskin wears ${JSON.stringify(lionskin && { armor: lionskin.armor?.name, madeFrom: lionskin.armor?.madeFrom, shield: lionskin.shield, ac: lionskin.armorClass, training: lionskin.training })}, not its suit at ${suitAc} without a Shield`);
   const chirurgeon = run(someone([{ class: 'Physician', level: 3, subclass: 'Chirurgeon' }]), 'Chirurgeon 3');
-  const theatre = featureText('Physician', 'Chirurgeon', 'Theatre Training').match(/following Martial weapons: (.+?)\./)?.[1].replace(/\bthe /g, '').split(/,(?: and)? /) ?? [];
+  const theatre = featureText('Physician', 'Chirurgeon', 'Theatre Training').match(/following Martial weapons: (.+?)\./)?.[1].replace(/\bthe /g, '').split(/,\s*(?:and\s+)?|\s+and\s+/) ?? [];
   const missing = theatre.filter(n => !chirurgeon?.proficientWeapons.some(w => w.name === n));
   if (!theatre.length || missing.length || !['Medium', 'Shield'].every(t => chirurgeon?.training.includes(t)))
     fail(`a Chirurgeon's Theatre Training: training ${chirurgeon?.training.join(', ')}; ${theatre.length ? `not proficient with ${missing.join(', ') || 'nothing missing'}` : 'its weapons aren\'t read'}`);
