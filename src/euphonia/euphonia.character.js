@@ -1991,11 +1991,17 @@ export function character(book, state) {
       const type = f.text.match(/If you have no vista open, it[’']s (\w+) damage/)?.[1];
       return [{ name: f.name, kind: 'feature', ability: sc?.ability ?? planarDice[2], bonus: sc?.attack ?? mod[planarDice[2]] + bonus, proficient: true, damage: `${dice}${signedMod(n * mod[planarDice[2]])} ${type ? `${type}, or your open vista's type` : 'by your vista'}`, versatile: null, reach: `reach ${planar[1]} feet, or ${planar[2]} feet`, mastery: null }];
     }
-    const m = f.text.match(/make a ranged attack roll using (\w+) against a creature or object within (\d+) feet of yourself, adding your Proficiency Bonus\. On a hit, the target takes (\w+) damage equal to the dice shown in the ([\w ]+) column of the \w+ Features table plus your \1 modifier/);
+    // A shot that's a spell attack with the class's modifier ("you fire the
+    // Arc Gun: make a ranged spell attack with your Mhizha spell attack
+    // modifier …"): the casting's attack, so its spell-attack items with it,
+    // and an item's bonus to the shot alone where the casting hasn't counted
+    // it already (the Tuned Arc Gun's one bonus is to both).
+    const m = f.text.match(/make a ranged spell attack with your (\w+) spell attack modifier against a creature or object within (\d+) feet of you\. On a hit, the target takes (\w+) damage equal to the dice in the ([\w ]+) column of the \w+ Features table plus your (\w+) modifier/);
     if (!m) return [];
     reads(f);
-    const tuned = featureBoosts.filter(b => b.attack === f.name).reduce((n, b) => n + b.n, 0);
-    return [{ name: f.name, kind: 'feature', ability: m[1], bonus: mod[m[1]] + bonus + tuned, proficient: true, damage: `${atLevel(f.class, m[4])}${signedMod(mod[m[1]])} ${m[3]}`, versatile: null, reach: `${m[2]} feet`, mastery: null }];
+    const sc = spellcasting.find(x => x.class === m[1]);
+    const own = featureBoosts.filter(b => b.attack === f.name && !sc?.items?.includes(b.name)).reduce((n, b) => n + b.n, 0);
+    return [{ name: f.name, kind: 'feature', ability: sc?.ability ?? m[5], bonus: (sc?.attack ?? mod[m[5]] + bonus) + own, proficient: true, damage: `${atLevel(f.class, m[4])}${signedMod(mod[m[5]])} ${m[3]}`, versatile: null, reach: `${m[2]} feet`, mastery: null }];
   });
   const spellAttacks = spellcasting.filter(sc => sc.ability).flatMap(sc => {
     const pick = spellChoices.find(x => x.key === sc.class);

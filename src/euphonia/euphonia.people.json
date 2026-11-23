@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "92b7256014c171aead0f27a3b3f49a26b31ab656dcd7aae9a52232aa5d0ca388",
-  "modified": "2026-11-23T10:42:05-05:00",
+  "sha256": "60a673ba1935ade3824df2cbfa41018601048e962b948303b1a7ea0e30704539",
+  "modified": "2026-11-23T14:15:30-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -49,7 +49,7 @@
      },
      {
       "name": "Zanetta Bon",
-      "text": "A halfling carnival masker of the Giudecca who forged health passes, went into the Hidden and came home able to fold space. In Carnival she sits masked in a bauta at the Ridotto's faro table, losing small sums to a sergeant of the Ten's men. She wants her own file out of the Ten's archive, to read what they think she is. The Venice Job's way in and its way out, and the Crossing Danae on Venice's rooftops; what she owes the Hidden for the doors, she keeps to herself.",
+      "text": "A halfling carnival masker of the Giudecca who forged health passes, went into the Hidden and came home able to fold space. In Carnival she sits masked in a bauta at the Ridotto's bassetta table, losing small sums to a sergeant of the Ten's men. She wants her own file out of the Ten's archive, to read what they think she is. The Venice Job's way in and its way out, and the Crossing Danae on Venice's rooftops; what she owes the Hidden for the doors, she keeps to herself.",
       "at": {
        "name": "Venice",
        "modern": "Venice",
