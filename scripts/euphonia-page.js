@@ -3,7 +3,7 @@ import { euphoniaFiles } from './verify-euphonia.mjs';
 import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
 import { worldData, fixturesData, calendarsData, reliefData, rosesData, bordersData } from './verify-euphonia-map.mjs';
-import { ribbonOrder, tonguesData } from './verify-euphonia-tongues.mjs';
+import { ribbonLine, tonguesData } from './verify-euphonia-tongues.mjs';
 import { THEMES, THEME_KEY, THEME_PARAM } from '../src/euphonia/euphonia.themes.js';
 import { DRAFT_NOTE_HTML } from './euphonia-draft-note.mjs';
 
@@ -181,7 +181,7 @@ ${hasReading() ? '<button type="button" role="tab" id="tab-reading" aria-control
 // reaches; the bottom only repeats it, so it's hidden from them.
 function ribbons(regions, tongues) {
   const order = regions.map(r => r.name);
-  const words = ribbonOrder([...tongues.tongues].sort((a, b) => order.indexOf(a.region) - order.indexOf(b.region)));
+  const words = ribbonLine(regions, tongues);
   const item = t => `<li><span lang="${esc(t.lang)}" title="${esc(`${t.language}: ${t.sense}`)}">${esc(t.word)}</span></li>`;
   const list = words.map(item).join(''), back = words.toReversed().map(item).join('');
   const names = order.filter(name => words.some(t => t.region === name));

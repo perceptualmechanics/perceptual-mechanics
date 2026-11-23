@@ -23,7 +23,7 @@
     "verify-euphonia-srd": "node scripts/verify-euphonia-srd.mjs",
     "verify-euphonia-builder": "node scripts/verify-euphonia-builder.mjs",
     "euphonia:effects": "node scripts/euphonia-effects.mjs",
-    "euphonia:refresh": "python3 \"${CLASS_KIT:-$HOME/Documents/class-kit}/site_export.py\" src/euphonia --sheets public/euphonia/sheets && node scripts/verify-euphonia.mjs"
+    "euphonia:refresh": "python3 \"${CLASS_KIT:-$HOME/Documents/class-kit}/site_export.py\" src/euphonia --sheets public/euphonia/sheets && node scripts/verify-euphonia.mjs && node scripts/euphonia-ribbon.mjs"
   },
   "dependencies": {
     "bardjs": "*",
