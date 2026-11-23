@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "29ab5009d8c2d1f87bd21e683cb78d2e68a755c862daad300f3bfcaf4061f794",
-  "modified": "2026-11-22T07:01:17-05:00",
+  "sha256": "ebdd24c71086ed0d22c1d0c6fb1ff3aba17cd6f2f14a92aa4653a3dc2df20507",
+  "modified": "2026-11-23T06:08:02-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -1357,7 +1357,7 @@
      },
      {
       "name": "Amritnath",
-      "text": "A Nath yogi who has stopped aging and no longer needs food, water or air, and takes all three out of courtesy. At dawn he sits at his *dhuni* on the pilgrim road above the Ganges plain, and lets the raja's men who come to ask how to live forever wait until noon. He gives the old inoculation against smallpox to anyone who sits still, and wants the last *siddhi*, the deathless body. A mentor, or a foil to Lanternhall's Ilyanor Sael, who stopped reaching for the same thing.",
+      "text": "A yogi of the Sandhyānāthāha who has stopped aging and no longer needs food, water or air, and takes all three out of courtesy. At dawn he sits at his *dhuni* on the pilgrim road above the Ganges plain, and lets the raja's men who come to ask how to live forever wait until noon. He gives the old inoculation against smallpox to anyone who sits still, and wants the last *siddhi*, the deathless body. A mentor, or a foil to Lanternhall's Ilyanor Sael, who stopped reaching for the same thing.",
       "at": {
        "name": "the pilgrim road",
        "modern": "Dehra Dun",
@@ -1482,7 +1482,7 @@
        "country": "India"
       },
       "anchor": "place-india-the-pilgrim-road",
-      "text": "Above the Ganges plain the Naths, Shaiva yogis, pursue a deathless body through yoga and alchemy, and the powers folk belief credits them with are real here (Magic Here).",
+      "text": "Above the Ganges plain the Naths, Shaiva yogis, pursue a deathless body through yoga and alchemy, and in a few of them, the Sandhyānāthāha, the powers folk belief credits them with are real (Magic Here).",
       "people": [
        "Amritnath"
       ]
@@ -1619,7 +1619,7 @@
      },
      {
       "name": "Tachibana Chiyo",
-      "text": "An aasimar shrine priestess in a mountain province of Japan, born with the light in her, who is sent for when a child is lost at dusk (see The Hidden Here). She wants the province to send a second priestess before a child is lost on a night when she is already out. An ally for a child hidden by the kami, or by something that isn't one.",
+      "text": "A shrine priestess in a mountain province of Japan, an angel-touched divine-blood (Peoples, Divine-Bloods) born with the light in her, who is sent for when a child is lost at dusk (see The Hidden Here). She wants the province to send a second priestess before a child is lost on a night when she is already out. An ally for a child hidden by the kami, or by something that isn't one.",
       "at": {
        "name": "the mountain shrine",
        "modern": "Tsuruoka",
@@ -3565,7 +3565,7 @@
    },
    {
     "name": "Amritnath",
-    "line": "A Nath yogi who has stopped aging and no longer needs food, water or air, and takes all three out of courtesy.",
+    "line": "A yogi of the Sandhyānāthāha who has stopped aging and no longer needs food, water or air, and takes all three out of courtesy.",
     "region": "India",
     "place": "The pilgrim road",
     "anchor": "place-india-the-pilgrim-road",
@@ -3710,7 +3710,7 @@
    },
    {
     "name": "Tachibana Chiyo",
-    "line": "An aasimar shrine priestess in a mountain province of Japan, born with the light in her, who is sent for when a child is lost at dusk (see The Hidden Here).",
+    "line": "A shrine priestess in a mountain province of Japan, an angel-touched divine-blood (Peoples, Divine-Bloods) born with the light in her, who is sent for when a child is lost at dusk (see The Hidden Here).",
     "region": "East and Southeast Asia",
     "place": "The mountain shrine",
     "anchor": "place-east-and-southeast-asia-the-mountain-shrine",

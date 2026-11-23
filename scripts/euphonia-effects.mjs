@@ -36,7 +36,11 @@ export function effectsOf(engine, book) {
   for (const c of book.classes) for (const subclass of [undefined, ...c.subclasses.map(s => s.name)]) {
     const state = someone([{ class: c.name, level: MAX, subclass }]), key = `${c.name}${subclass ? `, ${subclass}` : ''}`;
     out[key] = build(state);
-    for (const k of engine.character(book, state).kindChoices) for (const offered of k.offered) out[`${key}, ${offered}`] = without(build({ ...state, kinds: { [k.key]: offered } }), out[key]);
+    const made = engine.character(book, state);
+    for (const k of made.kindChoices) for (const offered of k.offered) out[`${key}, ${offered}`] = without(build({ ...state, kinds: { [k.key]: offered } }), out[key]);
+    // Picks offered from sets (the Attunements), each set taken at every level.
+    const picks = made.swapChoices.filter(p => p.from);
+    for (const set of new Set(picks.flatMap(p => Object.values(p.from)))) out[`${key}, ${set} set`] = without(build({ ...state, swaps: Object.fromEntries(picks.map(p => [p.key, Object.keys(p.from).find(n => p.from[n] === set)])) }), out[key]);
   }
   const plain = someone([{ class: 'Fighter', level: ITEM_LEVEL }]), base = build(plain);
   for (const b of book.backgrounds.filter(x => x.source === 'Euphonia')) out[`Background: ${b.name}`] = without(build({ ...plain, background: b.name }), base);

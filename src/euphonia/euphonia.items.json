@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "29ab5009d8c2d1f87bd21e683cb78d2e68a755c862daad300f3bfcaf4061f794",
-  "modified": "2026-11-22T07:01:17-05:00",
+  "sha256": "ebdd24c71086ed0d22c1d0c6fb1ff3aba17cd6f2f14a92aa4653a3dc2df20507",
+  "modified": "2026-11-23T06:08:02-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -644,6 +644,152 @@
     "text": "- **House Ledger (Factor).** In any settlement where your house has standing, once a week you can draw on credit up to 50 GP times your Counsellor level without coin changing hands; the house settles it, and you owe the house. While you hold the ledger and handle an object for 1 minute, you know what it last sold for and roughly where.\n- **Marked Deck (Gamester).** You have Advantage on any ability check you make with a Gaming Set. In addition, once per Long Rest, when you roll your computation die, you can roll it twice and use either result.\n- **Mask of Manners (Hollowed).** While you wear the mask (it lies against your face and can't be seen), your face shows whatever expression you choose, and Wisdom (Insight) checks to read you have Disadvantage.\n- **Skeleton Keys (Majordomo).** You have Advantage on ability checks you make with Thieves' Tools. In addition, once per Long Rest, you can open a nonmagical lock you touch with them, silently and without a check.\n- **Baton of Command (Marshal).** Once per Long Rest, when you use Direct, you can choose two allies instead of one. While you hold the baton, troops who can see you know what you want of them without being told.\n- **Dead Drop (Spymaster).** A pair of small lockboxes, each about the size of a book. You can open one and place up to 1 pound of objects inside; when it's closed, they're in the other box, wherever it is on the same plane. Once you send something, you can't do so again until the next dawn."
    },
    {
+    "name": "The Gift Sword",
+    "kind": "Weapon",
+    "base": "Any Weapon with the Finesse Property",
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Legendary",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Courtier"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Courtier",
+     "subclass": null,
+     "section": "Courtier Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "You gain a +3 bonus to attack and damage rolls made with this magic weapon.\n\n- **Dress Sword.** At any court or great house, no one asks you to give the sword up. It is taken as part of your dress, and wearing it where no one else may go armed reads as favor, not threat.\n- **Telling.** Your Telling Cut die is one size larger while you wield the sword (a d4 becomes a d6, and a d10 a d12).\n- **The Salute.** When you roll Initiative, you can salute one creature you can see with the sword, and the sword insists that you do it properly. The first time you salute after a Long Rest, you also regain all your expended Ease. Until the fight ends, you can spend Ease regained this way only on the creature you saluted, or against its attacks. Whatever is left becomes ordinary Ease again when the fight ends.\n- **The Sword's Lessons.** The sword has taught every college, and it helps you in the way of yours. Each lesson works only against the creature you saluted in this fight.\n  - **Point in Line (Arms).** The sword has fenced for kings, and it knows the line. When you use The Riposte against the creature you saluted, the sword guides your point, and the attack deals extra damage equal to one roll of your Telling Cut die.\n  - **The Flash of the Blade (Art).** At your salute, the sword catches the light and holds it on your opponent. The creature you saluted is lit, as with Highlight's *Lit*, until the fight ends. This costs no Ease and no action, and it works alongside a painting of your own.\n  - **Composure of the Blade (Grace).** The sword won't let a guest of yours be struck rudely. Once on each turn, when the creature you saluted hits you, or an ally within 10 feet of you, with an attack roll, you can use Not a Hair Out of Place (or A Word in Time) without taking a Reaction. You still spend its Ease.\n  - **Reading the Opponent (Psyche).** The sword has watched a thousand duellists decide to strike, and it tells you first. When the creature you saluted makes an attack roll, you can take a Reaction to Stir it before the roll, at Stir's usual cost.\n  - **Touché (Verse).** The sword loves a good line and makes sure everyone hears it land. The first time on each of your turns that you deal damage to the creature you saluted, it has Disadvantage on its next attack roll against anyone other than you before the start of your next turn.\n- **Sworn on the Blade.** When an agreement is witnessed (Witnessed) with the sword in your hand, its terms appear faintly along the blade, and stay there until the agreement is kept or broken.\n\n**Sentience.** The Gift Sword is a woken thing (*The Setting*, Magic, Regarded Things), and no two are alike: each carries the taste of the court that gave it and of every hand that has worn it since. It's a sentient Chaotic Neutral or Lawful Neutral weapon (the giver's court decides) with an Intelligence of 14, a Wisdom of 12 and a Charisma of 18. It has hearing and normal vision out to 60 feet, and it speaks to you alone, in a voice no one else hears, in every language its past owners spoke.\n\n- **Etiquette Master.** The sword knows the manners of every court it has passed through, and it tells you before you make a mistake. You have Advantage on any ability check to know or follow the customs, precedence or forms of address of a court, a great house or a formal occasion, and you're never surprised by a breach of etiquette made in front of you.\n- **Purpose.** The sword wants you to be worthy of the gift. It approves of courage, wit and good form, and it's mortified by cowardice, crudeness and a broken word. When you act against its taste in public, the sword sulks: until you finish a Long Rest or make amends, it gives you no advice and Etiquette Master doesn't work."
+   },
+   {
+    "name": "Keepsakes of the Colleges",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Uncommon",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Courtier of the Keepsake's College"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Courtier",
+     "subclass": null,
+     "section": "Courtier Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [
+     {
+      "subclass": "Arms",
+      "name": "Second's Gloves",
+      "text": "When you use The Riposte against the creature you've challenged, it costs no Ease. Once the gloves have saved you Ease, they can't do so again until you finish a Short or Long Rest. When you stand second at a duel, you know whether either party carries a hidden weapon or a poisoned blade."
+     },
+     {
+      "subclass": "Art",
+      "name": "Camera Obscura",
+      "text": "You can carry two more likenesses (The Likeness). In a darkened room, the box can throw onto a wall the scene its lens faced at any moment in the last hour, in color and upside down, and hold it for 10 minutes while you paint."
+     },
+     {
+      "subclass": "Grace",
+      "name": "Commonplace Book",
+      "text": "At dawn you can speak two maxims instead of one (A Maxim a Day), each with its own use. When a host receives you, you know the names, ranks, and one current quarrel of everyone at the table before you sit down."
+     },
+     {
+      "subclass": "Psyche",
+      "name": "The Passions, Drawn",
+      "text": "When you see which passion is strongest in a creature (Wanting and Fearing), you also learn in a word or two what it's about: whom it fears, or what it wants. Once per Short or Long Rest, you can Settle a creature without spending Ease."
+     },
+     {
+      "subclass": "Verse",
+      "name": "Prompt Book",
+      "text": "Once per Short or Long Rest, you can put on a mask (The Mask) without spending Ease. Any play you have read in it, you know by heart, and a player you hand it to overnight knows any one part by morning."
+     }
+    ],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "- **Second's Gloves (Arms).** When you use The Riposte against the creature you've challenged, it costs no Ease. Once the gloves have saved you Ease, they can't do so again until you finish a Short or Long Rest. When you stand second at a duel, you know whether either party carries a hidden weapon or a poisoned blade.\n- **Camera Obscura (Art).** You can carry two more likenesses (The Likeness). In a darkened room, the box can throw onto a wall the scene its lens faced at any moment in the last hour, in color and upside down, and hold it for 10 minutes while you paint.\n- **Commonplace Book (Grace).** At dawn you can speak two maxims instead of one (A Maxim a Day), each with its own use. When a host receives you, you know the names, ranks, and one current quarrel of everyone at the table before you sit down.\n- **The Passions, Drawn (Psyche).** When you see which passion is strongest in a creature (Wanting and Fearing), you also learn in a word or two what it's about: whom it fears, or what it wants. Once per Short or Long Rest, you can Settle a creature without spending Ease.\n- **Prompt Book (Verse).** Once per Short or Long Rest, you can put on a mask (The Mask) without spending Ease. Any play you have read in it, you know by heart, and a player you hand it to overnight knows any one part by morning."
+   },
+   {
+    "name": "Patch Box",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Common",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": null,
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Courtier",
+     "subclass": null,
+     "section": "Courtier Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "The box makes patches, and the patches talk. When you set one on your face, you can fix a short message of up to twelve words to where it sits. Anyone who carries a box made with this one reads the message at a glance. Anyone else sees a patch, and an opinion about your taste."
+   },
+   {
+    "name": "Vizard",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Uncommon",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": null,
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Courtier",
+     "subclass": null,
+     "section": "Courtier Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "While you wear the vizard, no one can recognize you by your face or your voice unless you allow it, and magic that would tell who you are, short of *True Seeing*, sees only the mask. People can still see that you're masked, which at a masked ball or in Carnival is no clue at all. While wearing it, you can cast *Disguise Self* from it, and the disguise shows the mask or leaves it off, as you choose. Once you do, you can't do so again until the next dawn."
+   },
+   {
     "name": "Master's Piece",
     "kind": "Wondrous Item",
     "base": null,
@@ -870,6 +1016,193 @@
     "text": "If you spend 1 minute reading the weatherglass, you know whether a storm is coming within the next 12 hours. It also tells you how high you've climbed, as Pascal's brother-in-law showed on the Puy de Dôme in 1648: you know your height above the sea to within a hundred feet."
    },
    {
+    "name": "The Universal Instrument",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Legendary",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Natural Philosopher"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Natural Philosopher",
+     "subclass": null,
+     "section": "Natural Philosopher Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "You gain these benefits while you carry the instrument:\n\n- You have Advantage on saving throws against spells and other magical effects.\n- The save DC of your Mechanism, and of every feature that uses your Mechanism's save DC, increases by 3.\n- You can study a creature, an object, or a feature (Natural Philosophy) within 120 feet of yourself, and Measure is good to within a hundredth.\n- **Burning Glass.** In Bright Light, from the sun or from any strong light (a lens doesn't care where its light comes from), the instrument's glass is a strong light and a lens that you can study and set off with Mechanism (Optics), although you placed it there. Once you set it off, you can't do so again until you finish a Long Rest.\n- **One More Question.** When you use First Causes, you can ask a second question about the same thing without expending another use. Once you do, you can't do so again until you finish a Short or Long Rest."
+   },
+   {
+    "name": "The Proven Piece",
+    "kind": "Weapon",
+    "base": "Any Crossbow or Firearm",
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Uncommon",
+      "bonus": "+1",
+      "member": null
+     },
+     {
+      "rarity": "Rare",
+      "bonus": "+2",
+      "member": null
+     },
+     {
+      "rarity": "Very Rare",
+      "bonus": "+3",
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Natural Philosopher"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Natural Philosopher",
+     "subclass": null,
+     "section": "Natural Philosopher Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "You gain a bonus to attack and damage rolls made with this magic weapon, and to the save DC of your Mechanism and every feature that uses it, determined by the weapon's rarity. It never bursts, misfires, or fouls, and any gunner who sees the proof mark treats you as a colleague."
+   },
+   {
+    "name": "Instruments of the Subclasses",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Uncommon",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Natural Philosopher of the Instrument's Subclass"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Natural Philosopher",
+     "subclass": null,
+     "section": "Natural Philosopher Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [
+     {
+      "subclass": "Ballistician",
+      "name": "Gunner's Quadrant",
+      "text": "You can use Disabling Shot one more time before you finish a Long Rest. Set in a gun's muzzle, the quadrant tells you the elevation for any range you name, and where a shot at that elevation will fall."
+     },
+     {
+      "subclass": "Crowner",
+      "name": "Crowner's Seal",
+      "text": "You can use Reconstruction on a place where something happened in the last 3 days, not only the last 24 hours. A body you press the seal to doesn't decay, and can't be moved without your knowing, until you lift the seal or 10 days pass."
+     },
+     {
+      "subclass": "Experimentalist",
+      "name": "Cimento Glassware",
+      "text": "When Volatile would make one of your experiments go off badly, you can reroll the d6, and you must use the new roll. A Demonstration you stage with the glassware takes 10 minutes to set up, not 1 hour."
+     },
+     {
+      "subclass": "Naturalist",
+      "name": "Specimen Case",
+      "text": "You can have two remedies at a time (Specimen), and a remedy kept in the case doesn't spoil when you finish a Long Rest. Nothing put in the case decays while it's closed."
+     },
+     {
+      "subclass": "Navigator",
+      "name": "Pilot's Rutter",
+      "text": "You can use Course Correction and Reading the Currents one more time between Long Rests. Every coast you have sailed is written in the rutter in your hand, with its marks, soundings, and dangers, and whoever reads it can pilot that coast as if they had sailed it themselves."
+     }
+    ],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "- **Gunner's Quadrant (Ballistician).** You can use Disabling Shot one more time before you finish a Long Rest. Set in a gun's muzzle, the quadrant tells you the elevation for any range you name, and where a shot at that elevation will fall.\n- **Crowner's Seal (Crowner).** You can use Reconstruction on a place where something happened in the last 3 days, not only the last 24 hours. A body you press the seal to doesn't decay, and can't be moved without your knowing, until you lift the seal or 10 days pass.\n- **Cimento Glassware (Experimentalist).** When Volatile would make one of your experiments go off badly, you can reroll the d6, and you must use the new roll. A Demonstration you stage with the glassware takes 10 minutes to set up, not 1 hour.\n- **Specimen Case (Naturalist).** You can have two remedies at a time (Specimen), and a remedy kept in the case doesn't spoil when you finish a Long Rest. Nothing put in the case decays while it's closed.\n- **Pilot's Rutter (Navigator).** You can use Course Correction and Reading the Currents one more time between Long Rests. Every coast you have sailed is written in the rutter in your hand, with its marks, soundings, and dangers, and whoever reads it can pilot that coast as if they had sailed it themselves."
+   },
+   {
+    "name": "Magic Lantern",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Uncommon",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": null,
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Natural Philosopher",
+     "subclass": null,
+     "section": "Natural Philosopher Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "As a Utilize action, you can make the lantern throw onto a wall or a sheet within 30 feet a moving picture of something you saw in the last 24 hours, as you saw it, for up to 1 minute. It shows only what could be seen; it shows nothing of what anyone thought. A jury, a patron, or a learned society that watches it has Advantage on its checks to understand what happened, and you have Advantage on your Charisma checks to persuade it. Once you use the lantern, you can't do so again until the next dawn."
+   },
+   {
+    "name": "Anagram Case",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Common",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": null,
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Natural Philosopher",
+     "subclass": null,
+     "section": "Natural Philosopher Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "A paper you seal in the case can't be read, altered, or replaced, by any means, magic included, until you open it or die. When it's opened, the date and hour you sealed it show in the wax, and no one who sees the seal doubts them."
+   },
+   {
     "name": "Bonesaw",
     "kind": "Weapon",
     "base": "Greatsword",
@@ -929,7 +1262,7 @@
     "homelands": [],
     "living": false,
     "prices": [],
-    "text": "A long coat of close-woven cloth, cut for work, with deep pockets. Blood, filth, and rain don't cling to it, and it takes the cut and color its wearer's discipline would choose: a white coat for a Doctor, a buff coat for a Combat Medic, a long black wrap for a Plague Doctor, an unbleached, hand-stitched coat for a Hedge Witch, an oddly soothing plum-gray for a Neurologist, an apron for a Surgeon or a Chirurgeon, a weathered field coat for a Vitalist, and for an Immortalist, the color of their attuned energy.\n\nYou gain these benefits while wearing the coat:\n\n- If you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier.\n- You have Advantage on saving throws against spells and other magical effects, and you have Immunity to disease and to the Poisoned condition.\n- Your spell save DC and spell attack bonus each increase by 2.\n- **Attending.** Once on each of your turns, when you restore Hit Points to a creature with a Physician feature or spell, you can use your Diagnosis feature on a creature you can see within 30 feet of yourself as part of the same action, Bonus Action, or Reaction."
+    "text": "A long coat of close-woven cloth, cut for work, with deep pockets. Blood, filth, and rain don't cling to it, and it takes the cut and color its wearer's discipline would choose: a white coat for a Doctor, a buff coat for a Combat Medic, a long black wrap for a Plague Doctor, an unbleached, hand-stitched coat for a Hedge Witch, an oddly soothing plum-gray for a Neurologist, an apron for a Surgeon or a Chirurgeon, a weathered field coat for a Vitalist, and for an Immortalist, a color that won't settle, shifting with whichever energy last came out of them.\n\nYou gain these benefits while wearing the coat:\n\n- If you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier.\n- You have Advantage on saving throws against spells and other magical effects, and you have Immunity to disease and to the Poisoned condition.\n- Your spell save DC and spell attack bonus each increase by 2.\n- **Attending.** Once on each of your turns, when you restore Hit Points to a creature with a Physician feature or spell, you can use your Diagnosis feature on a creature you can see within 30 feet of yourself as part of the same action, Bonus Action, or Reaction."
    },
    {
     "name": "Rod of the Doctor",
@@ -1943,7 +2276,7 @@
   },
   "class_gear": {
    "about": [
-    "A class's gear is the magic items its chapter carries, in this book and in *Life on the Border*: the Physician's Doctor's Coat, Rod of the Doctor, Ward and Bonesaw, for instance. Three rules decide who has which, and when.",
+    "A class's gear is the magic items its chapter carries, in this book and in *Life on the Border*: the Physician's Doctor's Coat, Rod of the Doctor, Ward and Bonesaw, for instance. Most new classes have a set: a great item at the rarity of the core rules' great robes, staffs and weapons (the Courtier's Gift Sword, the Natural Philosopher's Universal Instrument, the Revelator's Walker's Strides, the Danae's Dream's Mantle), a keepsake for each subclass, and lesser things for the road. Three rules decide who has which, and when.",
     "An item that closes with a homeland, such as the Geomancer's Lahore Astrolabe, is explained in *The Setting*, Characters, Wonders and Curiosities (Homelands)."
    ],
    "rules": [

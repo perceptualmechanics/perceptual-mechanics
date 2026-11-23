@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "29ab5009d8c2d1f87bd21e683cb78d2e68a755c862daad300f3bfcaf4061f794",
-  "modified": "2026-11-22T07:01:17-05:00",
+  "sha256": "ebdd24c71086ed0d22c1d0c6fb1ff3aba17cd6f2f14a92aa4653a3dc2df20507",
+  "modified": "2026-11-23T06:08:02-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -345,12 +345,6 @@
    },
    {
     "species": [
-     "Aasimar"
-    ],
-    "line": "Touched by the angel tier of being, in any tradition that has one: a Shinto shrine's priestess, a Kabbalist's child. Some are born holy"
-   },
-   {
-    "species": [
      "Dragonborn"
     ],
     "line": "Dragons are real, and a few bloodlines carry them. Where the dragon was a god, as on China's rivers, a dragonborn is a sign; where it was a monster, she keeps her sleeves down"
@@ -372,6 +366,18 @@
      "Tiefling"
     ],
     "line": "A fiendish mark from the hells. In a Europe that burns people for the Devil's pact, a tiefling is proof of a crime nobody committed; Spain's Inquisition, which demands evidence, is safer ground than a prince-bishop's court"
+   },
+   {
+    "species": [
+     "Elemental-blood"
+    ],
+    "line": "Descended from an elemental being that crossed from the elemental planes in human shape and forgot. Any core species' traits"
+   },
+   {
+    "species": [
+     "Divine-blood"
+    ],
+    "line": "Divinity in the body, by one of two strands: descent from a god itself, through a line her people records (the Sun's line of the Sapa Inca, Amaterasu's of Japan's emperors), or the touch of a god's servants, the angel tier, in any tradition that has one (a Shinto shrine's priestess, a Kabbalist's child). Some are born holy. Any core species' traits"
    }
   ],
   "species_status": "final",

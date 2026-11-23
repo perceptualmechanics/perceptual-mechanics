@@ -273,8 +273,9 @@ export function rulebook(srd, euphonia, setting, added, goods) {
   // Who an item is for, as its attunement line names them: a class ("a
   // Revelator"), a subclass and its class ("an Envoy Warlock", "a
   // Chirurgeon"), a class's subclass a family's member is for ("a Counsellor
-  // of the Keepsake's Subclass"), or a class's subclasses in the item's own
-  // chapter ("a Sorcerer of an Origin in This Chapter"). A family's members
+  // of the Keepsake's Subclass", "a Courtier of the Keepsake's College", the
+  // last word the family's own for a subclass), or a class's subclasses in
+  // the item's own chapter ("a Sorcerer of an Origin in This Chapter"). A family's members
   // each name a subclass of the class whose chapter carries it; one is the
   // member for that subclass only where its line or its text says so ("works
   // only for a Mhizha of that subclass"). A class still being written
@@ -285,7 +286,7 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     const home = classes.find(c => c.name === item.place.class_name) ?? null;
     let who = null;
     if (item.attunement?.by) {
-      const by = item.attunement.by.replace(/^an? /, ''), family = by.match(/^(.+?) of the \w+'s (?:Subclass|Pathway)$/), chapter = by.match(/^(.+?) of an? \w+ in This Chapter$/);
+      const by = item.attunement.by.replace(/^an? /, ''), family = item.members.length ? by.match(/^(.+?) of the \w+'s \w+$/) : null, chapter = by.match(/^(.+?) of an? \w+ in This Chapter$/);
       const cls = classes.find(c => c.name === (family ?? chapter)?.[1] || c.name === by) ?? classes.find(c => by.endsWith(` ${c.name}`));
       if (family && cls) who = { class: cls.name, member: true };
       else if (chapter && cls) who = { class: cls.name, subclasses: cls.subclasses.filter(sc => sc.book === item.place.book).map(sc => sc.name) };
@@ -650,14 +651,14 @@ export function character(book, state) {
     if (entry.carries) for (const m of balance.matchAll(/^- \*\*Level (\d+) — ([^.]+)\.\*\* (.+)$/gm)) if (c.level >= +m[1]) features.push({ class: c.class, subclass: c.subclass, level: +m[1], name: `${rule.name}: ${m[2]}`, text: m[3], optional: true });
   }
   // A lasting choice a feature writes as a list in a sentence of its own:
-  // "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant" (the
-  // Immortalist's Attuned Energy), "Choose one of those types: Acid, …"
-  // (Elemental Affinity), "Choose the light half or the dark half" (the
-  // Danae's Half), "Choose one damage type, other than Force" (the SRD's
-  // types, Fiendish Resilience). A choice made inside a "when" is made in
-  // play, and isn't one, except one that stands until the next rest ("When
-  // you finish a Long Rest, choose the suit's model, Infiltrator or
-  // Guardian"): the sheet shows the one in force. The one chosen is a feature
+  // "Choose one of those types: Acid, …" (Elemental Affinity), "Choose the
+  // light half or the dark half" (the Danae's Half), "Choose one damage
+  // type, other than Force" (the SRD's types, Fiendish Resilience). A choice
+  // made inside a "when" is made in play, and isn't one, except one that
+  // stands until the next rest ("When you finish a Long Rest, choose the
+  // suit's model, Infiltrator or Guardian"; "…, choose one of your
+  // energies", from the list another of the class's features names as
+  // them): the sheet shows the one in force. The one chosen is a feature
   // from then on, with what the feature sets beside it: its rows of a table
   // ("| Light | **Spring** |"), or its line of a list ("**Fire.** *Fire
   // Bolt*, then …", "- *Infiltrator model.* …").
@@ -667,10 +668,14 @@ export function character(book, state) {
     const pair = f.text.match(/(?:^|[.!]\s+)Choose the (\w+) (\w+) or the (\w+) \2\./);
     const typed = f.text.match(/(?:^|[.!]\s+)Choose (?:one|a) damage type(?!:)(?:, other than ([^,.]+),)?/);
     const rested = f.text.match(/(?:^|[.!]\*?\s+)When you finish a Long Rest, choose the [\w’']+ (\w+), ([A-Z]\w+) or ([A-Z]\w+)\./);
-    if (!named && !pair && !typed && !rested) continue;
-    // "One of those types" asks for one type.
-    const noun = named ? named[1].replace(/s$/, '') : pair ? pair[2] : typed ? 'damage type' : rested[1], cap = x => x[0].toUpperCase() + x.slice(1);
-    const offered = named ? list(named[2]) : pair ? [cap(pair[1]), cap(pair[3])] : typed ? book.damageTypes.filter(t => !list(typed[1] ?? '').includes(t)) : [rested[2], rested[3]];
+    const yours = f.text.match(/(?:^|[.!]\*?\s+)When you finish a Long Rest, choose one of your (\w+):/);
+    const defined = yours && features.filter(x => x.class === f.class).map(x => x.text.match(new RegExp(`((?:[A-Z]\\w+, )+or [A-Z]\\w+)\\. These are your \\*\\*${yours[1]}\\*\\*`))).find(Boolean);
+    if (!named && !pair && !typed && !rested && !defined) continue;
+    // "One of those types" asks for one type; so does a choice among damage
+    // types a feature names as yours.
+    const own = defined ? list(defined[1]) : null;
+    const noun = named ? named[1].replace(/s$/, '') : pair ? pair[2] : typed ? 'damage type' : rested ? rested[1] : own.every(t => book.damageTypes.includes(t)) ? 'damage type' : yours[1].replace(/s$/, ''), cap = x => x[0].toUpperCase() + x.slice(1);
+    const offered = named ? list(named[2]) : pair ? [cap(pair[1]), cap(pair[3])] : typed ? book.damageTypes.filter(t => !list(typed[1] ?? '').includes(t)) : rested ? [rested[2], rested[3]] : own;
     const key = f.key ?? `${f.class} ${f.level} ${f.name}`, chosen = offered.find(x => x === state.kinds?.[key]) ?? null;
     kindChoices.push({ key, class: f.class, label: `${f.name} (${f.class} ${f.level})`, noun, offered, chosen });
     reads(f);
@@ -1204,8 +1209,8 @@ export function character(book, state) {
   // learn the *Vicious Mockery* cantrip", and one more of the list's if it
   // was already known); a spell added to the
   // spellbook ("You add *Telekinesis* and *Resilient Sphere* to your
-  // spellbook", "**Level 5.** You add *Fly* …" from that level); and an
-  // Attunement's set, its cantrip known and a spell of each level from 1 to
+  // spellbook", "**Level 5.** You add *Fly* …" from that level); and the
+  // Attunements' picks, a cantrip known and a spell of each level from 1 to
   // 5 added to the spellbook once the class can cast it.
   const byName = name => allSpells.find(sp => sp.name === name) ?? { name, level: null };
   // The highest level of spell a class casts at its level: its slots', or
@@ -1224,30 +1229,32 @@ export function character(book, state) {
       if (at && c.level < +at[1]) continue;
       for (const m of line.matchAll(/You add \*([^*]+)\*(?: and \*([^*]+)\*)? to your spellbook/g)) for (const n of [m[1], m[2]].filter(Boolean)) give(n, 'book');
     }
-    const set = f.kind && f.text.match(/^\*\*\w+\.\*\* \*([^*]+)\*.*?then \*([^*]+)\*/m);
-    if (set) {
-      // "You can swap any of them … for another spell of the same level that
-      // deals your attuned damage type, from the Bard, Cleric, … spell list.
-      // If no spell of a given level deals your attuned damage type, you can
-      // choose one of a lower level that does."
-      const whole = features.find(x => x.class === f.class && x.level === f.level && f.name.startsWith(`${x.name}: `));
-      const swap = whole?.text.match(/You can swap any of them, .*? for another spell of the same level that deals your attuned damage type, from the (.+?) spell lists?\./);
-      const type = f.name.split(': ')[1];
-      const lists = swap ? swap[1].split(/,\s*(?:or\s+)?|\s+or\s+/) : [];
+    // An Attunements list whose every spell is picked from any of its sets
+    // ("You gain spells from the Attunements list below, picking each one
+    // from any of the five sets"): at each level the class casts, the sets'
+    // spells of that level, or one more of it that deals one of their damage
+    // types from the lists the swap names ("for another spell of the same
+    // level that deals Cold, Fire, Lightning, Psychic, or Radiant damage,
+    // from the Bard, Cleric, … spell list"). Each pick is the player's. A
+    // build saved when the feature chose one energy for all of them keeps
+    // that energy's spells (its kind, under the feature's key).
+    if (/picking each one from any of the \w+ sets/.test(f.text)) {
+      const sets = [...f.text.matchAll(/^> \*\*(\w+)\.\*\* \*([^*]+)\*.*?then \*([^*]+)\*/gm)].map(m => ({ type: m[1], spells: [m[2], ...m[3].replace(/\.$/, '').split(/\s*·\s*/)] }));
+      const swap = f.text.match(/for another spell of the same level that deals ((?:\w+, )+or \w+) damage, from the (.+?) spell lists?\./);
+      const types = swap ? list(swap[1]) : [], lists = swap ? swap[2].split(/,\s*(?:or\s+)?|\s+or\s+/) : [];
       const pool = [...new Map([...lists.flatMap(n => book.classNamed(n)?.spellList ?? []), ...[...book.spellFacts.values()].filter(sp => sp.classes?.some(n => lists.includes(n)))].map(sp => [sp.name, sp])).values()]
-        .filter(sp => book.spellFacts.get(sp.name)?.damage.includes(type));
-      [set[1], ...set[2].replace(/\.$/, '').split(/\s*·\s*/)].forEach((own, level) => {
+        .filter(sp => types.some(t => book.spellFacts.get(sp.name)?.damage.includes(t)));
+      const levelOf = sp => book.spellFacts.get(sp.name)?.level ?? sp.level;
+      const saved = sets.find(x => x.type === state.kinds?.[`${f.class} ${f.level} ${f.name}`]);
+      reads(f);
+      sets[0].spells.forEach((_, level) => {
         if (level && casterHighest(c) < level) return;
-        const levelOf = sp => book.spellFacts.get(sp.name)?.level ?? sp.level;
-        const key = `${whole?.name ?? f.name} ${type} ${level}`, at = pool.filter(sp => levelOf(sp) === level);
-        // None of this level deals it only where the set's own spell is of a
-        // lower one (Call Lightning at 4); one the data doesn't hold is of
-        // the level it's set at.
-        const none = !at.length && book.spellFacts.has(own) && book.spellFacts.get(own).level < level;
-        const offered = [...new Set([own, ...(none ? pool.filter(sp => levelOf(sp) < level && levelOf(sp) >= 1) : at).map(sp => sp.name)])];
-        const pick = swap ? offered.find(n => n === state.swaps?.[key]) ?? own : own;
-        if (swap) { swapChoices.push({ key, class: f.class, label: `${whole.name}: ${level ? `the level ${level} spell` : 'the cantrip'}`, own, offered, chosen: pick }); reads(whole); }
-        give(pick, level ? 'book' : 'cantrip');
+        const from = Object.fromEntries(sets.map(x => [x.spells[level], x.type])), key = `${f.name} ${level}`;
+        const offered = [...new Set([...Object.keys(from), ...pool.filter(sp => levelOf(sp) === level).map(sp => sp.name)])];
+        const pick = offered.find(n => n === state.swaps?.[key]) ?? saved?.spells[level] ?? null;
+        swapChoices.push({ key, class: f.class, label: `${f.name}: ${level ? `the level ${level} spell` : 'the cantrip'}`, from, offered, chosen: pick });
+        if (pick) give(pick, level ? 'book' : 'cantrip');
+        else fail(`swap:${key}`, `Choose ${level ? `a level ${level} spell` : 'a cantrip'} for ${f.name}.`);
       });
     }
   }
@@ -2071,9 +2078,14 @@ export function character(book, state) {
   // by 10 feet", the Infiltrator's model), each while its condition holds of
   // the armour worn, and by its class table's column where the table grows
   // it (Unarmored Movement).
+  // A choice that stands until the next rest is in force on the sheet, so
+  // what it gives holds there ("When you finish a Long Rest, choose one of
+  // your energies: you have Resistance to that damage type …").
   const unchosen = f => {
     const k = kindChoices.find(c => c.key === (f.key ?? `${f.class} ${f.level} ${f.name}`));
-    return k ? f.text.split('\n').filter(l => !k.offered.some(o => l.trimStart().startsWith(`- *${o} `) || l.startsWith(`> **${o}.`) || l.startsWith(`| ${o} |`))).join('\n') : f.text;
+    if (!k) return f.text;
+    const kept = f.text.split('\n').filter(l => !k.offered.some(o => l.trimStart().startsWith(`- *${o} `) || l.startsWith(`> **${o}.`) || l.startsWith(`| ${o} |`))).join('\n');
+    return k.chosen ? kept.replace(/(^|[.!]\s+)When you finish a Long Rest, choose one of your \w+: (\w)/, (m, lead, c) => lead + c.toUpperCase()) : kept;
   };
   const holds = condition => !condition || (/^Heavy armor$/.test(condition) ? worn?.category !== 'Heavy' : /^armor or wielding a Shield$/.test(condition) ? !worn && !shield : false);
   // A clause for one option of a lasting choice ("*Infiltrator:* you have a
@@ -2131,7 +2143,7 @@ export function character(book, state) {
   // Immunity to damage types by name ("Resistance to Bludgeoning, Piercing,
   // and Slashing damage"), or to the type a choice set ("the damage type
   // determined by your Draconic Ancestry trait", the ancestry's row; "that
-  // damage type", "your attuned damage type", the feature's choice);
+  // damage type", the feature's choice);
   // Immunity to conditions; and Advantage on saves against one ("to avoid
   // or end the Charmed condition"). One that holds only in a state ("while
   // your Rage is active", "In Monster Form") is for play.
@@ -2146,7 +2158,7 @@ export function character(book, state) {
     if (/\bwhile (?:your|you)\b|\bwhile in\b/.test(x) || !/\b[Yy]ou (?:have|gain|are immune)\b/.test(x)) continue;
     for (const m of x.matchAll(/\b(Resistance|Immunity) to ((?:[A-Z]\w+(?:,? (?:and |or )?)?)+) damage\b/g)) list(m[2]).filter(t => book.damageTypes.includes(t)).forEach(t => defenses[m[1] === 'Resistance' ? 'resistances' : 'immunities'].add(t));
     if (/Resistance to the damage type determined by your Draconic Ancestry/.test(x) && optionRow?.['Damage Type']) defenses.resistances.add(optionRow['Damage Type']);
-    if (f && /Resistance to (?:that damage type|your attuned damage type)\b/.test(x) && typeChosen(f)) defenses.resistances.add(typeChosen(f));
+    if (f && /Resistance to that damage type\b/.test(x) && typeChosen(f)) defenses.resistances.add(typeChosen(f));
     for (const m of x.matchAll(/\b(?:Immunity to|immune to) (?:disease and to )?the ((?:[A-Z]\w+(?:,? (?:and )?)?)+) conditions?\b/g)) list(m[1]).forEach(c => defenses.conditionImmunities.add(c));
     for (const m of x.matchAll(/Advantage on saving throws you make to avoid or end the (\w+) condition/g)) defenses.conditionAdvantages.add(m[1]);
     // Advantage on saves by ability, with what for where it says ("on

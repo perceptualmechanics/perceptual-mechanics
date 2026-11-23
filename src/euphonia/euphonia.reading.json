@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "29ab5009d8c2d1f87bd21e683cb78d2e68a755c862daad300f3bfcaf4061f794",
-  "modified": "2026-11-22T07:01:17-05:00",
+  "sha256": "ebdd24c71086ed0d22c1d0c6fb1ff3aba17cd6f2f14a92aa4653a3dc2df20507",
+  "modified": "2026-11-23T06:08:02-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -2250,7 +2250,7 @@
     "name": "Amritnath",
     "region": "India",
     "class": "Physician",
-    "line": "A Nath siddha who found the Font of life inside his own body, and burns with it.",
+    "line": "A yogi of the Sandhyānāthāha, a siddha who found the Font of life inside his own body, and burns with it.",
     "scene": "Dawn on the pilgrim road above the Ganges plain, the snows white to the north. A man in ash and ochre sits beside a fire he lit last night and hasn't fed since. The great rings in his split ears catch the light. A raja's men have been waiting since moonrise to ask him how to live forever. He doesn't look up. When he finally speaks, the fire leans toward him, and the air over it shakes the way it does over a road in summer, and the oldest of the raja's men realizes he saw this same yogi, looking exactly this age, when he was a boy.",
     "play": "You pay for magic with your own vitality: fire for your foes, healing for your friends, from the same source.",
     "class_note": "The scholar-healer, doing by study what the churches did by grace.",
@@ -2269,7 +2269,7 @@
      "back": "one on a Short Rest"
     },
     "turn": [
-     "Action: Fire Bolt, his attuned fire (Attuned Energy); or Cure Wounds",
+     "Action: Fire Bolt, his vitality as fire (Attuned Energy); or Cure Wounds",
      "Bonus Action: Life-Fused Casting on a fire spell, harm to one target or healing to one creature; otherwise Healing Prowess",
      "Healing: a spell from the Font Within, his own life spent for it"
     ],
@@ -7607,7 +7607,7 @@
     },
     "turn": [
      "Bonus Action: Diagnosis on the patient",
-     "Action: Sacred Flame, his attuned light (Attuned Energy); or Cure Wounds from a slot or the Font Within",
+     "Action: Sacred Flame, his vitality as light (Attuned Energy); or Cure Wounds from a slot or the Font Within",
      "Bonus Action, after a spell: Healing Prowess, or Life-Fused Casting on a Radiant spell"
     ],
     "level3": {

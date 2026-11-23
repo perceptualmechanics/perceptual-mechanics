@@ -591,15 +591,16 @@ export async function initBuilder(panel) {
       return box;
     }));
   }
-  // An Attunement's set, each place its own spell or another of its level
-  // that deals the attuned type.
+  // The Attunements' picks: at each level a spell from any of the sets,
+  // each named with its set, or another of its level that deals one of
+  // their damage types.
   function renderSwaps(result) {
     if (!fresh(swapBox, JSON.stringify(result.swapChoices))) return;
     rebuild(swapBox, ...(result.swapChoices.length ? [h('fieldset', { class: 'b-pick' },
-      h('legend', {}, `${result.swapChoices[0].label.split(':')[0]}: your set, each spell its own or another that deals your damage type`),
-      result.swapChoices.map(c => h('label', { class: 'b-field' }, h('span', {}, capital(c.label.split(': ')[1])),
-        h('select', { 'data-key': `swap-${c.key}`, onchange: e => set(s => { s.swaps = { ...s.swaps, [c.key]: e.target.value }; }) },
-          c.offered.map(n => h('option', { value: n, selected: n === c.chosen || null }, n === c.own ? `${n} (the set's)` : n))))))] : []));
+      h('legend', {}, `${result.swapChoices[0].label.split(':')[0]}: a spell at each level, from any set or another of your energies`),
+      result.swapChoices.map(c => [h('label', { class: 'b-field' }, h('span', {}, capital(c.label.split(': ')[1])),
+        h('select', { 'data-key': `swap-${c.key}`, 'aria-describedby': idFor(`swap:${c.key}`), onchange: e => set(s => { s.swaps = { ...s.swaps, [c.key]: e.target.value }; }) },
+          options(c.offered.map(v => ({ value: v, label: c.from[v] ? `${v} (${c.from[v]})` : v })), c.chosen, 'Choose a spell'))), problemSlot(`swap:${c.key}`)]).flat())] : []));
   }
   function renderWalked(result) {
     if (!fresh(walkedBox, JSON.stringify(result.walkedChoices))) return;

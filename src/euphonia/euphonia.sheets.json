@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "29ab5009d8c2d1f87bd21e683cb78d2e68a755c862daad300f3bfcaf4061f794",
-  "modified": "2026-11-22T07:01:17-05:00",
+  "sha256": "ebdd24c71086ed0d22c1d0c6fb1ff3aba17cd6f2f14a92aa4653a3dc2df20507",
+  "modified": "2026-11-23T06:08:02-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -207,8 +207,8 @@
   },
   {
    "name": "Tachibana Chiyo",
-   "title": "Tachibana Chiyo (aasimar priestess, 10th)",
-   "line": "aasimar priestess, 10th",
+   "title": "Tachibana Chiyo (angel-touched priestess, 10th)",
+   "line": "angel-touched priestess, 10th",
    "file": "cover_shinto_priestess.html"
   },
   {
