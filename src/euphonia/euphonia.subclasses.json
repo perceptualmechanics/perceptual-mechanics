@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
-  "modified": "2026-11-23T18:46:58-05:00",
+  "sha256": "d41a5b9520ff21ca323e4260aeb304ce74eda1ac9123c81b90bf49b3d4a3de03",
+  "modified": "2026-11-24T14:19:47-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -325,7 +325,7 @@
   {
    "class_name": "Sorcerer",
    "name": "Frost Origin",
-   "book": "Euphonia: The Classes",
+   "book": "Euphonia: A Player's Companion",
    "place": "font",
    "lead": "",
    "features": [
@@ -399,7 +399,7 @@
   {
    "class_name": "Sorcerer",
    "name": "Kinetic Origin",
-   "book": "Euphonia: The Classes",
+   "book": "Euphonia: A Player's Companion",
    "place": "font",
    "lead": "",
    "features": [
@@ -473,7 +473,7 @@
   {
    "class_name": "Sorcerer",
    "name": "Light Origin",
-   "book": "Euphonia: The Classes",
+   "book": "Euphonia: A Player's Companion",
    "place": "font",
    "lead": "",
    "features": [

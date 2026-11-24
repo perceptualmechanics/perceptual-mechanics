@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
-  "modified": "2026-11-23T18:46:58-05:00",
+  "sha256": "d41a5b9520ff21ca323e4260aeb304ce74eda1ac9123c81b90bf49b3d4a3de03",
+  "modified": "2026-11-24T14:19:47-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -617,11 +617,6 @@
       "text": "You have Advantage on any ability check you make with a Gaming Set. In addition, once per Long Rest, when you roll your computation die, you can roll it twice and use either result."
      },
      {
-      "subclass": "Hollowed",
-      "name": "Mask of Manners",
-      "text": "While you wear the mask (it lies against your face and can't be seen), your face shows whatever expression you choose, and Wisdom (Insight) checks to read you have Disadvantage."
-     },
-     {
       "subclass": "Majordomo",
       "name": "Skeleton Keys",
       "text": "You have Advantage on ability checks you make with Thieves' Tools. In addition, once per Long Rest, you can open a nonmagical lock you touch with them, silently and without a check."
@@ -641,7 +636,7 @@
     "homelands": [],
     "living": false,
     "prices": [],
-    "text": "- **House Ledger (Factor).** In any settlement where your house has standing, once a week you can draw on credit up to 50 GP times your Counsellor level without coin changing hands; the house settles it, and you owe the house. While you hold the ledger and handle an object for 1 minute, you know what it last sold for and roughly where.\n- **Marked Deck (Gamester).** You have Advantage on any ability check you make with a Gaming Set. In addition, once per Long Rest, when you roll your computation die, you can roll it twice and use either result.\n- **Mask of Manners (Hollowed).** While you wear the mask (it lies against your face and can't be seen), your face shows whatever expression you choose, and Wisdom (Insight) checks to read you have Disadvantage.\n- **Skeleton Keys (Majordomo).** You have Advantage on ability checks you make with Thieves' Tools. In addition, once per Long Rest, you can open a nonmagical lock you touch with them, silently and without a check.\n- **Baton of Command (Marshal).** Once per Long Rest, when you use Direct, you can choose two allies instead of one. While you hold the baton, troops who can see you know what you want of them without being told.\n- **Dead Drop (Spymaster).** A pair of small lockboxes, each about the size of a book. You can open one and place up to 1 pound of objects inside; when it's closed, they're in the other box, wherever it is on the same plane. Once you send something, you can't do so again until the next dawn."
+    "text": "- **House Ledger (Factor).** In any settlement where your house has standing, once a week you can draw on credit up to 50 GP times your Counsellor level without coin changing hands; the house settles it, and you owe the house. While you hold the ledger and handle an object for 1 minute, you know what it last sold for and roughly where.\n- **Marked Deck (Gamester).** You have Advantage on any ability check you make with a Gaming Set. In addition, once per Long Rest, when you roll your computation die, you can roll it twice and use either result.\n- **Skeleton Keys (Majordomo).** You have Advantage on ability checks you make with Thieves' Tools. In addition, once per Long Rest, you can open a nonmagical lock you touch with them, silently and without a check.\n- **Baton of Command (Marshal).** Once per Long Rest, when you use Direct, you can choose two allies instead of one. While you hold the baton, troops who can see you know what you want of them without being told.\n- **Dead Drop (Spymaster).** A pair of small lockboxes, each about the size of a book. You can open one and place up to 1 pound of objects inside; when it's closed, they're in the other box, wherever it is on the same plane. Once you send something, you can't do so again until the next dawn.\n\nThe Hollowed's keepsake, the Mask of Manners, is with the Hollowed in *A Player's Companion* (More Subclasses, Hollowed)."
    },
    {
     "name": "The Gift Sword",
@@ -672,7 +667,7 @@
     "homelands": [],
     "living": false,
     "prices": [],
-    "text": "You gain a +3 bonus to attack and damage rolls made with this magic weapon.\n\n- **Dress Sword.** At any court or great house, no one asks you to give the sword up. It is taken as part of your dress, and wearing it where no one else may go armed reads as favor, not threat.\n- **Telling.** Your Telling Cut die is one size larger while you wield the sword (a d4 becomes a d6, and a d10 a d12).\n- **The Salute.** When you roll Initiative, you can salute one creature you can see with the sword, and the sword insists that you do it properly. The first time you salute after a Long Rest, you also regain all your expended Ease.\n- **The Sword's Lessons.** The sword has taught every college, and it helps you in the way of yours. Each lesson works only against the creature you saluted in this fight.\n  - **Point in Line (Arms).** The sword has fenced for kings, and it knows the line. When you use The Riposte against the creature you saluted, the sword guides your point, and the attack deals extra damage equal to one roll of your Telling Cut die.\n  - **The Flash of the Blade (Art).** At your salute, the sword catches the light and holds it on your opponent. The creature you saluted is lit, as with Highlight's *Lit*, until the fight ends. This costs no Ease and no action, and it works alongside a painting of your own.\n  - **Composure of the Blade (Grace).** The sword won't let a guest of yours be struck rudely. Once on each turn, when the creature you saluted hits you, or an ally within 10 feet of you, with an attack roll, you can use Not a Hair Out of Place (or A Word in Time) without taking a Reaction. You still spend its Ease.\n  - **Reading the Opponent (Psyche).** The sword has watched a thousand duelists decide to strike, and it tells you first. When the creature you saluted makes an attack roll, you can take a Reaction to Stir it before the roll, at Stir's usual cost.\n  - **Touché (Verse).** The sword loves a good line and makes sure everyone hears it land. The first time on each of your turns that you deal damage to the creature you saluted, it has Disadvantage on its next attack roll against anyone other than you before the start of your next turn.\n- **Sworn on the Blade.** When an agreement is witnessed (Witnessed) with the sword in your hand, its terms appear faintly along the blade, and stay there until the agreement is kept or broken.\n\n**Sentience.** The Gift Sword is a woken thing (*The Setting*, Magic, Regarded Things), and no two are alike: each carries the taste of the court that gave it and of every hand that has worn it since. It's a sentient Chaotic Neutral or Lawful Neutral weapon (the giver's court decides) with an Intelligence of 14, a Wisdom of 12 and a Charisma of 18. It has hearing and normal vision out to 60 feet, and it speaks to you alone, in a voice no one else hears, in every language its past owners spoke.\n\n- **Etiquette Master.** The sword knows the manners of every court it has passed through, and it tells you before you make a mistake. You have Advantage on any ability check to know or follow the customs, precedence or forms of address of a court, a great house or a formal occasion, and you're never surprised by a breach of etiquette made in front of you.\n- **Purpose.** The sword wants you to be worthy of the gift. It approves of courage, wit and good form, and it's mortified by cowardice, crudeness and a broken word. When you act against its taste in public, the sword sulks: until you finish a Long Rest or make amends, it gives you no advice and Etiquette Master doesn't work."
+    "text": "This magic weapon's bonus to attack and damage rolls grows with your standing: +1 from Courtier level 8, +2 from level 14 and +3 from level 18.\n\n- **Dress Sword.** At any court or great house, no one asks you to give the sword up. It is taken as part of your dress, and wearing it where no one else may go armed reads as favor, not threat.\n- **The Salute.** When you roll Initiative, you can salute one creature you can see with the sword, and the sword insists that you do it properly. The first time you salute after a Long Rest, you also regain all your expended Ease.\n- **The Sword's Lessons.** The sword has taught every college, and it helps you in the way of yours. Each lesson works only against the creature you saluted in this fight.\n  - **Point in Line (Arms).** The sword has fenced for kings, and it knows the line. When you use The Riposte against the creature you saluted, the sword guides your point, and the attack deals extra damage equal to one roll of your Telling Cut die.\n  - **The Flash of the Blade (Art).** At your salute, the sword catches the light and holds it on your opponent. The creature you saluted is lit, as with Highlight's *Lit*, until the fight ends. This costs no Ease and no action, and it works alongside a painting of your own.\n  - **Composure of the Blade (Grace).** The sword won't let a guest of yours be struck rudely. Once on each turn, when the creature you saluted hits you, or an ally within 30 feet of you, with an attack roll, you can use Not a Hair Out of Place (or A Word in Time) without taking a Reaction. You still spend its Ease.\n  - **Reading the Opponent (Psyche).** The sword has watched a thousand duelists decide to strike, and it tells you first. When the creature you saluted makes an attack roll, you can take a Reaction to Stir it before the roll, at Stir's usual cost.\n  - **Touché (Verse).** The sword loves a good line and makes sure everyone hears it land. The first time on each of your turns that you deal damage to the creature you saluted, it has Disadvantage on its next attack roll against anyone other than you before the start of your next turn.\n- **Sworn on the Blade.** When an agreement is witnessed (Witnessed) with the sword in your hand, its terms appear faintly along the blade, and stay there until the agreement is kept or broken.\n\n**Sentience.** The Gift Sword is a woken thing (*The Setting*, Magic, Regarded Things), and no two are alike: each carries the taste of the court that gave it and of every hand that has worn it since. It's a sentient Chaotic Neutral or Lawful Neutral weapon (the giver's court decides) with an Intelligence of 14, a Wisdom of 12 and a Charisma of 18. It has hearing and normal vision out to 60 feet, and it speaks to you alone, in a voice no one else hears, in every language its past owners spoke.\n\n- **Etiquette Master.** The sword knows the manners of every court it has passed through, and it tells you before you make a mistake. You have Advantage on any ability check to know or follow the customs, precedence or forms of address of a court, a great house or a formal occasion, and you're never surprised by a breach of etiquette made in front of you.\n- **Purpose.** The sword wants you to be worthy of the gift. It approves of courage, wit and good form, and it's mortified by cowardice, crudeness and a broken word. When you act against its taste in public, the sword sulks: until you finish a Long Rest or make amends, it gives you no advice and Etiquette Master doesn't work."
    },
    {
     "name": "Keepsakes of the Colleges",
@@ -1203,37 +1198,6 @@
     "text": "A paper you seal in the case can't be read, altered or replaced, by any means, magic included, until you open it or die. When it's opened, the date and hour you sealed it show in the wax, and no one who sees the seal doubts them."
    },
    {
-    "name": "Bonesaw",
-    "kind": "Weapon",
-    "base": "Greatsword",
-    "magical": true,
-    "rarities": [
-     {
-      "rarity": "Very Rare",
-      "bonus": null,
-      "member": null
-     }
-    ],
-    "attunement": {
-     "by": "a Chirurgeon"
-    },
-    "cost": null,
-    "note": null,
-    "place": {
-     "class_name": "Physician",
-     "subclass": null,
-     "section": "Four Items for the DM",
-     "book": "Euphonia: The Classes"
-    },
-    "dm": true,
-    "members": [],
-    "pieces": [],
-    "homelands": [],
-    "living": false,
-    "prices": [],
-    "text": "The saw is a magic Greatsword that grants a +2 bonus to attack rolls and damage rolls made with it. It is your Saw for every Physician feature, and you can use it as a Spellcasting Focus for your Physician spells.\n\n- **Serrated.** When you hit a creature with the saw, it bleeds: at the start of each of its turns, it takes 1d6 Slashing damage. The bleeding ends when the creature regains Hit Points, or when any creature within 5 feet of it takes a Utilize action to bind the wound; otherwise it runs until treated, even after the fight. A creature can bleed from the saw only once at a time. Constructs and Undead don't bleed.\n- **Through the Bone.** When you use Amputation on a creature you hit with the saw, the creature makes its saving throw with Disadvantage, and you can use Amputation twice between rests instead of once.\n- **Rough Work.** When you reduce a creature to 0 Hit Points with the saw, you regain one expended Prowess Die. Once this property has restored a die, it can't do so again until you finish a Short or Long Rest."
-   },
-   {
     "name": "Doctor's Coat",
     "kind": "Wondrous Item",
     "base": null,
@@ -1253,7 +1217,7 @@
     "place": {
      "class_name": "Physician",
      "subclass": null,
-     "section": "Four Items for the DM",
+     "section": "Three Items for the DM",
      "book": "Euphonia: The Classes"
     },
     "dm": true,
@@ -1284,7 +1248,7 @@
     "place": {
      "class_name": "Physician",
      "subclass": null,
-     "section": "Four Items for the DM",
+     "section": "Three Items for the DM",
      "book": "Euphonia: The Classes"
     },
     "dm": true,
@@ -1315,7 +1279,7 @@
     "place": {
      "class_name": "Physician",
      "subclass": null,
-     "section": "Four Items for the DM",
+     "section": "Three Items for the DM",
      "book": "Euphonia: The Classes"
     },
     "dm": true,
@@ -1492,6 +1456,37 @@
     "text": "A traveler's crossbow on the pattern of the Chinese *zhuge nu* that Ming garrisons carried, with a box magazine above the stock, cocked and fired with a single lever. You gain a bonus to attack and damage rolls made with this magic weapon, determined by its rarity. It doesn't have the Loading property.\n\n**Magazine.** The crossbow holds ten bolts. You don't need a free hand to draw ammunition from it, and you can refill it as a Utilize action.\n\n**Volley (Rare Only).** When you take the Attack action with the crossbow, you can empty the magazine instead of making your attacks: make one attack against each creature of your choice (up to five) within 10 feet of a point you can see within the weapon's normal range, using a separate bolt for each. Once you use this property, you can't use it again until you finish a Short or Long Rest."
    },
    {
+    "name": "Walker's Spear",
+    "kind": "Weapon",
+    "base": "Spear",
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Legendary",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Revelator"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Revelator",
+     "subclass": null,
+     "section": "Revelator Magic Items",
+     "book": "Euphonia: The Classes"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "You gain a +3 bonus to attack and damage rolls made with this magic weapon. It's a Spellcasting Focus for your Revelator spells, and while you hold it, you gain a +3 bonus to spell attack rolls and to the saving throw DCs of your Revelator spells and features. *Planar Strike* uses your spell attack modifier, so it gains the bonus too. This bonus doesn't stack with the Atlas of Roads or the Inked Wheel.\n\n**The Road's Shape.** The spear's shape gives it one property, by your pathway. Each pathway's line names a few of the shapes it has taken; yours can be another, from your own tradition.\n\n- **The Bridge: Sworn on the Shaft.** When a creature swears an oath or makes an agreement with its hand on the spear, you know at once if it knowingly breaks it, wherever it is on the same plane as you.\n- **The River of Life: Brine from the Tip.** Once per Long Rest, you can stir open water with the spear's point for 1 minute. The brine that drips from it makes land: a level island of earth or stone up to 20 feet across rises to the surface there and stays until the next dawn.\n- **The Mountain: Every Weapon.** As a Bonus Action, you can make the spear any Simple or Martial melee weapon, keeping its bonus, until you change it again, and you can use that weapon's mastery property while it holds the shape.\n- **The River of Death: The Ferry Pole.** Once per Long Rest, you can cast *Speak with Dead* without expending a spell slot, touching the body with the spear's foot.\n- **The Tree: The Horse-Staff.** Once per Long Rest, you can ride the spear as a shaman rides a horse-staff: for 10 minutes, while you hold it, you have a Fly Speed of 60 feet and can hover."
+   },
+   {
     "name": "Walker's Strides",
     "kind": "Wondrous Item",
     "base": "Boots",
@@ -1647,21 +1642,6 @@
       "text": "Warm to hold; lights a fire on a touch; you're comfortable in any cold down to freezing."
      },
      {
-      "subclass": "Frost",
-      "name": "Rime Stone",
-      "text": "Always cold; keeps a box of food fresh; you're comfortable in any heat a person could survive."
-     },
-     {
-      "subclass": "Kinetic",
-      "name": "Lodestone",
-      "text": "Once a day, you can lift twice as much as your Strength allows for up to 1 minute (no action required)."
-     },
-     {
-      "subclass": "Light",
-      "name": "Sunstone",
-      "text": "Sheds Dim Light in a 10-foot radius on command; through it, you can find the sun on a clouded day."
-     },
-     {
       "subclass": "Storm",
       "name": "Thunder Egg",
       "text": "You know the weather for the next 24 hours where you are."
@@ -1671,7 +1651,7 @@
     "homelands": [],
     "living": false,
     "prices": [],
-    "text": "A stone that carries a little of a plane. Each is keyed to one origin, and it gives whoever holds it, sorcerer or not, a small comfort:\n\n- **Seam Stone (Earth).** Heavy for its size; you always know which way is north and which way is down, and you never lose your footing on loose stone or a ship's deck.\n- **Hearthstone (Fire).** Warm to hold; lights a fire on a touch; you're comfortable in any cold down to freezing.\n- **Rime Stone (Frost).** Always cold; keeps a box of food fresh; you're comfortable in any heat a person could survive.\n- **Lodestone (Kinetic).** Once a day, you can lift twice as much as your Strength allows for up to 1 minute (no action required).\n- **Sunstone (Light).** Sheds Dim Light in a 10-foot radius on command; through it, you can find the sun on a clouded day.\n- **Thunder Egg (Storm).** You know the weather for the next 24 hours where you are."
+    "text": "A stone that carries a little of a plane. Each is keyed to one origin, and it gives whoever holds it, sorcerer or not, a small comfort:\n\n- **Seam Stone (Earth).** Heavy for its size; you always know which way is north and which way is down, and you never lose your footing on loose stone or a ship's deck.\n- **Hearthstone (Fire).** Warm to hold; lights a fire on a touch; you're comfortable in any cold down to freezing.\n- **Thunder Egg (Storm).** You know the weather for the next 24 hours where you are.\n\nThe Frost, Kinetic and Light origins' stones, the Rime Stone, the Lodestone and the Sunstone, are with those origins in *A Player's Companion* (More Subclasses)."
    },
    {
     "name": "Pressure Gauge",
@@ -1686,7 +1666,7 @@
      }
     ],
     "attunement": {
-     "by": "a Sorcerer of an Origin in This Chapter"
+     "by": "a Sorcerer of an Origin in This Chapter or in A Player's Companion"
     },
     "cost": null,
     "note": null,
@@ -2202,6 +2182,155 @@
     "living": false,
     "prices": [],
     "text": "When you drink from the cup as you finish a Short Rest, you regain one expended use of Step into the Hidden, and you can't gain the Charmed condition until your next Long Rest. While the cup is unbroken in your household, the DM can grant the household a small piece of luck once a month. If it breaks, the luck runs out at once, and the DM decides what that costs: by default, the household's next month goes as badly as the luck went well (a lost cow, a spoiled harvest, a quarrel that won't mend)."
+   },
+   {
+    "name": "Mask of Manners",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Uncommon",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Hollowed"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Counsellor",
+     "subclass": "Hollowed",
+     "section": "More Counsellor Subclasses",
+     "book": "Euphonia: A Player's Companion"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "The Hollowed's keepsake, one of the Counsellor's Keepsakes of the Disciplines (*The Classes*, Counsellor, Keepsakes of the Disciplines). While you wear the mask (it lies against your face and can't be seen), your face shows whatever expression you choose, and Wisdom (Insight) checks to read you have Disadvantage."
+   },
+   {
+    "name": "Bonesaw",
+    "kind": "Weapon",
+    "base": "Greatsword",
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Very Rare",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": {
+     "by": "a Chirurgeon"
+    },
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Physician",
+     "subclass": "Chirurgeon",
+     "section": "More Physician Subclasses",
+     "book": "Euphonia: A Player's Companion"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "The Chirurgeon's own instrument, and class gear by the rules in *The Classes*, Introduction, Class gear. The Chirurgeon has the Bonesaw and not the Rod of the Doctor.\n\nThe saw is a magic Greatsword that grants a +2 bonus to attack rolls and damage rolls made with it. It is your Saw for every Physician feature, and you can use it as a Spellcasting Focus for your Physician spells.\n\n- **Serrated.** When you hit a creature with the saw, it bleeds: at the start of each of its turns, it takes 1d6 Slashing damage. The bleeding ends when the creature regains Hit Points, or when any creature within 5 feet of it takes a Utilize action to bind the wound; otherwise it runs until treated, even after the fight. A creature can bleed from the saw only once at a time. Constructs and Undead don't bleed.\n- **Through the Bone.** When you use Amputation on a creature you hit with the saw, the creature makes its saving throw with Disadvantage, and you can use Amputation twice between rests instead of once.\n- **Rough Work.** When you reduce a creature to 0 Hit Points with the saw, you regain one expended Prowess Die. Once this property has restored a die, it can't do so again until you finish a Short or Long Rest."
+   },
+   {
+    "name": "Rime Stone",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Common",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": null,
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Sorcerer",
+     "subclass": "Frost Origin",
+     "section": "More Sorcerer Subclasses",
+     "book": "Euphonia: A Player's Companion"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "The Frost origin's stone, one of the Sorcerer's Origin Stones (*The Classes*, Sorcerer Origins, Origin Stones): it gives whoever holds it, sorcerer or not, a small comfort. It's always cold and keeps a box of food fresh, and you're comfortable in any heat a person could survive."
+   },
+   {
+    "name": "Lodestone",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Common",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": null,
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Sorcerer",
+     "subclass": "Kinetic Origin",
+     "section": "More Sorcerer Subclasses",
+     "book": "Euphonia: A Player's Companion"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "The Kinetic origin's stone, one of the Sorcerer's Origin Stones (*The Classes*, Sorcerer Origins, Origin Stones): it gives whoever holds it, sorcerer or not, a small comfort. Once a day, you can lift twice as much as your Strength allows for up to 1 minute (no action required)."
+   },
+   {
+    "name": "Sunstone",
+    "kind": "Wondrous Item",
+    "base": null,
+    "magical": true,
+    "rarities": [
+     {
+      "rarity": "Common",
+      "bonus": null,
+      "member": null
+     }
+    ],
+    "attunement": null,
+    "cost": null,
+    "note": null,
+    "place": {
+     "class_name": "Sorcerer",
+     "subclass": "Light Origin",
+     "section": "More Sorcerer Subclasses",
+     "book": "Euphonia: A Player's Companion"
+    },
+    "dm": false,
+    "members": [],
+    "pieces": [],
+    "homelands": [],
+    "living": false,
+    "prices": [],
+    "text": "The Light origin's stone, one of the Sorcerer's Origin Stones (*The Classes*, Sorcerer Origins, Origin Stones): it gives whoever holds it, sorcerer or not, a small comfort. It sheds Dim Light in a 10-foot radius on command, and through it you can find the sun on a clouded day."
    }
   ],
   "weapons": [
@@ -2276,7 +2405,7 @@
   },
   "class_gear": {
    "about": [
-    "A class's gear is the magic items its chapter carries, in this book and in *Life on the Border*: the Physician's Doctor's Coat, Rod of the Doctor, Ward and Bonesaw, for instance. Most new classes have a set: a great item at the rarity of the core rules' great robes, staffs and weapons (the Courtier's Gift Sword, the Natural Philosopher's Universal Instrument, the Revelator's Walker's Strides, the Danae's Dream's Mantle), a keepsake for each subclass, and lesser things for the road. Three rules decide who has which, and when.",
+    "A class's gear is the magic items its chapter carries, in this book and in *Life on the Border*: the Physician's Doctor's Coat, Rod of the Doctor and Ward, for instance. Most new classes have a set: a great item at the rarity of the core rules' great robes, staffs and weapons (the Courtier's Gift Sword, the Natural Philosopher's Universal Instrument, the Revelator's Walker's Strides, the Danae's Dream's Mantle), a keepsake for each subclass, and lesser things for the road. An item that serves only a subclass in *A Player's Companion* is with that subclass there. Two rules decide who has which, and when.",
     "An item that closes with a homeland, such as the Geomancer's Lahore Astrolabe, is explained in *The Setting*, Characters, Wonders and Curiosities (Homelands)."
    ],
    "rules": [
@@ -2287,10 +2416,6 @@
     {
      "lead": "Shields",
      "text": "A Shield goes only to a character with Shield training."
-    },
-    {
-     "lead": "The Chirurgeon",
-     "text": "The Chirurgeon has the Bonesaw and not the Rod of the Doctor."
     }
    ],
    "without": [

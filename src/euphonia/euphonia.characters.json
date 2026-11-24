@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
-  "modified": "2026-11-23T18:46:58-05:00",
+  "sha256": "d41a5b9520ff21ca323e4260aeb304ce74eda1ac9123c81b90bf49b3d4a3de03",
+  "modified": "2026-11-24T14:19:47-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -29,7 +29,20 @@
    "renames_because": "The setting's own names for those planes, the first two of the Revelator's Cosmography: the Feywild is the Hidden, the Shadowfell the Ghostlands (setting/whats-out.md, wheel-and-plenum.md). The SRD's \"the Feywild\" reads \"the Hidden\"."
   }
  },
- "withheld": [],
+ "withheld": [
+  {
+   "where": "Elemental-Blood · 1d4",
+   "reasons": [
+    "placeholder flavor"
+   ]
+  },
+  {
+   "where": "Divine-Blood · 1d6",
+   "reasons": [
+    "placeholder flavor"
+   ]
+  }
+ ],
  "data": {
   "backgrounds": [
    {
@@ -371,16 +384,180 @@
     "species": [
      "Elemental-blood"
     ],
-    "line": "Descended from an elemental being that crossed from the elemental planes in human shape and forgot. Any core species' traits"
+    "line": "Descended from an elemental being that crossed from one of the four elemental spheres in human shape and forgot. Its traits are in *A Player's Companion* (Species)"
    },
    {
     "species": [
      "Divine-blood"
     ],
-    "line": "Divinity in the body, by one of two strands: descent from a god itself, through a line her people records (the Sun's line of the Sapa Inca, Amaterasu's of Japan's emperors), or the touch of a god's servants, the angel tier, in any tradition that has one (a Shinto shrine's priestess, a Kabbalist's child). Some are born holy. Any core species' traits"
+    "line": "Divinity in the body, by one of two strands: descent from a god itself, through a line her people records (the Sun's line of the Sapa Inca, Amaterasu's of Japan's emperors), or the touch of a god's servants, the angel tier, in any tradition that has one (a Shinto shrine's priestess, a Kabbalist's child). Some are born holy. Its traits are in *A Player's Companion* (Species)"
    }
   ],
   "species_status": "final",
+  "book_species": [
+   {
+    "name": "Elemental-Blood",
+    "lead": "An elemental-blood descends from a being of one of the four elemental spheres that crossed into the world in human shape and in time forgot what it was (*The Setting*, Peoples, Elemental-Bloods). The blood is inherited, a thing about her body. She doesn't cast it, it doesn't build up in her and it never has to be let out, which is how anyone who knows the difference tells her from a sorcerer. Now and then the blood remembers the shape it came in.",
+    "creature_type": "Humanoid",
+    "size": "Medium (about 4–7 feet tall) or Small (about 3–4 feet tall), chosen when you select this species",
+    "speed": "30 feet",
+    "traits": [
+     {
+      "name": "Elemental Lineage",
+      "text": "Your forebear came from one of the four elemental spheres that wrap the world as the period draws it: earth at the center, then water, then air, then fire, just below the Moon. Choose a lineage from the Elemental Lineages table. You have Resistance to its damage type, and you have its level 1 trait."
+     },
+     {
+      "name": "The Old Shape",
+      "text": "When you reach level 3, you can take a Bonus Action to let the blood remember the shape it crossed in. For 1 minute you take on a trace of it, by your lineage:"
+     },
+     {
+      "name": "Kin of the Sphere",
+      "text": "Elementals of your lineage's sphere know you on sight for one of theirs who forgot. Knowing isn't liking: by default an elemental is curious and wary of you, and the DM can say otherwise."
+     },
+     {
+      "name": "The Sphere's Knack",
+      "text": "You know the *Elementalism* cantrip, and you can use it only on your lineage's element. Intelligence, Wisdom or Charisma is your spellcasting ability for it (choose when you select this species). It isn't a learned spell: you have done it since you could walk, and no school taught it to you. Whether the law counts it as magic is a question every ministry answers differently (*The Setting*, Magic, Scarcity and Distance)."
+     }
+    ],
+    "strands": [],
+    "tables": [
+     {
+      "head": [
+       "Lineage",
+       "What a learned European calls you",
+       "Resistance",
+       "Level 1 trait"
+      ],
+      "rows": [
+       [
+        "**Earth**",
+        "A pygmy, or a gnome, Paracelsus's other word, which the gnomes resent",
+        "Acid",
+        "**Rooted.** While you stand on earth or stone, you have Advantage on saving throws and ability checks to avoid being moved against your will or knocked Prone"
+       ],
+       [
+        "**Water**",
+        "A nymph, or an undine",
+        "Cold",
+        "**Of the Water.** You have a Swim Speed equal to your Speed, and you can hold your breath for 1 hour"
+       ],
+       [
+        "**Air**",
+        "A sylph",
+        "Lightning",
+        "**Light on the Air.** Your Speed is 35 feet, and the distance of your Long Jump and High Jump is doubled"
+       ],
+       [
+        "**Fire**",
+        "A salamander",
+        "Fire",
+        "**Kindled.** You have Darkvision with a range of 60 feet, and the Burning hazard doesn't affect you; you can hold a coal or a candle flame in your bare hand without harm"
+       ]
+      ]
+     }
+    ],
+    "where": "A Player's Companion, Species"
+   },
+   {
+    "name": "Divine-Blood",
+    "lead": "A divine-blood carries a god's divinity in her body, by one of two strands: descent from the god itself, or the touch of its servants (*The Setting*, Peoples, Divine-Bloods). She did nothing to earn it. A Cleric earns power by devotion, a Warlock bargains for it and a Sorcerer vents a plane pushing through; a divine-blood just has it, by birth, and owes nothing for it. None of these traits is a spell, and none of them asks anything of her: the blood does them on its own.",
+    "creature_type": "Humanoid",
+    "size": "Medium (about 4–7 feet tall) or Small (about 3–4 feet tall), chosen when you select this species",
+    "speed": "30 feet",
+    "traits": [
+     {
+      "name": "Divine Strand",
+      "text": "Choose your strand: **the Line**, descent from the god itself through a line your people records, or **the Touch**, the touch of a god's servants, the messengers every heaven sends. You have the traits of your strand, below. One person can carry both strands; if your character does, choose one for its traits and describe the other."
+     },
+     {
+      "name": "Known on Sight",
+      "text": "The god's spirits, servants and sacred animals know what you are when they see you, and its priests feel you come into a room. If you are angel-touched, the messengers of the heaven that touched you know you too. None of them is bound to like you, and the god's own people, if they see it, are the dangerous part."
+     }
+    ],
+    "strands": [
+     {
+      "name": "The Line",
+      "traits": [
+       {
+        "name": "The God's Province",
+        "text": "A god forms where a people's faith meets a phenomenon or a system (*The Setting* tells how), and your god's province is in your blood. Choose it from the God's Provinces table; you have Resistance to its damage type. The province is courteous to you in small ways (*The Setting*, Peoples, Divine-Bloods, Playing a Divine-Blood)."
+       },
+       {
+        "name": "The Blood Refuses",
+        "text": "From level 3, when you fail a saving throw, you can succeed instead. Once this happens, it can't happen again until you finish a Long Rest. It isn't something you do: the blood won't have it."
+       },
+       {
+        "name": "The Blood Shows",
+        "text": "From level 5, the first time you are Bloodied after a Long Rest, the blood shows. For a moment, everyone near you sees the god's province gather around you: the sun through a roof, the smell of rain, spray off nothing, heat, the hum of the ground. Each ally within 30 feet of you who can see you gains Temporary Hit Points equal to your level. Everyone who saw it knows what you are, and a court that claims your line will hear of it by evening."
+       }
+      ]
+     },
+     {
+      "name": "The Touch",
+      "traits": [
+       {
+        "name": "Born Holy",
+        "text": "You have Resistance to Radiant damage. You can shed Dim Light in a 5-foot radius, or put it out, at will and without an action; the light was in you when you were born."
+       },
+       {
+        "name": "The Messenger's Hand",
+        "text": "When you fall, you descend 60 feet per round and take no damage from the fall, unless you have the Incapacitated condition. Something caught you once, and the air remembers."
+       },
+       {
+        "name": "Caught Before the Fall",
+        "text": "From level 3, when a creature you can see within 30 feet of you drops to 0 Hit Points and isn't killed outright, you can take a Reaction to have it drop to 1 Hit Point instead. Once you do, you can't do so again until you finish a Long Rest."
+       },
+       {
+        "name": "Borne Up",
+        "text": "From level 5, once per Long Rest, when you jump or fall, you can gain a Fly Speed equal to your Speed for 10 minutes. The messengers carried you this way once, and the touch remembers how."
+       }
+      ]
+     }
+    ],
+    "tables": [
+     {
+      "head": [
+       "Province",
+       "Lines that claim it (*The Setting*, Peoples, Divine-Bloods)",
+       "Resistance"
+      ],
+      "rows": [
+       [
+        "**The sun**",
+        "Inti's through the Sapa Inca, Amaterasu's through Japan's emperors, Surya's through the Rajput houses of the Sun",
+        "Radiant"
+       ],
+       [
+        "**The sky, the storm or Heaven**",
+        "Tangaloa's through the Tuʻi Tonga, Tengri's through Chinggis Khan, Wākea's through the Hawaiian aliʻi, Zeus's",
+        "Lightning"
+       ],
+       [
+        "**The sea, a river or the moon**",
+        "Nyikang's, whose mother is the river, through the Shilluk reth, Chandra's through the Rajput houses of the Moon, Poseidon's, Thetis's",
+        "Cold"
+       ],
+       [
+        "**Fire**",
+        "Agni's, if the fire-born houses are his",
+        "Fire"
+       ],
+       [
+        "**The earth or a mountain**",
+        "Papahānaumoku's through the Hawaiian aliʻi, Oduduwa's through the Yoruba crowns",
+        "Thunder"
+       ],
+       [
+        "**A system: law, war, love or an art**",
+        "Athena's, Aphrodite's through Aeneas, Apollo's",
+        "Psychic"
+       ]
+      ]
+     }
+    ],
+    "where": "A Player's Companion, Species"
+   }
+  ],
   "species_and_people": {
    "text": "Every species takes its traits as written; the setting supplies where it comes from and what 1668 makes of it. Pick the species, then the people: where the family comes from, what that place calls them and what it thinks of them. The trouble comes with the country. The lore behind each is in Peoples.",
    "where": "The Setting, Characters, Species and People"

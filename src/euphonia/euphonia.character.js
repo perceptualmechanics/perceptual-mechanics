@@ -294,10 +294,16 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     const home = classes.find(c => c.name === item.place.class_name) ?? null;
     let who = null;
     if (item.attunement?.by) {
-      const by = item.attunement.by.replace(/^an? /, ''), family = item.members.length ? by.match(/^(.+?) of the \w+'s \w+$/) : null, chapter = by.match(/^(.+?) of an? \w+ in This Chapter$/);
+      const by = item.attunement.by.replace(/^an? /, ''), family = item.members.length ? by.match(/^(.+?) of the \w+'s \w+$/) : null, chapter = by.match(/^(.+?) of an? \w+ in (This Chapter(?: or in .+)?)$/);
       const cls = classes.find(c => c.name === (family ?? chapter)?.[1] || c.name === by) ?? classes.find(c => by.endsWith(` ${c.name}`));
+      // "in This Chapter or in A Player's Companion": the item's own book, then each book named.
+      const books = chapter?.[2].split(' or in ').map(b => b === 'This Chapter' ? item.place.book : `Euphonia: ${b}`);
       if (family && cls) who = { class: cls.name, member: true };
-      else if (chapter && cls) who = { class: cls.name, subclasses: cls.subclasses.filter(sc => sc.book === item.place.book).map(sc => sc.name) };
+      else if (chapter && cls) {
+        const none = books.find(b => !cls.subclasses.some(sc => sc.book === b));
+        if (none) throw new Error(`${item.name}: "Requires Attunement by ${item.attunement.by}" names ${none}, which holds no ${cls.name} subclass`);
+        who = { class: cls.name, subclasses: cls.subclasses.filter(sc => books.includes(sc.book)).map(sc => sc.name) };
+      }
       else if (cls && cls.name === by) who = { class: cls.name };
       else {
         const [c, sc] = cls ? [cls, subclassesNamed(cls, by.slice(0, -cls.name.length - 1))] : classes.map(c => [c, subclassesNamed(c, by)]).find(([, x]) => x.length) ?? [];
@@ -1584,8 +1590,10 @@ export function character(book, state) {
   const taken = new Set();
   const RARITIES = ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Legendary', 'Artifact'];
   // A character also has its class's own gear, what the table never gives:
-  // the chapter's items rarer than any of the table's, and those the books
-  // leave the DM to give (Scott, 17 November). Each comes a rarity ahead of
+  // the chapter's items rarer than any of the table's, those the books
+  // leave the DM to give (Scott, 17 November), and one whose text calls it
+  // "class gear by the rules" (the Bonesaw, with its Chirurgeon in the
+  // Companion). Each comes a rarity ahead of
   // the table, as The Classes rules (a Very Rare Bonesaw at 11–16, where the
   // table first gives Rare; the Legendary coat at 17–20), and all of it in
   // the table's last row; each for one who can use it (the Bonesaw a
@@ -1594,7 +1602,7 @@ export function character(book, state) {
   const tableTop = RARITIES.indexOf(book.higherLevelEquipment.at(-1).magic.at(-1).rarity);
   const gearArrives = r => higher && (higher === book.higherLevelEquipment.at(-1) || RARITIES.indexOf(r) <= RARITIES.indexOf(higher.magic.at(-1)?.rarity) + book.classGear.ahead);
   const classGear = () => book.items.filter(i => i.magical && !i.story && i.place.class_name && has(i.place.class_name) && usable(i) && !taken.has(i.name)
-    && (i.dm || i.rarities.every(r => RARITIES.indexOf(r.rarity) > tableTop)) && gearArrives(i.rarities.at(-1).rarity)
+    && (i.dm || /\bclass gear by the rules\b/.test(i.text) || i.rarities.every(r => RARITIES.indexOf(r.rarity) > tableTop)) && gearArrives(i.rarities.at(-1).rarity)
     && !(i.kind === 'Armor' && i.base === 'Shield' && !ownTraining.includes('Shield')) && !book.classGear.without.some(w => w.without === i.name && w.subclass === subclassOf(i.place.class_name)))
     .map(i => { taken.add(i.name); return { rarity: i.rarities.at(-1).rarity, classGear: true, item: { name: i.name, kind: i.kind, base: i.base, member: memberFor(i) && (memberFor(i).name ?? memberFor(i).subclass), bonus: i.rarities.at(-1).bonus, attunement: i.attunement, living: Boolean(i.living), text: i.text } }; });
   // The inventory the player keeps (a tracker; Scott, 17 November): what
@@ -1641,24 +1649,30 @@ export function character(book, state) {
     const base = i.kind === 'Weapon' ? i.base : said(i, /It can be wielded as a magic (\w+)/)?.[1];
     const w = base && (book.weapons ?? []).find(x => x.name === base);
     if (!w) return [];
-    const n = +(said(i, /grants a \+(\d+) bonus to attack rolls and damage rolls made with it/)?.[1] ?? said(i, /You have a \+(\d+) bonus to attack and damage rolls made with this magic weapon/)?.[1] ?? (/bonus to attack and damage rolls made with this magic weapon, determined by its rarity/.test(i.text) ? i.rated : 0));
+    const n = +(said(i, /(?:grants|You have|You gain) a \+(\d+) bonus to attack (?:rolls )?and damage rolls made with (?:it|this magic weapon)/)?.[1] ?? (/bonus to attack and damage rolls made with this magic weapon, determined by its rarity/.test(i.text) ? i.rated : 0));
     return [{ name: i.name, w, n }];
   });
   // Spell attacks and DCs, by class ("of your Revelator spells") or every
   // class's ("a +2 bonus to spell attack rolls").
+  const bare = name => name.replace(/^(?:the|an?) /i, '');
   const castingBoosts = inUse.flatMap(i => {
     const m = said(i, /(?:a \+(\d+) bonus|a bonus(?:, determined by the item[’']s rarity,)?) to (?:spell attack rolls and to the saving throw DCs|the attack rolls and saving throw DCs|attack rolls with [^.]+?, and to the spell attack rolls and spell save DCs) of your (\w+) spells/);
     const any = said(i, /a \+(\d+) bonus to spell attack rolls\b(?! and)/);
     const both = said(i, /Your spell save DC and spell attack bonus each increase by (\d+)/);
     const focus = said(i, /doesn[’']t stack with another (\w+) focus[’']s bonus/)?.[1];
-    return [m && { name: i.name, cls: m[2], n: m[1] ? +m[1] : i.rated, dc: true, focus }, any && { name: i.name, cls: null, n: +any[1], dc: false }, both && { name: i.name, cls: null, n: +both[1], dc: true }].filter(x => x && x.n);
+    // "This bonus doesn't stack with the Atlas of Roads or the Inked Wheel."
+    const apart = said(i, /This bonus doesn[’']t stack with ((?:the |an? )?[A-Z][^.]*)\./)?.[1].split(/,? or |, /).map(bare) ?? [];
+    return [m && { name: i.name, cls: m[2], n: m[1] ? +m[1] : i.rated, dc: true, focus, apart }, any && { name: i.name, cls: null, n: +any[1], dc: false, apart: [] }, both && { name: i.name, cls: null, n: +both[1], dc: true, apart: [] }].filter(x => x && x.n);
   });
+  // Bonuses that don't stack (two of a class's foci, or an item and one its
+  // sentence names): the larger counts.
+  const clash = (a, b) => (a.focus && a.focus === b.focus) || a.apart.includes(bare(b.name)) || b.apart.includes(bare(a.name));
   for (const sc of spellcasting.filter(x => x.ability)) {
-    const mine = castingBoosts.filter(b => !b.cls || b.cls === sc.class), focused = mine.filter(b => b.focus), plain = mine.filter(b => !b.focus);
-    const n = plain.reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.map(b => b.n)), dcn = plain.filter(b => b.dc).reduce((t, b) => t + b.n, 0) + Math.max(0, ...focused.filter(b => b.dc).map(b => b.n));
+    const kept = castingBoosts.filter(b => !b.cls || b.cls === sc.class).toSorted((a, b) => b.n - a.n).reduce((k, b) => (k.some(x => clash(x, b)) ? k : [...k, b]), []);
+    const n = kept.reduce((t, b) => t + b.n, 0), dcn = kept.filter(b => b.dc).reduce((t, b) => t + b.n, 0);
     if (n) sc.attack += n;
     if (dcn) sc.dc += dcn;
-    if (n || dcn) sc.items = [...plain, ...focused].map(b => b.name);
+    if (n || dcn) sc.items = kept.map(b => b.name);
   }
   const featureBoosts = inUse.flatMap(i => { const m = said(i, /to attack rolls with the ([\w ]+?), /); return m ? [{ attack: m[1], n: i.rated, name: i.name }] : []; });
   // With an item's ("you have Shield training", the Ward).

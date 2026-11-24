@@ -814,8 +814,20 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const atlas = revelator17?.equipment.magicItems.find(m => m.item?.name === 'Atlas of Roads');
   const seer = revelator17?.spellcasting.find(x => x.class === 'Revelator');
   const needing = revelator17?.equipment.magicItems.filter(m => m.item?.attunement).length ?? 0;
-  if (!(atlas && revelator17.unattuned && !revelator17.unattuned.includes('Atlas of Roads') && seer.dc === srd.attacks.spell_save_dc_base + revelator17.mod.Wisdom + revelator17.bonus + rated('Atlas of Roads', atlas.rarity) + +items.items.find(i => i.name === 'The Inked Wheel').text.match(/a \+(\d+) bonus to spell attack rolls and to the saving throw DCs/)[1] && revelator17.unattuned.length === Math.max(0, needing - srd.attunement_max)))
-    fail(`a Revelator 17's items: ${JSON.stringify({ atlas: atlas?.rarity, dc: seer?.dc, unattuned: revelator17?.unattuned })}`);
+  // "a Sorcerer of an Origin in This Chapter or in A Player's Companion": each
+  // Sorcerer subclass written in the item's own book or in the Companion.
+  const gauge = book.items.find(i => i.name === 'Pressure Gauge');
+  const gaugeBooks = [gauge.place.book, "Euphonia: A Player's Companion"], origins = subclasses.data.filter(x => x.class_name === 'Sorcerer' && gaugeBooks.includes(x.book)).map(x => x.name);
+  if (!(origins.some(n => subclasses.data.find(x => x.name === n).book !== gauge.place.book) && gauge.who?.subclasses?.toSorted().join() === origins.toSorted().join())) fail(`the Pressure Gauge: attuned by ${JSON.stringify(gauge.who)}, where the books give ${origins.join(', ')}`);
+  // The Atlas, the Inked Wheel and the Walker's Spear each say their bonus
+  // doesn't stack with the others': the larger of those carried counts.
+  const focusBonus = m => (m.item.name === 'Atlas of Roads' ? rated('Atlas of Roads', m.rarity) : +(m.item.text.match(/a \+(\d+) bonus to spell attack rolls and to the saving throw DCs/)?.[1] ?? 0));
+  const foci = revelator17?.equipment.magicItems.filter(m => ['Atlas of Roads', 'The Inked Wheel', "Walker's Spear"].includes(m.item?.name) && !revelator17.unattuned.includes(m.item.name)) ?? [];
+  if (!(atlas && foci.length > 1 && revelator17.unattuned && seer.dc === srd.attacks.spell_save_dc_base + revelator17.mod.Wisdom + revelator17.bonus + Math.max(...foci.map(focusBonus)) && revelator17.unattuned.length === Math.max(0, needing - srd.attunement_max)))
+    fail(`a Revelator 17's items: ${JSON.stringify({ atlas: atlas?.rarity, foci: foci.map(m => m.item.name), dc: seer?.dc, unattuned: revelator17?.unattuned })}`);
+  // The Walker's Spear, held to the same character's plain Spear: "a +3 bonus to attack and damage rolls".
+  const walkers = hitOf(revelator17, "Walker's Spear (Spear)"), plainSpear = hitOf(revelator17, 'Spear'), walkersN = +items.items.find(i => i.name === "Walker's Spear").text.match(/a \+(\d+) bonus to attack and damage rolls/)[1];
+  if (!(walkers?.bonus === plainSpear?.bonus + walkersN && walkers.damage === plainSpear.damage.replace(/\+ (\d+)/, (_, d) => `+ ${+d + walkersN}`))) fail(`the Walker's Spear: ${JSON.stringify(walkers)} beside ${JSON.stringify(plainSpear)}`);
   const crossbowman = champion11, repeating = crossbowman?.attacks.find(a => a.name.startsWith('Repeating Crossbow')), crossbowRarity = crossbowman?.equipment.magicItems.find(m => m.item?.name === 'Repeating Crossbow')?.rarity;
   // Held to the same character's plain Shortbow, another ranged weapon by
   // the same ability: its bonus, plus the item's.

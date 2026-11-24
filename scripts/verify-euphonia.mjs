@@ -157,7 +157,7 @@ export function verifyEuphonia(d = euphoniaData()) {
   // subclass (the builder offers it beside the SRD's there), from a book the
   // page can cite, with features to show.
   const srdClasses = JSON.parse(read('src/euphonia/euphonia.srd.json')).classes;
-  const BOOKS = ['Euphonia: The Classes', 'Euphonia: Life on the Border'];
+  const BOOKS = d.modules.data.books.map(b => `Euphonia: ${b.title}`);
   for (const sub of d.subclasses.data) {
     const core = srdClasses.find(c => c.name === sub.class_name);
     const at = `${sub.class_name} subclass ${sub.name}`;
@@ -169,12 +169,11 @@ export function verifyEuphonia(d = euphoniaData()) {
     if (!BOOKS.includes(sub.book)) fail(`${at}: from "${sub.book}", which isn't one of the books`);
   }
 
-  // The books' items, for the builder's gear: each from a book the page can
-  // cite, a magic item with a rarity and a piece of gear without one, and
-  // each period weapon counted as a weapon the SRD has.
-  const ITEM_BOOKS = ['Euphonia: The Setting', ...BOOKS];
+  // The books' items, for the builder's gear: each from a published book, a
+  // magic item with a rarity and a piece of gear without one, and each period
+  // weapon counted as a weapon the SRD has.
   for (const it of d.items.data.items) {
-    if (!ITEM_BOOKS.includes(it.place.book)) fail(`item ${it.name}: from "${it.place.book}", which isn't one of the books`);
+    if (!BOOKS.includes(it.place.book)) fail(`item ${it.name}: from "${it.place.book}", which isn't one of the books`);
     if (it.magical !== Boolean(it.rarities.length)) fail(`item ${it.name}: ${it.magical ? 'a magic item with no rarity' : 'gear with a rarity'}`);
   }
   const srdWeapons = JSON.parse(read('src/euphonia/euphonia.srd.json')).weapons.map(w => w.name);

@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
-  "modified": "2026-11-23T18:46:58-05:00",
+  "sha256": "d41a5b9520ff21ca323e4260aeb304ce74eda1ac9123c81b90bf49b3d4a3de03",
+  "modified": "2026-11-24T14:19:47-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -14033,12 +14033,12 @@
      "Initiative: the Pressure rises where the crew can see it; Bonus Action: Stormcharged, the stance that makes him fast and hard to catch",
      "Action: Shocking Grasp or Sorcerous Burst",
      "Release: all the Pressure into one creature, and Forked Strike carries part of it to others nearby",
-     "Reaction: Storm's Thunder, at whoever hurt him; or Shield"
+     "Reaction: Shield"
     ],
     "level3": {
      "class": "Sorcerer",
      "subclass": "Storm",
-     "species": "Goliath",
+     "species": "Elemental-Blood",
      "background": "Merchant"
     },
     "scores": {
@@ -14051,8 +14051,9 @@
     },
     "build": {
      "name": "Rashid bin Khamis al-Ghafiri",
-     "species": "Goliath",
-     "option": "Storm’s Thunder (Storm Giant)",
+     "species": "Elemental-Blood",
+     "option": "Air",
+     "size": "Medium",
      "background": "Merchant",
      "homeland": "Mutapa and the Indian Ocean",
      "method": "standard",
@@ -16236,6 +16237,117 @@
        "Detect Magic",
        "Misty Step",
        "Suggestion"
+      ]
+     }
+    }
+   },
+   {
+    "id": "cover_shinto_priestess",
+    "name": "Tachibana Chiyo",
+    "region": "East and Southeast Asia",
+    "class": "Cleric",
+    "line": "A shrine priestess in a mountain province of Japan, born with the light in her, who is sent for when a child is lost at dusk.",
+    "scene": "Dusk on a mountain road, and something wearing a yamabushi's clothes has a village child by the wrist. The priestess doesn't run. She opens her hands, and the light comes off her like morning off a lake, and the thing in the borrowed clothes lets go to cover its eyes.",
+    "play": "You are the light in the dark: you drive off what comes at dusk, and you keep whoever it reached on their feet.",
+    "class_note": "Carries a holiness that works, and answers for it to a church or a god.",
+    "traits": [
+     "care",
+     "power",
+     "faith",
+     "mercy"
+    ],
+    "sheet": "/euphonia/sheets/cover_shinto_priestess.html",
+    "signature": {
+     "name": "Radiance of the Dawn",
+     "line": "The light comes off her like morning off a lake: magical darkness ends, and whatever came at dusk burns.",
+     "uses": 2,
+     "per": "long rest",
+     "back": "one on a Short Rest"
+    },
+    "turn": [
+     "Action: Sacred Flame, or Radiance of the Dawn (Channel Divinity) when they close in",
+     "Bonus Action: Healing Word, or Spiritual Weapon",
+     "Reaction: Warding Flare, or once a day Caught Before the Fall for whoever drops"
+    ],
+    "level3": {
+     "class": "Cleric",
+     "subclass": "Light",
+     "species": "Divine-Blood",
+     "background": "Acolyte"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 13,
+     "Constitution": 14,
+     "Intelligence": 10,
+     "Wisdom": 17,
+     "Charisma": 13
+    },
+    "build": {
+     "name": "Tachibana Chiyo",
+     "species": "Divine-Blood",
+     "option": "The Touch",
+     "size": "Medium",
+     "background": "Acolyte",
+     "homeland": "East and Southeast Asia",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 13,
+      "Constitution": 14,
+      "Intelligence": 10,
+      "Wisdom": 15,
+      "Charisma": 12
+     },
+     "increases": {
+      "Wisdom": 2,
+      "Charisma": 1
+     },
+     "classes": [
+      {
+       "class": "Cleric",
+       "level": 3,
+       "subclass": "Light Domain"
+      }
+     ],
+     "skills": {
+      "Cleric": [
+       "Medicine",
+       "Persuasion"
+      ]
+     },
+     "picks": {
+      "Cleric 1 Divine Order": "Thaumaturge"
+     },
+     "languages": {
+      "Common": [
+       "Japanese"
+      ],
+      "standard": [
+       "Classical Chinese",
+       "Sanskrit"
+      ]
+     },
+     "spellAbilities": {
+      "feat Acolyte": "Wisdom"
+     },
+     "spells": {
+      "Cleric": [
+       "Sacred Flame",
+       "Guidance",
+       "Thaumaturgy",
+       "Light",
+       "Bless",
+       "Healing Word",
+       "Cure Wounds",
+       "Shield of Faith",
+       "Spiritual Weapon",
+       "Aid"
+      ],
+      "feat Acolyte": [
+       "Mending",
+       "Resistance",
+       "Protection from Evil and Good"
       ]
      }
     }
