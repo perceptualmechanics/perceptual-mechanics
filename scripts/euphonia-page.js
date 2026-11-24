@@ -42,7 +42,7 @@ function catalog(items) {
 // there for a screen reader. Everything to read is in
 // its panel: the contents, each region's chapter, the moment shown, how the
 // map is made, the classes and the games.
-function mapStage({ classes, regions, adventures, hidden, people, sheets, welcome }, world, fixtures, calendars) {
+function mapStage({ classes, regions, adventures, hidden, people, sheets, welcome, modules, links }, world, fixtures, calendars) {
   const globe = `<div class="map-cell"><div class="map-disc" tabindex="0" role="group" aria-label="The globe" aria-describedby="map-help">
 <canvas class="map-ambient" aria-hidden="true"></canvas>
 <canvas aria-hidden="true"></canvas>
@@ -57,7 +57,7 @@ ${globe}
 <button type="button" class="map-panel-close" aria-label="Close panel">&#215;</button>
 </div>
 <h2 id="map-panel-title" class="map-panel-title" tabindex="-1"></h2>
-${panelSections({ classes, regions, adventures, hidden, people, sheets, welcome }, world, fixtures, calendars)}
+${panelSections({ classes, regions, adventures, hidden, people, sheets, welcome, modules, links }, world, fixtures, calendars)}
 <section class="map-panel-pick" aria-labelledby="map-panel-pick-title" hidden>
 <h3 id="map-panel-pick-title">The place you picked</h3>
 <dl class="map-panel-facts"></dl>
@@ -106,7 +106,7 @@ function welcomePage(welcome, games) {
   const door = (title, body) => `<h3>${title}</h3>\n${body}`;
   const ways = items => `<ul class="welcome-ways">${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
   const page = (id, name) => `<button type="button" data-page="${id}">${name}</button>`;
-  return `<section class="map-panel-page map-panel-welcome" data-page="welcome" data-title="Welcome to Euphonia" hidden>
+  return `<section class="map-panel-page map-panel-welcome" data-page="welcome" data-title="Welcome to Euphonia" data-address hidden>
 <p class="welcome-lead">${inline(sentences(welcome.opening[0])[0])}</p>
 <p>${inline(sentences(welcome.pitch[0])[0])}</p>
 <figure class="welcome-moment">
@@ -360,13 +360,45 @@ function bordersNote({ provenance: b, polities, fronts }) {
   return `<p class="note">The states of ${b.year} are Seshat's Cliopatria (<a href="https://github.com/Seshat-Global-History-Databank/cliopatria">release ${esc(b.release)}</a>, <a href="${esc(b.licence)}">CC BY 4.0</a>; ${esc(b.cite)}), cut back from the shore this map draws and simplified as its coasts are. Each region's chapter says which of its states had firm edges and which were zones. A fine line is a firm edge, drawn and argued over. Elsewhere a band of wash runs along the inside of a state's edge, as Dutch colourists coloured boundaries, with no line under it: a people's country, not a surveyor's mark. Changed from the record: ${changes}.</p>
 <p class="note">✦ marks where the book departs from the record, drawn from its chapters: dashed where the book names a firm side, washed where it names a zone, and a dotted ring for a front. ${departs}</p>`;
 }
-function panelSections({ classes, regions, adventures, hidden, people, sheets, welcome }, world, fixtures, calendars, relief = reliefData()) {
+// The books, each a PDF on Google Drive (euphonia.links.json), in the order
+// they're published; a module's leads to its page too.
+const drive = (links, pdf) => `https://drive.google.com/file/d/${links.drive[pdf]}/view`;
+const moduleAddress = m => `module-${m.key}`;
+function booksPage({ books, modules }, links) {
+  return `<section class="map-panel-page" data-page="books" data-title="The books" data-address hidden>
+<p class="note">Each of the books as a PDF, on Google Drive.</p>
+${catalog(books.map(b => {
+    const m = modules.find(x => x.pdf === b.pdf);
+    return `<li><span class="t">${esc(b.title)}</span><span class="e"><a href="${drive(links, b.pdf)}">The PDF</a>${m ? ` · <a href="#${moduleAddress(m)}">its page</a>` : ''}</span></li>`;
+  }))}
+</section>`;
+}
+// A module's page: what a table needs, as the book says it; its
+// pregenerated characters' sheets, each a page of its own; its Roll20 game,
+// where its DM invites the players; and its PDF.
+function modulePage(m, links) {
+  return `<section class="map-panel-page" data-page="${moduleAddress(m)}" data-title="${esc(m.title)}" data-address hidden>
+<p><strong>You need</strong> ${inline(m.need)}</p>
+<h3>The pregenerated characters</h3>
+${catalog(m.pregens.map(p => `<li><span class="t"><a href="/euphonia/sheets/${esc(p.file)}">${esc(p.name)}</a></span><span class="e">${esc(p.line)}${p.role ? ` · ${esc(p.role)}` : ''}</span></li>`))}
+<h3>To play</h3>
+<ul>
+<li><a href="https://app.roll20.net/campaigns/details/${links.roll20[m.key]}">The game on Roll20</a>, where its DM invites the players</li>
+<li><a href="${drive(links, m.pdf)}">The module as a PDF</a>, on Google Drive</li>
+</ul>
+</section>`;
+}
+
+function panelSections({ classes, regions, adventures, hidden, people, sheets, welcome, modules, links }, world, fixtures, calendars, relief = reliefData()) {
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
   const versions = [...new Set(world.provenance.files.map(f => f.version))].join(' and ');
   const directory = new Map(people.data.directory.map(p => [p.name, p]));
-  const pages = [['welcome', 'Welcome'], ['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['people', 'People'], ['games', 'Adventures and Hooks'], ['ribbons', 'The ribbons']];
-  return `<nav class="map-panel-page map-panel-contents" aria-label="Contents" data-title="Contents" hidden>
+  // A game whose "Ready to run" one-shot is a module ("*Euphonia: The Venice
+  // Job*, …") leads to that module's page.
+  const moduleOf = g => modules.data.modules.find(m => g.ready?.includes(`*Euphonia: ${m.title}*`));
+  const pages = [['welcome', 'Welcome'], ['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['people', 'People'], ['games', 'Adventures and Hooks'], ...modules.data.modules.map(m => [moduleAddress(m), m.title]), ['books', 'The books'], ['ribbons', 'The ribbons']];
+  return `<nav class="map-panel-page map-panel-contents" aria-label="Contents" data-title="Contents" data-address hidden>
 <h3>The State of the World</h3>
 <ul>
 ${regions.data.map(r => `<li><button type="button" data-region="${slug(r.name)}">${esc(r.name)}</button></li>`).join('\n')}
@@ -402,9 +434,11 @@ ${bordersNote(bordersData())}
 <section class="map-panel-page" data-page="classes" data-title="The classes" hidden>
 ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span class="n">${inline(c.blurb)}</span></li>`))}
 </section>
-<section class="map-panel-page" data-page="games" data-title="Adventures and Hooks" hidden>
-${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.ready ? `<span class="n">${inline(g.ready)}</span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
+<section class="map-panel-page" data-page="games" data-title="Adventures and Hooks" data-address hidden>
+${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.ready ? `<span class="n">${inline(g.ready)}</span>` : ''}${moduleOf(g) ? `<span class="n"><a href="#${moduleAddress(moduleOf(g))}">${esc(moduleOf(g).title)}: its sheets, its Roll20 game and its PDF</a></span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
 </section>
+${booksPage(modules.data, links)}
+${modules.data.modules.map(m => modulePage(m, links)).join('\n')}
 ${peoplePage(people.data, regions.data, regions.status, sheets.data)}
 ${ribbonsPage(tonguesData())}
 ${regions.data.map(r => `<template class="map-chapter" data-region="${slug(r.name)}">

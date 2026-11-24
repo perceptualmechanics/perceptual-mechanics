@@ -1,0 +1,146 @@
+{
+ "provenance": {
+  "source": "Euphonia.md",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
+  "modified": "2026-11-23T18:46:58-05:00",
+  "exporter": "class-kit/site_export.py",
+  "exporter_version": 42,
+  "rules": {
+   "banned": [
+    "eladrin",
+    "Feywild",
+    "Shadowfell",
+    "changeling",
+    "genasi",
+    "Seelie",
+    "Unseelie",
+    "Imbas",
+    "Dungeons & Dragons",
+    "D&D"
+   ],
+   "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b|\\bFey(?= (?:Ancestry|Touched|Wanderer)\\b)|(?<=\\bSummon )Fey\\b|(?<=\\bConjure )Fey\\b|\\b(?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead), Fey\\b|\\bFey(?=,? (?:and|or) (?:Aberrations?|Beasts?|Celestials?|Constructs?|Dragons?|Elementals?|Fiends?|Giants?|Humanoids?|Monstrosit(?:y|ies)|Oozes?|Plants?|Undead)\\b)",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different). The 2024 rules' own names keep it too: Fey Ancestry, Fey Touched, Fey Wanderer, Summon Fey and the SRD's Conjure Fey (Chat, 15 November). So does a list of creature types: \"any Undead, Fey, or Elemental\".",
+   "renames": {
+    "Feywild": "Hidden",
+    "Shadowfell": "Ghostlands"
+   },
+   "renames_because": "The setting's own names for those planes, the first two of the Revelator's Cosmography: the Feywild is the Hidden, the Shadowfell the Ghostlands (setting/whats-out.md, wheel-and-plenum.md). The SRD's \"the Feywild\" reads \"the Hidden\"."
+  }
+ },
+ "withheld": [],
+ "data": {
+  "books": [
+   {
+    "title": "The Setting",
+    "pdf": "Euphonia - The Setting.pdf",
+    "key": "setting"
+   },
+   {
+    "title": "The Classes",
+    "pdf": "Euphonia - The Classes.pdf",
+    "key": "classes"
+   },
+   {
+    "title": "Life on the Border",
+    "pdf": "Euphonia - Life on the Border.pdf",
+    "key": "border"
+   },
+   {
+    "title": "A Player's Companion",
+    "pdf": "Euphonia - A Player's Companion.pdf",
+    "key": "font"
+   },
+   {
+    "title": "The Venice Job",
+    "pdf": "Euphonia - The Venice Job.pdf",
+    "key": "venice"
+   },
+   {
+    "title": "The Night the Hunt Came",
+    "pdf": "Euphonia - The Night the Hunt Came.pdf",
+    "key": "hunt"
+   },
+   {
+    "title": "A First Look",
+    "pdf": "Euphonia - A First Look.pdf",
+    "key": null
+   }
+  ],
+  "modules": [
+   {
+    "key": "venice",
+    "title": "The Venice Job",
+    "pdf": "Euphonia - The Venice Job.pdf",
+    "need": "*The Classes*, the 2024 core rules and the five pregenerated characters (their sheets and a Roll20 game are on the site, perceptualmechanics.com/euphonia). Tilde is a Danae from *Life on the Border*; her sheet carries everything the night uses.",
+    "adventure": "The Venice Job",
+    "pregens": [
+     {
+      "name": "Bettina Scarpa",
+      "role": "The Face and the Planner",
+      "line": "Counsellor (Spymaster) 3",
+      "file": "venice_pregen_spymaster.html"
+     },
+     {
+      "name": "Dr. Elia Pardo",
+      "role": "The Healer",
+      "line": "Physician (Doctor) 3",
+      "file": "venice_pregen_doctor.html"
+     },
+     {
+      "name": "Tilde Zorzut",
+      "role": "The Roof-Runner",
+      "line": "Danae (Crossing) 3",
+      "file": "venice_pregen_crossing.html"
+     },
+     {
+      "name": "Cecilia dalla Pietà",
+      "role": "The Voice",
+      "line": "Courtier (College of Psyche) 3",
+      "file": "venice_pregen_psyche.html"
+     },
+     {
+      "name": "Kudzai Moyo",
+      "role": "The Shield and the Lock",
+      "line": "Mhizha (Lionskin) 3",
+      "file": "venice_pregen_lionskin.html"
+     }
+    ]
+   },
+   {
+    "key": "hunt",
+    "title": "The Night the Hunt Came",
+    "pdf": "Euphonia - The Night the Hunt Came.pdf",
+    "need": "*The Classes*, *Life on the Border*, the 2024 core rules and the four pregenerated characters (their sheets and a Roll20 game are on the site, perceptualmechanics.com/euphonia).",
+    "adventure": "The Night the Hunt Came",
+    "pregens": [
+     {
+      "name": "Nhamo",
+      "role": "The Anchor",
+      "line": "Barbarian (Path of the Faebreaker) 5",
+      "file": "hunt_pregen_faebreaker.html"
+     },
+     {
+      "name": "Ambuya Sekai",
+      "role": "The Go-Between",
+      "line": "Cleric (Hidden Domain) 5",
+      "file": "hunt_pregen_hiddendomain.html"
+     },
+     {
+      "name": "Fungai",
+      "role": "The Watch on the Doors",
+      "line": "Ranger (Hidden Killer) 5",
+      "file": "hunt_pregen_hiddenkiller.html"
+     },
+     {
+      "name": "Tichaona",
+      "role": "The Roof-Runner",
+      "line": "Danae (Crossing) 5",
+      "file": "hunt_pregen_danae.html"
+     }
+    ]
+   }
+  ]
+ }
+}

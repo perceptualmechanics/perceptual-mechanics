@@ -1172,10 +1172,11 @@ export async function initMap(stage) {
 
   // A link to a region (#europe) opens its chapter; one to a place in it
   // (#place-europe-venice, from the People page), the chapter at that
-  // place's fold, open; one to a page of the panel (#welcome, #contents,
-  // #games), that; one to the People page (#people), or to its Notable
-  // People (#notable-people), that.
-  const PANEL_ADDRESSES = ['welcome', 'contents', 'games'];
+  // place's fold, open; one to a page of the panel the page marks as having
+  // an address (data-address: #welcome, #contents, #games, #books, a
+  // module's #module-venice), that; one to the People page (#people), or to
+  // its Notable People (#notable-people), that.
+  const addressed = new Set(pages.filter(p => 'address' in p.dataset).map(pageName));
   const chapterOf = id => id && regions.find(x => panel.querySelector(`template[data-region="${x.id}"]`).content.getElementById(id));
   function openFold(r, id) {
     openChapter(r, g.cell);
@@ -1187,7 +1188,7 @@ export async function initMap(stage) {
     if (r) { openChapter(r, g.cell); return; }
     const holder = chapterOf(id);
     if (holder) { openFold(holder, id); return; }
-    if (PANEL_ADDRESSES.includes(id)) { openPage(id); requestAnimationFrame(() => panelTitle.focus()); return; }
+    if (addressed.has(id)) { openPage(id); requestAnimationFrame(() => panelTitle.focus()); return; }
     const people = panel.querySelector('.map-panel-people');
     if (id !== 'people' && !(id && people.querySelector(`#${CSS.escape(id)}`))) return;
     showPage('people');

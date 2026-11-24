@@ -12,7 +12,7 @@ import { DRAFT_NOTE, DRAFT_NOTE_HTML, HELP_URL } from './euphonia-draft-note.mjs
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
 // The Reading joins them once the book exports it.
-const FILES = ['classes', 'subclasses', 'items', 'people', 'sheets', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages', ...(existsSync(new URL('../src/euphonia/euphonia.reading.json', import.meta.url)) ? ['reading'] : [])];
+const FILES = ['classes', 'subclasses', 'items', 'people', 'sheets', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages', 'modules', ...(existsSync(new URL('../src/euphonia/euphonia.reading.json', import.meta.url)) ? ['reading'] : [])];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -22,6 +22,7 @@ const FILES = ['classes', 'subclasses', 'items', 'people', 'sheets', 'regions', 
 export function euphoniaFiles() {
   const d = Object.fromEntries(FILES.map(f => [f, JSON.parse(read(`src/euphonia/euphonia.${f}.json`))]));
   d.rules = JSON.parse(read('src/euphonia/euphonia.rules.json'));
+  d.links = JSON.parse(read('src/euphonia/euphonia.links.json'));
   d.release = existsSync(RELEASE) ? JSON.parse(readFileSync(RELEASE, 'utf8')) : null;
   return d;
 }
@@ -248,7 +249,65 @@ export function verifyEuphonia(d = euphoniaData()) {
     const why = problems(unescape(src.replace(/<style[\s\S]*?<\/style>|<[^>]+>/g, ' ')), d.rules);
     if (why.length) fail(`${at}: its text has ${why.join(', ')}`);
   }
-  for (const f of files) if (!d.sheets.data.some(sh => sh.file === f)) fail(`${SHEETS}${f}: a page no person links`);
+  // Each module's pregenerated characters, the same way: their sheets, from
+  // another generator, titled by name alone and linking nowhere.
+  const pregens = d.modules.data.modules.flatMap(m => m.pregens.map(p => ({ ...p, module: m.title })));
+  for (const p of pregens) {
+    const at = `${p.module}'s sheet ${p.file}`;
+    if (!files.includes(p.file)) { fail(`${at}: not in ${SHEETS}`); continue; }
+    const src = sheetText(p.file), title = unescape(src.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '').trim();
+    if (title !== p.name) fail(`${at}: titled "${title}", not ${p.name}`);
+    if (/<script|<iframe|<object|<embed|\son\w+\s*=/i.test(src)) fail(`${at}: it carries a script`);
+    if (/(?:src|href)\s*=/.test(src) || /url\((?!["']?(?:data:|#))/.test(src)) fail(`${at}: it links or loads something`);
+    const why = problems(unescape(src.replace(/<style[\s\S]*?<\/style>|<[^>]+>/g, ' ')), d.rules);
+    if (why.length) fail(`${at}: its text has ${why.join(', ')}`);
+  }
+  for (const f of files) if (!d.sheets.data.some(sh => sh.file === f) && !pregens.some(p => p.file === f)) fail(`${SHEETS}${f}: a page no person links`);
+
+  // Where the site sends readers off it (euphonia.links.json): every book as
+  // published has its PDF on Drive, and nothing there is for a book retired;
+  // every module has its Roll20 game.
+  const books = d.modules.data.books;
+  for (const b of books) if (!/^[\w-]{20,}$/.test(d.links.drive[b.pdf] ?? '')) fail(`euphonia.links.json: ${b.pdf} has no Drive file`);
+  for (const pdf of Object.keys(d.links.drive)) if (!books.some(b => b.pdf === pdf)) fail(`euphonia.links.json: ${pdf} isn't a book as published`);
+  for (const m of d.modules.data.modules) if (!/^\d+$/.test(String(d.links.roll20[m.key] ?? ''))) fail(`euphonia.links.json: ${m.title} has no Roll20 game`);
+
+  // What the books say is on the site is. Each claim takes one of the forms
+  // below, each held to the data; a claim in any other form fails, so a new
+  // one can't go unchecked.
+  const sheeted = new Set(d.sheets.data.map(sh => sh.name));
+  const claims = [];
+  const gather = (o, where) => {
+    if (typeof o === 'string') { for (const m of o.matchAll(/[^.]*\bon the site\b[^.]*\./g)) claims.push({ where, text: o, at: m.index, said: m[0].trim() }); return; }
+    if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) gather(v, where.concat(v?.name ?? v?.region ?? v?.title ?? k));
+  };
+  for (const f of FILES) gather(d[f]?.data, [f]);
+  for (const c of claims) {
+    const where = c.where.join(' / ');
+    const intro = c.said.match(/^The sheets are on the site\b/) && c.text.slice(0, c.at).match(/Each has a pregen sheet(?: except ([^.]+))?\.\s*$/);
+    const module = /their sheets and a Roll20 game are on the site/.test(c.said) && d.modules.data.modules.find(m => c.where.includes(m.title));
+    const titled = c.said.match(/\*Euphonia: ([^*]+)\*, on the site/);
+    const own = c.said.match(/\b(his|her|their) sheets? (?:are |among the pregens )?on the site|\b(?:has|have) (his|her|their) sheets? among the pregens on the site/);
+    if (intro) {
+      const region = c.where.find(w => d.regions.data.some(r => r.name === w)), except = intro[1] ? intro[1].split(/,\s*|\s+and\s+/) : [];
+      const cast = people.regions.find(r => r.region === region)?.people.map(p => p.name) ?? [];
+      for (const n of cast.filter(n => !except.includes(n) && !sheeted.has(n))) fail(`${where}: says ${n} has a sheet on the site, and none is`);
+      for (const n of except.filter(n => !cast.includes(n))) fail(`${where}: excepts ${n}, who isn't in its cast`);
+    } else if (module) {
+      if (!module.pregens.length || !d.links.roll20[module.key]) fail(`${where}: says ${module.title}'s sheets and Roll20 game are on the site; ${module.pregens.length ? 'its game isn\'t' : 'its sheets aren\'t'}`);
+    } else if (titled) {
+      if (!d.modules.data.modules.some(m => m.title === titled[1] && d.links.drive[m.pdf])) fail(`${where}: says Euphonia: ${titled[1]} is on the site, and it isn't`);
+    } else if (own) {
+      // A sheet an entry gives its own person ("his sheet"), or the people
+      // its place has named so far ("both are level 8, and their sheets …").
+      const region = d.regions.data.find(r => c.where.includes(r.name)), before = c.text.slice(0, c.at);
+      const fold = region?.folds.find(f => f.name === [...before.matchAll(/^#### (.+)$/gm)].at(-1)?.[1]);
+      const led = [...before.slice(before.lastIndexOf('#### ')).matchAll(/\*\*([^*]+?)\.\*\* /g)].map(m => m[1]).filter(n => fold?.people.includes(n));
+      const whose = /their/.test(own[0]) ? led : led.slice(-1);
+      if (!whose.length) fail(`${where}: "${c.said}" names no one the gate can find`);
+      for (const n of whose.filter(n => !sheeted.has(n))) fail(`${where}: says ${n}'s sheet is on the site, and none is`);
+    } else fail(`${where}: "${c.said}" is a claim about the site the gate doesn't know how to check`);
+  }
   if (!/script-src 'none'/.test(d.sheetPolicy ?? (existsSync(new URL(`${SHEETS}.htaccess`, ROOT)) ? read(`${SHEETS}.htaccess`) : ''))) fail(`${SHEETS}.htaccess: no policy that runs no script`);
 
   // The Wheel behind the globe: every plane the table files by height and

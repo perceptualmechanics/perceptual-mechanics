@@ -1,0 +1,16 @@
+{
+ "about": "Where the site sends readers off it, kept by the site: each book's PDF on Google Drive (perceptualmechanics@gmail.com's Euphonia folder, shared by link), by the file name publish.json gives it, as its Drive file ID; and each module's Roll20 game, by its book key, as its campaign ID. publish.py overwrites a PDF in place, so its ID holds from release to release; a new book needs its ID added here, and verify-euphonia fails until it is.",
+ "drive": {
+  "Euphonia - The Setting.pdf": "187gK_o4xuhreVVvTHc0YY4yEVbYKkTmI",
+  "Euphonia - The Classes.pdf": "1xgrJQfQDvImZ9gB34w3FtgLOdJ_MYsNw",
+  "Euphonia - Life on the Border.pdf": "1oH9bdnh7AASUJMcYdudiBUniZ9_B3TiK",
+  "Euphonia - A Player's Companion.pdf": "1YgA3Hnjp6UbUji9QTiu2JidFSCTHzV2p",
+  "Euphonia - The Venice Job.pdf": "1yJa6x3QLrrhQhaS2zmK-klz8CaU1TOa0",
+  "Euphonia - The Night the Hunt Came.pdf": "1EAaoEzTcyt3-f-CrHIqb8F7d187jJoPP",
+  "Euphonia - A First Look.pdf": "11QMc6_mTjvuZLWxFmZkzF3FS0qOzcIYh"
+ },
+ "roll20": {
+  "venice": 22179564,
+  "hunt": 22206049
+ }
+}
