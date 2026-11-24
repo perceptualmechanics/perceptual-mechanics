@@ -570,8 +570,8 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     if (book.classNamed('Danae') && !(grace?.count === 1 && grace.from.join() === 'Deception,Intimidation,Performance,Persuasion')) fail('Courtly Grace doesn\'t ask one of its four skills');
   }
   // The Courtier's accomplishments, as its table and its words count them:
-  // two at level 1 and eight at 20; the College of Arms closes an
-  // accomplishment that counts only as Letters and gives The Code; Regard is
+  // two at level 1 and eight at 20; the College of Arms gives The Code and,
+  // forgoing no art, leaves an accomplishment of Letters open; Regard is
   // the different arts; one taken "twice" can't be taken a third time; and it
   // prepares its spells, two at level 1, with two cantrips chosen beside
   // the three it always knows. Every Table asks two skills of its four.
@@ -584,8 +584,8 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     const every = one?.choices.find(c => c.key === 'Courtier accomplishment 1');
     const casting = one?.spellChoices.find(c => c.key === 'Courtier');
     if (!(accomplishments(one)?.count === 2 && accomplishments(courtier(20, '', []))?.count === 8)) fail(`the Courtier's accomplishments count ${accomplishments(one)?.count} at level 1, not its table's 2`);
-    if (!(arms?.problems.some(p => p.field === 'option:Courtier:0') && accomplishments(arms)?.given.some(g => g.name === 'The Code'))) fail('the College of Arms leaves Letters open, or doesn\'t give The Code');
-    if (accomplishments(one)?.regard !== 2 || accomplishments(arms)?.regard !== 4) fail(`Regard reads ${accomplishments(one)?.regard} and ${accomplishments(arms)?.regard}, not 2 and 4`);
+    if (arms?.problems.some(p => p.field === 'option:Courtier:0') || !accomplishments(arms)?.given.some(g => g.name === 'The Code')) fail('the College of Arms closes Letters, or doesn\'t give The Code');
+    if (accomplishments(one)?.regard !== 2 || accomplishments(arms)?.regard !== 5) fail(`Regard reads ${accomplishments(one)?.regard} and ${accomplishments(arms)?.regard}, not 2 and 5`);
     if (!thrice?.problems.some(p => p.field === 'option:Courtier:2' && /twice/.test(p.message))) fail('a Courtier takes A Secret three times');
     if (!(casting?.prepared === 2 && casting.verb === 'prepared' && casting.cantrips === 2 && casting.given.map(s => s.name).join() === 'Prestidigitation,Mending,Message' && casting.list.some(sp => sp.name === 'Vicious Mockery'))) fail(`the Courtier's spells read ${JSON.stringify(casting && { prepared: casting.prepared, verb: casting.verb, cantrips: casting.cantrips, given: casting.given.map(s => s.name) })}`);
     if (!(every?.count === 2 && every.from.join() === 'Deception,Insight,Intimidation,Persuasion')) fail('Every Table doesn\'t ask two of its four skills');
@@ -776,7 +776,8 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   // Fighting on a two-handed weapon; Sneak Attack on a Finesse weapon and not
   // a Spear; Telling Cut on a weapon and not a fist; a leveled spell at its
   // own dice, with its higher slot; Eldritch Spear's range and Repelling
-  // Blast's push; Planar Strike's dice and Wisdom once for each.
+  // Blast's push; Planar Strike, a cantrip now, at the dice its class table
+  // shows plus Wisdom once, in reach or at range.
   const legacyRow = Object.values(srd.species.find(x => x.name === 'Tiefling').tables).flat().find(r => Object.values(r)[0] === 'Abyssal');
   const legacyCantrip = legacyRow['Level 1'].match(/know the (.+?) cantrip/)[1], spray = srd.spells.find(x => x.name === legacyCantrip);
   const tiefling = run({ ...someone([{ class: 'Fighter', level: 5, subclass: 'Champion' }], { base: { ...ABLE, Charisma: 16 } }), species: 'Tiefling', option: 'Abyssal', spellAbilities: { 'Tiefling Fiendish Legacy': 'Charisma' } }, 'Abyssal Tiefling');
@@ -801,7 +802,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   if (!(speared?.reach === `${+srd.spells.find(x => x.name === 'Eldritch Blast').range.match(/\d+/)[0] + 30 * 5} feet` && speared.riders.some(r => /^Push/.test(r)))) fail(`Eldritch Spear and Repelling Blast: ${JSON.stringify(speared)}`);
   const revelator5 = run(someone([{ class: 'Revelator', level: 5, subclass: 'The Tree' }]), 'Revelator 5');
   const planarRow = euphonia.data.find(c => c.name === 'Revelator').table.rows[4]['Planar Strike'], planarHit = hitOf(revelator5, 'Planar Strike');
-  if (!planarHit?.damage.startsWith(`${planarRow}${(n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : ''))(+planarRow.match(/^\d+/)[0] * revelator5.mod.Wisdom)} `)) fail(`Planar Strike: ${JSON.stringify(planarHit)}`);
+  if (!planarHit?.damage.startsWith(`${planarRow}${(n => (n ? ` ${n > 0 ? '+' : '−'} ${Math.abs(n)}` : ''))(revelator5.mod.Wisdom)} `) || planarHit.reach !== 'reach 5 feet, or 60 feet') fail(`Planar Strike: ${JSON.stringify(planarHit)}`);
 
   // Magic items on the numbers, each from its data and sentence: attuned to
   // no more than the SRD allows, the rarest first; a weapon's bonus by its

@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "60a673ba1935ade3824df2cbfa41018601048e962b948303b1a7ea0e30704539",
-  "modified": "2026-11-23T14:15:30-05:00",
+  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
+  "modified": "2026-11-23T18:46:58-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -438,7 +438,7 @@
       {
        "level": 14,
        "name": "All In",
-       "text": "When you call an attack with The Count, you can go all in. If the attack hits, roll the attack's own damage dice twice and add both rolls together: the weapon's or the spell's dice, and no extra dice from features such as Exploit, Sneak Attack, smites or *Hunter's Mark*. The hit doesn't count as a Critical Hit, so nothing that triggers on a Critical Hit applies; if the attack is a Critical Hit anyway, going all in adds nothing to it. If it misses, you can't use Exploit until the end of your next turn, and Stacked Deck doesn't save the call. You can go all in a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+       "text": "When you call an attack with The Count, you can go all in. If the attack hits, it's a Critical Hit. If it misses, it costs what any missed call costs (The Count), and Stacked Deck can save it. You can go all in a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 14,
@@ -1036,7 +1036,7 @@
     {
      "level": 1,
      "name": "Accomplishments and Regard",
-     "text": "You have made yourself accomplished. You gain two accomplishments from the list below, and you gain more as you reach Courtier levels, as shown in the Accomplishments column of the Courtier Features table. Each accomplishment is one choice. The arts in parentheses after its name (Arms, Letters, Muses, Society or Mysteries) are what it can count as for your Regard: when an accomplishment lists two, choose one when you take it, and it counts as that art for as long as you have it. The accomplishments are listed by the level you need to take them. Unless an accomplishment says otherwise, you can't choose the same one twice. Whenever you gain a Courtier level, you can replace one accomplishment with another for which you qualify.\n\n**The forgone art.** At level 3 you join a college, and four of the five colleges forgo one art: the College of Arms forgoes Letters, the College of Art forgoes Mysteries, the College of Psyche forgoes Muses and the College of Verse forgoes Arms. The College of Grace forgoes none, and no college forgoes Society, since every courtier lives in it. This is the whole rule:\n\n- None of your accomplishments can count as the forgone art, so your Regard can be at most 4 (5 for Grace).\n- You can't take an accomplishment that lists only the forgone art. One that lists two arts counts as the other.\n- When you join the college, each accomplishment you have that counts as the forgone art switches to its other art. If it lists no other, replace it with an accomplishment you qualify for.\n- Forgoing an art changes your accomplishments and your Regard, and nothing else. You keep your weapons, your spells and every class feature, and your college's features work even if they draw on the art it forgoes.\n\nIf you know your college at level 1, leave its forgone art out of your choices, and nothing changes at level 3.\n\n**Regard.** You have presence, and you see everyone else's. Your **Regard** is the number of different arts (Arms, Letters, Muses, Society and Mysteries) among your accomplishments. Several of your features grow with your Regard; each says how.\n\n**The Read.** When you can see and hear a group of creatures for 1 minute, or as a Study action in combat, you learn the following about a number of them up to your Regard: each one's attitude toward you; which of them has the most authority over the others, and which has the most actual power; and whether any of them is hiding hostility toward you or your companions.\n\n**Never a Misstep.** You never commit a breach of manners by accident. In any court, house or company, you know the forms of precedence, address and courtesy as if you'd been raised among them, even if you've never seen their like before. You have Advantage on Charisma checks to be accepted as belonging somewhere you don't.\n\n> **For the DM.** The Read is a reveal, and it comes whenever the Courtier asks. For any room a Courtier walks into, decide who really holds power there, and keep a line on each important creature's attitude. A Read shows *that* a creature is hiding hostility, never why, or what it means to do about it.\n\n**From Courtier level 1**\n\n***A Secret (Mysteries).*** Choose one spell from the Courtier spell list, of a level for which you have spell slots. You always have it prepared. It counts as a Courtier spell for you and doesn't count against your number of prepared spells, and once per Long Rest you can cast it without expending a spell slot. You can take this accomplishment twice, choosing a different spell each time.\n\n***An Instrument of Your Art (Muses).*** You gain proficiency with one musical instrument, one type of Artisan's Tools or the Disguise Kit, and you have Advantage on ability checks you make with it. A work you make with it, given as a gift, earns you an audience with the person who receives it. You can take this accomplishment more than once, choosing a different tool each time.\n\n***Correspondence (Letters, Society).*** You gain proficiency with Calligrapher's Supplies and the Forgery Kit. A letter you write in your own hand is opened and read by its recipient before any other mail, whoever they are, and you can tell when a letter you receive has been opened and resealed on the way, whether by a postmaster or a *cabinet noir*.\n\n***Every Table (Society, Muses).*** You gain proficiency in two of these skills: Deception, Insight, Intimidation or Persuasion.\n\n***Fencing Style (Arms).*** You gain a Fighting Style feat of your choice. You can take this accomplishment twice, choosing a different feat each time.\n\n***Horse and Bow (Arms).*** You gain proficiency with Longbows and in the Animal Handling skill, and you have Advantage on checks and saving throws to stay mounted.\n\n***Patronage (Society, Muses).*** You have a patron at one court or great house of your choice (a king's chamber, a cardinal's household, a factor of Mutapa's House of the Bird) who will receive you, lend you modest sums and speak for you to that court's authorities. If you lose the patron, you can find another at a different court after a month there.\n\n***The Code (Arms, Society).*** You know the customs of the duel in any land you've lived in: who can challenge whom, over what, with which weapons and what the law will overlook. You can serve as a second, and a challenge you carry or accept is honored by both sides. Before a fight that begins with words, you can tell whether the other side means to keep the forms.\n\n***The Gaming House (Society, Letters).*** You gain proficiency with two Gaming Sets, and you always know when a game you're watching is crooked.\n\n***The Hunt (Arms, Society).*** You gain proficiency in the Survival skill, and you keep a trained hawk or a brace of hounds that hunts for you but never fights. You're welcome at any hunt a court holds, and whoever rides beside you there speaks more freely than they would indoors.\n\n***The Library (Letters).*** You gain proficiency in two of these skills: Arcana, History, Nature or Religion.\n\n***The Second Weapon (Arms).*** You gain proficiency with one Martial weapon of your choice, and you can use the mastery property of one kind of weapon you're proficient with (one more kind once you have Weapon Mastery).\n\n***The Stage (Muses).*** You gain proficiency in the Performance skill and with the Disguise Kit. When you perform for at least 1 minute, you can choose one creature in the audience: if it isn't Hostile, its attitude toward you improves by one step until your next Long Rest, unless you give it reason otherwise.\n\n***Tongues (Letters, Society).*** You learn two languages of your choice, and you can read any script used to write a language you know, however archaic. You can take this accomplishment more than once.\n\n**From Courtier level 11**\n\nFrom level 11, any accomplishment you gain or swap in can be one of these; your seventh comes at level 11.\n\n***A Crown's Commission (Muses, Society).*** You hold an appointment as artist to one sovereign of your choice. While you serve, you have lodging at that court, a pension of 50 GP a month, and a place in its ceremonies, and your work hangs where everyone who matters will see it. Once per month you can ask the sovereign's household a favor that costs it nothing but attention: an introduction, a pass through a closed gate, a seat at a dinner.\n\n***A Great Work (Mysteries, Muses).*** Choose one level 6 spell from any class's spell list, of any school: the great work is the one time a courtier reaches past their own kind of magic. You always have it prepared, it counts as a Courtier spell for you and you can cast it once without expending a spell slot; you regain that use when you finish a Long Rest. It stays one spell as it grows: when you reach Courtier levels 13, 15 and 17, you can replace it with one a level higher (level 7, then 8, then 9), and your level 9 Great Work can be *Wish* (with all of that spell's usual risks).\n\n> **For the DM.** A Great Work is one spell, cast once per Long Rest, and the Courtier has no other spell above level 5. Run a Courtier's *Wish* as you would any caster's: copying another spell is safe, and anything bigger carries the spell's own stress.\n\n***A Master's Salle (Arms, Society).*** You keep a fencing school in a city of your choice, and its pupils, from the younger children of great houses to princes, owe you a student's loyalty. In that city, or at any court where one of them now serves (the DM says who's there; usually at least one pupil), you can call on a pupil once a month for a sword at your side, a message carried or a word in the right ear. A challenge issued in your school's name is always answered, and always by the person challenged.\n\n***The Ear of the King (Society, Arms).*** Once per month, you can have a private audience of a few minutes with any ruler who has received you before, without going through their ministers. What you say reaches them exactly as you say it. What they do about it is theirs.\n\n***The Republic of Letters (Letters, Mysteries).*** You keep a correspondence with scholars in the great cities of the world, from the Royal Society to the madrasas of Isfahan. Any library, archive, academy or college admits you as a colleague. Once a week, a letter to your correspondents brings back an answer to one question of learning (history, law, languages, natural philosophy or theology) as accurate as the learned world can make it, in the time the post takes."
+     "text": "You have made yourself accomplished. You gain two accomplishments from the list below, and you gain more as you reach Courtier levels, as shown in the Accomplishments column of the Courtier Features table. Each accomplishment is one choice. The arts in parentheses after its name (Arms, Letters, Muses, Society or Mysteries) are what it can count as for your Regard: when an accomplishment lists two, choose one when you take it, and it counts as that art for as long as you have it. The accomplishments are listed by the level you need to take them. Unless an accomplishment says otherwise, you can't choose the same one twice. Whenever you gain a Courtier level, you can replace one accomplishment with another for which you qualify.\n\n**Regard.** You have presence, and you see everyone else's. Your **Regard** is the number of different arts (Arms, Letters, Muses, Society and Mysteries) among your accomplishments. Several of your features grow with your Regard; each says how.\n\n**The Read.** When you can see and hear a group of creatures for 1 minute, or as a Study action in combat, you learn the following about a number of them up to your Regard: each one's attitude toward you; which of them has the most authority over the others, and which has the most actual power; and whether any of them is hiding hostility toward you or your companions.\n\n**Never a Misstep.** You never commit a breach of manners by accident. In any court, house or company, you know the forms of precedence, address and courtesy as if you'd been raised among them, even if you've never seen their like before. You have Advantage on Charisma checks to be accepted as belonging somewhere you don't.\n\n> **For the DM.** The Read is a reveal, and it comes whenever the Courtier asks. For any room a Courtier walks into, decide who really holds power there, and keep a line on each important creature's attitude. A Read shows *that* a creature is hiding hostility, never why, or what it means to do about it.\n\n**From Courtier level 1**\n\n***A Secret (Mysteries).*** Choose one spell from the Courtier spell list, of a level for which you have spell slots. You always have it prepared. It counts as a Courtier spell for you and doesn't count against your number of prepared spells, and once per Long Rest you can cast it without expending a spell slot. You can take this accomplishment twice, choosing a different spell each time.\n\n***An Instrument of Your Art (Muses).*** You gain proficiency with one musical instrument, one type of Artisan's Tools or the Disguise Kit, and you have Advantage on ability checks you make with it. A work you make with it, given as a gift, earns you an audience with the person who receives it. You can take this accomplishment more than once, choosing a different tool each time.\n\n***Correspondence (Letters, Society).*** You gain proficiency with Calligrapher's Supplies and the Forgery Kit. A letter you write in your own hand is opened and read by its recipient before any other mail, whoever they are, and you can tell when a letter you receive has been opened and resealed on the way, whether by a postmaster or a *cabinet noir*.\n\n***Every Table (Society, Muses).*** You gain proficiency in two of these skills: Deception, Insight, Intimidation or Persuasion.\n\n***Fencing Style (Arms).*** You gain a Fighting Style feat of your choice. You can take this accomplishment twice, choosing a different feat each time.\n\n***Horse and Bow (Arms).*** You gain proficiency with Longbows and in the Animal Handling skill, and you have Advantage on checks and saving throws to stay mounted.\n\n***Patronage (Society, Muses).*** You have a patron at one court or great house of your choice (a king's chamber, a cardinal's household, a factor of Mutapa's House of the Bird) who will receive you, lend you modest sums and speak for you to that court's authorities. If you lose the patron, you can find another at a different court after a month there.\n\n***The Code (Arms, Society).*** You know the customs of the duel in any land you've lived in: who can challenge whom, over what, with which weapons and what the law will overlook. You can serve as a second, and a challenge you carry or accept is honored by both sides. Before a fight that begins with words, you can tell whether the other side means to keep the forms.\n\n***The Gaming House (Society, Letters).*** You gain proficiency with two Gaming Sets, and you always know when a game you're watching is crooked.\n\n***The Hunt (Arms, Society).*** You gain proficiency in the Survival skill, and you keep a trained hawk or a brace of hounds that hunts for you but never fights. You're welcome at any hunt a court holds, and whoever rides beside you there speaks more freely than they would indoors.\n\n***The Library (Letters).*** You gain proficiency in two of these skills: Arcana, History, Nature or Religion.\n\n***The Second Weapon (Arms).*** You gain proficiency with one Martial weapon of your choice, and you can use the mastery property of one kind of weapon you're proficient with (one more kind once you have Weapon Mastery).\n\n***The Stage (Muses).*** You gain proficiency in the Performance skill and with the Disguise Kit. When you perform for at least 1 minute, you can choose one creature in the audience: if it isn't Hostile, its attitude toward you improves by one step until your next Long Rest, unless you give it reason otherwise.\n\n***Tongues (Letters, Society).*** You learn two languages of your choice, and you can read any script used to write a language you know, however archaic. You can take this accomplishment more than once.\n\n**From Courtier level 11**\n\nFrom level 11, any accomplishment you gain or swap in can be one of these; your seventh comes at level 11.\n\n***A Crown's Commission (Muses, Society).*** You hold an appointment as artist to one sovereign of your choice. While you serve, you have lodging at that court, a pension of 50 GP a month, and a place in its ceremonies, and your work hangs where everyone who matters will see it. Once per month you can ask the sovereign's household a favor that costs it nothing but attention: an introduction, a pass through a closed gate, a seat at a dinner.\n\n***A Great Work (Mysteries, Muses).*** Choose one level 6 spell from any class's spell list, of any school: the great work is the one time a courtier reaches past their own kind of magic. You always have it prepared, it counts as a Courtier spell for you and you can cast it once without expending a spell slot; you regain that use when you finish a Long Rest. It stays one spell as it grows: when you reach Courtier levels 13, 15 and 17, you can replace it with one a level higher (level 7, then 8, then 9), and your level 9 Great Work can be *Wish* (with all of that spell's usual risks).\n\n> **For the DM.** A Great Work is one spell, cast once per Long Rest, and the Courtier has no other spell above level 5. Run a Courtier's *Wish* as you would any caster's: copying another spell is safe, and anything bigger carries the spell's own stress.\n\n***A Master's Salle (Arms, Society).*** You keep a fencing school in a city of your choice, and its pupils, from the younger children of great houses to princes, owe you a student's loyalty. In that city, or at any court where one of them now serves (the DM says who's there; usually at least one pupil), you can call on a pupil once a month for a sword at your side, a message carried or a word in the right ear. A challenge issued in your school's name is always answered, and always by the person challenged.\n\n***The Ear of the King (Society, Arms).*** Once per month, you can have a private audience of a few minutes with any ruler who has received you before, without going through their ministers. What you say reaches them exactly as you say it. What they do about it is theirs.\n\n***The Republic of Letters (Letters, Mysteries).*** You keep a correspondence with scholars in the great cities of the world, from the Royal Society to the madrasas of Isfahan. Any library, archive, academy or college admits you as a colleague. Once a week, a letter to your correspondents brings back an answer to one question of learning (history, law, languages, natural philosophy or theology) as accurate as the learned world can make it, in the time the post takes."
     },
     {
      "level": 1,
@@ -1133,7 +1133,7 @@
       {
        "level": 3,
        "name": "The Sword or the Book",
-       "text": "Your college forgoes Letters. In exchange, you gain proficiency in the Athletics skill (if you already have it, choose another skill instead), and the master of any fencing school will open the salle to you and let you train there.\n\n**Affairs of Honor.** You have The Code without spending an accomplishment on it (if you already have it, you gain one more accomplishment from the art of Arms instead), and people of rank bring you their quarrels: a duel you arrange is fought by its terms, and the magistrates hear of it last. Roll on the table below when someone comes to you for satisfaction."
+       "text": "You gain proficiency in the Athletics skill (if you already have it, choose another skill instead), and the master of any fencing school will open the salle to you and let you train there.\n\n**Affairs of Honor.** You have The Code without spending an accomplishment on it (if you already have it, you gain one more accomplishment from the art of Arms instead), and people of rank bring you their quarrels: a duel you arrange is fought by its terms, and the magistrates hear of it last. Roll on the table below when someone comes to you for satisfaction."
       },
       {
        "level": 3,
@@ -1170,7 +1170,7 @@
       {
        "level": 3,
        "name": "What the Eye Can See",
-       "text": "Your college forgoes Mysteries, the study of magic for its own sake. Your magic goes into your painting, and this college's features are that magic. You keep your Courtier spells; you study no magic beyond them. In exchange, you gain proficiency with Painter's Supplies and one other type of Artisan's Tools (if you already have either, choose another tool instead)."
+       "text": "Your magic goes into your painting, and this college's features are that magic. You gain proficiency with Painter's Supplies and one other type of Artisan's Tools (if you already have either, choose another tool instead)."
       },
       {
        "level": 3,
@@ -1202,7 +1202,7 @@
     {
      "name": "Grace",
      "place": "chapter",
-     "lead": "* Montaigne's essays, Gracián's art of worldly wisdom, the salon, the tea ceremony: life itself as the art worth mastering. Its emblem is the crane standing watch with a stone in its raised foot, so that if it sleeps the stone falls and wakes it: Europe's old sign of vigilance, and the same bird Kyoto paints on its screens. Grace's work is the evening itself: who sits where, who speaks and who goes home pleased. Grace forgoes no art, so only a Courtier of Grace can reach a Regard of 5.*",
+     "lead": "* Montaigne's essays, Gracián's art of worldly wisdom, the salon, the tea ceremony: life itself as the art worth mastering. Its emblem is the crane standing watch with a stone in its raised foot, so that if it sleeps the stone falls and wakes it: Europe's old sign of vigilance, and the same bird Kyoto paints on its screens. Grace's work is the evening itself: who sits where, who speaks and who goes home pleased. Only a Courtier of Grace carries a Regard past 5 (Reputation).*",
      "features": [
       {
        "level": 3,
@@ -1244,7 +1244,7 @@
       {
        "level": 3,
        "name": "People, Not Canvases",
-       "text": "Your college forgoes Muses. In exchange, you gain proficiency in the Insight and Medicine skills (if you already have either, choose another skill instead), and the physicians of any hospital will let you work beside them.\n\n**Real or Performed.** When a creature shows a passion in front of you (tears at a funeral, rage in a council, a lover's sigh), you know whether it's felt or performed.\n\n**Cases.** Families, abbesses and commanders send for you when the trouble is in someone's head and the physicians have run out of remedies. Roll on the table below when you're between cases."
+       "text": "You gain proficiency in the Insight and Medicine skills (if you already have either, choose another skill instead), and the physicians of any hospital will let you work beside them.\n\n**Real or Performed.** When a creature shows a passion in front of you (tears at a funeral, rage in a council, a lover's sigh), you know whether it's felt or performed.\n\n**Cases.** Families, abbesses and commanders send for you when the trouble is in someone's head and the physicians have run out of remedies. Roll on the table below when you're between cases."
       },
       {
        "level": 3,
@@ -1276,7 +1276,7 @@
       {
        "level": 3,
        "name": "The Stage over the Field",
-       "text": "Your college forgoes Arms. In exchange, you gain proficiency in the Performance skill and with the Disguise Kit (if you already have either, choose another skill or tool instead), and you can perform anything you've seen performed, even once. The stage teaches one thing with a blade: you gain one Fighting Style feat of your choice. Accomplishments that list only Arms, the Fencing Style among them, stay closed to you.\n\n**The Repertory.** A company or a patron will take you on for a season wherever plays are licensed, and some will hide you where they aren't. Roll on the table below when you're between engagements."
+       "text": "You gain proficiency in the Performance skill and with the Disguise Kit (if you already have either, choose another skill or tool instead), and you can perform anything you've seen performed, even once.\n\n**The Repertory.** A company or a patron will take you on for a season wherever plays are licensed, and some will hide you where they aren't. Roll on the table below when you're between engagements."
       },
       {
        "level": 3,
@@ -3983,7 +3983,7 @@
       {
        "level": 3,
        "name": "The Incision",
-       "text": "As a Magic action, you can make an **incision**: a ranged spell attack using Intelligence against a creature you can see within 60 feet of yourself. On a hit, the target takes 1d10 Force damage. This damage increases to 2d10 at Physician level 5, 3d10 at level 11 and 4d10 at level 17. The incision is magic but not a spell: *Counterspell* can't stop it, features that work on spells don't apply to it and it doesn't work in an Antimagic Field."
+       "text": "You know the *Incision* cantrip (New Physician Spells). It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. Each casting of it is an **incision**."
       },
       {
        "level": 3,
@@ -4747,6 +4747,49 @@
    ],
    "new_spells": [
     {
+     "name": "Incision",
+     "level": 0,
+     "school": "Evocation",
+     "classes": [
+      "Physician"
+     ],
+     "casting": "Action",
+     "damage": [
+      "Force"
+     ],
+     "range": "60 feet",
+     "reach": null,
+     "area": null,
+     "higher": null,
+     "attack": "ranged",
+     "save": null,
+     "dice": {
+      "dice": "1d10",
+      "type": "Force"
+     },
+     "upgrade": {
+      "kind": "dice",
+      "class": "Physician",
+      "steps": [
+       [
+        5,
+        "2d10"
+       ],
+       [
+        11,
+        "3d10"
+       ],
+       [
+        17,
+        "4d10"
+       ]
+      ]
+     },
+     "components": "S, M (a Scalpel)",
+     "duration": "Instantaneous",
+     "text": "Your instrument cuts from across the room. Make a ranged spell attack against a creature you can see within range. On a hit, the target takes 1d10 Force damage.\n\n**Cantrip Upgrade.** The damage increases to 2d10 when you reach Physician level 5, 3d10 at Physician level 11 and 4d10 at Physician level 17."
+    },
+    {
      "name": "Ambulance",
      "level": 2,
      "school": "Transmutation",
@@ -4997,7 +5040,7 @@
       "Level": "1",
       "Proficiency Bonus": "+2",
       "Class Features": "Spellcasting, Vistas, Planar Strike, Planar Adept",
-      "Planar Strike": "1d12",
+      "Planar Strike": "1d10",
       "Revelations": "2",
       "Favors": "2",
       "Prepared Spells": "2",
@@ -5011,7 +5054,7 @@
       "Level": "2",
       "Proficiency Bonus": "+2",
       "Class Features": "The Border Ethereal, Ethereal Stride",
-      "Planar Strike": "1d12",
+      "Planar Strike": "1d10",
       "Revelations": "3",
       "Favors": "4",
       "Prepared Spells": "3",
@@ -5025,7 +5068,7 @@
       "Level": "3",
       "Proficiency Bonus": "+2",
       "Class Features": "Visiting Spirit, Revelator Pathway",
-      "Planar Strike": "1d12",
+      "Planar Strike": "1d10",
       "Revelations": "4",
       "Favors": "6",
       "Prepared Spells": "4",
@@ -5039,7 +5082,7 @@
       "Level": "4",
       "Proficiency Bonus": "+2",
       "Class Features": "Ability Score Improvement",
-      "Planar Strike": "1d12",
+      "Planar Strike": "1d10",
       "Revelations": "4",
       "Favors": "6",
       "Prepared Spells": "5",
@@ -5053,7 +5096,7 @@
       "Level": "5",
       "Proficiency Bonus": "+3",
       "Class Features": "The Near Planes",
-      "Planar Strike": "2d12",
+      "Planar Strike": "3d10",
       "Revelations": "5",
       "Favors": "7",
       "Prepared Spells": "6",
@@ -5067,7 +5110,7 @@
       "Level": "6",
       "Proficiency Bonus": "+3",
       "Class Features": "The Crossings, Guide's Hand",
-      "Planar Strike": "2d12",
+      "Planar Strike": "3d10",
       "Revelations": "6",
       "Favors": "8",
       "Prepared Spells": "6",
@@ -5081,7 +5124,7 @@
       "Level": "7",
       "Proficiency Bonus": "+3",
       "Class Features": "",
-      "Planar Strike": "2d12",
+      "Planar Strike": "3d10",
       "Revelations": "7",
       "Favors": "9",
       "Prepared Spells": "7",
@@ -5095,7 +5138,7 @@
       "Level": "8",
       "Proficiency Bonus": "+3",
       "Class Features": "Ability Score Improvement",
-      "Planar Strike": "2d12",
+      "Planar Strike": "3d10",
       "Revelations": "7",
       "Favors": "9",
       "Prepared Spells": "7",
@@ -5109,7 +5152,7 @@
       "Level": "9",
       "Proficiency Bonus": "+4",
       "Class Features": "Reach Beyond, Soul's Journey",
-      "Planar Strike": "2d12",
+      "Planar Strike": "3d10",
       "Revelations": "7",
       "Favors": "9",
       "Prepared Spells": "9",
@@ -5123,7 +5166,7 @@
       "Level": "10",
       "Proficiency Bonus": "+4",
       "Class Features": "Wider Vistas",
-      "Planar Strike": "2d12",
+      "Planar Strike": "3d10",
       "Revelations": "7",
       "Favors": "9",
       "Prepared Spells": "9",
@@ -5137,7 +5180,7 @@
       "Level": "11",
       "Proficiency Bonus": "+4",
       "Class Features": "",
-      "Planar Strike": "3d12",
+      "Planar Strike": "5d10",
       "Revelations": "7",
       "Favors": "9",
       "Prepared Spells": "10",
@@ -5151,7 +5194,7 @@
       "Level": "12",
       "Proficiency Bonus": "+4",
       "Class Features": "Ability Score Improvement",
-      "Planar Strike": "3d12",
+      "Planar Strike": "5d10",
       "Revelations": "7",
       "Favors": "9",
       "Prepared Spells": "10",
@@ -5165,7 +5208,7 @@
       "Level": "13",
       "Proficiency Bonus": "+5",
       "Class Features": "The Circuit",
-      "Planar Strike": "3d12",
+      "Planar Strike": "5d10",
       "Revelations": "8",
       "Favors": "10",
       "Prepared Spells": "11",
@@ -5179,7 +5222,7 @@
       "Level": "14",
       "Proficiency Bonus": "+5",
       "Class Features": "Ethereal Wayfarer",
-      "Planar Strike": "3d12",
+      "Planar Strike": "5d10",
       "Revelations": "8",
       "Favors": "10",
       "Prepared Spells": "11",
@@ -5193,7 +5236,7 @@
       "Level": "15",
       "Proficiency Bonus": "+5",
       "Class Features": "",
-      "Planar Strike": "3d12",
+      "Planar Strike": "5d10",
       "Revelations": "9",
       "Favors": "11",
       "Prepared Spells": "12",
@@ -5207,7 +5250,7 @@
       "Level": "16",
       "Proficiency Bonus": "+5",
       "Class Features": "Ability Score Improvement",
-      "Planar Strike": "3d12",
+      "Planar Strike": "5d10",
       "Revelations": "9",
       "Favors": "11",
       "Prepared Spells": "12",
@@ -5221,7 +5264,7 @@
       "Level": "17",
       "Proficiency Bonus": "+6",
       "Class Features": "The Body Follows",
-      "Planar Strike": "4d12",
+      "Planar Strike": "7d10",
       "Revelations": "9",
       "Favors": "11",
       "Prepared Spells": "14",
@@ -5235,7 +5278,7 @@
       "Level": "18",
       "Proficiency Bonus": "+6",
       "Class Features": "Ethereal Sight",
-      "Planar Strike": "4d12",
+      "Planar Strike": "7d10",
       "Revelations": "9",
       "Favors": "11",
       "Prepared Spells": "14",
@@ -5249,7 +5292,7 @@
       "Level": "19",
       "Proficiency Bonus": "+6",
       "Class Features": "Epic Boon",
-      "Planar Strike": "4d12",
+      "Planar Strike": "7d10",
       "Revelations": "9",
       "Favors": "11",
       "Prepared Spells": "15",
@@ -5263,7 +5306,7 @@
       "Level": "20",
       "Proficiency Bonus": "+6",
       "Class Features": "The Circuit Made Whole",
-      "Planar Strike": "4d12",
+      "Planar Strike": "7d10",
       "Revelations": "All",
       "Favors": "11",
       "Prepared Spells": "15",
@@ -5284,12 +5327,12 @@
     {
      "level": 1,
      "name": "Vistas",
-     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect (what a spirit of that plane can do, from level 3, when you can call one) and one Influence (what washes over a creature when you open a vista there). You start knowing two, the echoes of the world closest to home: the Hidden and the Ghostlands. Most Revelations are granted by your features by name; two features let you choose one (The Near Planes at level 5 and The Circuit at level 13). The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced.\n\n**Favor.** The planes answer you a number of times between rests: you have the number of Favors shown in the Favors column of the Revelator Features table, plus one for each plane you have walked (Soul's Journey). Opening a vista spends one, and so do the other features that tell you to spend a Favor. Healing costs more: an Influence that restores Hit Points or grants Temporary Hit Points costs two Favors. A Short or Long Rest brings every Favor back.\n\n**Opening a Vista.** As a Bonus Action, you spend a Favor and open a vista to a Revelation you know, beside a creature you can see within 60 feet of yourself (it can be you), and **let in an Influence**: that Revelation's Influence takes effect on the creature. From Revelator level 3, a vista can call a spirit instead (Visiting Spirit), and the spirit steps through beside the creature you chose. A plane needs a breath between answers: you can't open a vista to the same plane on two of your turns in a row.\n\n**Influences.** Unless an Influence says otherwise, it lasts until the start of your next turn.\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required) or until you have the Incapacitated condition. While it's open, it sets the damage type of your Planar Strike; its Influence keeps its own, shorter clock (above).\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells.\n\n**One Bonus to AC.** Bonuses to AC from Revelator Influences and Aspects don't stack with each other; a creature uses the highest.\n\n**Your First Two Revelations.** Every Revelator starts with these. The rest are in the Cosmography, after the pathways, and the Cosmography Summary table compares them all.\n\n**The Hidden.**\n- ***Spirit Aspect: Fae Trickster.*** *Fey.* It has Advantage on Dexterity (Stealth) checks, and in place of its other action it can take the Magic action to cast *Minor Illusion* without components. **Command:** *Misdirect.* One creature within 5 feet of the spirit must succeed on a Wisdom saving throw or have Disadvantage on its next attack roll before the start of your next turn.\n- ***Influence: Merriment.*** The creature can end one Charmed or Frightened condition on itself, and has Advantage on its next saving throw.\n- ***Planar Strike.*** Psychic damage.\n\n**The Ghostlands.**\n- ***Spirit Aspect: Shade.*** *Undead.* It has Advantage on Dexterity (Stealth) checks, it can take the Hide action in addition to its other action and it can move through a space as narrow as 1 inch. **Command:** *Go Ahead.* It moves up to twice its Speed without provoking Opportunity Attacks and takes the Hide action, and you see through its eyes until the start of your next turn.\n- ***Influence: Gloom.*** Choose an ally or an enemy; shadow falls on either. On an ally, the next attack roll against it has Disadvantage. On an enemy, it must succeed on a Wisdom saving throw or have Disadvantage on its next attack roll.\n- ***Planar Strike.*** Necrotic damage."
+     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect (what a spirit of that plane can do, from level 3, when you can call one) and one Influence (what washes over a creature when you open a vista there). You start knowing two, the echoes of the world closest to home: the Hidden and the Ghostlands. Most Revelations are granted by your features by name; two features let you choose one (The Near Planes at level 5 and The Circuit at level 13). The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced.\n\n**Favor.** The planes answer you a number of times between rests: you have the number of Favors shown in the Favors column of the Revelator Features table, plus one for each plane you have walked (Soul's Journey). Opening a vista spends one, and so do the other features that tell you to spend a Favor. Healing costs more: an Influence that restores Hit Points or grants Temporary Hit Points costs two Favors. A Short or Long Rest brings every Favor back.\n\n**Opening a Vista.** As a Bonus Action, you spend a Favor and open a vista to a Revelation you know, beside a creature you can see within 60 feet of yourself (it can be you), and **let in an Influence**: that Revelation's Influence takes effect on the creature. From Revelator level 3, a vista can call a spirit instead (Visiting Spirit), and the spirit steps through beside the creature you chose. A plane needs a breath between answers: you can't open a vista to the same plane on two of your turns in a row.\n\n**Influences.** Unless an Influence says otherwise, it lasts until the start of your next turn.\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required) or until you have the Incapacitated condition. While it's open, it sets the damage type of your *Planar Strike*; its Influence keeps its own, shorter clock (above).\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells.\n\n**One Bonus to AC.** Bonuses to AC from Revelator Influences and Aspects don't stack with each other; a creature uses the highest.\n\n**Your First Two Revelations.** Every Revelator starts with these. The rest are in the Cosmography, after the pathways, and the Cosmography Summary table compares them all.\n\n**The Hidden.**\n- ***Spirit Aspect: Fae Trickster.*** *Fey.* It has Advantage on Dexterity (Stealth) checks, and in place of its other action it can take the Magic action to cast *Minor Illusion* without components. **Command:** *Misdirect.* One creature within 5 feet of the spirit must succeed on a Wisdom saving throw or have Disadvantage on its next attack roll before the start of your next turn.\n- ***Influence: Merriment.*** The creature can end one Charmed or Frightened condition on itself, and has Advantage on its next saving throw.\n- ***Planar Strike.*** Psychic damage.\n\n**The Ghostlands.**\n- ***Spirit Aspect: Shade.*** *Undead.* It has Advantage on Dexterity (Stealth) checks, it can take the Hide action in addition to its other action and it can move through a space as narrow as 1 inch. **Command:** *Go Ahead.* It moves up to twice its Speed without provoking Opportunity Attacks and takes the Hide action, and you see through its eyes until the start of your next turn.\n- ***Influence: Gloom.*** Choose an ally or an enemy; shadow falls on either. On an ally, the next attack roll against it has Disadvantage. On an enemy, it must succeed on a Wisdom saving throw or have Disadvantage on its next attack roll.\n- ***Planar Strike.*** Necrotic damage."
     },
     {
      "level": 1,
      "name": "Planar Strike",
-     "text": "When you take the Attack action on your turn, you can replace one of the attacks with a Planar Strike: a melee spell attack against a creature within 5 feet of yourself, or a ranged spell attack against a creature within 60 feet of yourself. You can make only one Planar Strike on each of your turns. Planar Strike is magical but isn't a spell.\n\n**Damage.** On a hit, the target takes the dice shown in the Planar Strike column of the Revelator Features table, plus your Wisdom modifier once for each of those dice (so 2d12 adds twice your Wisdom modifier).\n\n**The Plane's Power.** The damage is the type the Cosmography gives your open vista's Revelation. If you have no vista open, it's Force damage.\n\n**One Hand for the Plane.** You need a free hand, or a hand holding your Spellcasting Focus, to make a Planar Strike. On a turn when you make one, you can't also make the extra attack of the Light property or the Nick mastery.\n\n**Your Weapons.** A weapon you have proficiency with is a Spellcasting Focus for you, so you can make a Planar Strike with a Spear in one hand and a Shield on the other arm. A Planar Strike is made only with the Attack action on your own turn, so you make Opportunity Attacks with the weapon. A Light Crossbow reaches targets more than 60 feet away, and it works where magic is suppressed."
+     "text": "You know the *Planar Strike* cantrip (New Revelator Cantrip, after the Revelator spell list). It doesn't count against the cantrips you learn with Planar Adept.\n\n**In Place of an Attack.** When you take the Attack action on your turn, you can replace one of the attacks with a casting of *Planar Strike*. You can cast it only once on each of your turns, and on a turn when you cast it, you can't also make the extra attack of the Light property or the Nick mastery.\n\n**The Plane's Power.** Its damage is the type the Cosmography gives your open vista's Revelation, or Force damage if you have no vista open. Its dice grow with your Revelator level, as the Planar Strike column of the Revelator Features table shows.\n\n**Your Weapons.** A weapon you have proficiency with is a Spellcasting Focus for you, and you can make *Planar Strike*'s gesture with the hand that holds it, so you can cast it with a Spear in one hand and a Shield on the other arm. A Light Crossbow reaches targets more than 60 feet away, and it works where magic is suppressed."
     },
     {
      "level": 1,
@@ -5339,7 +5382,7 @@
     {
      "level": 9,
      "name": "Reach Beyond",
-     "text": "*You can push through to the deepest, best-guarded parts of reality, if you're brave enough.*\n\nOnce per Long Rest, as a Bonus Action, you can open a vista without spending a Favor, reaching instead for any Revelation in the Cosmography that you don't know. You can do this even when you have no Favors left. A reach within the Cosmography draws no Attention (defined below).\n\n**Past the Map.** Instead, you can reach past the Cosmography, toward what it leaves out: a single layer or realm, such as the efreet's city in the Plane of Fire or a god's hall in Valhalla; a ruler and their court, such as an archfey, Yama with his scribe, the Jade Emperor in his palace, the lord of the deepest circle of the Nine or a demon lord in their layer; or what lies between and beyond, such as the dead gods adrift in the Astral, the crossroads of the Middle World or the Far Realm. The vista both calls a spirit and lets in an Influence, and the Influence affects every creature of your choice within 30 feet of the vista. The DM decides what comes through from that place's nature, taking the Cosmography's Aspects and Influences as the yardstick: the nearest plane's, bent toward the place you reached. By default, use the nearest plane's Aspect and Influence as written, dressed in the look and voice of the place you reached. A reach past the map always draws Attention.\n\n**The Strain.** The further you reach, the more passes through you, and your body has to bear it. Reaching past the Cosmography forces you to make a Constitution saving throw: DC 15 for a particular layer or realm, or DC 20 for a god, a ruler or the Far Realm. On a failed save, you take 6d6 Psychic damage (10d6 against DC 20); on a successful save, you take half as much damage. If you fail the DC 20 save, your spirit also takes the long way home: you can't spend Favors until you finish a Short or Long Rest. You can still make Planar Strikes, cast spells and command whatever came through. Either way, the vista opens, and you get what you reached for.\n\n**Attention.** A power of that place notices you, and you have its Attention. The DM decides what the power guards and what it wants from you; it might call in a favor, pay you a visit, set you a test or name a debt. By default, it asks one service of you before you gain your next level, in proportion to what you reached for: a message carried, a guest sheltered, a thing returned to its place. Powers act from their own nature, which isn't always kind. The debt is the cost, and it is paid in story, not in Favors. While you have a power's Attention, using Reach Beyond on its place again deepens the relationship rather than drawing new Attention."
+     "text": "*You can push through to the deepest, best-guarded parts of reality, if you're brave enough.*\n\nOnce per Long Rest, as a Bonus Action, you can open a vista without spending a Favor, reaching instead for any Revelation in the Cosmography that you don't know. You can do this even when you have no Favors left. A reach within the Cosmography draws no Attention (defined below).\n\n**Past the Map.** Instead, you can reach past the Cosmography, toward what it leaves out: a single layer or realm, such as the efreet's city in the Plane of Fire or a god's hall in Valhalla; a ruler and their court, such as an archfey, Yama with his scribe, the Jade Emperor in his palace, the lord of the deepest circle of the Nine or a demon lord in their layer; or what lies between and beyond, such as the dead gods adrift in the Astral, the crossroads of the Middle World or the Far Realm. The vista both calls a spirit and lets in an Influence, and the Influence affects every creature of your choice within 30 feet of the vista. The DM decides what comes through from that place's nature, taking the Cosmography's Aspects and Influences as the yardstick: the nearest plane's, bent toward the place you reached. By default, use the nearest plane's Aspect and Influence as written, dressed in the look and voice of the place you reached. A reach past the map always draws Attention.\n\n**The Strain.** The further you reach, the more passes through you, and your body has to bear it. Reaching past the Cosmography forces you to make a Constitution saving throw: DC 15 for a particular layer or realm, or DC 20 for a god, a ruler or the Far Realm. On a failed save, you take 6d6 Psychic damage (10d6 against DC 20); on a successful save, you take half as much damage. If you fail the DC 20 save, your spirit also takes the long way home: you can't spend Favors until you finish a Short or Long Rest. You can still cast *Planar Strike* and your other spells, and command whatever came through. Either way, the vista opens, and you get what you reached for.\n\n**Attention.** A power of that place notices you, and you have its Attention. The DM decides what the power guards and what it wants from you; it might call in a favor, pay you a visit, set you a test or name a debt. By default, it asks one service of you before you gain your next level, in proportion to what you reached for: a message carried, a guest sheltered, a thing returned to its place. Powers act from their own nature, which isn't always kind. The debt is the cost, and it is paid in story, not in Favors. While you have a power's Attention, using Reach Beyond on its place again deepens the relationship rather than drawing new Attention."
     },
     {
      "level": 9,
@@ -5379,7 +5422,7 @@
     {
      "level": 20,
      "name": "The Circuit Made Whole",
-     "text": "*You understand why the world is the shape that it is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography.\n\n**Old Acquaintance.** You can use Reach Beyond twice per Long Rest.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors.\n\n**Spirit of Totality.** When you call a spirit, you can call the Spirit of Totality instead: a spirit of no one plane, sent by all of them together. It is still your one spirit, and it uses the Visiting Spirit stat block. It counts as every creature type, and it understands and speaks every language, but it has no Aspect's traits. When you command it, it uses the commands of two different Spirit Aspects of your choice; it can't choose a command that depends on an Aspect's trait: Element's Way, which needs a chosen element, or Moonlight, which needs the light of the Sphere of the Moon's Lantern. While it's with you, each time you hit with your Planar Strike you can choose its damage type from any plane's.\n\n**Walked Whole.** The hard roads add up. For every two hard roads you have walked, Favor in the Moment regains one more Favor. If you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond.\n\n> **Playing a Revelator**\n>\n> You see the world's other rooms, and you've been to some of them. The planes answer a few times between rests, and a Short Rest brings every Favor back, so a party that stops to breathe gets a generous Revelator. Your spirit doesn't fight: it's a guide, a scout and a voice in the right ear, so give it a job every turn. Ethereal Stride is your exit and your shortcut: step through the wall, and bring a friend. Out of a fight, you talk with ghosts, see into the Border Ethereal and know the planes better than anyone at the table: when the party wonders what lives behind a door, you have often seen the other side of it."
+     "text": "*You understand why the world is the shape that it is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography.\n\n**Old Acquaintance.** You can use Reach Beyond twice per Long Rest.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors.\n\n**Spirit of Totality.** When you call a spirit, you can call the Spirit of Totality instead: a spirit of no one plane, sent by all of them together. It is still your one spirit, and it uses the Visiting Spirit stat block. It counts as every creature type, and it understands and speaks every language, but it has no Aspect's traits. When you command it, it uses the commands of two different Spirit Aspects of your choice; it can't choose a command that depends on an Aspect's trait: Element's Way, which needs a chosen element, or Moonlight, which needs the light of the Sphere of the Moon's Lantern. While it's with you, each time you hit with *Planar Strike* you can choose its damage type from any plane's.\n\n**Walked Whole.** The hard roads add up. For every two hard roads you have walked, Favor in the Moment regains one more Favor. If you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond.\n\n> **Playing a Revelator**\n>\n> You see the world's other rooms, and you've been to some of them. The planes answer a few times between rests, and a Short Rest brings every Favor back, so a party that stops to breathe gets a generous Revelator. Your spirit doesn't fight: it's a guide, a scout and a voice in the right ear, so give it a job every turn. Ethereal Stride is your exit and your shortcut: step through the wall, and bring a friend. Out of a fight, you talk with ghosts, see into the Border Ethereal and know the planes better than anyone at the table: when the party wonders what lives behind a door, you have often seen the other side of it."
     }
    ],
    "subclasses": [
@@ -5438,7 +5481,7 @@
       {
        "level": 3,
        "name": "Bear the Verdict",
-       "text": "You gain training with Heavy armor, and you have Advantage on saving throws you make to avoid being moved or given the Prone condition. When an ally within 5 feet of you takes damage, you can take a Reaction, after the damage is rolled, to take that damage instead, as if it had been dealt to you: your Resistances, Vulnerabilities and Immunities apply to it, and the ally's don't. Any other effect of the attack still applies to the ally. If the damage came from a Weighed creature, the scale still tips.\n\nOn this pathway the plane comes through your guard more than your hands: your Planar Strike adds your Wisdom modifier no more than twice, however many dice it rolls."
+       "text": "You gain training with Heavy armor, and you have Advantage on saving throws you make to avoid being moved or given the Prone condition. When an ally within 5 feet of you takes damage, you can take a Reaction, after the damage is rolled, to take that damage instead, as if it had been dealt to you: your Resistances, Vulnerabilities and Immunities apply to it, and the ally's don't. Any other effect of the attack still applies to the ally. If the damage came from a Weighed creature, the scale still tips."
       },
       {
        "level": 7,
@@ -5532,7 +5575,7 @@
       {
        "level": 3,
        "name": "Wellspring",
-       "text": "As a Bonus Action, you can spend two Favors to set down a Wellspring: the Maelstrom fills a spring in one 5-foot square of a surface a creature could stand on (the ground, a floor, stairs, a deck or the surface of water; not a wall or ceiling) that you can see within 60 feet of yourself, and the square can be in a creature's space. A creature is in the Wellspring if its space includes that square and it's on the surface or in the water within 5 feet below it; a creature flying above it isn't. Its water doesn't hinder movement or block sight. You can have one Wellspring at a time; setting down a new one closes the old. The Wellspring isn't a vista: setting it down doesn't count toward a plane's breath, and your vistas open and close as usual while it runs.\n\n**The Water Heals.** When a Bloodied creature of your choice starts its turn in the Wellspring, or enters it during its turn by any means, it regains Hit Points equal to your Proficiency Bonus. A creature regains Hit Points this way only once per turn, and the Wellspring arriving under a creature isn't the creature entering it. While you have the Incapacitated condition, the water heals you and your allies, and no one else. A creature at 0 Hit Points that isn't dead is Bloodied, so the water lifts anyone fallen in it, you included, at the start of their turn, before they roll a Death Saving Throw: they regain the Hit Points and are no longer Unconscious (they're still Prone).\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet along a continuous path you can see over surfaces it can be set down on, into a creature's space if you like (no action required). It moves before the water heals anyone, so if it flows under you, it can heal you as your turn starts.\n\n**Striking or Casting Feeds the River.** The Wellspring runs through the end of the turn you set it down, and through the end of each later turn of yours on which, while an enemy is still in the fight, you make a Planar Strike against an enemy (hit or miss) or cast a Revelator spell (a cantrip counts). An enemy is in the fight while it's Hostile and still able and willing to fight; a captive, or a creature that has surrendered or fled, isn't. The DM says when no enemy is left. At the end of any other turn of yours, the Wellspring runs dry and closes. While you have the Incapacitated condition, the Wellspring doesn't run dry and you can't move it. If you're still Incapacitated after the water has healed at the start of your turn, it closes then. It also closes when no enemy is left in the fight, after 1 minute, if you end your turn more than 60 feet from it or when you dismiss it (no action required).\n\n**Between Fights.** When you set the Wellspring down while no enemy is in the fight, each Bloodied creature of your choice within 10 feet of it regains Hit Points equal to your Proficiency Bonus, and then the Wellspring closes. You can set one down this way once, and you can't do so again until you finish a Short or Long Rest."
+       "text": "As a Bonus Action, you can spend two Favors to set down a Wellspring: the Maelstrom fills a spring in one 5-foot square of a surface a creature could stand on (the ground, a floor, stairs, a deck or the surface of water; not a wall or ceiling) that you can see within 60 feet of yourself, and the square can be in a creature's space. A creature is in the Wellspring if its space includes that square and it's on the surface or in the water within 5 feet below it; a creature flying above it isn't. Its water doesn't hinder movement or block sight. You can have one Wellspring at a time; setting down a new one closes the old. The Wellspring isn't a vista: setting it down doesn't count toward a plane's breath, and your vistas open and close as usual while it runs.\n\n**The Water Heals.** When a Bloodied creature of your choice starts its turn in the Wellspring, or enters it during its turn by any means, it regains Hit Points equal to your Proficiency Bonus. A creature regains Hit Points this way only once per turn, and the Wellspring arriving under a creature isn't the creature entering it. While you have the Incapacitated condition, the water heals you and your allies, and no one else. A creature at 0 Hit Points that isn't dead is Bloodied, so the water lifts anyone fallen in it, you included, at the start of their turn, before they roll a Death Saving Throw: they regain the Hit Points and are no longer Unconscious (they're still Prone).\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet along a continuous path you can see over surfaces it can be set down on, into a creature's space if you like (no action required). It moves before the water heals anyone, so if it flows under you, it can heal you as your turn starts.\n\n**Striking or Casting Feeds the River.** The Wellspring runs through the end of the turn you set it down, and through the end of each later turn of yours on which, while an enemy is still in the fight, you cast *Planar Strike* against an enemy (hit or miss) or cast another Revelator spell (a cantrip counts). An enemy is in the fight while it's Hostile and still able and willing to fight; a captive, or a creature that has surrendered or fled, isn't. The DM says when no enemy is left. At the end of any other turn of yours, the Wellspring runs dry and closes. While you have the Incapacitated condition, the Wellspring doesn't run dry and you can't move it. If you're still Incapacitated after the water has healed at the start of your turn, it closes then. It also closes when no enemy is left in the fight, after 1 minute, if you end your turn more than 60 feet from it or when you dismiss it (no action required).\n\n**Between Fights.** When you set the Wellspring down while no enemy is in the fight, each Bloodied creature of your choice within 10 feet of it regains Hit Points equal to your Proficiency Bonus, and then the Wellspring closes. You can set one down this way once, and you can't do so again until you finish a Short or Long Rest."
       },
       {
        "level": 3,
@@ -5547,7 +5590,7 @@
       {
        "level": 7,
        "name": "The River Rises",
-       "text": "Once per Short or Long Rest, when you make a Planar Strike against an enemy while your Wellspring is open, you can let the Wellspring break after the attack roll, hit or miss (no action required). Each creature of your choice within 10 feet of the Wellspring regains 2d6 Hit Points (3d6 at Revelator level 11, 4d6 at Revelator level 17); roll once for all of them. They don't need to be Bloodied, and this doesn't count as anyone's healing from the water this turn. You can do this on the turn you set the Wellspring down. Then the Wellspring closes."
+       "text": "Once per Short or Long Rest, when you cast *Planar Strike* against an enemy while your Wellspring is open, you can let the Wellspring break after the attack roll, hit or miss (no action required). Each creature of your choice within 10 feet of the Wellspring regains 2d6 Hit Points (3d6 at Revelator level 11, 4d6 at Revelator level 17); roll once for all of them. They don't need to be Bloodied, and this doesn't count as anyone's healing from the water this turn. You can do this on the turn you set the Wellspring down. Then the Wellspring closes."
       },
       {
        "level": 7,
@@ -5661,7 +5704,7 @@
       {
        "level": 7,
        "name": "Twofold Vista",
-       "text": "When you open a vista to let in an Influence, you can also let in the Influence of a second Revelation you know through the same vista, on the same creature or another within 30 feet of the vista. The second Influence costs what it would cost on its own: one more Favor, or two more if it restores Hit Points or grants Temporary Hit Points (Vistas). The first Revelation is your open vista, for your Planar Strike's damage; both count as opened this turn, so neither can be opened on your next turn."
+       "text": "When you open a vista to let in an Influence, you can also let in the Influence of a second Revelation you know through the same vista, on the same creature or another within 30 feet of the vista. The second Influence costs what it would cost on its own: one more Favor, or two more if it restores Hit Points or grants Temporary Hit Points (Vistas). The first Revelation is your open vista, for your *Planar Strike*'s damage; both count as opened this turn, so neither can be opened on your next turn."
       },
       {
        "level": 11,
@@ -5686,7 +5729,7 @@
       {
        "level": 15,
        "name": "Apotheosis",
-       "text": "As a Bonus Action, you regain a number of Favors equal to half the number in your Favors column (round up), and for 1 minute you have Advantage on attack rolls for your Planar Strikes. Once you use this feature, you can't use it again until you finish a Long Rest."
+       "text": "As a Bonus Action, you regain a number of Favors equal to half the number in your Favors column (round up), and for 1 minute you have Advantage on attack rolls for *Planar Strike*. Once you use this feature, you can't use it again until you finish a Long Rest."
       }
      ]
     },
@@ -5750,7 +5793,7 @@
       {
        "level": 3,
        "name": "Blood in the Pit",
-       "text": "*Your spirits remember the taste of blood.* Once per turn, when you hit a creature with Planar Strike, you can expend one of your Hit Point Dice. Roll it, and add the number rolled to the damage."
+       "text": "*Your spirits remember the taste of blood.* Once per turn, when you hit a creature with *Planar Strike*, you can expend one of your Hit Point Dice. Roll it, and add the number rolled to the damage."
       },
       {
        "level": 7,
@@ -5834,7 +5877,7 @@
       {
        "level": 3,
        "name": "Tyr's Hand",
-       "text": "*The bravest of the Aesir has one hand, and he put the other where it went on purpose.* You gain proficiency with Martial weapons and a Fighting Style feat of your choice (see the *Player's Handbook*). Your training includes Weapon Mastery: you can use the mastery properties of two kinds of Simple or Martial weapons of your choice, and whenever you finish a Long Rest, you can change the kinds you chose. When you attack with a weapon whose mastery property you can use, you can use your Wisdom modifier instead of your Strength or Dexterity modifier for the attack and damage rolls.\n\nOn this pathway the plane comes through your weapon more than your hands: your Planar Strike adds your Wisdom modifier no more than twice, however many dice it rolls."
+       "text": "*The bravest of the Aesir has one hand, and he put the other where it went on purpose.* You gain proficiency with Martial weapons and a Fighting Style feat of your choice (see the *Player's Handbook*). Your training includes Weapon Mastery: you can use the mastery properties of two kinds of Simple or Martial weapons of your choice, and whenever you finish a Long Rest, you can change the kinds you chose. When you attack with a weapon whose mastery property you can use, you can use your Wisdom modifier instead of your Strength or Dexterity modifier for the attack and damage rolls."
       },
       {
        "level": 3,
@@ -6151,7 +6194,7 @@
     "text": "You must have a Wisdom score of 13 or higher. Gain the following traits from the Core Revelator Traits table: Hit Point Die, proficiency in one skill of your choice from the Revelator's skill list, and training with Light and Medium armor and Shields. Gain the Revelator's level 1 features, which are listed in the Revelator Features table. For multiclass spell slots, add half your Revelator levels (round up). If you have levels in another class and fewer than five Revelator levels, you can call a spirit with Visiting Spirit only once, and you can't do so again until you finish a Long Rest."
    },
    "cosmography": {
-    "lead": "**The Wheel.** The planes below go by their names on the Wheel, the one diagram printed in every *Cosmographia* from Lisbon to Lahore, because it is the map the learned share. *The Setting* (The Plenum, The Wheel) has the diagram, the table of what stands where and the Plenum the Wheel flattens. Where an entry gives a direction after a plane's name, such as Asphodel (Evil), that is where the Wheel puts the plane. It is a position on the diagram and passes no judgment on the plane or on the dead who go there. *Plane Shift*, *Gate* and the *Monster Manual* use the core books' names; The Planes, by Their Core Names, in this book's appendices, gives the table.\n\nThis is the complete list of Revelations. Each gives a Spirit Aspect (what a spirit of that plane can do, and the power it uses when you command it), an Influence and the damage your Planar Strike deals while a vista to that plane is open. Class and pathway features name the Revelations they grant; The Near Planes (level 5) and The Circuit (level 13) choose from here. The Cosmography Summary table, after The Planes by Tier, compares them all.\n\n**Where they are.** Every Revelation is a place you can walk (Soul's Journey) or reach with *Plane Shift*. The Outer Planes are where the Wheel puts them. The two Echoes are in the Vistas feature: the Hidden lies wherever the barrier is thin, most of all in the Bordermarches (*Life on the Border*), and the Ghostlands lie just under the Middle World, nearest at graveyards, battlefields and the scene of a bad death, though not every people's dead pass through them. The other planes the Wheel doesn't place are the five earth ends, in pathway order, and the Middle World.\n\n- **The Bridgehead.**\n- **The Maelstrom.**\n- **The Foot of the Mountain.**\n- **The Source Mists.**\n- **The Wells.**\n- **The Middle World.**",
+    "lead": "**The Wheel.** The planes below go by their names on the Wheel, the one diagram printed in every *Cosmographia* from Lisbon to Lahore, because it is the map the learned share. *The Setting* (The Plenum, The Wheel) has the diagram, the table of what stands where and the Plenum the Wheel flattens. Where an entry gives a direction after a plane's name, such as Asphodel (Evil), that is where the Wheel puts the plane. It is a position on the diagram and passes no judgment on the plane or on the dead who go there. *Plane Shift*, *Gate* and the *Monster Manual* use the core books' names; The Planes, by Their Core Names, in this book's appendices, gives the table.\n\nThis is the complete list of Revelations. Each gives a Spirit Aspect (what a spirit of that plane can do, and the power it uses when you command it), an Influence and the damage your *Planar Strike* deals while a vista to that plane is open. Class and pathway features name the Revelations they grant; The Near Planes (level 5) and The Circuit (level 13) choose from here. The Cosmography Summary table, after The Planes by Tier, compares them all.\n\n**Where they are.** Every Revelation is a place you can walk (Soul's Journey) or reach with *Plane Shift*. The Outer Planes are where the Wheel puts them. The two Echoes are in the Vistas feature: the Hidden lies wherever the barrier is thin, most of all in the Bordermarches (*Life on the Border*), and the Ghostlands lie just under the Middle World, nearest at graveyards, battlefields and the scene of a bad death, though not every people's dead pass through them. The other planes the Wheel doesn't place are the five earth ends, in pathway order, and the Middle World.\n\n- **The Bridgehead.**\n- **The Maelstrom.**\n- **The Foot of the Mountain.**\n- **The Source Mists.**\n- **The Wells.**\n- **The Middle World.**",
     "summary": {
      "columns": [
       "Plane",
@@ -6604,7 +6647,7 @@
         "parts": [
          {
           "label": "The Elements",
-          "text": "When you open this vista, choose an element: Air (Lightning), Earth (Acid), Fire (Fire) or Water (Cold). The vista's Influence, its spirit and your Planar Strike all carry that element while the vista is open."
+          "text": "When you open this vista, choose an element: Air (Lightning), Earth (Acid), Fire (Fire) or Water (Cold). The vista's Influence, its spirit and your *Planar Strike* all carry that element while the vista is open."
          },
          {
           "label": "Spirit Aspect: Elemental",
@@ -6612,7 +6655,7 @@
          },
          {
           "label": "Influence: Elemental Edge",
-          "text": "The creature's weapon hits and Planar Strikes deal an extra 1d6 damage of the element's type."
+          "text": "The creature's weapon hits and its hits with *Planar Strike* deal an extra 1d6 damage of the element's type."
          },
          {
           "label": "Planar Strike",
@@ -6988,7 +7031,51 @@
     ]
    },
    "optional_rules": [],
-   "new_spells": []
+   "new_spells": [
+    {
+     "name": "Planar Strike",
+     "level": 0,
+     "school": "Evocation",
+     "classes": [
+      "Revelator"
+     ],
+     "casting": "Action",
+     "damage": [],
+     "range": "60 feet",
+     "reach": "reach 5 feet, or 60 feet",
+     "area": null,
+     "higher": null,
+     "attack": "melee",
+     "save": null,
+     "dice": {
+      "dice": "1d10",
+      "type": "Force",
+      "plus": "Wisdom",
+      "varies": true
+     },
+     "upgrade": {
+      "kind": "dice",
+      "class": "Revelator",
+      "steps": [
+       [
+        5,
+        "3d10"
+       ],
+       [
+        11,
+        "5d10"
+       ],
+       [
+        17,
+        "7d10"
+       ]
+      ]
+     },
+     "components": "S",
+     "duration": "Instantaneous",
+     "text": "The plane your vista is open to comes through your hands. Make a melee spell attack against a creature within 5 feet of yourself, or a ranged spell attack against a creature within range. On a hit, the target takes 1d10 damage plus your Wisdom modifier. The damage is the type the Cosmography gives your open vista's Revelation, or Force damage if you have no vista open.\n\n**Cantrip Upgrade.** The damage increases to 3d10 when you reach Revelator level 5, 5d10 at Revelator level 11 and 7d10 at Revelator level 17."
+    }
+   ]
   },
   {
    "name": "Danae",
@@ -7725,7 +7812,7 @@
       {
        "level": 3,
        "name": "Doors",
-       "text": "Your warps can be Doors. As a Bonus Action, you open a pair of linked Doors on solid surfaces you can see within 60 feet of yourself: a wall, a floor, a ceiling, the side of a cart. The pair counts as one warp. Each Door is a 5-foot square, or a 10-foot square from Danae level 5, and a creature fits through it only if the creature's space is no wider than the Door. A creature that moves into one Door of its own will steps out of the other, facing away from its surface; a Door doesn't send on a creature put into it any other way. When a feature refers to a warp's space, a Door's space is the space in front of it, as wide as the Door and 5 feet deep. A Door can open in the floor under a willing creature, which drops through.\n\n*A Door of Your Own.* Your Doors are openings no one has warded. Iron and salt on a house's doors, windows and chimney don't stop you, or anyone who comes through with you, from passing through a Door you open in its wall, floor or roof (Iron and salt, in \"The Hidden, in the rules\"). Your Gates and other teleportation get no such exception until Liminality, at level 10.\n\n*Inertia.* A creature that falls into a Door comes out of the other still moving. It travels up to the distance it had already fallen, in the direction the far Door faces, before it falls normally or strikes something. When it lands or strikes something, it takes damage as for one fall of the whole distance it fell and traveled, and has the Prone condition if it takes any.\n\n*Keyhole.* One of your Doors can open on a surface you can't see, if it's within 30 feet of yourself and on the far side of a wall, door, floor or ceiling no more than 5 feet thick. You know whether the space beyond is open before you commit to it.\n\n*Latch.* Once on each of your turns, when you pass through a pair of your Doors that are no more than 30 feet apart, you can latch them behind you: they close, and you regain the warp they used. Doors you leave open for your friends still cost their warp.\n\n*Fellow Travellers.* When you go through one of your Doors, up to a number of willing creatures equal to your Proficiency Bonus within 5 feet of you can go through with you, arriving in unoccupied spaces within 5 feet of the far Door. For each of them, this counts as its one trip through your warps that turn."
+       "text": "Your warps can be Doors. As a Bonus Action, you open a pair of linked Doors on solid surfaces you can see within 60 feet of yourself: a wall, a floor, a ceiling, the side of a cart. The pair counts as one warp. Each Door is a 5-foot square, or a 10-foot square from Danae level 5, and a creature fits through it only if the creature's space is no wider than the Door. A creature that moves into one Door of its own will steps out of the other, facing away from its surface; a Door doesn't send on a creature put into it any other way. When a feature refers to a warp's space, a Door's space is the space in front of it, as wide as the Door and 5 feet deep. A Door can open in the floor under a willing creature, which drops through.\n\n*A Door of Your Own.* Iron and salt bar only the openings they line, and a Door is an opening of your own (Iron and salt, in \"The Hidden, in the rules\"). A warded house doesn't stop you, or anyone who comes through with you, from passing through a Door you open in its wall, floor or roof; a Hidden Killer's ward on it does.\n\n*Inertia.* A creature that falls into a Door comes out of the other still moving. It travels up to the distance it had already fallen, in the direction the far Door faces, before it falls normally or strikes something. When it lands or strikes something, it takes damage as for one fall of the whole distance it fell and traveled, and has the Prone condition if it takes any.\n\n*Keyhole.* One of your Doors can open on a surface you can't see, if it's within 30 feet of yourself and on the far side of a wall, door, floor or ceiling no more than 5 feet thick. You know whether the space beyond is open before you commit to it.\n\n*Latch.* Once on each of your turns, when you pass through a pair of your Doors that are no more than 30 feet apart, you can latch them behind you: they close, and you regain the warp they used. Doors you leave open for your friends still cost their warp.\n\n*Fellow Travellers.* When you go through one of your Doors, up to a number of willing creatures equal to your Proficiency Bonus within 5 feet of you can go through with you, arriving in unoccupied spaces within 5 feet of the far Door. For each of them, this counts as its one trip through your warps that turn."
       },
       {
        "level": 3,
@@ -7750,7 +7837,7 @@
       {
        "level": 10,
        "name": "Liminality",
-       "text": "Your Keyhole reaches through up to 10 feet of wall, door, floor or ceiling. Iron and salt never stopped your Doors (A Door of Your Own). From this level they don't stop your Gates either, and other wards don't stop your Gates or Doors: your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (the Hidden Killer's Cold Iron, Name It and ward, the Iron Bell magic item, a Faebreaker's grip) still stops that creature. Creatures that pass through your Gates and Doors don't trigger *Alarm*, *Glyph of Warding* or similar warding magic, and need no invitation: an effect that keeps out uninvited creatures doesn't stop them. On foot, you're bound by such effects like anyone else (iron and salt at a door among them): the wall is your way in."
+       "text": "Your Keyhole reaches through up to 10 feet of wall, door, floor or ceiling. Iron and salt never stopped your Gates or Doors, since they bar only the openings they line. From this level other wards don't stop them either: your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (the Hidden Killer's Cold Iron, Name It and ward, the Iron Bell magic item, a Faebreaker's grip) still stops that creature. Creatures that pass through your Gates and Doors don't trigger *Alarm*, *Glyph of Warding* or similar warding magic, and need no invitation: an effect that keeps out uninvited creatures doesn't stop them. On foot, you're bound by such effects like anyone else (iron and salt at a door among them): the wall is your way in."
       },
       {
        "level": 14,

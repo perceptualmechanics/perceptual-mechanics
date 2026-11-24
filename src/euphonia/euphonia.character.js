@@ -80,10 +80,12 @@ function skillGrant(text, skills, classFrom) {
 // the Courtier's accomplishments. Read for the column that counts them, the
 // name the feature gives one ("You gain two accomplishments from the list
 // below"), and each option's level, the arts it can count as, how often it
-// can be taken ("twice", "more than once") and its text. A subclass says
-// the art it gives up, in its lead or its first feature ("Your college
-// forgoes Letters", or "forgoes no art"), and a subclass feature can give an option outright ("You have The
-// Code without spending an accomplishment on it").
+// can be taken ("twice", "more than once") and its text. Where the class
+// has its subclasses give up an art, each says which, in its lead or its
+// first feature ("Your college forgoes Letters", or "forgoes no art"); where
+// it never speaks of forgoing, none does. A subclass feature can give an
+// option outright ("You have The Code without spending an accomplishment on
+// it").
 function optionsOf(c) {
   if (c.options?.length) return sectionOptions(c);
   const f = c.features.find(x => /^\*\*From .+? level \d+\*\*$/m.test(x.text));
@@ -100,8 +102,11 @@ function optionsOf(c) {
   }
   if (!list.length) throw new Error(`${c.name}: ${f.name} names no options the builder can read`);
   const arts = new Set(list.flatMap(o => o.arts));
+  const saidOf = s => [s.lead ?? '', ...s.features.map(f => f.text)].join('\n');
+  const forgoing = [...c.features.map(x => x.text), ...c.subclasses.map(saidOf)].some(t => /\bforgo/.test(t));
   const forgoes = Object.fromEntries(c.subclasses.map(s => {
-    const said = [s.lead ?? '', ...s.features.map(f => f.text)].join('\n');
+    if (!forgoing) return [s.name, null];
+    const said = saidOf(s);
     const art = said.match(/(?:\bit|Your college) forgoes (\w+)\b/)?.[1];
     if (!(art && arts.has(art)) && !/forgoes no art/.test(said)) throw new Error(`${c.name}: the ${s.name} subclass doesn't say which art it forgoes`);
     return [s.name, art ?? null];
@@ -2003,6 +2008,13 @@ export function character(book, state) {
     const own = featureBoosts.filter(b => b.attack === f.name && !sc?.items?.includes(b.name)).reduce((n, b) => n + b.n, 0);
     return [{ name: f.name, kind: 'feature', ability: sc?.ability ?? m[5], bonus: (sc?.attack ?? mod[m[5]] + bonus) + own, proficient: true, damage: `${atLevel(f.class, m[4])}${signedMod(mod[m[5]])} ${m[3]}`, versatile: null, reach: `${m[2]} feet`, mastery: null }];
   });
+  // A cantrip's step: by the character's level, or by its class's where the
+  // spell says so ("when you reach Physician level 5"). And its damage's
+  // words: its type, or its default where the spell sets another ("…, or
+  // Force damage if you have no vista open"), and a modifier it adds ("1d10
+  // damage plus your Wisdom modifier").
+  const cantripStep = sp => { const at = sp.upgrade?.class ? known.find(k => k.class === sp.upgrade.class)?.level ?? 0 : total; return sp.upgrade?.steps.filter(([lv]) => at >= lv).at(-1)?.[1]; };
+  const damageType = sp => (sp.dice.type ? `${sp.dice.type}${sp.dice.varies ? ', or as the spell gives' : ''}` : 'of the chosen type');
   const spellAttacks = spellcasting.filter(sc => sc.ability).flatMap(sc => {
     const pick = spellChoices.find(x => x.key === sc.class);
     const one = features.find(f => f.class === sc.class && new RegExp(`When you cast an? ${sc.class} cantrip that rolls only one damage die, add your (\\w+) modifier to the damage`).test(f.text));
@@ -2011,7 +2023,7 @@ export function character(book, state) {
     // at its own level ("4d6 Radiant" for Guiding Bolt).
     const names = [...new Set([...(pick?.chosen ?? []).map(sp => sp.name), ...sc.given, ...sc.always.map(sp => sp.name)])];
     return names.map(n => book.spellFacts.get(n)).filter(sp => sp?.dice && (sp.attack || sp.save)).sort((a, b) => a.level - b.level).map(sp => {
-      const step = sp.level === 0 ? sp.upgrade?.steps.filter(([lv]) => total >= lv).at(-1)?.[1] : undefined;
+      const step = sp.level === 0 ? cantripStep(sp) : undefined;
       // What an invocation chosen for it does ("its range increases by a
       // number of feet equal to 30 times your Warlock level", Eldritch Spear;
       // "When you hit a Large or smaller creature with that cantrip, you can
@@ -2024,10 +2036,10 @@ export function character(book, state) {
       // And an improvement chosen for it ("You can add your Charisma modifier
       // to that spell's damage rolls", Agonizing Blast).
       const improved = cantripTargets.filter(t => t.chosen === sp.name).map(t => features.find(f => (f.key ?? `${f.class} ${f.level} ${f.name}`) === t.key)?.text.match(/You can add your (\w+) modifier to that spell[’']s damage rolls/)?.[1]).filter(Boolean);
-      const plus = (addOne && /^1d\d+$/.test(roll) ? mod[addOne] : 0) + improved.reduce((n, a) => n + mod[a], 0);
+      const plus = (addOne && /^1d\d+$/.test(roll) ? mod[addOne] : 0) + improved.reduce((n, a) => n + mod[a], 0) + (sp.dice.plus ? mod[sp.dice.plus] : 0);
       const range = sp.reach ?? (sp.area ? `${sp.range}, a ${sp.area}` : sp.range), feet = range.match(/^(\d+) feet$/);
       return { name: sp.name, kind: 'spell', class: sc.class, level: sp.level, ability: sc.ability, bonus: sp.attack ? sc.attack : null, save: sp.save ? { ability: sp.save, dc: sc.dc } : null, proficient: true,
-        damage: `${roll}${signedMod(plus)} ${sp.dice.type ?? 'of the chosen type'}`, beams: beams > 1 ? beams : null, versatile: null, reach: farther && feet ? `${+feet[1] + farther} feet` : range, mastery: null,
+        damage: `${roll}${signedMod(plus)} ${damageType(sp)}`, beams: beams > 1 ? beams : null, versatile: null, reach: farther && feet ? `${+feet[1] + farther} feet` : range, mastery: null,
         // A higher slot's effect, in the spell's own sentence.
         riders: [...onHit, ...(sp.higher ? [`With a higher slot: ${sp.higher.replace(/\.$/, '')}`] : [])] };
     });
@@ -2038,9 +2050,9 @@ export function character(book, state) {
   // type determined by your Draconic Ancestry trait … increases by 1d10 when
   // you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10)").
   const innateAttacks = innate.filter(x => x.ability).map(x => ({ ...x, sp: book.spellFacts.get(x.name) })).filter(x => x.sp?.dice && (x.sp.attack || x.sp.save)).map(({ name, ability, from, sp }) => {
-    const step = sp.upgrade?.steps.filter(([lv]) => total >= lv).at(-1)?.[1], roll = sp.upgrade?.kind === 'dice' && step ? step : sp.dice.dice;
+    const step = cantripStep(sp), roll = sp.upgrade?.kind === 'dice' && step ? step : sp.dice.dice;
     return { name, kind: 'spell', class: from, ability, bonus: sp.attack ? mod[ability] + bonus : null, save: sp.save ? { ability: sp.save, dc: book.attacks.spell_save_dc_base + mod[ability] + bonus } : null, proficient: true,
-      damage: `${roll} ${sp.dice.type ?? 'of the chosen type'}`, beams: sp.upgrade?.kind === 'beams' && step > 1 ? step : null, versatile: null, reach: sp.reach ?? sp.range, mastery: null };
+      damage: `${roll}${signedMod(sp.dice.plus ? mod[sp.dice.plus] : 0)} ${damageType(sp)}`, beams: sp.upgrade?.kind === 'beams' && step > 1 ? step : null, versatile: null, reach: sp.reach ?? sp.range, mastery: null };
   });
   const breaths = (species?.traits ?? []).flatMap(t => {
     const m = t.text.match(/(\d+)-foot Cone or a (\d+)-foot Line[^.]*\. Each creature in that area must make a (\w+) saving throw \(DC (\d+) plus your (\w+) modifier and Proficiency Bonus\)\. On a failed save, a creature takes (\d+d\d+) damage of the type determined by your .+? trait\..*?This damage increases by \d+d\d+ when you reach character levels (\d+) \((\d+d\d+)\), (\d+) \((\d+d\d+)\), and (\d+) \((\d+d\d+)\)/);

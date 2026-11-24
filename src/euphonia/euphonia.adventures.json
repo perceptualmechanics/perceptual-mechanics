@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "60a673ba1935ade3824df2cbfa41018601048e962b948303b1a7ea0e30704539",
-  "modified": "2026-11-23T14:15:30-05:00",
+  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
+  "modified": "2026-11-23T18:46:58-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -57,7 +57,7 @@
    "where": "Venice, then Toledo",
    "read_with": "Europe",
    "summary": "**The pitch.** The Republic of Venice is about to sell the most wanted document in Europe, and a crew can be paid to take it before the sale. Venice is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. Its roof-runner is Zanetta Bon, a Danae of the Crossing, who folds space to cross a canal at a step (The State of the World, Europe, Places, Venice).",
-   "ready": "**Ready to run.** *The Venice Job: The First Night*, in *Three Ways In* and on the site (perceptualmechanics.com/euphonia), is the heist's opening night as a one-shot, with five level 3 characters ready to play.",
+   "ready": "**Ready to run.** *Euphonia: The Venice Job*, on the site (perceptualmechanics.com/euphonia), is the heist's opening night as a one-shot, with five level 3 characters ready to play.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts and bravos; the Spanish one hires a crew.",
     "The scryer who made the report left notes the Ten's clerks didn't understand, and Spain's ambassador is looking for her.",
@@ -71,27 +71,12 @@
    ]
   },
   {
-   "title": "The Razès: Treasure and the Dead",
-   "kind": "Treasure and the dead",
-   "where": "The hills below Carcassonne, behind the new border with Spain",
-   "read_with": "Europe",
-   "summary": "**The pitch.** The hill country of the upper Aude, below Carcassonne, in the autumn of 1668. The new border with Spain is nine years old, the old frontier castles of the Corbières guard nothing, and south of them, in the Vallespir, the salt war is on. The Razès itself is not in revolt; its quarrels are older: a rigorist bishop at Alet against the nobles who sued him, a crown inquiry into who is really noble, and under the hills, the dead of a church that was burned out of this country four hundred years ago. Learned men have read in Procopius that the Visigoths kept Rome's treasure at Carcassonne; the Inquisition's registers say Montségur's heretics carried treasure out before the fall. A party hunts what is real under the stories, and finds the dead have their own claim on it.",
-   "ready": "**Ready to run.** *Where the Dead Keep the Gold*, in *Three Ways In*, is a ghost story and a treasure caper for five level 3 characters: one night under the Blanchefort crag, on the full moon of September 1668.",
-   "hooks": [
-    "A rockfall below the Blanchefort crag has opened a hole, and a shepherd's boy brought down a coin no one in Couiza can name.",
-    "A Carcassonne notary who has read his Procopius has hired diggers, and the diggers are afraid of the dark.",
-    "Colbert's copyist is in Toulouse with the Inquisition's registers, and someone wants a page of them before he copies it.",
-    "The salt-farm's archers lost men at the Llop pass, and the smugglers' road north runs through the Razès."
-   ],
-   "regions": []
-  },
-  {
    "title": "The Border: The Village and the Hidden",
    "kind": "Frontier",
    "where": "Any village at the edge of the Hidden",
    "read_with": "Running Euphonia; *Euphonia: Life on the Border*",
    "summary": "The frontier game belongs to no region: every society has villages on its outskirts and a Hidden past them. The Border can be a Highland glen, a Japanese mountain village, a Swedish chapelry in the year the Blåkulla trials begin, or the almost suburban edge of one of Mutapa's fast-growing cities, where modern artifice meets the water spirits of the pools (The State of the World, Mutapa and the Indian Ocean). Pick the border your table knows.",
-   "ready": "**Ready to run.** *The Night the Hunt Came*, in *Three Ways In*, is a one-shot for the resisters: one dark-half night in the Border village of Bowden, with four level 5 characters ready to play.",
+   "ready": "**Ready to run.** *Euphonia: The Night the Hunt Came* is a one-shot for the resisters: one dark-half night at the new edge of Dambarare, a Mutapan market town, with four level 5 characters ready to play.",
    "hooks": [
     "A child says she was carried to a feast inside a hill, and the examiner who comes to hear it is looking for witches.",
     "The village's Killer is seventy and her knees are going.",

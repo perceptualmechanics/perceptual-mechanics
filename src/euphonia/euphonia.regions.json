@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "60a673ba1935ade3824df2cbfa41018601048e962b948303b1a7ea0e30704539",
-  "modified": "2026-11-23T14:15:30-05:00",
+  "sha256": "8c7a2c6ce010af10d2564d391ed7e6a9708e7d28caec592b7c0ba8052639afb9",
+  "modified": "2026-11-23T18:46:58-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -781,7 +781,7 @@
     },
     {
      "name": "Dambarare",
-     "modern": "Harare",
+     "modern": "Mazowe",
      "country": "Zimbabwe"
     },
     {
@@ -1129,7 +1129,7 @@
       },
       {
        "name": "Dambarare",
-       "modern": "Harare",
+       "modern": "Mazowe",
        "country": "Zimbabwe"
       },
       {
@@ -1438,7 +1438,7 @@
     },
     {
      "heading": "Who Holds Power",
-     "text": "Powers and Factions (Mutapa's Institutions) has the crown, the mediums, the House of the Bird, the Mhizha Guild and the spymaster in full; here is how they sit on the ground, then around the sea.\n\n- **The crown.** The paramount ruler is the *Mwenemutapa*, and his commander, the *mukomohasha*, is also \"captain of the gates.\" Mukombwe holds the throne, as he did in our history. The merchant houses steer him (see Powers and Factions).\n- **The mediums** (*svikiro*) speak for the royal dead, the *mhondoro*, each guarding a province and its rain; here the dead answer. In the southwest, petitioners climb to the Matobo shrines, where Mwari, the creator, is said to speak from the rocks.\n- **The great artificer**, Simbarashe Moyo, is alive and unhappy with how the court stewards his work (see Places, Sofala).\n- **The tributaries.** Mutapa's overlordship is a relationship, renewed with tribute and the new fire. Uteve, Manyika (in the eastern highlands) and Barwe keep their own dynasties and pay in grain, gold, labor and one tusk of every elephant killed. Royal officials put out every hearth and relight it from the king's fire; refusing the new fire is rebellion.\n- **The Torwa** rule Butua, to the southwest, from a court that has left Khami, and are no one's tributary.\n- **The Portuguese remnant.** The prazo heirs on the Zambezi around Tete lost their leases when Mutapa kept its mines; some kept their private armies of enslaved soldiers and sell them to anyone. The old plateau fairs, the *feiras* (Dambarare, Masapa), are Mutapa's customs posts now, where foreign traders live and pay by the king's leave. Sofala's harbor carries the gold to sea.\n- **The Cape's own people.** The Khoekhoe chiefdoms nearest the harbor are Mutapa's tributaries, held with the same tools: lent cattle, the new fire lit each reign from the king's own and a tax on every trade. Further out, the Cochoqua and the Chainouqua take Mutapa's terms when it suits them and a Dutch or English captain's when it doesn't. The San hold the mountains and the dry country, in no one's ledger.\n- **The Swahili city-states** are Muslim trading towns, each with a foreign patron. Mombasa and Pate have asked Oman for help against Fort Jesus, and any town pays for news of whose fleet is coming.\n- **The Portuguese at sea** hold Mozambique Island, Fort Jesus at Mombasa and Goa. They have lost Hormuz, Malacca and Muscat. They sell passes, *cartazes*, to other people's ships, and pay for any way to hold Fort Jesus without a fleet.\n- **Oman.** The Ya'rubi imams took Muscat from the Portuguese and raid their posts down the Swahili coast. The imam, Sultan bin Saif, hires shipwrights, gunners and pilots, and buys news of Portuguese garrisons.\n- **The Dutch East India Company** holds Ceylon's cinnamon coast from Colombo (Kandy keeps the highlands) and the pepper ports of Malabar (see Powers and Factions, The Chartered Companies). Its seat at Batavia and its spice islands are in East and Southeast Asia. *It pays for:* charts, pilots and news of anyone selling spice outside its contracts."
+     "text": "Powers and Factions (Mutapa's Institutions) has the crown, the mediums, the House of the Bird, the Mhizha Guild and the spymaster in full; here is how they sit on the ground, then around the sea.\n\n- **The crown.** The paramount ruler is the *Mwenemutapa*, and his commander, the *mukomohasha*, is also \"captain of the gates.\" Mukombwe holds the throne, as he did in our history. The merchant houses steer him (see Powers and Factions).\n- **The mediums** (*svikiro*) speak for the royal dead, the *mhondoro*, each guarding a province and its rain; here the dead answer. In the southwest, petitioners climb to the Matobo shrines, where Mwari, the creator, is said to speak from the rocks.\n- **The great artificer**, Simbarashe Moyo, is alive and unhappy with how the court stewards his work (see Places, Sofala).\n- **The tributaries.** Mutapa's overlordship is a relationship, renewed with tribute and the new fire. Uteve, Manyika (in the eastern highlands) and Barwe keep their own dynasties and pay in grain, gold, labor and one tusk of every elephant killed. Royal officials put out every hearth and relight it from the king's fire; refusing the new fire is rebellion.\n- **The Torwa** rule Butua, to the southwest, from a court that has left Khami, and are no one's tributary.\n- **The Portuguese remnant.** The prazo heirs on the Zambezi around Tete lost their leases when Mutapa kept its mines; some kept their private armies of enslaved soldiers and sell them to anyone. The old plateau fairs, the *feiras* at Dambarare and Masapa, are Mutapa's customs posts now, where foreign traders live and pay by the king's leave. Sofala's harbor carries the gold to sea.\n- **The Cape's own people.** The Khoekhoe chiefdoms nearest the harbor are Mutapa's tributaries, held with the same tools: lent cattle, the new fire lit each reign from the king's own and a tax on every trade. Further out, the Cochoqua and the Chainouqua take Mutapa's terms when it suits them and a Dutch or English captain's when it doesn't. The San hold the mountains and the dry country, in no one's ledger.\n- **The Swahili city-states** are Muslim trading towns, each with a foreign patron. Mombasa and Pate have asked Oman for help against Fort Jesus, and any town pays for news of whose fleet is coming.\n- **The Portuguese at sea** hold Mozambique Island, Fort Jesus at Mombasa and Goa. They have lost Hormuz, Malacca and Muscat. They sell passes, *cartazes*, to other people's ships, and pay for any way to hold Fort Jesus without a fleet.\n- **Oman.** The Ya'rubi imams took Muscat from the Portuguese and raid their posts down the Swahili coast. The imam, Sultan bin Saif, hires shipwrights, gunners and pilots, and buys news of Portuguese garrisons.\n- **The Dutch East India Company** holds Ceylon's cinnamon coast from Colombo (Kandy keeps the highlands) and the pepper ports of Malabar (see Powers and Factions, The Chartered Companies). Its seat at Batavia and its spice islands are in East and Southeast Asia. *It pays for:* charts, pilots and news of anyone selling spice outside its contracts."
     },
     {
      "heading": "Magic Here",
