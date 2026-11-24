@@ -408,7 +408,26 @@
      },
      {
       "name": "The Old Shape",
-      "text": "When you reach level 3, you can take a Bonus Action to let the blood remember the shape it crossed in. For 1 minute you take on a trace of it, by your lineage:"
+      "text": "When you reach level 3, you can take a Bonus Action to let the blood remember the shape it crossed in. For 1 minute you take on a trace of it, by your lineage:",
+      "options": [
+       {
+        "name": "Earth: Stone",
+        "text": "Your skin goes gray and hard as a quarry face. You gain a +2 bonus to Armor Class, and you have a Burrow Speed of 20 feet through earth and loose stone, though not worked stone; you leave no tunnel."
+       },
+       {
+        "name": "Water: The Current",
+        "text": "You move like water. Whenever you take damage, reduce it by your Proficiency Bonus, and you can move through the space of any creature."
+       },
+       {
+        "name": "Air: The Wind",
+        "text": "You are half wind. You have a Fly Speed equal to your Speed and can hover, and the first attack roll made against you each round has Disadvantage."
+       },
+       {
+        "name": "Fire: The Flame",
+        "text": "You burn without being burned. You shed Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. Once on each of your turns, when you deal damage to a creature, it takes extra Fire damage equal to your Proficiency Bonus, and a creature that hits you with a melee attack takes Fire damage equal to your Proficiency Bonus."
+       }
+      ],
+      "after": "You can take the Old Shape once, and you regain the use when you finish a Long Rest. From level 5 you can take it twice between Long Rests. The trace can't be hidden while it lasts: anyone who sees it knows what you are, and a witch-finder writes it down."
      },
      {
       "name": "Kin of the Sphere",

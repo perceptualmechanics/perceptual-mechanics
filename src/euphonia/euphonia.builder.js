@@ -23,6 +23,11 @@ const options = (values, chosen, prompt) => [
 // "A", "A and B", "A, B and C" (or "A, B or C").
 const listed = (items, word = 'and') => (items.length < 3 ? items.join(` ${word} `) : `${items.slice(0, -1).join(', ')} ${word} ${items.at(-1)}`);
 const idFor = field => `problem-${field.replace(/[^\w-]+/g, '-')}`;
+// A species trait as the book writes it: its paragraph, its list, and what
+// follows the list.
+const traitText = t => blocks([`**${t.name}.** ${t.text}`, (t.options ?? []).map(o => `- **${o.name}.** ${o.text}`).join('\n'), t.after].filter(Boolean).join('\n\n'));
+// The name of the species table a row is from.
+const rowTable = (species, row) => Object.entries(species.tables ?? {}).find(([, rows]) => rows.includes(row))?.[0];
 // Rebuilding a group of controls keeps the keyboard where it was: the
 // control with the same key takes focus back.
 function rebuild(container, ...children) {
@@ -261,7 +266,11 @@ export async function initBuilder(panel) {
       rebuild(speciesTraits, ...(species ? [
         placed ? h('p', { class: 'b-note' }, `In Euphonia${placed.status === 'draft' ? ' (a draft)' : ''}: ${placed.line}.`) : null,
         h('details', {}, h('summary', {}, `${species.name}: ${species.creature_type}, ${species.size}, speed ${species.speed}`),
-        ...species.traits.map(t => h('div', { html: blocks(`**${t.name}.** ${t.text}`) + (t.options ?? []).map(o => blocks(`**${o.name}.** ${o.text}`)).join('') })))] : []));
+          species.where ? h('p', { class: 'b-note' }, `From ${species.where}.`) : null,
+          ...species.traits.map(t => h('div', { html: traitText(t) })),
+          // A strand's traits under its name (the divine-blood's Line and
+          // Touch), a label and not a heading: the choices here are fieldsets.
+          ...(species.strands ?? []).map(st => h('div', { class: 'b-strand' }, h('p', {}, h('strong', {}, st.name)), ...st.traits.map(t => h('div', { html: traitText(t) })))))] : []));
     }
   }
 
@@ -1005,8 +1014,12 @@ export async function initBuilder(panel) {
       result.species ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-traits' },
         h('h3', { id: 'sheet-traits' }, `${result.species.name} traits`),
         placed ? h('p', { class: 'sheet-placement' }, `In Euphonia${placed.status === 'draft' ? ' (a draft)' : ''}: ${placed.line}.`) : null,
-        result.species.traits.map(t => det(`trait-${t.name}`, t.name, h('div', { html: blocks(t.text) }),
-          (t.options ?? []).filter(o => o.name === result.option).map(o => h('div', { html: blocks(`**${o.name}.** ${o.text}`) }))))) : null,
+        result.speciesTraits.map(t => det(`trait-${t.name}`, t.name, h('div', { html: blocks(t.text) }),
+          // The option chosen, or its form ("Air: The Wind" for an Air
+          // lineage); the chosen row under the trait that names its table.
+          (t.options ?? []).filter(o => o.name === result.option || o.name.startsWith(`${result.option}: `)).map(o => h('div', { html: blocks(`**${o.name}.** ${o.text}`) })),
+          t.after ? h('div', { html: blocks(t.after) }) : null,
+          result.optionRow && t.text.includes(`${rowTable(result.species, result.optionRow)} table`) ? h('div', { html: blocks(Object.entries(result.optionRow).slice(1).map(([k, v]) => `**${k}:** ${v}`).join('\n\n')) }) : null))) : null,
       result.optionChoices.map(o => (o.given.length || o.taken.length ? h('section', { class: 'sheet-block', 'aria-labelledby': `sheet-options-${o.class.replace(/\W+/g, '-')}` },
         h('h3', { id: `sheet-options-${o.class.replace(/\W+/g, '-')}` }, `${capital(o.noun)}s`),
         h('p', {}, `Regard ${o.regard}${o.forgone ? ` (${o.subclass} forgoes ${o.forgone})` : ''}`),

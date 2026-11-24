@@ -189,6 +189,35 @@ function packagesOf(text, where) {
   return found;
 }
 
+// One of the books' own species (A Player's Companion's elemental-blood and
+// divine-blood) in the SRD's shape: each table under the name the trait that
+// sends you to it gives ("Choose a lineage from the Elemental Lineages
+// table"), its rows keyed by its head; and its one choice worked out here:
+// a strand of those the trait names in bold ("**the Line** … or **the
+// Touch**"), by the rows of a table its own trait names ("The Line: The
+// sun"), or else a row of the species' table ("Air").
+function bookSpecies(sp) {
+  const strands = sp.strands ?? [];
+  const named = traits => traits.flatMap(t => [...t.text.matchAll(/\bfrom the (.+?) table\b/g)].map(m => m[1]));
+  const names = [...named(sp.traits), ...strands.flatMap(s => named(s.traits))];
+  if (names.length !== sp.tables.length) throw new Error(`${sp.name}: its traits name ${names.length} table(s) (${names.join(', ')}), and it has ${sp.tables.length}`);
+  const tables = Object.fromEntries(sp.tables.map((t, i) => [names[i], t.rows.map(r => Object.fromEntries(t.head.map((hd, j) => [hd, j ? r[j] : r[j].replace(/\*\*/g, '')])))]));
+  const first = row => Object.values(row)[0];
+  let choice;
+  if (strands.length) {
+    const asks = sp.traits.find(t => strands.every(st => t.text.toLowerCase().includes(`**${st.name.toLowerCase()}**`)));
+    if (!asks) throw new Error(`${sp.name}: no trait names its strands (${strands.map(st => st.name).join(', ')})`);
+    const of = Object.fromEntries(strands.flatMap(st => {
+      const rows = named(st.traits).map(n => tables[n])[0];
+      return rows ? rows.map(row => [`${st.name}: ${first(row)}`, { strand: st.name, row }]) : [[st.name, { strand: st.name, row: null }]];
+    }));
+    choice = { label: asks.name, of };
+  } else if (names.length) {
+    choice = { label: names[0].replace(/s$/, ''), of: Object.fromEntries(tables[names[0]].map(row => [first(row), { strand: null, row }])) };
+  }
+  return { ...sp, tables, ...(choice ? { choice } : {}) };
+}
+
 // The rules as the builder uses them: the SRD's tables and options, every
 // class and background, the SRD's and the setting's own, in one shape, and
 // where the setting places each species. `added` holds the subclasses the
@@ -359,7 +388,7 @@ export function rulebook(srd, euphonia, setting, added, goods) {
     weights: { gear: srd.gear, ammunition: srd.ammunition, forms: srd.forms, coinsPerPound: srd.coins_per_pound, carrying: srd.carrying, overloaded: srd.overloaded },
     attacks: srd.attacks,
     backgroundIncreases: srd.ability_scores.background,
-    species: srd.species, feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
+    species: [...srd.species, ...(setting.data.book_species ?? []).map(bookSpecies)], feats: srd.feats, armor: srd.armor, weapons: srd.weapons, tools: srd.tools, beasts: srd.beasts, languages: srd.languages, classes,
     classGear: classGearRules(goods.class_gear), speciesAndPeople: setting.data.species_and_people.text,
     backgrounds: [...srd.backgrounds.map(b => ({ ...b, source: 'SRD 5.2.1' })), ...setting.data.backgrounds.map(b => ({ ...b, source: 'Euphonia' }))]
       .map(b => ({ ...b, packages: packagesOf(b.equipment, b.name) })),
@@ -378,8 +407,10 @@ export function rulebook(srd, euphonia, setting, added, goods) {
       });
       return { lo, hi, gold: gold ? number(gold[1]) : 0, roll: gold ? money.match(/1d10 × [\d,]+ GP/i)[0] : null, magic };
     }),
+    // The setting's rows write a book species' name in lower case after the
+    // hyphen ("Elemental-blood"), where its heading has "Elemental-Blood".
     placement: name => {
-      const row = setting.data.species.find(x => x.species.includes(name));
+      const row = setting.data.species.find(x => x.species.some(n => n.toLowerCase() === name.toLowerCase()));
       return row ? { line: row.line, status: setting.data.species_status } : null;
     },
     classNamed: name => classes.find(c => c.name === name),
@@ -432,10 +463,11 @@ function fits(increases, from, shapes) {
   return shapes.some(s => s.length === values.length && [...s].sort((a, b) => b - a).every((v, i) => v === values[i]));
 }
 
-// A species' one choice, where it has one: a row of the table a trait names
-// (Elven Lineages, Draconic Ancestors) or one of a trait's options (Gnomish
-// Lineage, Giant Ancestry).
+// A species' one choice, where it has one: a book species' own (bookSpecies),
+// a row of the table a trait names (Elven Lineages, Draconic Ancestors) or
+// one of a trait's options (Gnomish Lineage, Giant Ancestry).
 export function speciesOptions(species) {
+  if (species?.choice) return { label: species.choice.label, names: Object.keys(species.choice.of) };
   const [table, rows] = Object.entries(species?.tables ?? {})[0] ?? [];
   if (table) return { label: table.replace(/s$/, ''), names: rows.map(r => Object.values(r)[0]) };
   const t = species?.traits.find(x => x.options);
@@ -466,6 +498,12 @@ export function character(book, state) {
   const fail = (field, message, open = OPEN_CHOICE.test(message)) => problems.push({ field, message, open });
   const species = book.species.find(s => s.name === state.species) ?? null;
   const background = book.backgrounds.find(b => b.name === state.background) ?? null;
+  // The species' option (a lineage, a legacy, an ancestry, a strand) and its
+  // row, and the traits it has: its own, and a chosen strand's.
+  const options = speciesOptions(species);
+  const chose = species?.choice?.of[state.option] ?? null;
+  const optionRow = species?.choice ? chose?.row ?? null : species && Object.values(species.tables ?? {}).flat().find(r => Object.values(r)[0] === state.option);
+  const speciesTraits = species ? [...species.traits, ...(species.strands?.find(st => st.name === chose?.strand)?.traits ?? [])] : [];
   if (!species) fail('species', 'Choose a species.');
   if (!background) fail('background', 'Choose a background.');
 
@@ -865,7 +903,7 @@ export function character(book, state) {
   // Or a feature, as the Warlock's Lessons of the First Ones ("allowing you
   // to gain one Origin feat of your choice").
   const originChoices = [];
-  const grantsOrigin = [...(species?.traits ?? []).filter(t => /^You gain an Origin feat of your choice\b/.test(t.text)).map(t => ({ key: `${species.name} ${t.name}`, from: `${t.name} (${species.name})`, name: t.name, source: 'species' })),
+  const grantsOrigin = [...speciesTraits.filter(t => /^You gain an Origin feat of your choice\b/.test(t.text)).map(t => ({ key: `${species.name} ${t.name}`, from: `${t.name} (${species.name})`, name: t.name, source: 'species' })),
     ...features.filter(f => /gain one Origin feat of your choice/.test(f.text)).map(f => ({ key: f.key ?? `${f.class} ${f.level} ${f.name}`, from: f.label ?? `${f.name} (${f.class})`, name: f.name, source: 'feature' }))];
   for (const f of features) if (/gain one Origin feat of your choice/.test(f.text)) reads(f);
   for (const t of grantsOrigin) {
@@ -922,7 +960,7 @@ export function character(book, state) {
   for (const s of background?.skills ?? []) grant(s, background.name);
   if (background?.skill_choice) chosen(`${background.name} skills`, background.skill_choice.from, background.skill_choice.count, state.skills?.[`${background.name} skills`], background.name);
   if (species) {
-    for (const t of species.traits) {
+    for (const t of speciesTraits) {
       const from = skillGrant(t.text, book.skills.map(s => s.name));
       if (from) chosen(`${species.name} ${t.name}`, from, 1, state.skills?.[`${species.name} ${t.name}`], `${t.name} (${species.name})`);
     }
@@ -1168,7 +1206,7 @@ export function character(book, state) {
   // the level the feature comes at; "… again whenever you gain a level",
   // from the character's first.
   const hpFrom = [];
-  for (const t of [...features, ...(species?.traits ?? []).map(t => ({ ...t, level: 1 }))]) {
+  for (const t of [...features, ...speciesTraits.map(t => ({ ...t, level: 1 }))]) {
     const m = t.text.match(/Your Hit Point maximum increases by (\d+), and it increases by (\d+)(?: again)? whenever you gain (?:another (.+?) level|a level)\./);
     if (!m) continue;
     const at = m[3] ? known.find(c => c.class === m[3])?.level : total;
@@ -1843,10 +1881,7 @@ export function character(book, state) {
     const known = [name, name.replace(/es$/, ''), name.replace(/s$/, '')].map(curly).find(x => weightOf.has(x));
     return { item: part, weight: known ? n * weightOf.get(known) : null };
   });
-  // The species' option (a lineage, a legacy, an ancestry) and its row.
-  const options = speciesOptions(species);
   if (options && !options.names.includes(state.option)) fail('option', `Choose your ${options.label}.`);
-  const optionRow = species && Object.values(species.tables ?? {}).flat().find(r => Object.values(r)[0] === state.option);
   // The spellcasting ability a species trait or a feat lets the player
   // choose ("Intelligence, Wisdom, or Charisma is your spellcasting ability
   // for the spells you cast with this trait", the Tiefling's legacy; "for
@@ -1854,7 +1889,7 @@ export function character(book, state) {
   // lineage's ("You also know the Poison Spray cantrip"), a trait's own ("You
   // know the Thaumaturgy cantrip … the same spellcasting ability you use for
   // your Fiendish Legacy trait"), the feat's chosen ones.
-  const ABILITY_CHOICE = /(\w+), (\w+),? or (\w+) is your spellcasting ability for (?:the spells you cast with this trait|this feat[’']s spells)/;
+  const ABILITY_CHOICE = /(\w+), (\w+),? or (\w+) is your spellcasting ability for (?:the spells you cast with this trait|this feat[’']s spells|it\b)/;
   const abilityChoices = [];
   const askAbility = (key, label, text) => {
     const m = text.match(ABILITY_CHOICE);
@@ -1869,12 +1904,12 @@ export function character(book, state) {
   // You know the Minor Illusion cantrip …").
   const ownOption = text => text.split('\n').filter(l => { const o = l.replace(/^[-\s]*/, '').match(/^\*\*(.+?)\.\*\*/)?.[1]; return !o || !options?.names.includes(o) || o === state.option; }).join('\n');
   const innate = [];
-  for (const t of species?.traits ?? []) {
+  for (const t of speciesTraits) {
     const ability = askAbility(`${species.name} ${t.name}`, `${t.name} (${species.name})`, t.text);
     const text = ownOption(t.text) + (ability !== null && /Lineage|Legacy|lineage|legacy/.test(t.name) ? ` ${lineage}` : '');
     const same = t.text.match(/uses the same spellcasting ability you use for your (.+?) trait/)?.[1];
     const by = ability ?? (same ? abilityChoices.find(c => c.label.startsWith(`${same} (`))?.chosen ?? null : null);
-    for (const m of text.matchAll(/You (?:also )?know the ([A-Z][\w’' ]+?) cantrip/g)) innate.push({ name: m[1], ability: by, from: `${species.name}, ${t.name}` });
+    for (const m of text.matchAll(/You (?:also )?know the \*?([A-Z][\w’' ]+?)\*? cantrip/g)) innate.push({ name: m[1], ability: by, from: `${species.name}, ${t.name}` });
   }
   for (const f of feats) {
     const key = `feat ${f.from}`, ability = askAbility(key, `${f.feat.name} (${f.from})`, f.feat.benefits.map(b => b.text).join(' '));
@@ -2068,7 +2103,7 @@ export function character(book, state) {
     return { name, kind: 'spell', class: from, ability, bonus: sp.attack ? mod[ability] + bonus : null, save: sp.save ? { ability: sp.save, dc: book.attacks.spell_save_dc_base + mod[ability] + bonus } : null, proficient: true,
       damage: `${roll}${signedMod(sp.dice.plus ? mod[sp.dice.plus] : 0)} ${damageType(sp)}`, beams: sp.upgrade?.kind === 'beams' && step > 1 ? step : null, versatile: null, reach: sp.reach ?? sp.range, mastery: null };
   });
-  const breaths = (species?.traits ?? []).flatMap(t => {
+  const breaths = speciesTraits.flatMap(t => {
     const m = t.text.match(/(\d+)-foot Cone or a (\d+)-foot Line[^.]*\. Each creature in that area must make a (\w+) saving throw \(DC (\d+) plus your (\w+) modifier and Proficiency Bonus\)\. On a failed save, a creature takes (\d+d\d+) damage of the type determined by your .+? trait\..*?This damage increases by \d+d\d+ when you reach character levels (\d+) \((\d+d\d+)\), (\d+) \((\d+d\d+)\), and (\d+) \((\d+d\d+)\)/);
     if (!m) return [];
     const roll = [[+m[7], m[8]], [+m[9], m[10]], [+m[11], m[12]]].filter(([lv]) => total >= lv).at(-1)?.[1] ?? m[6];
@@ -2107,7 +2142,7 @@ export function character(book, state) {
       resistance: r.growth.find(g => /Resistance to/.test(g))?.match(/Resistance to (.+?) damage/)?.[1] ?? null,
     };
   }
-  const faster = Object.values(optionRow ?? {}).join(' ').match(/Your Speed increases to (\d+) feet/)?.[1];
+  const faster = Object.values(optionRow ?? {}).join(' ').match(/Your Speed (?:increases to|is) (\d+) feet/)?.[1];
   // And what features add ("Your speed increases by 10 feet while you
   // aren't wearing Heavy armor", Fast Movement; "…, and your Speed increases
   // by 10 feet", the Infiltrator's model), each while its condition holds of
@@ -2165,10 +2200,14 @@ export function character(book, state) {
     }, 0);
   }, 0);
   const speed = Number(faster ?? species?.speed.match(/^(\d+)/)?.[1] ?? 0) + added;
+  // What the species (its traits and its lineage's row) and the feats say,
+  // sentence by sentence.
+  const traitSayings = [...speciesTraits.map(t => t.text), Object.values(optionRow ?? {}).slice(1).join(' '), ...feats.map(f => [f.feat.description, ...f.feat.benefits.map(b => b.text)].join('\n\n'))].flatMap(standing);
   // Other speeds ("You also have a Climb Speed and a Swim Speed equal to
-  // your Speed", "You have a Fly Speed of 60 feet").
+  // your Speed", "You have a Fly Speed of 60 feet"; a water elemental-blood's
+  // "You have a Swim Speed equal to your Speed").
   const moving = {};
-  for (const x of features.flatMap(sayings)) {
+  for (const x of [...features.flatMap(sayings), ...traitSayings]) {
     for (const m of x.matchAll(/\b[Yy]ou (?:also )?(?:have|gain) an? (Fly|Climb|Swim|Burrow) Speed(?: and an? (Fly|Climb|Swim|Burrow) Speed)? (?:equal to (your Speed|half your Speed)|of (\d+) feet)/g)) {
       const feet = m[4] ? +m[4] : m[3] === 'your Speed' ? speed : Math.floor(speed / 2);
       for (const k of [m[1], m[2]].filter(Boolean)) moving[k] = Math.max(moving[k] ?? 0, feet);
@@ -2184,7 +2223,6 @@ export function character(book, state) {
   // your Rage is active", "In Monster Form") is for play.
   const defenses = { resistances: new Set(), immunities: new Set(), conditionImmunities: new Set(), conditionAdvantages: new Set(), saveAdvantages: new Set() };
   const typeChosen = f => kindChoices.find(c => c.class === f.class && c.noun === 'damage type' && c.chosen)?.chosen;
-  const traitSayings = [...(species?.traits ?? []).map(t => t.text), Object.values(optionRow ?? {}).slice(1).join(' '), ...feats.map(f => [f.feat.description, ...f.feat.benefits.map(b => b.text)].join('\n\n'))].flatMap(standing);
   // An item's, worn or held as the builder has it ("While you wear the
   // shirt, you have …" is said of the shirt on).
   const itemSayings = inUse.flatMap(i => standing(i.text.replace(/(^|\. |\n- |\n)While (?:you (?:wear|hold|are attuned to)|wearing|holding) (?:it|them|the [\w’' ]+?), (\w)/g, (m, lead, c) => lead + c.toUpperCase())));
@@ -2193,6 +2231,7 @@ export function character(book, state) {
     if (/\bwhile (?:your|you)\b|\bwhile in\b/.test(x) || !/\b[Yy]ou (?:have|gain|are immune)\b/.test(x)) continue;
     for (const m of x.matchAll(/\b(Resistance|Immunity) to ((?:[A-Z]\w+(?:,? (?:and |or )?)?)+) damage\b/g)) list(m[2]).filter(t => book.damageTypes.includes(t)).forEach(t => defenses[m[1] === 'Resistance' ? 'resistances' : 'immunities'].add(t));
     if (/Resistance to the damage type determined by your Draconic Ancestry/.test(x) && optionRow?.['Damage Type']) defenses.resistances.add(optionRow['Damage Type']);
+    if (/\bResistance to its damage type\b/.test(x) && book.damageTypes.includes(optionRow?.Resistance)) defenses.resistances.add(optionRow.Resistance);
     if (f && /Resistance to that damage type\b/.test(x) && typeChosen(f)) defenses.resistances.add(typeChosen(f));
     for (const m of x.matchAll(/\b(?:Immunity to|immune to) (?:disease and to )?the ((?:[A-Z]\w+(?:,? (?:and )?)?)+) conditions?\b/g)) list(m[1]).forEach(c => defenses.conditionImmunities.add(c));
     for (const m of x.matchAll(/Advantage on saving throws you make to avoid or end the (\w+) condition/g)) defenses.conditionAdvantages.add(m[1]);
@@ -2245,7 +2284,7 @@ export function character(book, state) {
   load.over = load.carry !== null && load.items + load.coins > load.carry ? W.overloaded : null;
 
   return {
-    problems, notes, species, option: options?.names.includes(state.option) ? state.option : null, size, background, scores, base, mod, level: total, bonus,
+    problems, notes, species, option: options?.names.includes(state.option) ? state.option : null, optionRow: optionRow ?? null, speciesTraits, size, background, scores, base, mod, level: total, bonus,
     xp: advancement.xp, nextXp: book.advancement[total]?.xp ?? null,
     // Each class's own columns at its level (Rages, Rage Damage, Focus
     // Points, Favors), those the sheet shows elsewhere left out: the

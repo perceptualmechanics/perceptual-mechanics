@@ -783,6 +783,25 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const tiefling = run({ ...someone([{ class: 'Fighter', level: 5, subclass: 'Champion' }], { base: { ...ABLE, Charisma: 16 } }), species: 'Tiefling', option: 'Abyssal', spellAbilities: { 'Tiefling Fiendish Legacy': 'Charisma' } }, 'Abyssal Tiefling');
   const sprayed = hitOf(tiefling, legacyCantrip);
   if (!(sprayed?.bonus === tiefling.mod.Charisma + tiefling.bonus && sprayed.damage === `${spray.upgrade.steps.filter(([lv]) => lv <= 5).at(-1)[1]} ${spray.dice.type}`)) fail(`a Tiefling's ${legacyCantrip}: ${JSON.stringify(sprayed)}`);
+  // The books' own species (A Player's Companion), every option built: the
+  // Resistance its row gives ("Resistance to its damage type") or its strand
+  // names ("Resistance to Radiant damage"); a lineage's level 1 trait in
+  // force (its Speed, Swim Speed or Darkvision, as the row writes it); and
+  // the Knack's spellcasting ability asked for until it's chosen.
+  const bookSpecies = book.species.filter(x => x.choice);
+  if (bookSpecies.length !== (setting.data.book_species ?? []).length) fail(`the books' species: ${bookSpecies.map(x => x.name)} offered of ${(setting.data.book_species ?? []).map(x => x.name)}`);
+  for (const sp of bookSpecies) for (const option of engine.speciesOptions(sp).names) {
+    const { row, strand } = sp.choice.of[option], knack = sp.traits.find(t => /is your spellcasting ability for it/.test(t.text));
+    const plain = { ...someone([{ class: 'Fighter', level: 1 }]), species: sp.name, option, originFeats: {} };
+    const r = run({ ...plain, spellAbilities: knack ? { [`${sp.name} ${knack.name}`]: 'Wisdom' } : {} }, `${sp.name} (${option})`);
+    const strandText = sp.strands.find(x => x.name === strand)?.traits.map(t => t.text).join(' ') ?? '';
+    const resisted = row?.Resistance ?? strandText.match(/You have Resistance to (\w+) damage/)?.[1];
+    const said = row ? Object.values(row).slice(1).join(' ') : '';
+    const speed = +(said.match(/Your Speed is (\d+) feet/)?.[1] ?? sp.speed.match(/^\d+/)[0]), dark = said.match(/Darkvision with a range of (\d+) feet/)?.[1];
+    if (!(r && resisted && r.defenses.resistances.includes(resisted) && r.speed === speed && (!/Swim Speed equal to your Speed/.test(said) || r.speeds.Swim === speed) && (!dark || r.senses.Darkvision === +dark)))
+      fail(`${sp.name} (${option}): ${JSON.stringify({ resisted, got: r?.defenses.resistances, speed: [speed, r?.speed], speeds: r?.speeds, senses: r?.senses })}`);
+    if (knack && !engine.character(book, plain).problems.some(x => x.field === `ability:${sp.name} ${knack.name}`)) fail(`${sp.name}: ${knack.name}'s spellcasting ability isn't asked for`);
+  }
   const red = run({ ...someone([{ class: 'Fighter', level: 5, subclass: 'Champion' }]), species: 'Dragonborn', option: 'Red' }, 'Red Dragonborn');
   const breath = hitOf(red, 'Breath Weapon'), redType = Object.values(srd.species.find(x => x.name === 'Dragonborn').tables).flat().find(r => Object.values(r)[0] === 'Red')['Damage Type'];
   if (!(breath?.save?.dc === 8 + red.mod.Constitution + red.bonus && breath.damage === `2d10 ${redType}`)) fail(`a Red Dragonborn's Breath Weapon: ${JSON.stringify(breath)}`);
