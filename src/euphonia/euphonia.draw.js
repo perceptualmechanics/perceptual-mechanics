@@ -264,11 +264,12 @@ export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
   const free = b => b.l >= edge.l - 1e-6 && b.r <= edge.r + 1e-6 && b.t >= edge.t && b.b <= edge.b
     && Math.hypot(Math.max(b.l, Math.min(cx, b.r)) - cx, Math.max(b.t, Math.min(cy, b.b)) - cy) >= radius
     && !taken.some(o => b.l < o.r + clear && o.l < b.r + clear && b.t < o.b + clear && o.t < b.b + clear);
-  // Where every name stands clear where it falls (a desktop's window), each
-  // stays there. On a narrow window each finds the nearest room up or down
-  // its side. Where names would meet in a window wider than tall (above a
-  // phone's open sheet) there's no such room, and a name moved off its realm
-  // would mislead: the Wheel goes unlettered until it has room again.
+  // A name stands where it falls if it's clear there; if not (on a desktop's
+  // window, the names at Good and Evil fall on the mount), it finds the
+  // nearest room up or down its side. Where names would meet one another in
+  // a window wider than tall (above a phone's open sheet) there's no such
+  // room, and a name moved off its realm would mislead: the Wheel goes
+  // unlettered until it has room again.
   const names = [...realmNames.sort((a, b) => Math.abs(b.y - cy) - Math.abs(a.y - cy)), ...roadNames];
   const meet = (a, b) => a.l < b.r + clear && b.l < a.r + clear && a.t < b.b + clear && b.t < a.b + clear;
   const fallen = names.map(n => boxOf(n, n.y)), narrow = rim.x < rim.y;
@@ -307,7 +308,7 @@ export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
   const across = (n, top, bottom) => {
     for (let i = 0; i <= 2 * reach; i++) {
       const y = n.y + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * step, b = boxOf(n, y);
-      if (y >= top && y <= bottom && (!narrow || free(b))) return { ...n, x: b.l + n.ax * n.w, y, box: b };
+      if (y >= top && y <= bottom && free(b)) return { ...n, x: b.l + n.ax * n.w, y, box: b };
     }
     return null;
   };

@@ -609,7 +609,6 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   const PHONE_BAR = 118;
   const stages = [[320, 568], [360, 640], [375, 667], [375, 812], [390, 844], [414, 736], [414, 896], [430, 932]].map(([W, H]) => [W, H - PHONE_BAR]);
   const realmNames = wheelData.realms.filter(r => r.at !== 'centre').map(r => r.name);
-  let wheelMoved = 0;
   for (const [W, H, kind] of [...sizes, ...aboveSheet.map(f => [...f, 'sheet']), ...stages.map(f => [...f, 'stage'])]) for (const dpr of [1, 2]) {
     const sheet = kind === 'sheet';
     const m = REALM_REACH_REM * REM, f = Math.min(W - 2 * m, H - 2 * m) / (2 * mounting.MERIDIAN.outer);
@@ -619,11 +618,10 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
     else if (got.length !== (sheet ? 0 : named)) fail(`the Wheel at ${W}x${H}: ${got.length} of ${named} names placed${sheet ? ', above a phone\'s open sheet' : ''}`);
     got.forEach((n, i) => {
       const { l, r, t, b } = n.box, near = Math.hypot(Math.max(l, Math.min(view.cx, r)) - view.cx, Math.max(t, Math.min(view.cy, b)) - view.cy);
-      if (W >= H && !sheet) { if (n.moved > 1e-6) fail(`the Wheel at ${W}x${H}: ${n.text} moved ${n.moved.toFixed(1)}px with room to spare`); return; }
-      wheelMoved = Math.max(wheelMoved, n.moved / dpr);
       // On a phone a name stays by its realm: past at most its two
-      // neighbours above or below, a line each, and its own line's room.
-      if (W < 768 && n.moved > 4 * n.h) fail(`the Wheel at ${W}x${H}: ${n.text} moved ${(n.moved / n.h).toFixed(1)} of its lines from its realm`);
+      // neighbours above or below, a line each, and its own line's room. On a
+      // desktop, where it moves only to clear the mount, it stays as close.
+      if ((W < 768 || W >= H) && n.moved > 4 * n.h) fail(`the Wheel at ${W}x${H}: ${n.text} moved ${(n.moved / n.h).toFixed(1)} of its lines from its realm`);
       if (l < 0 || r > W * dpr || t < 0 || b > H * dpr) fail(`the Wheel at ${W}x${H}: ${n.text} leaves the window`);
       if (near < mounting.MERIDIAN.outer * view.k) fail(`the Wheel at ${W}x${H}: ${n.text} runs under the mount`);
       for (const o of got.slice(i + 1)) if (l < o.box.r && o.box.l < r && t < o.box.b && o.box.t < b) fail(`the Wheel at ${W}x${H}: ${n.text} is over ${o.text}`);
