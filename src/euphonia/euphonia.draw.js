@@ -230,9 +230,10 @@ export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
   // climbs, so two roads rising together part. One rising at the centre, under
   // the globe (the Tree, from the Middle World), is named at its far end, on
   // the side toward the rest of the road. One that runs straight in from the
-  // one realm it touches on the ring (the Mountain, from Svarga to the Middle
-  // World) has no way along the ring, so it leans away from the nearest other
-  // road's name, as two roads rising together part.
+  // only realm it touches on the ring to the Middle World (a shape the reader
+  // allows, though no pathway takes it now) has no way along the ring, so it
+  // leans away from the nearest other road's name, as two roads rising
+  // together part.
   const turn = (to, from) => Math.sign(((to - from + 540) % 360) - 180);
   const courses = roads.map(road => {
     const ring = road.through.map(n => place.get(n)).filter(at => at !== 'centre'), rises = place.get(road.rises);

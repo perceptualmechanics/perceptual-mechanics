@@ -64,8 +64,12 @@ export function wheelOf(wheel, classes) {
       from = ring[(widest + 1) % ring.length];
       span = 360 - gaps[widest];
     }
+    // Where its opening names none, its course can't be read: rises is null
+    // and the map gate stops the build, rather than draw a road the book
+    // doesn't give.
     const lead = plain(s.lead), at = r => { const i = mention(lead, r.name); return i < 0 ? Infinity : i; };
-    const rises = through.reduce((first, r) => (at(r) < at(first) ? r : first), through[0])?.name;
+    const first = through.reduce((a, r) => (at(r) < at(a) ? r : a), through[0]);
+    const rises = first && at(first) < Infinity ? first.name : null;
     return { name: s.name, through: through.map(r => r.name), from, span, centre: through.some(r => r.at === 'centre'), rises };
   });
   return { realms, roads };

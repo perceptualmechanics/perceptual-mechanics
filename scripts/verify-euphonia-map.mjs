@@ -600,6 +600,9 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   // a taller one. Phones' screens, from the first SE to the largest, less the
   // bar above the stage (118 px on a phone, measured for 7.6.0).
   const wheelData = wheelOf(JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.wheel.json', import.meta.url), 'utf8')).data, JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.classes.json', import.meta.url), 'utf8')).data);
+  // Each road's course as its pathway's opening gives it: the plane it rises
+  // in, named there.
+  for (const road of wheelData.roads) if (!road.rises) fail(`the Wheel: ${road.name}'s opening names no plane it rises in, so its course can't be read (it runs through ${road.through.join(', ') || 'nothing'})`);
   const REM = 16, NAME_EM = 0.62, named = wheelData.realms.filter(r => r.at !== 'centre').length + wheelData.roads.length;
   const sizes = [[320, 568], [360, 640], [375, 690], [390, 720], [414, 760], [768, 900], [1280, 780], [1920, 960]];
   const aboveSheet = [[375, 290], [390, 350], [440, 400]];
