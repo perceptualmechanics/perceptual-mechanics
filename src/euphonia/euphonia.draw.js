@@ -229,13 +229,24 @@ export function wheelNames(view, { realms, roads }, rim, rem, dpr, measure) {
   // on along its arc, or, for a road through the centre, back from the way it
   // climbs, so two roads rising together part. One rising at the centre, under
   // the globe (the Tree, from the Middle World), is named at its far end, on
-  // the side toward the rest of the road.
+  // the side toward the rest of the road. One that runs straight in from the
+  // one realm it touches on the ring (the Mountain, from Svarga to the Middle
+  // World) has no way along the ring, so it leans away from the nearest other
+  // road's name, as two roads rising together part.
   const turn = (to, from) => Math.sign(((to - from + 540) % 360) - 180);
-  const roadNames = roads.map((road, j) => {
+  const courses = roads.map(road => {
     const ring = road.through.map(n => place.get(n)).filter(at => at !== 'centre'), rises = place.get(road.rises);
-    const source = rises === 'centre' ? ring.at(-1) : rises;
-    const along = rises === 'centre' ? turn(ring.at(-2), source) : road.centre ? -turn(ring.find(at => at !== source), source) : source === road.from ? 1 : -1;
-    const at = (source + along * SIXTEENTH / 2 + 360) % 360;
+    const source = rises === 'centre' ? ring.at(-1) : rises, other = ring.find(at => at !== source);
+    const along = other === undefined ? null : rises === 'centre' ? turn(ring.at(-2), source) : road.centre ? -turn(other, source) : source === road.from ? 1 : -1;
+    return { source, at: along === null ? null : (source + along * SIXTEENTH / 2 + 360) % 360 };
+  });
+  const apart = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+  const roadNames = roads.map((road, j) => {
+    let { source, at } = courses[j];
+    if (at === null) {
+      const near = courses.filter(c => c.at !== null).reduce((n, c) => (apart(c.at, source) < apart(n, source) ? c.at : n), source + 180);
+      at = (source - turn(near, source) * SIXTEENTH / 2 + 360) % 360;
+    }
     return name(road, road.name, at, point(roadT(j), at), WHEEL_SMALL_REM, true);
   });
   const clear = WHEEL_SMALL_REM * rem * dpr * NAME_CLEAR, radius = MERIDIAN.outer * k + clear;
