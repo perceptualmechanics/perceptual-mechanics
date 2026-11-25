@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "b814f9d2303c636c6752c62010fe1412474bff491a3d89be0708eb8aae291b46",
-  "modified": "2026-11-25T07:52:04-05:00",
+  "sha256": "c38227678dbd281aa44cf15c56144ab2eca65504b0236b98807f196c634f3bf7",
+  "modified": "2026-11-25T11:50:12-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 42,
   "rules": {
@@ -4171,7 +4171,7 @@
     {
      "name": "Vitalist",
      "place": "font",
-     "lead": "You couldn't find where your body stopped. The life in your chest and the life in the air, the ground, the river and the people beside you is one current, and you're a place where it runs strong. When you heal someone, you aren't giving away something of yours: you mend a little yourself, and whatever they can't hold goes on to the next one who needs it. In the villages you arrive with a basket of simples, open every window and ask for nothing but a bed, and you can diagnose and treat a field, a well or a herd as readily as a patient.",
+     "lead": "You couldn't find where your body stopped. The life in your chest and the life in the air, the ground, the river and the people beside you is one current, and you're a place where it runs strong. You heal with your hands as much as your simples: you lay them on a patient, the warmth runs through, and the patient feels it before the medicine. It shows on you, too. A Vitalist has the look of someone just back from a long walk in good air, a warmth in the face that doesn't fade in a sickroom or a siege. When you heal someone, you aren't giving away something of yours: you mend a little yourself, and whatever they can't hold goes on to the next one who needs it. In the villages you arrive with a basket of simples, open every window and ask for nothing but a bed, and you can diagnose and treat a field, a well or a herd as readily as a patient.",
      "features": [
       {
        "level": 3,
@@ -5427,7 +5427,7 @@
     {
      "level": 20,
      "name": "The Circuit Made Whole",
-     "text": "*You have seen the whole, and it doesn't make sense the way anyone expects. It simply is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors. The hard roads add up: you regain one more for every two hard roads you have walked, and if you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond.\n\n**The Road Walked Whole.** Once you have walked all three of your pathway's planes (its earth end, its Inner Circuit plane and its Far Circuit plane; see Soul's Journey), the road answers you from end to end. Once per Long Rest, as a Bonus Action, you can bring your pathway's road into the fight for 1 minute:\n\n- **The Bridge: The Sentence.** Attack rolls against the creature you have Weighed have Advantage. If you Weigh another creature, the sentence moves to it.\n- **The River of Life: Oceanus.** Your Wellspring runs as Oceanus: every creature of your choice within 60 feet of you is in it. If you have no Wellspring open, one opens under you at no cost, and either way it lasts the minute.\n- **The Mountain: The Summit.** Twofold Vista's second Influence costs no Favor, and a plane can answer you on two of your turns in a row.\n- **The River of Death: The Flood.** The Unpaid fill a 60-foot Emanation from you, as The Unpaid describes, in addition to any crowd you have already let in.\n- **The Tree: The Hall Rides Out.** You and your allies within 30 feet of you have Advantage on attack rolls.\n\n> **Playing a Revelator**\n>\n> You see the world's other rooms, and you've been to some of them. A Short Rest brings every Favor back, so a party that stops to breathe gets a generous Revelator. Give your spirit a job every turn: it's a guide, a scout and a voice in the right ear. Ethereal Stride is your exit and your shortcut; bring a friend. Out of a fight, you talk with ghosts, find the waymarks and remember the planes better than anyone at the table: when the party wonders what lives behind a door, you have often stood on the other side of it."
+     "text": "*You have seen the whole, and it doesn't make sense the way anyone expects. It simply is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors. The hard roads add up: you regain one more for every two hard roads you have walked, and if you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond.\n\n**The Road Walked Whole.** Getting here was the walk: the earth end where your pathway called you, its Inner Circuit plane and its Far Circuit plane are the road you took to 20th level, whether or not you stood on each in the body, and the road answers you from end to end. Once per Long Rest, as a Bonus Action, you can bring your pathway's road into the fight for 1 minute:\n\n- **The Bridge: The Sentence.** Attack rolls against the creature you have Weighed have Advantage. If you Weigh another creature, the sentence moves to it.\n- **The River of Life: Oceanus.** Your Wellspring runs as Oceanus: every creature of your choice within 60 feet of you is in it. If you have no Wellspring open, one opens under you at no cost, and either way it lasts the minute.\n- **The Mountain: The Summit.** Twofold Vista's second Influence costs no Favor, and a plane can answer you on two of your turns in a row.\n- **The River of Death: The Flood.** The Unpaid fill a 60-foot Emanation from you, as The Unpaid describes, in addition to any crowd you have already let in.\n- **The Tree: The Hall Rides Out.** You and your allies within 30 feet of you have Advantage on attack rolls.\n\n> **Playing a Revelator**\n>\n> You see the world's other rooms, and you've been to some of them. A Short Rest brings every Favor back, so a party that stops to breathe gets a generous Revelator. Give your spirit a job every turn: it's a guide, a scout and a voice in the right ear. Ethereal Stride is your exit and your shortcut; bring a friend. Out of a fight, you talk with ghosts, find the waymarks and remember the planes better than anyone at the table: when the party wonders what lives behind a door, you have often stood on the other side of it."
     }
    ],
    "subclasses": [
@@ -5600,7 +5600,7 @@
       {
        "level": 11,
        "name": "The River Runs Deep",
-       "text": "When an Influence you let in restores Hit Points, each creature it heals regains an extra 2d8 Hit Points. This increases to 3d8 at Revelator level 15 and 6d8 at Revelator level 17."
+       "text": "When an Influence you let in restores Hit Points, each creature it heals regains an extra 3d8 Hit Points. This increases to 4d8 at Revelator level 15 and 6d8 at Revelator level 17."
       },
       {
        "level": 15,
@@ -5617,7 +5617,7 @@
     {
      "name": "The Mountain",
      "place": "chapter",
-     "lead": "*Stand Where Every Road Meets*\n\nA Revelator of the Mountain has stood at the center, where every road meets, and belongs everywhere. You change your mind more freely than other Revelators, and your spirit stands beside your friends to turn aside the blows meant for them. Out of a fight you climb something high and read the country, and any house that takes you in finds you already know its customs. Whatever the question, you've stood next door to the answer.",
+     "lead": "*Stand Where Every Road Meets*\n\nA Revelator of the Mountain has stood at the center, where every road meets, and belongs everywhere. You change your mind more freely than other Revelators, and your spirit stands beside your friends to turn aside the blows meant for them. Out of a fight you climb something high and read the country, and any house that takes you in finds you already know its customs. Whatever the question, you've stood next door to the answer.\n\nThe heart of the earth: the unmoving stone playground of the gods, rising from Asphodel to Svarga with the Middle World on its slopes.",
      "features": [
       {
        "level": 3,
@@ -5798,7 +5798,7 @@
       {
        "level": 7,
        "name": "The Unpaid",
-       "text": "When you open a vista, you can let in the Unpaid, the shades who couldn't afford the fare, instead of calling a spirit or letting in an Influence. The vista opens on any Revelation you know, spends a Favor as usual and is your open vista. The Unpaid fill a 15-foot radius around it for 1 minute, even if the vista closes. The area is Difficult Terrain for your enemies, and an enemy that starts its turn there must succeed on a Wisdom saving throw or take 1d6 Psychic damage (2d6 from Revelator level 11, 3d6 from 15) and have Disadvantage on its next attack roll. They don't dismiss your spirits or count against your limit, but only one crowd of the Unpaid can be in the world at a time."
+       "text": "When you open a vista, you can let in the Unpaid, the shades who couldn't afford the fare, instead of calling a spirit or letting in an Influence. The vista opens on any Revelation you know, spends a Favor as usual and is your open vista. The Unpaid fill a 15-foot radius around it for 1 minute, even if the vista closes. The area is Difficult Terrain for your enemies, and an enemy that starts its turn there must succeed on a Wisdom saving throw or take 1d6 Psychic damage (2d6 from Revelator level 11, 4d6 from 15, 5d6 from 17) and have Disadvantage on its next attack roll. They don't dismiss your spirits or count against your limit, but only one crowd of the Unpaid can be in the world at a time."
       },
       {
        "level": 11,
