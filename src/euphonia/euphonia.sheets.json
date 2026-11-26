@@ -458,10 +458,22 @@
    "file": "people_abdul_wahid.html"
   },
   {
+   "name": "Aeltje Verschoor",
+   "title": "Aeltje Verschoor (Courtier 7, Art)",
+   "line": "Courtier 7, Art",
+   "file": "people_aeltje_verschoor.html"
+  },
+  {
    "name": "Agnesina Fabris",
    "title": "Agnesina Fabris (Warlock 5, Envoy)",
    "line": "Warlock 5, Envoy",
    "file": "people_agnesina_fabris.html"
+  },
+  {
+   "name": "Ahmed Boşnak",
+   "title": "Ahmed Boşnak (Fighter 6, Battle Master)",
+   "line": "Fighter 6, Battle Master",
+   "file": "people_ahmed_bosnak.html"
   },
   {
    "name": "Aisulu",
@@ -518,6 +530,12 @@
    "file": "people_asiga.html"
   },
   {
+   "name": "Âşık Hüsniye",
+   "title": "Âşık Hüsniye (Bard 4, College of Lore)",
+   "line": "Bard 4, College of Lore",
+   "file": "people_asik_husniye.html"
+  },
+  {
    "name": "Avdotya Shchukina",
    "title": "Avdotya Shchukina (Counsellor 9, Majordomo)",
    "line": "Counsellor 9, Majordomo",
@@ -534,6 +552,12 @@
    "title": "Ayoka (Bard 6, College of Lore)",
    "line": "Bard 6, College of Lore",
    "file": "people_ayoka.html"
+  },
+  {
+   "name": "Baciccia Arvigo",
+   "title": "Baciccia Arvigo (Danae 5, Crossing)",
+   "line": "Danae 5, Crossing",
+   "file": "people_baciccia_arvigo.html"
   },
   {
    "name": "Mwalimu Bakari Shee",
@@ -560,6 +584,18 @@
    "file": "people_brites_fagundes.html"
   },
   {
+   "name": "Buzcu Ayşe",
+   "title": "Buzcu Ayşe (Sorcerer 4, Frost Origin)",
+   "line": "Sorcerer 4, Frost Origin",
+   "file": "people_buzcu_ayse.html"
+  },
+  {
+   "name": "Doña Catalina de Ibarra",
+   "title": "Doña Catalina de Ibarra (Courtier 12, Arms)",
+   "line": "Courtier 12, Arms",
+   "file": "people_catalina_de_ibarra.html"
+  },
+  {
    "name": "Dona Catarina de Sá",
    "title": "Dona Catarina de Sá (Counsellor 11, Majordomo)",
    "line": "Counsellor 11, Majordomo",
@@ -572,6 +608,12 @@
    "file": "people_chea_sok.html"
   },
   {
+   "name": "Chengetai Chiweshe",
+   "title": "Chengetai Chiweshe (Ranger 7, Hidden Killer)",
+   "line": "Ranger 7, Hidden Killer",
+   "file": "people_chengetai_chiweshe.html"
+  },
+  {
    "name": "Chuqui Ocllo",
    "title": "Chuqui Ocllo (Counsellor 6, Factor)",
    "line": "Counsellor 6, Factor",
@@ -582,6 +624,12 @@
    "title": "Đào Thị Lựu (Courtier 5, Art)",
    "line": "Courtier 5, Art",
    "file": "people_dao_thi_luu.html"
+  },
+  {
+   "name": "Deli İlyas",
+   "title": "Deli İlyas (Barbarian 5, Path of the Wild Heart)",
+   "line": "Barbarian 5, Path of the Wild Heart",
+   "file": "people_deli_ilyas.html"
   },
   {
    "name": "Licenciado Diego Ruiz de Lezcano",
@@ -608,10 +656,22 @@
    "file": "people_eliphalet_crane.html"
   },
   {
+   "name": "Emina Kujundžić",
+   "title": "Emina Kujundžić (Revelator 7, the Bridge)",
+   "line": "Revelator 7, the Bridge",
+   "file": "people_emina_kujundzic.html"
+  },
+  {
    "name": "Ferhad Usta",
    "title": "Ferhad Usta (Courtier 6, Art)",
    "line": "Courtier 6, Art",
    "file": "people_ferhad_usta.html"
+  },
+  {
+   "name": "Françoise Dalmas",
+   "title": "Françoise Dalmas (Courtier 6, Verse)",
+   "line": "Courtier 6, Verse",
+   "file": "people_francoise_dalmas.html"
   },
   {
    "name": "Fusipala",
@@ -686,6 +746,12 @@
    "file": "people_iliqa.html"
   },
   {
+   "name": "Isabeau de Mérville",
+   "title": "Isabeau de Mérville (Danae 7, Binding)",
+   "line": "Danae 7, Binding",
+   "file": "people_isabeau_de_merville.html"
+  },
+  {
    "name": "Iya Adunni",
    "title": "Iya Adunni (Counsellor 9, Spymaster)",
    "line": "Counsellor 9, Spymaster",
@@ -696,6 +762,12 @@
    "title": "Jakub Lipenský (Danae 14, Naming)",
    "line": "Danae 14, Naming",
    "file": "people_jakub_lipensky.html"
+  },
+  {
+   "name": "Jost Imhof",
+   "title": "Jost Imhof (Physician 6, Combat Medic)",
+   "line": "Physician 6, Combat Medic",
+   "file": "people_jost_imhof.html"
   },
   {
    "name": "Kalehua",
@@ -728,6 +800,12 @@
    "file": "people_khodadad_the_dyer.html"
   },
   {
+   "name": "Khoja Grigor Melikian",
+   "title": "Khoja Grigor Melikian (Counsellor 8, Factor)",
+   "line": "Counsellor 8, Factor",
+   "file": "people_khoja_grigor_melikian.html"
+  },
+  {
    "name": "Kichibei",
    "title": "Kichibei (Natural Philosopher 5, Experimentalist)",
    "line": "Natural Philosopher 5, Experimentalist",
@@ -752,10 +830,22 @@
    "file": "people_kunhi_ayesha.html"
   },
   {
+   "name": "Kunigunde Hauck",
+   "title": "Kunigunde Hauck (Physician 8, Hedge Witch)",
+   "line": "Physician 8, Hedge Witch",
+   "file": "people_kunigunde_hauck.html"
+  },
+  {
    "name": "Kunwar Ratan Singh",
    "title": "Kunwar Ratan Singh (Courtier 10, Arms)",
    "line": "Courtier 10, Arms",
    "file": "people_kunwar_ratan_singh.html"
+  },
+  {
+   "name": "Kurokawa Tadashige",
+   "title": "Kurokawa Tadashige (Fighter 9, Battle Master)",
+   "line": "Fighter 9, Battle Master",
+   "file": "people_kurokawa_tadashige.html"
   },
   {
    "name": "Kusi Wallpa",
@@ -818,6 +908,12 @@
    "file": "people_munyaradzi_shava.html"
   },
   {
+   "name": "Mwinyi Abdalla bin Shaibu",
+   "title": "Mwinyi Abdalla bin Shaibu (Counsellor 6, Gamester)",
+   "line": "Counsellor 6, Gamester",
+   "file": "people_mwinyi_abdalla.html"
+  },
+  {
    "name": "Nane Gulbahar",
    "title": "Nane Gulbahar (Ranger 7, Hidden Killer)",
    "line": "Ranger 7, Hidden Killer",
@@ -854,6 +950,12 @@
    "file": "people_olaniyi.html"
   },
   {
+   "name": "Olof Persson Stråle",
+   "title": "Olof Persson Stråle (Revelator 8, the Tree)",
+   "line": "Revelator 8, the Tree",
+   "file": "people_olof_persson_strale.html"
+  },
+  {
    "name": "Osaretin",
    "title": "Osaretin (Courtier 6, Art)",
    "line": "Courtier 6, Art",
@@ -888,6 +990,12 @@
    "title": "Saadat Ali (Warlock 4, Dreamlord)",
    "line": "Warlock 4, Dreamlord",
    "file": "people_saadat_ali.html"
+  },
+  {
+   "name": "Saatçi Mehmed Ağa",
+   "title": "Saatçi Mehmed Ağa (Counsellor 11, Marshal)",
+   "line": "Counsellor 11, Marshal",
+   "file": "people_saatci_mehmed_aga.html"
   },
   {
    "name": "Saliha Hatun",
@@ -930,6 +1038,12 @@
    "title": "Sister Ondine (Counsellor 7, Majordomo)",
    "line": "Counsellor 7, Majordomo",
    "file": "people_sister_ondine.html"
+  },
+  {
+   "name": "Sol Mataraso",
+   "title": "Sol Mataraso (Warlock 6, Envoy)",
+   "line": "Warlock 6, Envoy",
+   "file": "people_sol_mataraso.html"
   },
   {
    "name": "Sossi",
@@ -1004,6 +1118,12 @@
    "file": "people_yahya_efendi.html"
   },
   {
+   "name": "Zainab bint Ali al-Sitrawi",
+   "title": "Zainab bint Ali al-Sitrawi (Revelator 6, the River of Life)",
+   "line": "Revelator 6, the River of Life",
+   "file": "people_zainab_al_sitrawi.html"
+  },
+  {
    "name": "Zhamal-apa",
    "title": "Zhamal-apa (Physician 7, Hedge Witch)",
    "line": "Physician 7, Hedge Witch",
@@ -1014,6 +1134,12 @@
    "title": "Zhao Nainai (Cleric 8, Hidden Domain)",
    "line": "Cleric 8, Hidden Domain",
    "file": "people_zhao_nainai.html"
+  },
+  {
+   "name": "Zhou Wenbing",
+   "title": "Zhou Wenbing (Warlock 5, Dreamlord)",
+   "line": "Warlock 5, Dreamlord",
+   "file": "people_zhou_wenbing.html"
   }
  ]
 }
