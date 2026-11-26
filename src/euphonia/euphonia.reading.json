@@ -1077,6 +1077,139 @@
     }
    },
    {
+    "id": "people_agnesina_fabris",
+    "name": "Agnesina Fabris",
+    "region": "Europe",
+    "class": "Warlock",
+    "line": "A bookbinder's widow of Venice whose pact is with an angel from a heaven not her own, who catches people falling off roofs.",
+    "scene": "The roofs of San Polo on a wet night, lanterns in the alley below. A boy jumps a gap a long stride too wide, and halfway across there is light at his shoulder and a grip on his collar like his father's, and he lands on the bookbinder's roof on both feet. Something tall and bright folds itself back into the rain. On the roof behind him, a woman in widow's black says a word of thanks to a heaven that isn't hers, gathers her skirts and jumps.",
+    "play": "You call an angel for one errand at a time, mostly to catch whoever is falling, and push the rest off the roof.",
+    "class_note": "Made a deal, and the other side keeps it.",
+    "traits": [
+     "guard",
+     "care",
+     "faith",
+     "loyalty"
+    ],
+    "sheet": "/euphonia/sheets/people_agnesina_fabris.html",
+    "signature": {
+     "name": "Call an Angel",
+     "line": "An angel lands beside the fight, does one errand (strike, guard, mend or bear) and goes back.",
+     "uses": 2,
+     "per": "short rest"
+    },
+    "turn": [
+     "Bonus Action: Call an Angel, Guard on whoever is running",
+     "Action: Eldritch Blast (Agonizing Blast), or Fly on a friend",
+     "Reaction: Counterspell"
+    ],
+    "level3": {
+     "class": "Warlock",
+     "subclass": "Envoy",
+     "species": "Human",
+     "background": "Acolyte"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 14,
+     "Constitution": 13,
+     "Intelligence": 10,
+     "Wisdom": 13,
+     "Charisma": 17
+    },
+    "build": {
+     "name": "Agnesina Fabris",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Acolyte",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 14,
+      "Constitution": 13,
+      "Intelligence": 10,
+      "Wisdom": 12,
+      "Charisma": 15
+     },
+     "increases": {
+      "Charisma": 2,
+      "Wisdom": 1
+     },
+     "classes": [
+      {
+       "class": "Warlock",
+       "level": 3,
+       "subclass": "Envoy Patron"
+      }
+     ],
+     "skills": {
+      "Warlock": [
+       "Investigation",
+       "History"
+      ],
+      "Human Skillful": [
+       "Acrobatics"
+      ],
+      "feat Versatile (Human)": [
+       "Athletics",
+       "Perception"
+      ]
+     },
+     "tools": {
+      "feat Versatile (Human)": [
+       "Leatherworker’s Tools"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "languages": {
+      "Common": [
+       "Venetian"
+      ],
+      "standard": [
+       "Italian",
+       "Latin"
+      ]
+     },
+     "options": {
+      "Warlock": [
+       {
+        "name": "Agonizing Blast"
+       },
+       {
+        "name": "Armor of Shadows"
+       },
+       {
+        "name": "Eldritch Mind"
+       }
+      ]
+     },
+     "spellAbilities": {
+      "feat Acolyte": "Charisma"
+     },
+     "spells": {
+      "Warlock": [
+       "Eldritch Blast",
+       "Mage Hand",
+       "Hex",
+       "Protection from Evil and Good",
+       "Misty Step",
+       "Spider Climb"
+      ],
+      "feat Acolyte": [
+       "Guidance",
+       "Light",
+       "Healing Word"
+      ]
+     },
+     "cantripTargets": {
+      "Warlock invocation 0": "Eldritch Blast"
+     }
+    }
+   },
+   {
     "id": "people_aisulu",
     "name": "Aisulu",
     "region": "The Steppe and the North",
@@ -4716,6 +4849,135 @@
     }
    },
    {
+    "id": "people_dorothea_pfister",
+    "name": "Dorothea Pfister",
+    "region": "Europe",
+    "class": "Sorcerer",
+    "line": "A vintner's daughter of Kitzingen on the Main whose egg stall went up in flames, waiting on the prince-bishop's answer.",
+    "scene": "Market day by the Main bridge at Kitzingen. A girl of sixteen holds a basket of eggs very still while a burgher's wife counts out her coins one at a time, slowly, as if to make a point. The girl's face doesn't change. The eggs in the basket begin, very faintly, to tick. At the edge of the market a man in a canon's black coat, with a bucket of water at his feet, writes something down.",
+    "play": "Your power builds every turn; you wreathe yourself in fire and let it out on one foe, where it catches and burns.",
+    "class_note": "Has a raw force coming through them that builds until it's let out.",
+    "traits": [
+     "power",
+     "care",
+     "family",
+     "mercy"
+    ],
+    "sheet": "/euphonia/sheets/people_dorothea_pfister.html",
+    "signature": {
+     "name": "Release",
+     "line": "Fire let out on one foe, where it catches like dry thatch.",
+     "uses": 1,
+     "per": "turn"
+    },
+    "turn": [
+     "Initiative: the Pressure rises; Bonus Action: Wreathed, the stance that burns whoever touches her",
+     "Action: Fire Bolt, or Scorching Ray",
+     "Release: all the Pressure into one creature, and Kindle sets it burning down turn by turn",
+     "Reaction: Shield"
+    ],
+    "level3": {
+     "class": "Sorcerer",
+     "subclass": "Fire",
+     "species": "Human",
+     "background": "Merchant"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 13,
+     "Constitution": 15,
+     "Intelligence": 10,
+     "Wisdom": 12,
+     "Charisma": 17
+    },
+    "build": {
+     "name": "Dorothea Pfister",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Merchant",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 13,
+      "Constitution": 14,
+      "Intelligence": 10,
+      "Wisdom": 12,
+      "Charisma": 15
+     },
+     "increases": {
+      "Charisma": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Sorcerer",
+       "level": 3,
+       "subclass": "Fire Origin"
+      }
+     ],
+     "skills": {
+      "Sorcerer": [
+       "Insight",
+       "Religion"
+      ],
+      "Human Skillful": [
+       "Nature"
+      ],
+      "feat Versatile (Human)": [
+       "Perception"
+      ],
+      "feat Merchant": [
+       "Deception",
+       "Investigation",
+       "Medicine"
+      ]
+     },
+     "tools": {
+      "feat Versatile (Human)": [
+       "Brewer’s Supplies",
+       "Cook’s Utensils"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "languages": {
+      "Common": [
+       "German"
+      ],
+      "standard": [
+       "Latin",
+       "Common Sign Language"
+      ]
+     },
+     "options": {
+      "Sorcerer": [
+       {
+        "name": "Careful Spell"
+       },
+       {
+        "name": "Subtle Spell"
+       }
+      ]
+     },
+     "spells": {
+      "Sorcerer": [
+       "Fire Bolt",
+       "Prestidigitation",
+       "Light",
+       "Mending",
+       "Shield",
+       "Sleep",
+       "Fog Cloud",
+       "Detect Magic",
+       "Misty Step",
+       "Hold Person"
+      ]
+     }
+    }
+   },
+   {
     "id": "show_art",
     "name": "Doña Isabel Cuauhtzin",
     "region": "The Americas",
@@ -5015,6 +5277,128 @@
        "Thaumaturgy",
        "Sacred Flame",
        "Bless"
+      ]
+     }
+    }
+   },
+   {
+    "id": "people_eliphalet_crane",
+    "name": "Eliphalet Crane",
+    "region": "The Americas",
+    "class": "Natural Philosopher",
+    "line": "A self-taught chemist of Wethersfield in Connecticut who has blown the roof off his own elaboratory twice.",
+    "scene": "A March morning on the Broad Street green in Wethersfield, the frost still on the grass. The lean-to behind the Crane house has no roof. A selectman stands at the gate with his hat in his hands, and in the yard a lean man with no eyebrows is patting out a smoldering cuff with his own hat. \"That,\" the man says, \"was the expected result.\" Behind him, his sister sets down an empty bucket of sand and goes to fetch another.",
+    "play": "You carry two experiments a day and choose their energy as you throw; sometimes they bite back.",
+    "class_note": "Uses the laws the world already obeys, with no magic at all.",
+    "traits": [
+     "craft",
+     "lore",
+     "wonder",
+     "family"
+    ],
+    "sheet": "/euphonia/sheets/people_eliphalet_crane.html",
+    "signature": {
+     "name": "Experiments",
+     "line": "Two sealed vessels a day, each released in the energy he chooses as he mixes it.",
+     "uses": 2,
+     "per": "long rest"
+    },
+    "turn": [
+     "Bonus Action: Study the creature, and Aim; or study the room",
+     "Action: release an Experiment; Volatile, so he rolls for it",
+     "Or: the pistol with Calculated Shot, or Mechanism on the studied feature"
+    ],
+    "level3": {
+     "class": "Natural Philosopher",
+     "subclass": "Experimentalist",
+     "species": "Human",
+     "background": "Artisan"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 15,
+     "Constitution": 13,
+     "Intelligence": 17,
+     "Wisdom": 12,
+     "Charisma": 10
+    },
+    "build": {
+     "name": "Eliphalet Crane",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Artisan",
+     "homeland": "The Americas",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 14,
+      "Constitution": 13,
+      "Intelligence": 15,
+      "Wisdom": 12,
+      "Charisma": 10
+     },
+     "increases": {
+      "Intelligence": 2,
+      "Dexterity": 1
+     },
+     "classes": [
+      {
+       "class": "Natural Philosopher",
+       "level": 3,
+       "subclass": "Experimentalist"
+      }
+     ],
+     "skills": {
+      "Natural Philosopher": [
+       "Arcana",
+       "Nature",
+       "Perception"
+      ],
+      "Human Skillful": [
+       "Insight"
+      ],
+      "feat Versatile (Human)": [
+       "History",
+       "Medicine",
+       "Religion"
+      ]
+     },
+     "tools": {
+      "Artisan tools": [
+       "Brewer’s Supplies"
+      ],
+      "Natural Philosopher": [
+       "Cartographer’s Tools",
+       "Navigator’s Tools"
+      ],
+      "feat Artisan": [
+       "Smith’s Tools",
+       "Carpenter’s Tools",
+       "Mason’s Tools"
+      ],
+      "tool expertise Natural Philosopher 2 Instruments": [
+       "Brewer’s Supplies",
+       "Alchemist’s Supplies"
+      ]
+     },
+     "notes": {
+      "Natural Philosopher 3 Mechanism": "Heat, Pneumatics"
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "mastery": {
+      "Natural Philosopher 1 Ballistics": [
+       "Pistol"
+      ]
+     },
+     "languages": {
+      "Common": [
+       "English"
+      ],
+      "standard": [
+       "Latin",
+       "Dutch"
       ]
      }
     }
@@ -6573,6 +6957,115 @@
     }
    },
    {
+    "id": "people_grizel_elliot",
+    "name": "Grizel Elliot",
+    "region": "Europe",
+    "class": "Barbarian",
+    "line": "A Liddesdale farmer's wife who held her husband at the Samhain crossroads through every shape till dawn, and now goes in after other people's.",
+    "scene": "Samhain night at the crossroads below a Liddesdale farm. The Hunt comes down the road with the taken among them on pale horses. A woman steps out of the hedge, pulls one rider from the saddle and gets both arms around him. He turns into a snake in her arms, then a bear, then a bar of red-hot iron, and she holds on through all of it, swearing steadily, until first light comes over the fell. Then he is only a man again, and he is hers, and he asks where his ewe is.",
+    "play": "You grab the thing that matters and hold on while your friends do the rest; when a friend is about to be taken, you hold them instead.",
+    "class_note": "Fights in a fury that is a state of mind, and is hard to put down.",
+    "traits": [
+     "guard",
+     "steel",
+     "family",
+     "loyalty"
+    ],
+    "sheet": "/euphonia/sheets/people_grizel_elliot.html",
+    "signature": {
+     "name": "Rage",
+     "line": "She rages and takes hold: what she grips stays gripped, through every shape it puts on.",
+     "uses": 3,
+     "per": "long rest",
+     "back": "one on a Short Rest"
+    },
+    "turn": [
+     "Bonus Action: Rage, and Hold Fast is on",
+     "Action: Attack with the Jeddart staff (Graze); a hit can Take Hold without letting go of it",
+     "Bonus Action, when a friend is about to be carried off: let go and Hold a Friend"
+    ],
+    "level3": {
+     "class": "Barbarian",
+     "subclass": "Faebreaker",
+     "species": "Human",
+     "background": "Farmer"
+    },
+    "scores": {
+     "Strength": 17,
+     "Dexterity": 13,
+     "Constitution": 15,
+     "Intelligence": 8,
+     "Wisdom": 12,
+     "Charisma": 10
+    },
+    "build": {
+     "name": "Grizel Elliot",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Farmer",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 15,
+      "Dexterity": 13,
+      "Constitution": 14,
+      "Intelligence": 8,
+      "Wisdom": 12,
+      "Charisma": 10
+     },
+     "increases": {
+      "Strength": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Barbarian",
+       "level": 3,
+       "subclass": "Path of the Faebreaker"
+      }
+     ],
+     "skills": {
+      "Barbarian": [
+       "Athletics",
+       "Intimidation"
+      ],
+      "Human Skillful": [
+       "Insight"
+      ],
+      "Barbarian 3 Primal Knowledge": [
+       "Survival"
+      ],
+      "feat Versatile (Human)": [
+       "Medicine",
+       "Stealth"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "mastery": {
+      "Barbarian 1 Weapon Mastery": [
+       "Glaive",
+       "Dagger"
+      ]
+     },
+     "languages": {
+      "Common": [
+       "Scots"
+      ],
+      "standard": [
+       "English",
+       "Gaelic"
+      ]
+     },
+     "tools": {
+      "feat Versatile (Human)": [
+       "Weaver’s Tools"
+      ]
+     }
+    }
+   },
+   {
     "id": "people_gu_wenyuan",
     "name": "Gu Wenyuan",
     "region": "East and Southeast Asia",
@@ -6934,6 +7427,276 @@
        "Minor Illusion",
        "Prestidigitation",
        "Find Familiar"
+      ]
+     }
+    }
+   },
+   {
+    "id": "people_yahya_efendi",
+    "name": "Hekim Yahya Efendi",
+    "region": "The Ottomans, Persia and the Horn",
+    "class": "Physician",
+    "line": "The senior physician of the Süleymaniye's hospital in Istanbul, who teaches at the bedside and heals with the Font.",
+    "scene": "The long ward of the Süleymaniye's hospital at the morning round, the light coming in high under the domes. An old physician walks the beds with his hands behind his back and a student on either side. At the fourth bed he stops and asks the patient, not the students, what the trouble is, and listens to the whole answer. Then he lays two fingers on the man's wrist, and a thread of light runs from the wrist to the woman in the next bed and to the boy in the bed past her, and all three of them breathe at once.",
+    "play": "You link your friends into a chain before the trouble starts, then heal anyone on it from where you stand.",
+    "class_note": "The scholar-healer, doing by study what the churches did by grace.",
+    "traits": [
+     "care",
+     "lore",
+     "mercy",
+     "faith"
+    ],
+    "sheet": "/euphonia/sheets/people_yahya_efendi.html",
+    "signature": {
+     "name": "Vital Stream",
+     "line": "One pulse, felt in every throat on the chain: his healing reaches anyone linked.",
+     "uses": 2,
+     "per": "long rest",
+     "back": "one on a Short Rest"
+    },
+    "turn": [
+     "Bonus Action: Vital Stream, linking his companions; or Healing Prowess on anyone in the chain",
+     "Action: Cure Wounds, or Poison Spray when nobody needs healing",
+     "Before the trouble: Diagnosis on the one who looks worst"
+    ],
+    "level3": {
+     "class": "Physician",
+     "subclass": "Doctor",
+     "species": "Human",
+     "background": "Schooled"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 13,
+     "Constitution": 14,
+     "Intelligence": 17,
+     "Wisdom": 13,
+     "Charisma": 10
+    },
+    "build": {
+     "name": "Hekim Yahya Efendi",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Schooled",
+     "homeland": "The Ottomans, Persia and the Horn",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 13,
+      "Constitution": 14,
+      "Intelligence": 15,
+      "Wisdom": 12,
+      "Charisma": 10
+     },
+     "increases": {
+      "Intelligence": 2,
+      "Wisdom": 1
+     },
+     "classes": [
+      {
+       "class": "Physician",
+       "level": 3,
+       "subclass": "Doctor"
+      }
+     ],
+     "skills": {
+      "Schooled skills": [
+       "Arcana"
+      ],
+      "Physician": [
+       "Insight",
+       "Perception"
+      ],
+      "Human Skillful": [
+       "Persuasion"
+      ],
+      "feat Versatile (Human)": [
+       "Religion",
+       "Investigation",
+       "Nature"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "tools": {
+      "Physician": [
+       "Alchemist’s Supplies"
+      ]
+     },
+     "spellbooks": {
+      "Physician": [
+       "Healing Word",
+       "Cure Wounds",
+       "Mage Armor",
+       "Sanctuary",
+       "Comprehend Languages",
+       "Detect Poison and Disease",
+       "Purify Food and Drink",
+       "Lesser Restoration",
+       "Anaesthesia",
+       "Calm Emotions"
+      ]
+     },
+     "featLists": {
+      "Schooled": "Cleric"
+     },
+     "languages": {
+      "Common": [
+       "Turkish"
+      ],
+      "standard": [
+       "Arabic",
+       "Persian"
+      ]
+     },
+     "spellAbilities": {
+      "feat Schooled": "Intelligence"
+     },
+     "spells": {
+      "Physician": [
+       "Spare the Dying",
+       "Poison Spray",
+       "Guidance",
+       "Healing Word",
+       "Cure Wounds",
+       "Mage Armor",
+       "Sanctuary",
+       "Comprehend Languages",
+       "Lesser Restoration"
+      ],
+      "feat Schooled": [
+       "Thaumaturgy",
+       "Resistance",
+       "Bless"
+      ]
+     }
+    }
+   },
+   {
+    "id": "people_hinerangi",
+    "name": "Hinerangi",
+    "region": "Oceania",
+    "class": "Ranger",
+    "line": "A Māori hunter of the taniwha that turn to killing, called up and down the coast once a tohunga agrees the creature is lost.",
+    "scene": "A grey dawn on Tīkapa Moana, the tide on the turn. A woman wades out until the water reaches her chest, a coil of plaited flax over one shoulder and a carved taiaha held out of the water in her other hand. Two cousins wait in a canoe behind her with the end of the rope. She is watching one patch of sea that is too smooth, and she has been watching it since the stars went out.",
+    "play": "You mark the great beast and strike it twice a turn; every wound you open makes the next one deeper.",
+    "class_note": "Knows the ground, and what comes over it.",
+    "traits": [
+     "steel",
+     "nature",
+     "family",
+     "justice"
+    ],
+    "sheet": "/euphonia/sheets/people_hinerangi.html",
+    "signature": {
+     "name": "Hunter's Mark",
+     "line": "The quarry marked: every hit on it lands harder, and she knows what it shrugs off.",
+     "uses": 3,
+     "per": "long rest"
+    },
+    "turn": [
+     "Bonus Action: Hunter's Mark on the creature as it surfaces",
+     "Action: Attack twice with the taiaha (Topple), Colossus Slayer on a wounded quarry",
+     "Reaction: an Opportunity Attack if it dives past her"
+    ],
+    "level3": {
+     "class": "Ranger",
+     "subclass": "Hunter",
+     "species": "Human",
+     "background": "Guide"
+    },
+    "scores": {
+     "Strength": 15,
+     "Dexterity": 12,
+     "Constitution": 14,
+     "Intelligence": 8,
+     "Wisdom": 16,
+     "Charisma": 10
+    },
+    "build": {
+     "name": "Hinerangi",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Guide",
+     "homeland": "Oceania",
+     "method": "standard",
+     "base": {
+      "Strength": 15,
+      "Dexterity": 12,
+      "Constitution": 13,
+      "Intelligence": 8,
+      "Wisdom": 14,
+      "Charisma": 10
+     },
+     "increases": {
+      "Wisdom": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Ranger",
+       "level": 3,
+       "subclass": "Hunter"
+      }
+     ],
+     "skills": {
+      "Ranger": [
+       "Athletics",
+       "Perception",
+       "Animal Handling"
+      ],
+      "Human Skillful": [
+       "Nature"
+      ]
+     },
+     "styles": {
+      "Ranger 2 Fighting Style": "Great Weapon Fighting"
+     },
+     "originFeats": {
+      "Human Versatile": "Alert"
+     },
+     "picks": {
+      "Ranger 3 Hunter’s Prey": "Colossus Slayer"
+     },
+     "spellAbilities": {
+      "feat Guide": "Wisdom"
+     },
+     "mastery": {
+      "Ranger 1 Weapon Mastery": [
+       "Quarterstaff",
+       "Spear"
+      ]
+     },
+     "languages": {
+      "Common": [
+       "Māori"
+      ],
+      "standard": [
+       "Elvish",
+       "Common Sign Language"
+      ],
+      "Ranger 2 Deft Explorer": [
+       "Sylvan",
+       "Primordial"
+      ]
+     },
+     "expertise": {
+      "Ranger 2 Deft Explorer": [
+       "Survival"
+      ]
+     },
+     "spells": {
+      "Ranger": [
+       "Ensnaring Strike",
+       "Cure Wounds",
+       "Fog Cloud",
+       "Speak with Animals"
+      ],
+      "feat Guide": [
+       "Druidcraft",
+       "Guidance",
+       "Goodberry"
       ]
      }
     }
@@ -7829,6 +8592,131 @@
       "Counsellor 2 Mental Index": [
        "Insight",
        "Persuasion"
+      ]
+     }
+    }
+   },
+   {
+    "id": "people_jakub_lipensky",
+    "name": "Jakub Lipenský",
+    "region": "Europe",
+    "class": "Danae",
+    "line": "A weary elf of Prague who cuts true Names into rowan staves and burns the old emperor's dead alchemists' tenants out of them.",
+    "scene": "A cellar under Prague's Old Town, the householder on the stairs with a lamp. A weary elf in an old-fashioned coat stands inside a ring of whirling flame, carving a Name into a rowan stave with a short knife. Across the cellar, the thing that has worn a dead alchemist's body since the Emperor Rudolf's day stops talking about the old court and starts, for the first time in sixty years, to be afraid. The stave catches. So does the Name.",
+    "play": "You name a creature and then call it, by name, into a loop or a winter you made for it.",
+    "class_note": "Fae-touched, folding space and season, with a piece of the Hidden inside.",
+    "traits": [
+     "lore",
+     "craft",
+     "hidden",
+     "justice"
+    ],
+    "sheet": "/euphonia/sheets/people_jakub_lipensky.html",
+    "signature": {
+     "name": "Warps",
+     "line": "Staves cut with a creature's Name, and the places he can call it into.",
+     "uses": 4,
+     "per": "short rest"
+    },
+    "turn": [
+     "Bonus Action: Define a creature, and learn what it is",
+     "Next Bonus Action: Call, speaking its Name, into one of his warps",
+     "Action: Hold Person, or Minor Illusion",
+     "Reaction: Denial, unravelling a warp against a hit; pressed, Flee"
+    ],
+    "level3": {
+     "class": "Danae",
+     "subclass": "Naming",
+     "species": "Elf (wood elf lineage)",
+     "background": "Taken"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 14,
+     "Constitution": 14,
+     "Intelligence": 10,
+     "Wisdom": 12,
+     "Charisma": 17
+    },
+    "build": {
+     "name": "Jakub Lipenský",
+     "species": "Elf",
+     "option": "Wood Elf",
+     "background": "Taken",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 14,
+      "Constitution": 13,
+      "Intelligence": 10,
+      "Wisdom": 12,
+      "Charisma": 15
+     },
+     "increases": {
+      "Charisma": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Danae",
+       "level": 3,
+       "subclass": "Naming"
+      }
+     ],
+     "skills": {
+      "Elf Keen Senses": [
+       "Insight"
+      ],
+      "Danae 1 The Sight instead of Insight": [
+       "Nature"
+      ],
+      "Danae": [
+       "Arcana",
+       "History"
+      ]
+     },
+     "tools": {
+      "Taken tools": [
+       "Musical Instrument (Flute)"
+      ],
+      "Danae": [
+       "Woodcarver’s Tools",
+       "Calligrapher’s Supplies"
+      ]
+     },
+     "kinds": {
+      "Danae 2 The Half": "Dark"
+     },
+     "languages": {
+      "Common": [
+       "Czech"
+      ],
+      "standard": [
+       "German",
+       "Latin"
+      ]
+     },
+     "spellAbilities": {
+      "Elf Elven Lineage": "Charisma",
+      "feat Taken": "Charisma"
+     },
+     "spells": {
+      "Danae": [
+       "Produce Flame",
+       "Mage Hand",
+       "Message",
+       "Command",
+       "Sleep",
+       "Faerie Fire",
+       "Feather Fall",
+       "Hold Person",
+       "Misty Step"
+      ],
+      "feat Taken": [
+       "Druidcraft",
+       "Guidance",
+       "Goodberry"
       ]
      }
     }
@@ -9698,6 +10586,135 @@
     }
    },
    {
+    "id": "people_knut_torgeirsson",
+    "name": "Knut Torgeirsson",
+    "region": "Europe",
+    "class": "Bard",
+    "line": "A Telemark farmhand who left a leg of mutton for the fossegrim and came home playing so well no wedding can stop dancing.",
+    "scene": "Below a waterfall in Telemark, an hour after dusk on a Thursday. A young man in a sheepskin jerkin sets a smoked leg of mutton on a flat stone at the edge of the spray, turns around and walks away, very carefully not looking back. Behind him the falls play a slått he has never heard. By the time he reaches the farm he can play it, and four more, and his fingers are bleeding a little, and he has the feeling that he said yes to something.",
+    "play": "You play songs nobody taught you and they change the room; every borrowed tune goes on a tally the Hidden will collect.",
+    "class_note": "Carries the words: song, story and memory that change a room.",
+    "traits": [
+     "words",
+     "wonder",
+     "hidden",
+     "family"
+    ],
+    "sheet": "/euphonia/sheets/people_knut_torgeirsson.html",
+    "signature": {
+     "name": "Bardic Inspiration",
+     "line": "A bar of the fiddle that steadies a friend's hand or voice when it counts.",
+     "uses": "Charisma modifier",
+     "per": "long rest"
+    },
+    "turn": [
+     "Initiative: Read the Room as part of the roll",
+     "Bonus Action: Sing the Season into one listener, with Bardic Inspiration or by remembering the song",
+     "Action: Sleep, or Hold Person on the one who matters"
+    ],
+    "level3": {
+     "class": "Bard",
+     "subclass": "Hidden Bard",
+     "species": "Human",
+     "background": "Entertainer"
+    },
+    "scores": {
+     "Strength": 10,
+     "Dexterity": 15,
+     "Constitution": 13,
+     "Intelligence": 8,
+     "Wisdom": 12,
+     "Charisma": 17
+    },
+    "build": {
+     "name": "Knut Torgeirsson",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Entertainer",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 10,
+      "Dexterity": 14,
+      "Constitution": 13,
+      "Intelligence": 8,
+      "Wisdom": 12,
+      "Charisma": 15
+     },
+     "increases": {
+      "Charisma": 2,
+      "Dexterity": 1
+     },
+     "classes": [
+      {
+       "class": "Bard",
+       "level": 3,
+       "subclass": "Hidden Bard"
+      }
+     ],
+     "skills": {
+      "Bard": [
+       "Insight",
+       "Persuasion",
+       "Animal Handling"
+      ],
+      "Human Skillful": [
+       "Athletics"
+      ],
+      "feat Versatile (Human)": [
+       "Nature",
+       "Survival",
+       "History"
+      ]
+     },
+     "tools": {
+      "Entertainer tools": [
+       "Musical Instrument (Viol)"
+      ],
+      "Bard": [
+       "Musical Instrument (Horn)",
+       "Musical Instrument (Dulcimer)",
+       "Musical Instrument (Flute)"
+      ],
+      "feat Entertainer": [
+       "Musical Instrument (Lute)",
+       "Musical Instrument (Drum)",
+       "Musical Instrument (Lyre)"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "languages": {
+      "Common": [
+       "Norwegian"
+      ],
+      "standard": [
+       "Danish",
+       "Common Sign Language"
+      ]
+     },
+     "expertise": {
+      "Bard 2 Expertise": [
+       "Performance",
+       "Persuasion"
+      ]
+     },
+     "spells": {
+      "Bard": [
+       "Vicious Mockery",
+       "Minor Illusion",
+       "Healing Word",
+       "Charm Person",
+       "Sleep",
+       "Dissonant Whispers",
+       "Calm Emotions",
+       "Hold Person"
+      ]
+     }
+    }
+   },
+   {
     "id": "people_kunhi_ayesha",
     "name": "Kunhi Ayesha",
     "region": "India",
@@ -10602,6 +11619,246 @@
     }
    },
    {
+    "id": "people_lucieta_rizzo",
+    "name": "Lucieta Rizzo",
+    "region": "Europe",
+    "class": "Danae",
+    "line": "An Arsenal caulker's daughter of Venice, taken by the Hidden on a Sensa night, around whom fate now bends.",
+    "scene": "A Venetian rooftop on the night of the Sensa, the lagoon full of lanterns. A woman in a leather coat rolls a copper soldo across her knuckles, and the bravo's sword that was sure to open her companion misses by a hand. He turns his fury on her instead, and every cut he makes goes comically wide, until he stands panting on the ridge tiles and she offers him the coin. He takes it. In the morning it is back in her pocket.",
+    "play": "You palm a lot and change someone's roll after it lands; when a blow comes for a friend, it misses.",
+    "class_note": "Fae-touched, folding space and season, with a piece of the Hidden inside.",
+    "traits": [
+     "cunning",
+     "guard",
+     "hidden",
+     "loyalty"
+    ],
+    "sheet": "/euphonia/sheets/people_lucieta_rizzo.html",
+    "signature": {
+     "name": "Warps",
+     "line": "Lots readied in the palm and springs set in the ground, ready to turn luck fair or foul.",
+     "uses": 4,
+     "per": "short rest"
+    },
+    "turn": [
+     "Bonus Action: ready a Lot (a warp), the soldo rolled across her knuckles; or a spring warp in the bravo's path",
+     "Reaction: cast a readied Lot on any roll she can see, fair or foul (Flow of Fate)",
+     "Action: Vicious Mockery, or Suggestion",
+     "When it goes wrong: Denial for herself, or Flee"
+    ],
+    "level3": {
+     "class": "Danae",
+     "subclass": "Changing",
+     "species": "Human",
+     "background": "Criminal"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 16,
+     "Constitution": 14,
+     "Intelligence": 10,
+     "Wisdom": 12,
+     "Charisma": 15
+    },
+    "build": {
+     "name": "Lucieta Rizzo",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Criminal",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 14,
+      "Constitution": 13,
+      "Intelligence": 10,
+      "Wisdom": 12,
+      "Charisma": 15
+     },
+     "increases": {
+      "Dexterity": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Danae",
+       "level": 3,
+       "subclass": "Changing"
+      }
+     ],
+     "skills": {
+      "Danae": [
+       "Persuasion",
+       "Intimidation"
+      ],
+      "Human Skillful": [
+       "Acrobatics"
+      ],
+      "feat Versatile (Human)": [
+       "Deception",
+       "Performance",
+       "Insight"
+      ]
+     },
+     "tools": {
+      "Danae": [
+       "Gaming Set (Dice)",
+       "Navigator’s Tools"
+      ]
+     },
+     "kinds": {
+      "Danae 2 The Half": "Light"
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "languages": {
+      "Common": [
+       "Venetian"
+      ],
+      "standard": [
+       "Italian",
+       "Greek"
+      ]
+     },
+     "spells": {
+      "Danae": [
+       "Minor Illusion",
+       "Mage Hand",
+       "Vicious Mockery",
+       "Feather Fall",
+       "Charm Person",
+       "Disguise Self",
+       "Hideous Laughter",
+       "Misty Step",
+       "Invisibility"
+      ]
+     }
+    }
+   },
+   {
+    "id": "people_mahin_banu",
+    "name": "Mahin Banu",
+    "region": "The Ottomans, Persia and the Horn",
+    "class": "Revelator",
+    "line": "A muleteer's widow who runs a caravan between Isfahan and the Gulf, and has walked the slopes of the world-mountain since a childhood fever.",
+    "scene": "The courtyard of a caravanserai a day out of Isfahan, the gate barred and bandits outside it. A woman in a quilted coat opens her hand over a bleeding muleteer, and the air in it turns two colors at once. The muleteer stops shaking and sits up; the guard beside him stops missing. The spirit that has been carrying her bales like a giant puts them down, becomes a thin clerk with a ledger and starts counting the bandits. There are nine.",
+    "play": "You guide the way and shield the one in danger; your hundred-handed spirit carries the load and catches blows meant for your friends.",
+    "class_note": "Has seen the real shape of the worlds beyond, and opens small gates to it.",
+    "traits": [
+     "nature",
+     "guard",
+     "family",
+     "road"
+    ],
+    "sheet": "/euphonia/sheets/people_mahin_banu.html",
+    "signature": {
+     "name": "Favors",
+     "line": "The mountain's gifts: a vista opened, a ward on a friend, a spirit called.",
+     "uses": 7,
+     "per": "short rest"
+    },
+    "turn": [
+     "Bonus Action: a vista on the Foot of the Mountain, Aegis on the one the danger is going for",
+     "Action: Attack, a Planar Strike in place of the weapon",
+     "Spirit: the Hundred-Handed carries a fallen companion (Visiting Spirit)",
+     "Reaction: Hundred Hands, an attack on an ally beside the spirit at Disadvantage"
+    ],
+    "level3": {
+     "class": "Revelator",
+     "subclass": "Mountain",
+     "species": "Human",
+     "background": "Guide"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 13,
+     "Constitution": 15,
+     "Intelligence": 12,
+     "Wisdom": 17,
+     "Charisma": 10
+    },
+    "build": {
+     "name": "Mahin Banu",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Guide",
+     "homeland": "The Ottomans, Persia and the Horn",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 13,
+      "Constitution": 14,
+      "Intelligence": 12,
+      "Wisdom": 15,
+      "Charisma": 10
+     },
+     "increases": {
+      "Wisdom": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Revelator",
+       "level": 3,
+       "subclass": "The Mountain"
+      }
+     ],
+     "skills": {
+      "Revelator": [
+       "Insight",
+       "Perception"
+      ],
+      "Human Skillful": [
+       "Intimidation"
+      ],
+      "feat Versatile (Human)": [
+       "Animal Handling",
+       "Persuasion",
+       "Medicine"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "tools": {
+      "tools Revelator 3 Everything Is Next Door": [
+       "Leatherworker’s Tools"
+      ]
+     },
+     "languages": {
+      "Common": [
+       "Persian"
+      ],
+      "standard": [
+       "Azerbaijani Turkic",
+       "Arabic"
+      ],
+      "Revelator 3 Everything Is Next Door": [
+       "Armenian"
+      ]
+     },
+     "spellAbilities": {
+      "feat Guide": "Wisdom"
+     },
+     "spells": {
+      "Revelator": [
+       "Guidance",
+       "Spare the Dying",
+       "Comprehend Languages",
+       "Healing Word",
+       "Sanctuary",
+       "Protection from Evil and Good"
+      ],
+      "feat Guide": [
+       "Druidcraft",
+       "Message",
+       "Goodberry"
+      ]
+     }
+    }
+   },
+   {
     "id": "people_mai_raji",
     "name": "Mai Raji",
     "region": "India",
@@ -10844,6 +12101,159 @@
       "Counsellor 2 Mental Index": [
        "Insight",
        "Investigation"
+      ]
+     }
+    }
+   },
+   {
+    "id": "people_marguerite_de_lanzac",
+    "name": "Marguerite de Lanzac",
+    "region": "Europe",
+    "class": "Courtier",
+    "line": "A Quercy gentleman's daughter at Versailles with four quarterings, one borrowed gown and a room that gets happier when she walks in.",
+    "scene": "Versailles at dusk, the parterre half dug and the palace half scaffolding. A young woman in a gown that fits almost perfectly crosses the gravel toward the fountain, on her way to nowhere in particular, and the conversations on the terrace go quiet in the order she passes them. At the fountain she turns, and bows to a duke exactly as deeply as she should and not a hair deeper, and asks after his spaniel by name. He tells her about the spaniel for twenty minutes. He has never been happier.",
+    "play": "You change minds in conversation without anyone noticing, keep your friends steady, and fence like it costs nothing.",
+    "class_note": "The accomplished person every court holds up, who makes it all look easy.",
+    "traits": [
+     "words",
+     "care",
+     "family",
+     "loyalty"
+    ],
+    "sheet": "/euphonia/sheets/people_marguerite_de_lanzac.html",
+    "signature": {
+     "name": "Ease",
+     "line": "Composure for everyone near her, and the conversation that brings a guest round.",
+     "uses": 5,
+     "per": "short rest"
+    },
+    "turn": [
+     "Initiative: Alert, and First Through the Door (Ease)",
+     "Action: the smallsword (Vex), with her Telling Cut on a hit",
+     "Bonus Action: Healing Word, when someone drops",
+     "Reaction: Not a Hair Out of Place, or A Word in Time on an ally (Ease)"
+    ],
+    "level3": {
+     "class": "Courtier",
+     "subclass": "Grace",
+     "species": "Human",
+     "background": "Noble"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 14,
+     "Constitution": 13,
+     "Intelligence": 13,
+     "Wisdom": 10,
+     "Charisma": 17
+    },
+    "build": {
+     "name": "Marguerite de Lanzac",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Noble",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 14,
+      "Constitution": 13,
+      "Intelligence": 12,
+      "Wisdom": 10,
+      "Charisma": 15
+     },
+     "increases": {
+      "Charisma": 2,
+      "Intelligence": 1
+     },
+     "classes": [
+      {
+       "class": "Courtier",
+       "level": 3,
+       "subclass": "Grace"
+      }
+     ],
+     "skills": {
+      "Courtier": [
+       "Performance",
+       "Acrobatics",
+       "Perception"
+      ],
+      "Courtier accomplishment 1": [
+       "Insight",
+       "Deception"
+      ],
+      "Human Skillful": [
+       "Animal Handling"
+      ],
+      "feat Noble": [
+       "Investigation",
+       "Religion",
+       "Sleight of Hand"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Alert"
+     },
+     "tools": {
+      "Noble tools": [
+       "Gaming Set (Playing cards)"
+      ],
+      "Courtier": [
+       "Disguise Kit"
+      ],
+      "tools Courtier accomplishment 2": [
+       "Musical Instrument (Lute)"
+      ]
+     },
+     "mastery": {
+      "Courtier 2 Weapon Mastery": [
+       "Rapier",
+       "Dagger"
+      ]
+     },
+     "languages": {
+      "Common": [
+       "French"
+      ],
+      "standard": [
+       "Occitan",
+       "Italian"
+      ]
+     },
+     "expertise": {
+      "Courtier 2 Expertise": [
+       "Persuasion",
+       "Insight"
+      ]
+     },
+     "options": {
+      "Courtier": [
+       {
+        "name": "The Hunt",
+        "art": "Arms"
+       },
+       {
+        "name": "Every Table",
+        "art": "Society"
+       },
+       {
+        "name": "An Instrument of Your Art"
+       },
+       {
+        "name": "Correspondence",
+        "art": "Letters"
+       }
+      ]
+     },
+     "spells": {
+      "Courtier": [
+       "Vicious Mockery",
+       "Minor Illusion",
+       "Charm Person",
+       "Command",
+       "Healing Word",
+       "Comprehend Languages"
       ]
      }
     }
@@ -16923,6 +18333,127 @@
     }
    },
    {
+    "id": "people_tok_awang_senik",
+    "name": "Tok Awang Senik",
+    "region": "East and Southeast Asia",
+    "class": "Cleric",
+    "line": "A Kedah bomoh who goes into the forest below Gunung Jerai after the children who answer the orang bunian's whistles.",
+    "scene": "The edge of the forest below Gunung Jerai at dusk, the rice behind him gone gray. An old man in a faded baju steps in under the trees with a betel quid wrapped in a leaf, talking softly to the dark as if to an old neighbor, about a boy who answered a whistle he shouldn't have. Somewhere ahead there are lamps where no village should be, and music, and a child laughing.",
+    "play": "You talk to the Hidden first, and a fight you never have is the one you win; when talk fails, you bring the taken back.",
+    "class_note": "Carries a holiness that works, and answers for it to a church or a god.",
+    "traits": [
+     "words",
+     "nature",
+     "hidden",
+     "mercy"
+    ],
+    "sheet": "/euphonia/sheets/people_tok_awang_senik.html",
+    "signature": {
+     "name": "Strike a Bargain",
+     "line": "A bargain struck with the Hidden through his god, and its people do the work.",
+     "uses": 2,
+     "per": "long rest",
+     "back": "one on a Short Rest"
+    },
+    "turn": [
+     "Before the fight: Parley under the old courtesies",
+     "Action: Strike a Bargain (Channel Divinity), Turn Aside or Bring Back",
+     "Bonus Action: Healing Word"
+    ],
+    "level3": {
+     "class": "Cleric",
+     "subclass": "Hidden",
+     "species": "Human",
+     "background": "Guide"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 13,
+     "Constitution": 15,
+     "Intelligence": 10,
+     "Wisdom": 17,
+     "Charisma": 12
+    },
+    "build": {
+     "name": "Tok Awang Senik",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Guide",
+     "homeland": "East and Southeast Asia",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 13,
+      "Constitution": 14,
+      "Intelligence": 10,
+      "Wisdom": 15,
+      "Charisma": 12
+     },
+     "increases": {
+      "Wisdom": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Cleric",
+       "level": 3,
+       "subclass": "Hidden Domain"
+      }
+     ],
+     "skills": {
+      "Cleric": [
+       "Insight",
+       "Persuasion"
+      ],
+      "Human Skillful": [
+       "Nature"
+      ],
+      "feat Versatile (Human)": [
+       "Medicine",
+       "Perception",
+       "Animal Handling"
+      ]
+     },
+     "picks": {
+      "Cleric 1 Divine Order": "Thaumaturge"
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "languages": {
+      "Common": [
+       "Malay"
+      ],
+      "standard": [
+       "Thai",
+       "Arabic"
+      ]
+     },
+     "spellAbilities": {
+      "feat Guide": "Wisdom"
+     },
+     "spells": {
+      "Cleric": [
+       "Guidance",
+       "Spare the Dying",
+       "Thaumaturgy",
+       "Light",
+       "Bless",
+       "Healing Word",
+       "Sanctuary",
+       "Command",
+       "Augury",
+       "Prayer of Healing"
+      ],
+      "feat Guide": [
+       "Druidcraft",
+       "Message",
+       "Speak with Animals"
+      ]
+     }
+    }
+   },
+   {
     "id": "cover_lion_armorer",
     "name": "Tonderai Shumba",
     "region": "Mutapa and the Indian Ocean",
@@ -18063,6 +19594,134 @@
     }
    },
    {
+    "id": "people_xie_yunqi",
+    "name": "Xie Yunqi",
+    "region": "East and Southeast Asia",
+    "class": "Warlock",
+    "line": "A Ming-loyalist scholar in the hills who capped verses with a fox one night and woke knowing a road under the hill.",
+    "scene": "A borrowed hut in the Siming hills, past midnight, one lamp. A young scholar in a robe gone thin at the elbows trades lines of poetry with a stranger, and loses. The stranger's cup never empties, and his shadow on the wall has a tail. At dawn the stranger is gone, the cup is full again, and behind the hut there is a road that wasn't there yesterday. The scholar picks up his brush and writes the couplet down before he forgets it.",
+    "play": "You charm, you dodge, and when it all goes wrong you step behind the world and are gone.",
+    "class_note": "Made a deal, and the other side keeps it.",
+    "traits": [
+     "words",
+     "cunning",
+     "hidden",
+     "loyalty"
+    ],
+    "sheet": "/euphonia/sheets/people_xie_yunqi.html",
+    "signature": {
+     "name": "Step into the Hidden",
+     "line": "He steps out of the world and back in, thirty feet away and unseen.",
+     "uses": "Charisma modifier",
+     "per": "long rest"
+    },
+    "turn": [
+     "Bonus Action: Step into the Hidden, and take a friend along",
+     "Action: Eldritch Blast (Agonizing Blast), or Suggestion",
+     "No action: Mask of Many Faces, a queue and a shaved forehead for the checkpoint"
+    ],
+    "level3": {
+     "class": "Warlock",
+     "subclass": "Dreamlord",
+     "species": "Human",
+     "background": "Noble"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 13,
+     "Constitution": 14,
+     "Intelligence": 13,
+     "Wisdom": 10,
+     "Charisma": 17
+    },
+    "build": {
+     "name": "Xie Yunqi",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Noble",
+     "homeland": "East and Southeast Asia",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 13,
+      "Constitution": 14,
+      "Intelligence": 12,
+      "Wisdom": 10,
+      "Charisma": 15
+     },
+     "increases": {
+      "Charisma": 2,
+      "Intelligence": 1
+     },
+     "classes": [
+      {
+       "class": "Warlock",
+       "level": 3,
+       "subclass": "Dreamlord Patron"
+      }
+     ],
+     "skills": {
+      "Warlock": [
+       "Arcana",
+       "Religion"
+      ],
+      "Human Skillful": [
+       "Survival"
+      ],
+      "feat Noble": [
+       "Insight",
+       "Performance"
+      ]
+     },
+     "tools": {
+      "Noble tools": [
+       "Gaming Set (Dragonchess)"
+      ],
+      "feat Noble": [
+       "Calligrapher’s Supplies"
+      ]
+     },
+     "originFeats": {
+      "Human Versatile": "Alert"
+     },
+     "languages": {
+      "Common": [
+       "Mandarin"
+      ],
+      "standard": [
+       "Wu",
+       "Classical Chinese"
+      ]
+     },
+     "options": {
+      "Warlock": [
+       {
+        "name": "Agonizing Blast"
+       },
+       {
+        "name": "Armor of Shadows"
+       },
+       {
+        "name": "Mask of Many Faces"
+       }
+      ]
+     },
+     "spells": {
+      "Warlock": [
+       "Eldritch Blast",
+       "Minor Illusion",
+       "Charm Person",
+       "Comprehend Languages",
+       "Hex",
+       "Invisibility"
+      ]
+     },
+     "cantripTargets": {
+      "Warlock invocation 0": "Eldritch Blast"
+     }
+    }
+   },
+   {
     "id": "cover_corsair",
     "name": "Yusuf Rais",
     "region": "The Ottomans, Persia and the Horn",
@@ -18437,6 +20096,127 @@
     }
    },
    {
+    "id": "people_zhao_nainai",
+    "name": "Zhao Nainai",
+    "region": "East and Southeast Asia",
+    "class": "Cleric",
+    "line": "A village medium outside Tianjin through whom the fox immortal speaks, healing the sick and settling quarrels.",
+    "scene": "The side room of a farmhouse outside Tianjin, incense thick in the air, a family on its knees with a feverish child. An old woman sits very straight before a red paper tablet and closes her eyes. When she speaks again her voice is older and more courteous than her own, and it asks after the child's grandfather by name, and what exactly he did to a burrow under the threshing floor in the spring of the Dragon year.",
+    "play": "You talk to the Hidden first, and a fight you never have is the one you win; when talk fails, you heal.",
+    "class_note": "Carries a holiness that works, and answers for it to a church or a god.",
+    "traits": [
+     "care",
+     "words",
+     "hidden",
+     "family"
+    ],
+    "sheet": "/euphonia/sheets/people_zhao_nainai.html",
+    "signature": {
+     "name": "Strike a Bargain",
+     "line": "A bargain struck with the Hidden through the immortal, and its people do the work.",
+     "uses": 2,
+     "per": "long rest",
+     "back": "one on a Short Rest"
+    },
+    "turn": [
+     "Before the fight: Parley under the old courtesies, in the immortal's voice",
+     "Action: Strike a Bargain (Channel Divinity), Turn Aside or Bring Back",
+     "Bonus Action: Healing Word"
+    ],
+    "level3": {
+     "class": "Cleric",
+     "subclass": "Hidden",
+     "species": "Human",
+     "background": "Acolyte"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 12,
+     "Constitution": 14,
+     "Intelligence": 10,
+     "Wisdom": 17,
+     "Charisma": 14
+    },
+    "build": {
+     "name": "Zhao Nainai",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Acolyte",
+     "homeland": "East and Southeast Asia",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 12,
+      "Constitution": 14,
+      "Intelligence": 10,
+      "Wisdom": 15,
+      "Charisma": 13
+     },
+     "increases": {
+      "Wisdom": 2,
+      "Charisma": 1
+     },
+     "classes": [
+      {
+       "class": "Cleric",
+       "level": 3,
+       "subclass": "Hidden Domain"
+      }
+     ],
+     "skills": {
+      "Cleric": [
+       "Medicine",
+       "Persuasion"
+      ],
+      "Human Skillful": [
+       "Perception"
+      ],
+      "feat Versatile (Human)": [
+       "Nature",
+       "Deception",
+       "History"
+      ]
+     },
+     "picks": {
+      "Cleric 1 Divine Order": "Thaumaturge"
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "languages": {
+      "Common": [
+       "Mandarin"
+      ],
+      "standard": [
+       "Manchu",
+       "Classical Chinese"
+      ]
+     },
+     "spellAbilities": {
+      "feat Acolyte": "Wisdom"
+     },
+     "spells": {
+      "Cleric": [
+       "Guidance",
+       "Spare the Dying",
+       "Thaumaturgy",
+       "Sacred Flame",
+       "Bless",
+       "Healing Word",
+       "Sanctuary",
+       "Command",
+       "Augury",
+       "Prayer of Healing"
+      ],
+      "feat Acolyte": [
+       "Resistance",
+       "Mending",
+       "Cure Wounds"
+      ]
+     }
+    }
+   },
+   {
     "id": "show_danae_shaping",
     "name": "Zólyomi Benke",
     "region": "Europe",
@@ -18653,6 +20433,127 @@
      },
      "spellAbilities": {
       "Elf Elven Lineage": "Wisdom"
+     }
+    }
+   },
+   {
+    "id": "people_una_ni_lochlainn",
+    "name": "Úna Ní Lochlainn",
+    "region": "Europe",
+    "class": "Cleric",
+    "line": "A fairy doctor of the Burren in County Clare who bargains with the Gentry for the parish's taken children.",
+    "scene": "A cottage door in the Burren on a November night, the limestone white under the moon. A woman of fifty with a bowl of new milk stands on the threshold and talks into the dark in a reasonable voice, about a child who was taken at Samhain and what would be fair to give for her. Behind her, the thing in the cradle has stopped crying to listen. Out in the dark, something is listening too, and has started to haggle.",
+    "play": "You talk to the Hidden first, and a fight you never have is the one you win; when talk fails, you bring the fallen back.",
+    "class_note": "Carries a holiness that works, and answers for it to a church or a god.",
+    "traits": [
+     "words",
+     "care",
+     "hidden",
+     "family"
+    ],
+    "sheet": "/euphonia/sheets/people_una_ni_lochlainn.html",
+    "signature": {
+     "name": "Strike a Bargain",
+     "line": "A bargain struck with the Hidden through her god, and its people do the work.",
+     "uses": 2,
+     "per": "long rest",
+     "back": "one on a Short Rest"
+    },
+    "turn": [
+     "Before the fight: Parley under the old courtesies",
+     "Action: Strike a Bargain (Channel Divinity), Turn Aside or Bring Back",
+     "Bonus Action: Healing Word"
+    ],
+    "level3": {
+     "class": "Cleric",
+     "subclass": "Hidden",
+     "species": "Human",
+     "background": "Cunning Folk"
+    },
+    "scores": {
+     "Strength": 8,
+     "Dexterity": 12,
+     "Constitution": 15,
+     "Intelligence": 10,
+     "Wisdom": 17,
+     "Charisma": 13
+    },
+    "build": {
+     "name": "Úna Ní Lochlainn",
+     "species": "Human",
+     "size": "Medium",
+     "background": "Cunning Folk",
+     "homeland": "Europe",
+     "method": "standard",
+     "base": {
+      "Strength": 8,
+      "Dexterity": 12,
+      "Constitution": 14,
+      "Intelligence": 10,
+      "Wisdom": 15,
+      "Charisma": 13
+     },
+     "increases": {
+      "Wisdom": 2,
+      "Constitution": 1
+     },
+     "classes": [
+      {
+       "class": "Cleric",
+       "level": 3,
+       "subclass": "Hidden Domain"
+      }
+     ],
+     "skills": {
+      "Cleric": [
+       "Insight",
+       "Persuasion"
+      ],
+      "Human Skillful": [
+       "History"
+      ],
+      "feat Versatile (Human)": [
+       "Animal Handling",
+       "Perception",
+       "Survival"
+      ]
+     },
+     "picks": {
+      "Cleric 1 Divine Order": "Thaumaturge"
+     },
+     "originFeats": {
+      "Human Versatile": "Skilled"
+     },
+     "languages": {
+      "Common": [
+       "Irish"
+      ],
+      "standard": [
+       "English",
+       "Latin"
+      ]
+     },
+     "spellAbilities": {
+      "feat Cunning Folk": "Wisdom"
+     },
+     "spells": {
+      "Cleric": [
+       "Guidance",
+       "Spare the Dying",
+       "Thaumaturgy",
+       "Light",
+       "Bless",
+       "Command",
+       "Healing Word",
+       "Sanctuary",
+       "Augury",
+       "Prayer of Healing"
+      ],
+      "feat Cunning Folk": [
+       "Druidcraft",
+       "Produce Flame",
+       "Goodberry"
+      ]
      }
     }
    },

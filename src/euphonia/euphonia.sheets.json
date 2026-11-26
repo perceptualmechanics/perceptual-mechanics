@@ -458,6 +458,12 @@
    "file": "people_abdul_wahid.html"
   },
   {
+   "name": "Agnesina Fabris",
+   "title": "Agnesina Fabris (Warlock 5, Envoy)",
+   "line": "Warlock 5, Envoy",
+   "file": "people_agnesina_fabris.html"
+  },
+  {
    "name": "Aisulu",
    "title": "Aisulu (Barbarian 7, Path of the Wild Heart)",
    "line": "Barbarian 7, Path of the Wild Heart",
@@ -590,6 +596,18 @@
    "file": "people_domingas_da_costa.html"
   },
   {
+   "name": "Dorothea Pfister",
+   "title": "Dorothea Pfister (Sorcerer 3, Fire Origin)",
+   "line": "Sorcerer 3, Fire Origin",
+   "file": "people_dorothea_pfister.html"
+  },
+  {
+   "name": "Eliphalet Crane",
+   "title": "Eliphalet Crane (Natural Philosopher 6, Experimentalist)",
+   "line": "Natural Philosopher 6, Experimentalist",
+   "file": "people_eliphalet_crane.html"
+  },
+  {
    "name": "Ferhad Usta",
    "title": "Ferhad Usta (Courtier 6, Art)",
    "line": "Courtier 6, Art",
@@ -626,6 +644,12 @@
    "file": "people_gottlieb_von_schleich.html"
   },
   {
+   "name": "Grizel Elliot",
+   "title": "Grizel Elliot (Barbarian 6, Faebreaker)",
+   "line": "Barbarian 6, Faebreaker",
+   "file": "people_grizel_elliot.html"
+  },
+  {
    "name": "Gu Wenyuan",
    "title": "Gu Wenyuan (Natural Philosopher 5, Navigator)",
    "line": "Natural Philosopher 5, Navigator",
@@ -636,6 +660,12 @@
    "title": "Hafız Ömer (Cleric 5, Light)",
    "line": "Cleric 5, Light",
    "file": "people_hafiz_omer.html"
+  },
+  {
+   "name": "Hinerangi",
+   "title": "Hinerangi (Ranger 6, Hunter)",
+   "line": "Ranger 6, Hunter",
+   "file": "people_hinerangi.html"
   },
   {
    "name": "Hinewai",
@@ -660,6 +690,12 @@
    "title": "Iya Adunni (Counsellor 9, Spymaster)",
    "line": "Counsellor 9, Spymaster",
    "file": "people_iya_adunni.html"
+  },
+  {
+   "name": "Jakub Lipenský",
+   "title": "Jakub Lipenský (Danae 14, Naming)",
+   "line": "Danae 14, Naming",
+   "file": "people_jakub_lipensky.html"
   },
   {
    "name": "Kalehua",
@@ -704,6 +740,12 @@
    "file": "people_kima_ismare.html"
   },
   {
+   "name": "Knut Torgeirsson",
+   "title": "Knut Torgeirsson (Bard 3, Hidden Bard)",
+   "line": "Bard 3, Hidden Bard",
+   "file": "people_knut_torgeirsson.html"
+  },
+  {
    "name": "Kunhi Ayesha",
    "title": "Kunhi Ayesha (Counsellor 6, Spymaster)",
    "line": "Counsellor 6, Spymaster",
@@ -740,6 +782,18 @@
    "file": "people_lihpahnu.html"
   },
   {
+   "name": "Lucieta Rizzo",
+   "title": "Lucieta Rizzo (Danae 9, Changing)",
+   "line": "Danae 9, Changing",
+   "file": "people_lucieta_rizzo.html"
+  },
+  {
+   "name": "Mahin Banu",
+   "title": "Mahin Banu (Revelator 9, the Mountain)",
+   "line": "Revelator 9, the Mountain",
+   "file": "people_mahin_banu.html"
+  },
+  {
    "name": "Mai Raji",
    "title": "Mai Raji (Paladin 5, Oath of Devotion)",
    "line": "Paladin 5, Oath of Devotion",
@@ -750,6 +804,12 @@
    "title": "Manekbai Parekh (Counsellor 11, Factor)",
    "line": "Counsellor 11, Factor",
    "file": "people_manekbai_parekh.html"
+  },
+  {
+   "name": "Marguerite de Lanzac",
+   "title": "Marguerite de Lanzac (Courtier 5, Grace)",
+   "line": "Courtier 5, Grace",
+   "file": "people_marguerite_de_lanzac.html"
   },
   {
    "name": "Munyaradzi Shava",
@@ -902,10 +962,22 @@
    "file": "people_tinashe_gumbo.html"
   },
   {
+   "name": "Tok Awang Senik",
+   "title": "Tok Awang Senik (Cleric 6, Hidden Domain)",
+   "line": "Cleric 6, Hidden Domain",
+   "file": "people_tok_awang_senik.html"
+  },
+  {
    "name": "Tseren Dorji",
    "title": "Tseren Dorji (Fighter 9, Battle Master)",
    "line": "Fighter 9, Battle Master",
    "file": "people_tseren_dorji.html"
+  },
+  {
+   "name": "Úna Ní Lochlainn",
+   "title": "Úna Ní Lochlainn (Cleric 7, Hidden Domain)",
+   "line": "Cleric 7, Hidden Domain",
+   "file": "people_una_ni_lochlainn.html"
   },
   {
    "name": "Wälättä Śellase",
@@ -920,10 +992,28 @@
    "file": "people_wang_yuezhen.html"
   },
   {
+   "name": "Xie Yunqi",
+   "title": "Xie Yunqi (Warlock 4, Dreamlord)",
+   "line": "Warlock 4, Dreamlord",
+   "file": "people_xie_yunqi.html"
+  },
+  {
+   "name": "Hekim Yahya Efendi",
+   "title": "Hekim Yahya Efendi (Physician 7, Doctor)",
+   "line": "Physician 7, Doctor",
+   "file": "people_yahya_efendi.html"
+  },
+  {
    "name": "Zhamal-apa",
    "title": "Zhamal-apa (Physician 7, Hedge Witch)",
    "line": "Physician 7, Hedge Witch",
    "file": "people_zhamal_apa.html"
+  },
+  {
+   "name": "Zhao Nainai",
+   "title": "Zhao Nainai (Cleric 8, Hidden Domain)",
+   "line": "Cleric 8, Hidden Domain",
+   "file": "people_zhao_nainai.html"
   }
  ]
 }
